@@ -13,6 +13,27 @@ import { auth } from '../lib/firebase';
 import { api } from '../lib/api';
 import { connectSocket, disconnectSocket } from '../lib/socket';
 const AppContext = createContext();
+const CHAT_CLEARS_STORAGE_KEY = 'vh-cleared-chats';
+
+const getStoredChatClears = () => {
+    try {
+        return JSON.parse(localStorage.getItem(CHAT_CLEARS_STORAGE_KEY) || '{}');
+    } catch {
+        return {};
+    }
+};
+
+const setStoredChatClear = (profileId) => {
+    const clears = getStoredChatClears();
+    clears[profileId] = new Date().toISOString();
+    localStorage.setItem(CHAT_CLEARS_STORAGE_KEY, JSON.stringify(clears));
+};
+
+const removeStoredChatClear = (profileId) => {
+    const clears = getStoredChatClears();
+    delete clears[profileId];
+    localStorage.setItem(CHAT_CLEARS_STORAGE_KEY, JSON.stringify(clears));
+};
 
 export const AppProvider = ({ children }) => {
     // --- Persistent Settings & Themes ---
@@ -245,14 +266,25 @@ export const AppProvider = ({ children }) => {
         try {
             const data = await api.getConversations();
             const conversationsList = Array.isArray(data) ? data : [];
-            setConversations(conversationsList);
+            const chatClears = getStoredChatClears();
+            const visibleConversations = conversationsList.filter(conv => {
+                const clearedAt = chatClears[conv.partnerId];
+                if (!clearedAt) return true;
+
+                return conv.lastMessageTime && new Date(conv.lastMessageTime) > new Date(clearedAt);
+            });
+            setConversations(visibleConversations);
 
             // Fetch messages for each conversation to populate the chats state
-            for (const conv of conversationsList) {
+            for (const conv of visibleConversations) {
                 try {
                     const messages = await api.getMessages(conv.id);
                     if (Array.isArray(messages)) {
-                        const mapped = messages.map(m => ({
+                        const clearedAt = chatClears[conv.partnerId];
+                        const visibleMessages = clearedAt
+                            ? messages.filter(m => new Date(m.createdAt) > new Date(clearedAt))
+                            : messages;
+                        const mapped = visibleMessages.map(m => ({
                             id: m.id,
                             sender: m.senderId === conv.partnerId ? 'partner' : 'user',
                             text: m.text,
@@ -431,19 +463,19 @@ export const AppProvider = ({ children }) => {
                     }));
                 });
 
-                socket.on('conversation_messages_deleted', ({ conversationId, senderId }) => {
+                socket.on('conversation_cleared', ({ conversationId }) => {
                     const conv = conversationsRef.current.find(c => c.id === conversationId);
                     if (!conv) return;
 
-                    setChats(prevChats => ({
-                        ...prevChats,
-                        [conv.partnerId]: (prevChats[conv.partnerId] || []).map(message => {
-                            const sender = senderId === conv.partnerId ? 'partner' : 'user';
-                            return message.sender === sender
-                                ? { ...message, text: 'This message was deleted', isDeleted: true }
-                                : message;
-                        })
-                    }));
+                    setStoredChatClear(conv.partnerId);
+                    setChats(prevChats => {
+                        const next = { ...prevChats };
+                        delete next[conv.partnerId];
+                        return next;
+                    });
+                    setConversations(prevConversations =>
+                        prevConversations.filter(conversation => conversation.id !== conversationId)
+                    );
                 });
 
                 return () => {
@@ -911,18 +943,20 @@ useEffect(() => {
 
     const deleteConversationMessages = async (profileId) => {
         const previous = chats[profileId] || [];
+        const previousConversations = conversations;
         const userMessagesToDelete = previous.filter(message =>
             message.sender === 'user' && !message.isDeleted
         );
+        setStoredChatClear(profileId);
 
-        setChats(prev => ({
-            ...prev,
-            [profileId]: (prev[profileId] || []).map(message =>
-                message.sender === 'user'
-                    ? { ...message, text: 'This message was deleted', isDeleted: true }
-                    : message
-            )
-        }));
+        setChats(prev => {
+            const next = { ...prev };
+            delete next[profileId];
+            return next;
+        });
+        setConversations(prev =>
+            prev.filter(conversation => conversation.partnerId !== profileId)
+        );
 
         if (!api.isConfigured) return;
 
@@ -952,10 +986,12 @@ useEffect(() => {
             }
 
             console.error('Failed to delete chat messages:', err);
+            removeStoredChatClear(profileId);
             setChats(prev => ({
                 ...prev,
                 [profileId]: previous
             }));
+            setConversations(previousConversations);
             throw err;
         }
     };
