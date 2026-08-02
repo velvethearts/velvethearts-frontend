@@ -9,7 +9,7 @@ import { Select } from '../../components/UI/Select';
 import { PageHeader } from '../../components/UI/PageHeader';
 
 export const OnboardingFlow = () => {
-    const { completeOnboarding } = useApp();
+    const { completeOnboarding, logout } = useApp();
 
     const DRAFT_KEY = 'vh-onboarding-draft';
 
@@ -569,6 +569,12 @@ export const OnboardingFlow = () => {
             }
         };
 
+        const handleBackToWelcome = async () => {
+            setShowAllErrors(false);
+            await logout();
+            window.scrollTo(0, 0);
+        };
+
         const progressPercentage = (step / 6) * 100;
 
         return (
@@ -577,7 +583,7 @@ export const OnboardingFlow = () => {
                 <PageHeader
                     title={`Step ${step} of 6`}
                     subtitle="Conversational Profile Onboarding"
-                    onBack={step > 1 ? handleBack : null}
+                    onBack={step > 1 ? handleBack : handleBackToWelcome}
                     actions={
                         isDev && step > 1 && step < 6 ? (
                             <button onClick={() => setStep(6)} className="onboarding-skip-btn font-ui">
@@ -1361,6 +1367,22 @@ export const OnboardingFlow = () => {
         }
 
         [data-theme="dark"] .radio-selection-card.active .radio-card-desc {
+          color: var(--charcoal-300, #c0bfbe);
+        }
+
+        /* Dark mode: same fix as .active above, but for :hover — the light
+           burgundy-50 hover background was invisible against dark-mode's
+           light default text color. */
+        [data-theme="dark"] .radio-selection-card:hover {
+          border-color: var(--burgundy-400);
+          background-color: rgba(184, 67, 106, 0.12);
+        }
+
+        [data-theme="dark"] .radio-selection-card:hover .radio-card-header strong {
+          color: var(--cream-100);
+        }
+
+        [data-theme="dark"] .radio-selection-card:hover .radio-card-desc {
           color: var(--charcoal-300, #c0bfbe);
         }
 
