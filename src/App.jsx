@@ -136,7 +136,15 @@ function AppContent() {
         return <DiscoverFeed onSelectProfile={setSelectedProfile} />;
         
       case 'matches':
-        return <MatchesList onSelectConnection={handleSelectConnection} />;
+        if (selectedProfile) {
+          return (
+            <ProfileDetail
+              profile={selectedProfile}
+              onBack={handleBackToDiscover}
+            />
+          );
+        }
+        return <MatchesList onSelectConnection={handleSelectConnection} onSelectProfile={setSelectedProfile} />;
         
       case 'chat':
         return (

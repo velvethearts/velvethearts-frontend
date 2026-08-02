@@ -156,6 +156,10 @@ export const api = {
         return request('/api/v1/match/connections');
     },
 
+    getReceivedInvites() {
+        return request('/api/v1/match/received-invites');
+    },
+
     // ==========================================================
     // SAFETY
     // ==========================================================

@@ -127,6 +127,7 @@ export const AppProvider = ({ children }) => {
     const [interestStatuses, setInterestStatuses] = useState({});
 
     const [connections, setConnections] = useState([]);
+    const [receivedInvites, setReceivedInvites] = useState([]);
     const [blockedUsers, setBlockedUsers] = useState([]);
     const [reportedUsers, setReportedUsers] = useState([]);
 
@@ -258,6 +259,16 @@ export const AppProvider = ({ children }) => {
         }
     }, [interestsSent, interestStatuses]);
 
+    const fetchReceivedInvites = useCallback(async () => {
+        if (!api.isConfigured) return;
+        try {
+            const data = await api.getReceivedInvites();
+            setReceivedInvites(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('Failed to fetch received invites:', err);
+        }
+    }, []);
+
 
     // ─── Conversations (API-driven) ────────────────────────────────────
 
@@ -314,7 +325,8 @@ export const AppProvider = ({ children }) => {
             await Promise.all([
                 fetchDiscoverProfiles(),
                 fetchConnections(),
-                fetchConversations()
+                fetchConversations(),
+                fetchReceivedInvites()
             ]);
         } catch (err) {
             console.error('Error loading social data:', err);
@@ -536,14 +548,16 @@ useEffect(() => {
         if (isLoggedIn && isOnboarded && approvalStatus === 'approved') {
             fetchConnections();
             fetchConversations();
+            fetchReceivedInvites();
 
             const intervalId = setInterval(() => {
                 fetchConnections();
+                fetchReceivedInvites();
             }, 10000);
 
             return () => clearInterval(intervalId);
         }
-    }, [isLoggedIn, isOnboarded, approvalStatus, fetchConnections, fetchConversations]);
+    }, [isLoggedIn, isOnboarded, approvalStatus, fetchConnections, fetchConversations, fetchReceivedInvites]);
 
 
 
@@ -699,6 +713,7 @@ useEffect(() => {
             if (data.match) {
                 // It's a mutual match!
                 setInterestStatuses(prev => ({ ...prev, [profileId]: 'mutual' }));
+                setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId));
 
                 // Add to connections
                 const matchedProfile = profiles.find(p => p.id === profileId);
@@ -716,6 +731,7 @@ useEffect(() => {
                 // Refresh connections from server
                 fetchConnections();
                 fetchConversations();
+                fetchReceivedInvites();
             } else {
                 setInterestStatuses(prev => ({ ...prev, [profileId]: 'sent' }));
             }
@@ -744,6 +760,7 @@ useEffect(() => {
     const unmatchConnection = async (matchId, profileId) => {
         // Optimistic local cleanup — soft removal only, unlike blockUser
         setConnections(prev => prev.filter(c => (c.id || c) !== profileId));
+        setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId));
         setInterestsSent(prev => prev.filter(id => id !== profileId));
         setInterestStatuses(prev => {
             const next = { ...prev };
@@ -767,6 +784,7 @@ useEffect(() => {
         // Optimistic local cleanup
         setSavedProfiles(prev => prev.filter(id => id !== profileId));
         setConnections(prev => prev.filter(c => (c.id || c) !== profileId));
+        setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId));
         setInterestsSent(prev => prev.filter(id => id !== profileId));
         setInterestStatuses(prev => {
             const next = { ...prev };
@@ -870,6 +888,7 @@ useEffect(() => {
             setSavedProfiles([]);
             setBlockedUsers([]);
             setReportedUsers([]);
+            setReceivedInvites([]);
             setSupportTickets([]);
             setChats({});
             setConversations([]);
@@ -1019,6 +1038,7 @@ useEffect(() => {
             interestStatuses,
             connections,
             setConnections,
+            receivedInvites,
             conversations,
             blockedUsers,
             reportedUsers,
@@ -1055,6 +1075,7 @@ useEffect(() => {
             logout,
             fetchDiscoverProfiles,
             fetchConnections,
+            fetchReceivedInvites,
             fetchConversations,
             loadSocialData
         }}>

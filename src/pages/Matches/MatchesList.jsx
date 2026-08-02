@@ -1,12 +1,11 @@
-import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Heart, ChatCircleText } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { Button } from '../../components/UI/Button';
 
-export const MatchesList = ({ onSelectConnection }) => {
-  const { connections, interestsSent, interestStatuses, profiles, setActiveTab, chats } = useApp();
+export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
+  const { connections, interestsSent, interestStatuses, profiles, receivedInvites, setActiveTab, sendInterest } = useApp();
 
   // Mutual connections where BOTH haven't messaged each other yet
  const activeConnections = connections;
@@ -115,6 +114,50 @@ export const MatchesList = ({ onSelectConnection }) => {
           <div className="empty-pending-wrap font-ui">
             <p className="no-pending-text font-body">
               You don't have any pending sent interests. Let someone know you're interested!
+            </p>
+          </div>
+        )}
+      </section>
+
+      {/* Received Invites Section */}
+      <section className="received-section border-top">
+        <h2 className="section-group-title font-ui">Received Invites ({receivedInvites.length})</h2>
+        {receivedInvites.length > 0 ? (
+          <div className="received-grid">
+            {receivedInvites.map(profile => (
+              <button
+                key={profile.id}
+                type="button"
+                className="received-item-card"
+                onClick={() => onSelectProfile(profile)}
+              >
+                <img src={profile.photo || profile.photos?.[0]} alt={profile.name} className="received-avatar-img" />
+                <div className="received-card-info">
+                  <div className="received-name-row">
+                    <span className="received-name font-ui">{profile.name}</span>
+                    <span className="received-age">, {profile.age}</span>
+                  </div>
+                  <p className="received-meta font-ui">{profile.city} &bull; {profile.relationshipIntent}</p>
+                  <p className="received-story font-body">&ldquo;{profile.story}&rdquo;</p>
+                </div>
+                <Button
+                  variant="primary"
+                  className="accept-invite-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    sendInterest(profile.id);
+                  }}
+                >
+                  <Heart size={16} weight="fill" />
+                  Accept
+                </Button>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-pending-wrap font-ui">
+            <p className="no-pending-text font-body">
+              Invites from people interested in you will appear here.
             </p>
           </div>
         )}
@@ -292,6 +335,98 @@ export const MatchesList = ({ onSelectConnection }) => {
           color: var(--text-secondary);
           font-style: italic;
           text-align: center;
+        }
+
+        .received-section {
+          margin-top: var(--space-6);
+        }
+
+        .received-grid {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-3);
+        }
+
+        .received-item-card {
+          display: flex;
+          align-items: center;
+          width: 100%;
+          text-align: left;
+          background-color: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-lg);
+          padding: var(--space-4);
+          box-shadow: var(--shadow-sm);
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          gap: var(--space-4);
+        }
+
+        .received-item-card:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-md);
+          border-color: var(--burgundy-300);
+        }
+
+        .received-avatar-img {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid #FFFFFF;
+          box-shadow: var(--shadow-sm);
+          flex-shrink: 0;
+        }
+
+        .received-card-info {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .received-name-row {
+          font-size: var(--text-body);
+          font-weight: 700;
+          color: var(--text-primary);
+        }
+
+        .received-age {
+          font-weight: 400;
+          color: var(--text-secondary);
+        }
+
+        .received-meta {
+          font-size: var(--text-caption);
+          color: var(--text-tertiary);
+          font-weight: 500;
+        }
+
+        .received-story {
+          font-size: var(--text-body-sm);
+          color: var(--text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .accept-invite-btn {
+          flex-shrink: 0;
+          padding: var(--space-2) var(--space-4);
+          font-size: var(--text-body-sm);
+        }
+
+        @media (max-width: 560px) {
+          .received-item-card {
+            align-items: flex-start;
+            flex-wrap: wrap;
+          }
+
+          .accept-invite-btn {
+            width: 100%;
+            justify-content: center;
+          }
         }
       `}</style>
     </div>
