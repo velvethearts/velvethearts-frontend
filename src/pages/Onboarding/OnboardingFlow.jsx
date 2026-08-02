@@ -10,9 +10,22 @@ import { PageHeader } from '../../components/UI/PageHeader';
 
 export const OnboardingFlow = () => {
     const { completeOnboarding } = useApp();
-    const [step, setStep] = useState(1);
+
+    const DRAFT_KEY = 'vh-onboarding-draft';
+
+    const loadDraft = () => {
+        try {
+            const saved = localStorage.getItem(DRAFT_KEY);
+            return saved ? JSON.parse(saved) : null;
+        } catch (e) {
+            return null;
+        }
+    };
+    const draft = loadDraft();
+
+    const [step, setStep] = useState(draft?.step || 1);
     console.log("ONBOARDINGFLOW_MOUNT_TEST: OnboardingFlow rendering, step =", step);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState(draft?.formData || {
         name: '',
         dobDay: '',
         dobMonth: '',
@@ -32,11 +45,46 @@ export const OnboardingFlow = () => {
         photos: []
     });
 
-    const [photoPreviews, setPhotoPreviews] = useState([]);
-    const [customGenderText, setCustomGenderText] = useState('');
-    const [customOrientationText, setCustomOrientationText] = useState('');
+    const [photoPreviews, setPhotoPreviews] = useState(draft?.photoPreviews || []);
+    const [customGenderText, setCustomGenderText] = useState(draft?.customGenderText || '');
+    const [customOrientationText, setCustomOrientationText] = useState(draft?.customOrientationText || '');
     const [validationErrors, setValidationErrors] = useState({});
     const [showAllErrors, setShowAllErrors] = useState(false);
+    const [showDraftBanner, setShowDraftBanner] = useState(!!draft);
+
+    const handleStartFresh = () => {
+        if (window.confirm('Discard your saved progress and start the profile from the beginning?')) {
+            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+            setFormData({
+                name: '', dobDay: '', dobMonth: '', dobYear: '', city: '',
+                gender: 'Woman', showGender: true, orientation: 'Straight', showOrientation: true,
+                relationshipIntent: 'Long-term Relationship', relationshipStatus: 'Single',
+                interests: [], story: '', hasDisability: false, disabilityInfo: '',
+                showDisability: false, photos: []
+            });
+            setPhotoPreviews([]);
+            setCustomGenderText('');
+            setCustomOrientationText('');
+            setStep(1);
+            setShowDraftBanner(false);
+        }
+    };
+
+    // Autosave the draft to localStorage whenever the meaningful bits change.
+    // Photos are lightweight Cloudinary URLs (not base64), so this is cheap.
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            try {
+                localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                    step, formData, photoPreviews, customGenderText, customOrientationText
+                }));
+            } catch (e) {
+                // Storage full or unavailable — not fatal, just skip autosave
+                console.warn('Could not save onboarding draft:', e);
+            }
+        }, 400);
+        return () => clearTimeout(timeout);
+    }, [step, formData, photoPreviews, customGenderText, customOrientationText]);
 
     const isDev = import.meta.env.DEV;
 
@@ -500,6 +548,11 @@ export const OnboardingFlow = () => {
                         orientation: finalOrientation,
                         photos: photoPreviews.length > 0 ? photoPreviews : ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500']
                     });
+                    try {
+                        localStorage.removeItem(DRAFT_KEY);
+                    } catch (e) {
+                        // Non-fatal — draft cleanup is best-effort
+                    }
                 } catch (err) {
                     setSubmitError(err.message || 'Failed to save profile. Please try again.');
                 } finally {
@@ -533,6 +586,18 @@ export const OnboardingFlow = () => {
                         ) : null
                     }
                 />
+
+                {showDraftBanner && (
+                    <div className="draft-restored-banner font-ui">
+                        <span>We've restored your progress from where you left off.</span>
+                        <div className="draft-banner-actions">
+                            <button type="button" onClick={handleStartFresh} className="draft-banner-link">Start over</button>
+                            <button type="button" onClick={() => setShowDraftBanner(false)} className="draft-banner-dismiss" aria-label="Dismiss">
+                                <X size={14} />
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Progress Bar */}
                 <div className="progress-container">
@@ -1033,6 +1098,44 @@ export const OnboardingFlow = () => {
           padding: var(--space-4) var(--space-4) 0;
           max-width: 640px;
           margin: 0 auto;
+        }
+
+        /* Draft restored banner */
+        .draft-restored-banner {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--space-3);
+          background-color: var(--bg-accent-subtle, #FCEAEE);
+          border: 1px solid var(--burgundy-200, #E8B8C4);
+          border-radius: var(--radius-md);
+          padding: var(--space-3) var(--space-4);
+          margin-bottom: var(--space-4);
+          font-size: var(--text-body-sm);
+          color: var(--text-secondary);
+        }
+
+        .draft-banner-actions {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+          flex-shrink: 0;
+        }
+
+        .draft-banner-link {
+          color: var(--text-accent, var(--burgundy-500));
+          font-weight: 600;
+          text-decoration: underline;
+          background: none;
+          border: none;
+        }
+
+        .draft-banner-dismiss {
+          color: var(--text-muted);
+          display: flex;
+          align-items: center;
+          background: none;
+          border: none;
         }
 
         /* Progress bar */
