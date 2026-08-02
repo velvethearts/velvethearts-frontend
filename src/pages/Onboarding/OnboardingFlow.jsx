@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../lib/api';
 import { Camera, Info, X } from '@phosphor-icons/react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
@@ -89,21 +90,37 @@ export const OnboardingFlow = () => {
         });
     };
 
-    const handlePhotoUpload = (e) => {
-        const files = Array.from(e.target.files);
+    const [uploadingCount, setUploadingCount] = useState(0);
+    const [photoUploadError, setPhotoUploadError] = useState('');
+
+    const handlePhotoUpload = async (e) => {
+        const remainingSlots = 6 - photoPreviews.length;
+        const files = Array.from(e.target.files).slice(0, remainingSlots);
+        e.target.value = ''; // allow re-selecting the same file later
         if (files.length === 0) return;
 
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
+        setPhotoUploadError('');
+        setUploadingCount(prev => prev + files.length);
+
+        for (const file of files) {
+            try {
+                // Upload to Cloudinary via the backend and store only the
+                // returned secure URL — never send raw/base64 image data
+                // in the profile save payload, it blows past the JSON
+                // body-size limit (especially full-resolution phone photos).
+                const result = await api.uploadPhoto(file);
                 setPhotoPreviews(prev => {
-                    const next = [...prev, reader.result].slice(0, 6);
+                    const next = [...prev, result.secureUrl].slice(0, 6);
                     handleChange('photos', next);
                     return next;
                 });
-            };
-            reader.readAsDataURL(file);
-        });
+            } catch (err) {
+                console.error('Photo upload failed:', err);
+                setPhotoUploadError(err.message || 'Failed to upload photo. Please try again.');
+            } finally {
+                setUploadingCount(prev => Math.max(0, prev - 1));
+            }
+        }
     };
 
     const removePhoto = (index) => {
@@ -444,7 +461,7 @@ export const OnboardingFlow = () => {
                 case 4:
                     return formData.interests.length >= 3 && formData.story.trim().length >= 20 && !validationErrors.story;
                 case 5:
-                    return photoPreviews.length >= 1;
+                    return photoPreviews.length >= 1 && uploadingCount === 0;
                 case 6:
                     return true;
                 default:
@@ -874,6 +891,7 @@ export const OnboardingFlow = () => {
                                 <div className="photo-grid">
                                     {Array.from({ length: 6 }).map((_, idx) => {
                                         const preview = photoPreviews[idx];
+                                        const isUploadingSlot = !preview && idx < photoPreviews.length + uploadingCount;
                                         return (
                                             <div key={idx} className={`photo-slot ${idx === 0 ? 'primary-slot' : ''}`}>
                                                 {preview ? (
@@ -884,14 +902,19 @@ export const OnboardingFlow = () => {
                                                         </button>
                                                         {idx === 0 && <span className="primary-photo-label font-ui">Primary Photo</span>}
                                                     </div>
+                                                ) : isUploadingSlot ? (
+                                                    <div className="photo-preview-wrap photo-uploading-slot">
+                                                        <span className="upload-btn-text font-ui">Uploading…</span>
+                                                    </div>
                                                 ) : (
-                                                    <label className="photo-upload-label">
+                                                    <label className={`photo-upload-label ${uploadingCount > 0 ? 'is-disabled' : ''}`}>
                                                         <input
                                                             type="file"
                                                             accept="image/*"
                                                             onChange={handlePhotoUpload}
                                                             className="sr-only"
                                                             multiple={idx === 0}
+                                                            disabled={uploadingCount > 0}
                                                         />
                                                         <Camera size={24} className="camera-upload-icon" />
                                                         <span className="upload-btn-text font-ui">Add Photo</span>
@@ -901,6 +924,10 @@ export const OnboardingFlow = () => {
                                         );
                                     })}
                                 </div>
+
+                                {photoUploadError && (
+                                    <div className="vh-input-error font-ui" role="alert" style={{ marginBottom: '16px' }}>{photoUploadError}</div>
+                                )}
 
                                 {validationErrors.photos && (
                                     <div className="vh-input-error font-ui" role="alert" style={{ marginBottom: '16px' }}>{validationErrors.photos}</div>
@@ -1350,6 +1377,28 @@ export const OnboardingFlow = () => {
           cursor: pointer;
         }
 
+        .photo-upload-label.is-disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
+
+        .photo-uploading-slot {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: var(--bg-surface-warm);
+        }
+
+        .photo-uploading-slot .upload-btn-text {
+          color: var(--text-muted);
+          animation: pulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+
         .camera-upload-icon {
           color: var(--charcoal-400);
         }
@@ -1610,4 +1659,3 @@ export const OnboardingFlow = () => {
             </div>
         );
     };
-
