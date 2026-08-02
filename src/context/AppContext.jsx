@@ -256,6 +256,7 @@ export const AppProvider = ({ children }) => {
                             id: m.id,
                             sender: m.senderId === conv.partnerId ? 'partner' : 'user',
                             text: m.text,
+                            isDeleted: m.isDeleted,
                             timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         })).reverse();
 
@@ -386,6 +387,7 @@ export const AppProvider = ({ children }) => {
                                     id: message.id,
                                     sender: message.senderId === conv.partnerId ? 'partner' : 'user',
                                     text: message.text,
+                                    isDeleted: message.isDeleted,
                                     timestamp: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                                 };
                                 return {
@@ -403,6 +405,7 @@ export const AppProvider = ({ children }) => {
                                 id: message.id,
                                 sender: message.senderId === conv.partnerId ? 'partner' : 'user',
                                 text: message.text,
+                                isDeleted: message.isDeleted,
                                 timestamp: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                             };
                             
@@ -412,6 +415,35 @@ export const AppProvider = ({ children }) => {
                             };
                         });
                     }
+                });
+
+                socket.on('message_deleted', ({ conversationId, messageId }) => {
+                    const conv = conversationsRef.current.find(c => c.id === conversationId);
+                    if (!conv) return;
+
+                    setChats(prevChats => ({
+                        ...prevChats,
+                        [conv.partnerId]: (prevChats[conv.partnerId] || []).map(message =>
+                            message.id === messageId
+                                ? { ...message, text: 'This message was deleted', isDeleted: true }
+                                : message
+                        )
+                    }));
+                });
+
+                socket.on('conversation_messages_deleted', ({ conversationId, senderId }) => {
+                    const conv = conversationsRef.current.find(c => c.id === conversationId);
+                    if (!conv) return;
+
+                    setChats(prevChats => ({
+                        ...prevChats,
+                        [conv.partnerId]: (prevChats[conv.partnerId] || []).map(message => {
+                            const sender = senderId === conv.partnerId ? 'partner' : 'user';
+                            return message.sender === sender
+                                ? { ...message, text: 'This message was deleted', isDeleted: true }
+                                : message;
+                        })
+                    }));
                 });
 
                 return () => {
@@ -824,6 +856,7 @@ useEffect(() => {
             id: messageId,
             sender: 'user',
             text,
+            isDeleted: false,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
@@ -847,6 +880,64 @@ useEffect(() => {
             } catch (err) {
                 console.error('Failed to send message via API:', err);
             }
+        }
+    };
+
+    const deleteMessage = async (profileId, messageId) => {
+        const previous = chats[profileId] || [];
+
+        setChats(prev => ({
+            ...prev,
+            [profileId]: (prev[profileId] || []).map(message =>
+                message.id === messageId
+                    ? { ...message, text: 'This message was deleted', isDeleted: true }
+                    : message
+            )
+        }));
+
+        if (!api.isConfigured) return;
+
+        try {
+            await api.deleteMessage(messageId);
+        } catch (err) {
+            console.error('Failed to delete message:', err);
+            setChats(prev => ({
+                ...prev,
+                [profileId]: previous
+            }));
+            throw err;
+        }
+    };
+
+    const deleteConversationMessages = async (profileId) => {
+        const previous = chats[profileId] || [];
+
+        setChats(prev => ({
+            ...prev,
+            [profileId]: (prev[profileId] || []).map(message =>
+                message.sender === 'user'
+                    ? { ...message, text: 'This message was deleted', isDeleted: true }
+                    : message
+            )
+        }));
+
+        if (!api.isConfigured) return;
+
+        try {
+            const conversation = conversations.find(c => c.partnerId === profileId);
+            if (!conversation) {
+                throw new Error('Conversation not found');
+            }
+
+            await api.deleteConversationMessages(conversation.id);
+            fetchConversations();
+        } catch (err) {
+            console.error('Failed to delete chat messages:', err);
+            setChats(prev => ({
+                ...prev,
+                [profileId]: previous
+            }));
+            throw err;
         }
     };
 
@@ -904,6 +995,8 @@ useEffect(() => {
             reportUser,
             submitSupportTicket,
             sendMessage,
+            deleteMessage,
+            deleteConversationMessages,
             logout,
             fetchDiscoverProfiles,
             fetchConnections,

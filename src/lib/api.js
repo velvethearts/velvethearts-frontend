@@ -213,6 +213,15 @@ export const api = {
         });
     },
 
+    deleteConversationMessages(conversationId) {
+        return request(
+            `/api/v1/chat/conversations/${conversationId}/messages`,
+            {
+                method: 'DELETE'
+            }
+        );
+    },
+
     // ==========================================================
     // UPLOAD
     // ==========================================================

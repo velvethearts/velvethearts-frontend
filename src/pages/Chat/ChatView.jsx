@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
-import { PaperPlaneRight, ArrowLeft, DotsThreeVertical, ShieldWarning, Prohibit, ChatCircleText } from '@phosphor-icons/react';
+import { PaperPlaneRight, ArrowLeft, DotsThreeVertical, ShieldWarning, Prohibit, ChatCircleText, Trash } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
-import { Button } from '../../components/UI/Button';
 import { getSocket, joinConversation, leaveConversation, emitStartTyping, emitStopTyping } from '../../lib/socket';
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
-  const { connections, conversations, chats, sendMessage, unmatchConnection, blockUser, reportUser } = useApp();
+  const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, unmatchConnection, blockUser, reportUser } = useApp();
   const [activeChatId, setActiveChatId] = useState(preselectedConnectionId || null);
   const [messageText, setMessageText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -137,6 +136,30 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     }
   };
 
+  const handleDeleteMessage = async (messageId) => {
+    if (!activeChatId) return;
+    if (!window.confirm('Delete this message for everyone?')) return;
+
+    try {
+      await deleteMessage(activeChatId, messageId);
+    } catch (err) {
+      alert(err.message || 'Could not delete this message.');
+    }
+  };
+
+  const handleDeleteChat = async () => {
+    if (!activeChatId || !activePartner) return;
+    const confirmed = window.confirm(`Delete all messages you sent to ${activePartner.name}? Their messages will stay in the chat.`);
+    if (!confirmed) return;
+
+    try {
+      await deleteConversationMessages(activeChatId);
+      setShowDropdown(false);
+    } catch (err) {
+      alert(err.message || 'Could not delete this chat.');
+    }
+  };
+
   const handleBackToList = () => {
     setActiveChatId(null);
     if (onClearPreselected) onClearPreselected();
@@ -239,6 +262,10 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                         <Prohibit size={16} />
                         <span>Remove Connection</span>
                       </button>
+                      <button onClick={handleDeleteChat} role="menuitem" className="dropdown-item danger">
+                        <Trash size={16} />
+                        <span>Delete my chat</span>
+                      </button>
                       <button onClick={handleBlock} role="menuitem" className="dropdown-item danger">
                         <ShieldWarning size={16} />
                         <span>Block user</span>
@@ -267,7 +294,18 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                           <img src={activePartner.photo} alt={activePartner.name} className="message-bubble-img" />
                         )}
                         <div className="message-bubble-content">
-                          <div className="message-bubble-text font-body">{msg.text}</div>
+                          <div className={`message-bubble-text font-body ${msg.isDeleted ? 'deleted' : ''}`}>{msg.text}</div>
+                          {isUser && !msg.isDeleted && (
+                            <button
+                              type="button"
+                              className="message-delete-btn"
+                              onClick={() => handleDeleteMessage(msg.id)}
+                              aria-label="Delete message"
+                              title="Delete message"
+                            >
+                              <Trash size={14} />
+                            </button>
+                          )}
                           <span className="message-bubble-time font-ui">{msg.timestamp}</span>
                         </div>
                       </div>
@@ -602,6 +640,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           display: flex;
           flex-direction: column;
           gap: 2px;
+          position: relative;
         }
 
         .message-bubble-text {
@@ -622,6 +661,41 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           color: var(--text-primary);
           border: 1px solid var(--border-subtle);
           border-bottom-left-radius: var(--radius-sm);
+        }
+
+        .message-bubble-text.deleted {
+          font-style: italic;
+          opacity: 0.72;
+        }
+
+        .message-delete-btn {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: absolute;
+          top: 50%;
+          right: calc(100% + var(--space-2));
+          transform: translateY(-50%);
+          color: var(--text-muted);
+          background-color: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity var(--duration-fast), color var(--duration-fast), background-color var(--duration-fast);
+        }
+
+        .chat-message-bubble-row.user-sent:hover .message-delete-btn,
+        .message-delete-btn:focus-visible {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .message-delete-btn:hover {
+          color: var(--error);
+          background-color: var(--error-light);
         }
 
         .message-bubble-time {
