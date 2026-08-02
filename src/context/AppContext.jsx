@@ -911,6 +911,9 @@ useEffect(() => {
 
     const deleteConversationMessages = async (profileId) => {
         const previous = chats[profileId] || [];
+        const userMessagesToDelete = previous.filter(message =>
+            message.sender === 'user' && !message.isDeleted
+        );
 
         setChats(prev => ({
             ...prev,
@@ -932,6 +935,22 @@ useEffect(() => {
             await api.deleteConversationMessages(conversation.id);
             fetchConversations();
         } catch (err) {
+            const canFallbackToMessageDeletes =
+                err.status === 404 ||
+                err.message?.toLowerCase().includes('resource not found');
+
+            if (canFallbackToMessageDeletes) {
+                const results = await Promise.allSettled(
+                    userMessagesToDelete.map(message => api.deleteMessage(message.id))
+                );
+                const failed = results.find(result => result.status === 'rejected');
+
+                if (!failed) {
+                    fetchConversations();
+                    return;
+                }
+            }
+
             console.error('Failed to delete chat messages:', err);
             setChats(prev => ({
                 ...prev,
