@@ -6,6 +6,7 @@ import { Input } from '../../components/UI/Input';
 import { Textarea } from '../../components/UI/Textarea';
 import { Select } from '../../components/UI/Select';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { getProfilePhoto } from '../../utils/avatar';
 
 export const EditProfile = ({ onBack }) => {
   const { userProfile, setUserProfile } = useApp();
@@ -331,7 +332,7 @@ export const EditProfile = ({ onBack }) => {
             <div className="profile-preview-card">
               <div className="preview-img-wrap">
                 <img 
-                  src={localProfile.photos?.[0] || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500"} 
+                  src={getProfilePhoto(localProfile)} 
                   alt={localProfile.name || 'Preview'} 
                   className="preview-photo"
                 />

@@ -4,6 +4,7 @@ import { CheckCircle, Heart, ShieldWarning, Prohibit, X } from '@phosphor-icons/
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
+import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
 
 export const ProfileDetail = ({ profile, onBack }) => {
   const { interestsSent, sendInterest, reportUser, blockUser } = useApp();
@@ -69,9 +70,13 @@ export const ProfileDetail = ({ profile, onBack }) => {
         {/* Asymmetric Profile Structure */}
         <div className="detail-image-panel">
           <img 
-            src={profile.photo || profile.photos?.[0]} 
+            src={getProfilePhoto(profile)} 
             alt={profile.name} 
             className="detail-hero-img" 
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = getDefaultAvatar(profile?.gender);
+            }}
           />
           <div className="detail-img-badges">
             {profile.verified && (

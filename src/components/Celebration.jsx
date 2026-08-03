@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Heart } from '@phosphor-icons/react';
+import { getProfilePhoto, getDefaultAvatar } from '../utils/avatar';
 
 export const Celebration = () => {
   const { showCelebration, setShowCelebration, userProfile, setActiveTab } = useApp();
@@ -70,11 +71,11 @@ export const Celebration = () => {
         <div className="avatar-meet-container">
           <div className="celebration-avatar user-avatar-slide">
             <img 
-              src={userProfile.photos[0] || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500"} 
+              src={getProfilePhoto(userProfile)} 
               alt="You" 
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500";
+                e.currentTarget.src = getDefaultAvatar(userProfile?.gender);
               }}
             />
             <span className="avatar-label font-ui">You</span>
@@ -86,11 +87,11 @@ export const Celebration = () => {
 
           <div className="celebration-avatar partner-avatar-slide">
             <img
-              src={showCelebration.photos?.[0] || showCelebration.photo || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500"}
+              src={getProfilePhoto(showCelebration)}
               alt={showCelebration.name}
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500";
+                e.currentTarget.src = getDefaultAvatar(showCelebration?.gender);
               }}
             />
             <span className="avatar-label font-ui">{showCelebration.name}</span>

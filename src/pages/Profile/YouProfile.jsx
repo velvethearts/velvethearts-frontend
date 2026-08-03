@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { PencilSimple, Sliders, ShieldCheck, SignOut } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Card } from '../../components/UI/Card';
+import { getProfilePhoto } from '../../utils/avatar';
 
 export const YouProfile = ({ onEditProfile }) => {
   const { userProfile, setActiveTab, logout } = useApp();
@@ -31,7 +32,7 @@ export const YouProfile = ({ onEditProfile }) => {
           <div className="profile-preview-card">
             <div className="preview-img-wrap">
               <img 
-                src={userProfile.photos?.[0] || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500"} 
+                src={getProfilePhoto(userProfile)} 
                 alt={userProfile.name} 
                 className="preview-photo"
               />

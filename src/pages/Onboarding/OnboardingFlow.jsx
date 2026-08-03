@@ -7,6 +7,7 @@ import { Input } from '../../components/UI/Input';
 import { Textarea } from '../../components/UI/Textarea';
 import { Select } from '../../components/UI/Select';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { getDefaultAvatar } from '../../utils/avatar';
 
 export const OnboardingFlow = () => {
     const { completeOnboarding, logout } = useApp();
@@ -546,7 +547,7 @@ export const OnboardingFlow = () => {
                         ...formData,
                         gender: finalGender,
                         orientation: finalOrientation,
-                        photos: photoPreviews.length > 0 ? photoPreviews : ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500']
+                        photos: photoPreviews.length > 0 ? photoPreviews : [getDefaultAvatar(finalGender)]
                     });
                     try {
                         localStorage.removeItem(DRAFT_KEY);
@@ -1027,7 +1028,7 @@ export const OnboardingFlow = () => {
                                     <div className="profile-gallery-card">
                                         <div className="profile-img-container">
                                             <img
-                                                src={photoPreviews[0] || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500"}
+                                                src={photoPreviews[0] || getDefaultAvatar(formData.gender === 'Prefer to self-describe' ? customGenderText : formData.gender)}
                                                 alt={formData.name || 'Preview'}
                                             />
                                             <div className="profile-badge-strip">

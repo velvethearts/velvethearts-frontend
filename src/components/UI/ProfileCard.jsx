@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CheckCircle, Heart, DotsThreeVertical, Bookmark, Prohibit, ShieldWarning } from '@phosphor-icons/react';
+import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
 
 export const ProfileCard = ({
   profile,
@@ -48,9 +49,13 @@ export const ProfileCard = ({
     >
       <div className="profile-img-wrap">
         <img
-            src={profile.photo || profile.photos?.[0]}
+            src={getProfilePhoto(profile)}
             alt={`Photo of ${profile.name}`}
             className="profile-card-image"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = getDefaultAvatar(profile?.gender);
+            }}
         />
         
         {/* Verification Badges */}

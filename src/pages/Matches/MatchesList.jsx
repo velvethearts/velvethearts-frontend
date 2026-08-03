@@ -3,11 +3,10 @@ import { Heart, ChatCircleText } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { Button } from '../../components/UI/Button';
+import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
 
 export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
   const { connections, interestsSent, interestStatuses, profiles, receivedInvites, setActiveTab, sendInterest } = useApp();
-
-  // Mutual connections where BOTH haven't messaged each other yet
  const activeConnections = connections;
 
   // Sent interests that are still pending matching (status 'sent' or 'pending')
@@ -43,7 +42,15 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                   if (e.key === 'Enter') onSelectConnection(conn);
                 }}
               >
-                <img src={conn.photo} alt={conn.name} className="connection-avatar-img" />
+                <img
+                  src={getProfilePhoto(conn)}
+                  alt={conn.name}
+                  className="connection-avatar-img"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = getDefaultAvatar(conn?.gender);
+                  }}
+                />
                 
                 <div className="connection-card-info">
                   <div className="connection-name-row">
@@ -79,8 +86,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                 <path d="M50 24C50 24 45 35 45 42C45 46.5 47 48 50 48C53 48 55 46.5 55 42C55 35 50 24 50 24Z" fill="var(--warning)" />
                 <path d="M50 32C50 32 47 38 47 42C47 44.5 48 45 50 45C52 45 53 44.5 53 42C53 38 50 32 50 32Z" fill="#FFFFFF" />
                 <path d="M50 46V52" stroke="var(--charcoal-600)" strokeWidth="2" strokeLinecap="round" />
-                <rect x="42" y="52" width="16" height="28" rx="2" fill="var(--burgundy-500)" />
-                <path d="M30 80H70" stroke="var(--border-default)" strokeWidth="3" strokeLinecap="round" />
+                <rect x="42" y="52" width="16" height="28" rx="2" fill="var(--burgundy-500)" />                <path d="M30 80H70" stroke="var(--border-default)" strokeWidth="3" strokeLinecap="round" />
               </svg>
             }
           />
@@ -96,7 +102,15 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
               const status = interestStatuses[profile.id];
               return (
                 <div key={profile.id} className="pending-item-card">
-                  <img src={profile.photo} alt={profile.name} className="pending-avatar-img" />
+                  <img
+                    src={getProfilePhoto(profile)}
+                    alt={profile.name}
+                    className="pending-avatar-img"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = getDefaultAvatar(profile?.gender);
+                    }}
+                  />
                   <div className="pending-card-info">
                     <div className="pending-name-row">
                       <span className="pending-name font-ui">{profile.name}</span>
@@ -131,7 +145,15 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                 className="received-item-card"
                 onClick={() => onSelectProfile(profile)}
               >
-                <img src={profile.photo || profile.photos?.[0]} alt={profile.name} className="received-avatar-img" />
+                <img
+                  src={getProfilePhoto(profile)}
+                  alt={profile.name}
+                  className="received-avatar-img"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = getDefaultAvatar(profile?.gender);
+                  }}
+                />
                 <div className="received-card-info">
                   <div className="received-name-row">
                     <span className="received-name font-ui">{profile.name}</span>
