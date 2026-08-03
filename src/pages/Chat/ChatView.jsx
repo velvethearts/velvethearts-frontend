@@ -33,7 +33,18 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     if (!partner) return false;
     return Boolean(onlineUserIds && (onlineUserIds.has(partner.userId) || onlineUserIds.has(partner.id)));
   };
-  const [activeChatId, setActiveChatId] = useState(preselectedConnectionId || null);
+  const [activeChatId, setActiveChatIdState] = useState(() => {
+    return preselectedConnectionId || sessionStorage.getItem('vh-active-chat-id') || null;
+  });
+
+  const setActiveChatId = (id) => {
+    if (id) {
+      sessionStorage.setItem('vh-active-chat-id', id);
+    } else {
+      sessionStorage.removeItem('vh-active-chat-id');
+    }
+    setActiveChatIdState(id);
+  };
   const [messageText, setMessageText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [localIsTyping, setLocalIsTyping] = useState(false);
@@ -282,11 +293,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     if (onClearPreselected) onClearPreselected();
   };
 
-  const activeMessagesRaw = activeChatId ? chats[activeChatId] || [] : [];
+  const activeMessagesRaw = activeChatId ? (
+    chats[activeChatId] || 
+    chats[conversationId] || 
+    (activePartner?.id ? chats[activePartner.id] : null) || 
+    (activePartner?.userId ? chats[activePartner.userId] : null) || 
+    []
+  ) : [];
   const activeMessages = [];
   const seenIds = new Set();
   for (const m of activeMessagesRaw) {
-    if (!seenIds.has(m.id)) {
+    if (!seenIds.has(m.id) && !m.isDeleted) {
       seenIds.add(m.id);
       activeMessages.push(m);
     }

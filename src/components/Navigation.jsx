@@ -5,17 +5,17 @@ import { ThemeToggle } from './UI/ThemeToggle';
 import logo from "../assets/velvet-heart-logo.png";
 
 export const Navigation = ({ children }) => {
-  const { activeTab, setActiveTab, userProfile, userRole, notificationUnreadCount } = useApp();
+  const { activeTab, setActiveTab, userProfile, userRole, notificationUnreadCount, chatUnreadCount } = useApp();
 
   const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
   const navItems = [
     { id: 'discover', label: 'Discover', icon: Compass },
     { id: 'matches', label: 'Matches', icon: Heart },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'chat', label: 'Chat', icon: Chats },
-  { id: 'profile', label: 'You', icon: User },
-  ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: Crown }] : []),
+    { id: 'notifications', label: 'Notifications', icon: Bell, badge: notificationUnreadCount },
+    { id: 'chat', label: 'Chat', icon: Chats, badge: chatUnreadCount },
+    { id: 'profile', label: 'You', icon: User },
+    ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: Crown }] : []),
   ];
 
   return (
@@ -31,6 +31,7 @@ export const Navigation = ({ children }) => {
             {navItems.map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
+              const badgeCount = item.badge || 0;
               return (
                 <li key={item.id}>
                   <button 
@@ -40,8 +41,8 @@ export const Navigation = ({ children }) => {
                   >
                     <Icon size={24} weight={isActive ? 'fill' : 'regular'} />
                     <span>{item.label}</span>
-                    {item.id === 'notifications' && notificationUnreadCount > 0 && (
-                      <span className="nav-notif-badge">{notificationUnreadCount > 99 ? '99+' : notificationUnreadCount}</span>
+                    {badgeCount > 0 && (
+                      <span className="nav-notif-badge">{badgeCount > 99 ? '99+' : badgeCount}</span>
                     )}
                     {isActive && <span className="active-dot-sidebar" />}
                   </button>
@@ -90,6 +91,7 @@ export const Navigation = ({ children }) => {
           {navItems.map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
+            const badgeCount = item.badge || 0;
             return (
               <li key={item.id}>
                 <button 
@@ -97,7 +99,12 @@ export const Navigation = ({ children }) => {
                   className={`mobile-nav-link ${isActive ? 'active' : ''}`}
                   aria-label={item.label}
                 >
-                  <Icon size={24} weight={isActive ? 'fill' : 'regular'} />
+                  <div className="mobile-icon-wrap">
+                    <Icon size={24} weight={isActive ? 'fill' : 'regular'} />
+                    {badgeCount > 0 && (
+                      <span className="mobile-nav-badge">{badgeCount > 99 ? '99+' : badgeCount}</span>
+                    )}
+                  </div>
                   <span className="mobile-nav-label">{item.label}</span>
                 </button>
               </li>
@@ -312,6 +319,31 @@ export const Navigation = ({ children }) => {
 
         .mobile-nav-link.active {
           color: var(--text-accent);
+        }
+
+        .mobile-icon-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .mobile-nav-badge {
+          position: absolute;
+          top: -4px;
+          right: -8px;
+          min-width: 16px;
+          height: 16px;
+          padding: 0 4px;
+          border-radius: 999px;
+          background-color: var(--text-accent);
+          color: var(--bg-surface);
+          font-size: 10px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
         }
 
         .mobile-nav-label {

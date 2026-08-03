@@ -18,7 +18,7 @@ import { EditProfile } from './pages/Profile/EditProfile';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { SafetyCenter } from './pages/Safety/SafetyCenter';
 import { NotificationsPage } from './pages/Notifications/NotificationsPage';
-
+import { ToastContainer } from './components/UI/ToastContainer';
 
 const AuthLoadingScreen = () => {
   return (
@@ -132,8 +132,6 @@ function AppContent() {
   }, [deepLinkConversationId, setActiveTab, setDeepLinkConversationId]);
 
   const renderActivePage = () => {
-   
-
     switch (activeTab) {
       case 'discover':
         if (selectedProfile) {
@@ -180,9 +178,8 @@ function AppContent() {
       case 'safety':
         return <SafetyCenter />;
 
-        
       default:
-      return <DiscoverFeed onSelectProfile={setSelectedProfile} />;
+        return <DiscoverFeed onSelectProfile={setSelectedProfile} />;
     }
   };
 
@@ -197,16 +194,16 @@ function AppContent() {
       return <AuthFlow onBack={() => setShowAuth(false)} initialMode={authInitialMode} />;
     }
     return (
-        <LandingPage
-            onGetStarted={() => {
-                setAuthInitialMode('signup');
-                setShowAuth(true);
-            }}
-            onSignIn={() => {
-                setAuthInitialMode('login');
-                setShowAuth(true);
-            }}
-        />
+      <LandingPage
+        onGetStarted={() => {
+          setAuthInitialMode('signup');
+          setShowAuth(true);
+        }}
+        onSignIn={() => {
+          setAuthInitialMode('login');
+          setShowAuth(true);
+        }}
+      />
     );
   }
 
@@ -229,6 +226,7 @@ function App() {
       <AppProvider>
         <AppContent />
         <Celebration />
+        <ToastContainer />
       </AppProvider>
     </ErrorBoundary>
   );

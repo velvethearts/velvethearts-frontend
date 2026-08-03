@@ -24,9 +24,12 @@ const getStoredChatClears = () => {
     }
 };
 
-const setStoredChatClear = (profileId) => {
+const setStoredChatClear = (...ids) => {
     const clears = getStoredChatClears();
-    clears[profileId] = new Date().toISOString();
+    const now = new Date().toISOString();
+    ids.forEach(id => {
+        if (id) clears[id] = now;
+    });
     localStorage.setItem(CHAT_CLEARS_STORAGE_KEY, JSON.stringify(clears));
 };
 
@@ -210,7 +213,49 @@ export const AppProvider = ({ children }) => {
     const [onlineUserIds, setOnlineUserIds] = useState(new Set());
 
     // UI state
-    const [activeTab, setActiveTab] = useState('discover');
+    const [activeTab, setActiveTabState] = useState(() => {
+        return sessionStorage.getItem('vh-active-tab') || 'discover';
+    });
+
+    const setActiveTab = useCallback((tab) => {
+        sessionStorage.setItem('vh-active-tab', tab);
+        setActiveTabState(tab);
+    }, []);
+
+    const [toastNotifications, setToastNotifications] = useState([]);
+
+    const addToast = useCallback((toast) => {
+        const id = Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+        const newToast = { id, ...toast };
+        setToastNotifications(prev => [newToast, ...prev].slice(0, 3));
+
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                const ctx = new AudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+            }
+        } catch (e) { }
+
+        setTimeout(() => {
+            setToastNotifications(prev => prev.filter(t => t.id !== id));
+        }, 5000);
+    }, []);
+
+    const removeToast = useCallback((id) => {
+        setToastNotifications(prev => prev.filter(t => t.id !== id));
+    }, []);
+
     const [filters, setFilters] = useState({
         gender: 'All',
         relationshipIntent: 'All',
@@ -241,6 +286,8 @@ export const AppProvider = ({ children }) => {
             setIsOnboarded(true);
             setUserProfile(prev => ({
                 ...prev,
+                id: profile.id || prev.id || '',
+                userId: profile.userId || user.id || prev.userId || '',
                 name: profile.name || '',
                 dobDay: profile.dobDay || profile.birthDay || '',
                 dobMonth: profile.dobMonth || profile.birthMonth || '',
@@ -355,10 +402,13 @@ export const AppProvider = ({ children }) => {
                 try {
                     const messages = await api.getMessages(conv.id);
                     if (Array.isArray(messages)) {
-                        const clearedAt = chatClears[conv.partnerId];
-                        const visibleMessages = clearedAt
-                            ? messages.filter(m => new Date(m.createdAt) > new Date(clearedAt))
-                            : messages;
+                        const clearedAt = chatClears[conv.partnerId] || chatClears[conv.id];
+                        const visibleMessages = messages.filter(m => {
+                            if (m.isDeleted) return false;
+                            if (clearedAt && new Date(m.createdAt) <= new Date(clearedAt)) return false;
+                            return true;
+                        });
+
                         const mapped = visibleMessages.map(m => ({
                             id: m.id,
                             sender: m.senderId === conv.partnerId ? 'partner' : 'user',
@@ -480,6 +530,17 @@ export const AppProvider = ({ children }) => {
         conversationsRef.current = conversations;
     }, [conversations]);
 
+    const connectionsRef = useRef(connections);
+    useEffect(() => {
+        connectionsRef.current = connections;
+    }, [connections]);
+
+    // Track the current user's userId for socket message identification
+    const currentUserIdRef = useRef(userProfile.userId || userProfile.id || '');
+    useEffect(() => {
+        currentUserIdRef.current = userProfile.userId || userProfile.id || '';
+    }, [userProfile.userId, userProfile.id]);
+
     useEffect(() => {
         if (isLoggedIn && isOnboarded && approvalStatus === 'approved') {
           const token = api.tokenStore.getToken();
@@ -487,18 +548,49 @@ export const AppProvider = ({ children }) => {
                 const socket = connectSocket(token);
 
                 socket.on('new_message', ({ conversationId, message }) => {
+                    if (!message) return;
+
                     const conv = conversationsRef.current.find(c => c.id === conversationId);
+                    const myUserId = currentUserIdRef.current;
+                    const isMySentMessage = message.senderId === myUserId;
+
+                    const partnerConn = connectionsRef.current.find(c => 
+                        c.id === message.senderId || 
+                        c.userId === message.senderId || 
+                        (conv && (c.id === conv.partnerId || c.userId === conv.partnerId))
+                    );
+
+                    // Resolve partnerId: if message is from me, look up partner from conversation; otherwise sender is partner
+                    let partnerId;
                     if (conv) {
+                        partnerId = conv.partnerId;
+                    } else if (!isMySentMessage) {
+                        partnerId = partnerConn?.id || partnerConn?.userId || message.senderId;
+                    } else {
+                        // Own message echo without a known conversation — find partner from connections
+                        partnerId = partnerConn?.id || partnerConn?.userId || null;
+                    }
+
+                    if (partnerId) {
+                        const isFromPartner = !isMySentMessage;
+
+                        const formatted = {
+                            id: message.id,
+                            sender: isFromPartner ? 'partner' : 'user',
+                            text: message.text || '',
+                            attachments: message.attachments || [],
+                            isDeleted: Boolean(message.isDeleted),
+                            timestamp: new Date(message.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        };
+
                         setChats(prevChats => {
-                            const current = prevChats[conv.partnerId] || [];
-                            
-                            // Find if there is an optimistic message with the same ID or content
+                            const current = prevChats[partnerId] || prevChats[conversationId] || (partnerConn?.id ? prevChats[partnerConn.id] : []) || [];
                             let optIndex = -1;
                             for (let i = current.length - 1; i >= 0; i--) {
                                 const item = current[i];
                                 if (
                                     item.id === message.id ||
-                                    (item.id.toString().includes('-') && (
+                                    (typeof item.id === 'string' && item.id.includes('-') && (
                                         (message.text && item.text === message.text) ||
                                         (Array.isArray(message.attachments) && message.attachments.length > 0)
                                     ))
@@ -508,34 +600,62 @@ export const AppProvider = ({ children }) => {
                                 }
                             }
 
-                            const formatted = {
-                                id: message.id,
-                                sender: message.senderId === conv.partnerId ? 'partner' : 'user',
-                                text: message.text,
-                                attachments: message.attachments || [],
-                                isDeleted: Boolean(message.isDeleted),
-                                timestamp: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                            };
-
+                            let updated;
                             if (optIndex !== -1) {
-                                const updated = [...current];
+                                updated = [...current];
                                 updated[optIndex] = formatted;
-                                return {
-                                    ...prevChats,
-                                    [conv.partnerId]: updated
-                                };
-                            }
-
-                            // Otherwise, check for duplicate and append
-                            if (current.some(m => m.id === message.id)) {
-                                return prevChats;
+                            } else if (!current.some(m => m.id === message.id)) {
+                                updated = [...current, formatted];
+                            } else {
+                                updated = current;
                             }
 
                             return {
                                 ...prevChats,
-                                [conv.partnerId]: [...current, formatted]
+                                [partnerId]: updated,
+                                ...(conversationId ? { [conversationId]: updated } : {}),
+                                ...(partnerConn?.id ? { [partnerConn.id]: updated } : {})
                             };
                         });
+
+                        // Update conversation preview and unread count in conversations state
+                        setConversations(prevConvs => {
+                            const exists = prevConvs.some(c => c.id === conversationId || c.partnerId === partnerId);
+                            if (exists) {
+                                return prevConvs.map(c => {
+                                    if (c.id === conversationId || c.partnerId === partnerId) {
+                                        const isPartnerSender = message.senderId === c.partnerId;
+                                        return {
+                                            ...c,
+                                            lastMessage: message.isDeleted ? 'Message deleted' : (message.text || 'Sent an attachment'),
+                                            lastMessageTime: message.createdAt || new Date().toISOString(),
+                                            unreadCount: isPartnerSender ? (c.unreadCount || 0) + 1 : (c.unreadCount || 0)
+                                        };
+                                    }
+                                    return c;
+                                });
+                            } else {
+                                fetchConversations();
+                                return prevConvs;
+                            }
+                        });
+
+                        // Trigger Toast notification if message is from partner and user is not actively chatting with them
+                        if (isFromPartner) {
+                            const activeTabCur = sessionStorage.getItem('vh-active-tab');
+                            const activeChatCur = sessionStorage.getItem('vh-active-chat-id');
+                            const isCurrentlyChatting = activeTabCur === 'chat' && activeChatCur === partnerId;
+
+                            if (!isCurrentlyChatting) {
+                                addToast({
+                                    partnerId,
+                                    conversationId,
+                                    title: partnerConn ? partnerConn.name : 'New Message',
+                                    message: message.text || 'Sent an attachment',
+                                    photo: partnerConn?.photo || ''
+                                });
+                            }
+                        }
                     }
                 });
 
@@ -752,6 +872,10 @@ useEffect(() => {
         setApprovalStatus(normalizeApprovalStatus(data.user.approvalStatus));
         setUserRole(data.user.role || 'USER');
         setIsOnboarded(data.user.isOnboarded || false);
+        // Store userId early so socket handler can identify self
+        if (data.user.id) {
+            setUserProfile(prev => ({ ...prev, userId: data.user.id }));
+        }
 
         // If user is already onboarded and approved, load their profile and social data
         if (data.user.isOnboarded) {
@@ -1088,24 +1212,53 @@ useEffect(() => {
         // Optimistic update
         setChats(prev => {
             const current = prev[profileId] || [];
+            const nextList = [...current, newMessage];
             return {
                 ...prev,
-                [profileId]: [...current, newMessage]
+                [profileId]: nextList
             };
         });
 
         // Find the conversation for this profile and send via API
         if (api.isConfigured) {
             try {
-                const conversation = conversations.find(c => c.partnerId === profileId);
+                let conversation = conversations.find(c => 
+                    c.partnerId === profileId || 
+                    c.id === profileId || 
+                    c.matchId === profileId
+                );
+
+                if (!conversation) {
+                    const freshConvs = await api.getConversations();
+                    const list = Array.isArray(freshConvs) ? freshConvs : [];
+                    setConversations(list);
+                    conversation = list.find(c => 
+                        c.partnerId === profileId || 
+                        c.id === profileId || 
+                        c.matchId === profileId
+                    );
+                }
 
                 if (conversation) {
+                    // Update optimistic message key under conversation ID & partner ID as well
+                    setChats(prev => {
+                        const current = prev[profileId] || prev[conversation.partnerId] || prev[conversation.id] || [];
+                        const hasMsg = current.some(m => m.id === messageId);
+                        const nextList = hasMsg ? current : [...current, newMessage];
+                        return {
+                            ...prev,
+                            [profileId]: nextList,
+                            [conversation.partnerId]: nextList,
+                            [conversation.id]: nextList
+                        };
+                    });
+
                     const res = await api.sendMessage(conversation.id, text, attachments);
                     const sentMsg = res?.data || res;
 
                     if (sentMsg && sentMsg.id) {
                         setChats(prev => {
-                            const current = prev[profileId] || [];
+                            const current = prev[profileId] || prev[conversation.partnerId] || prev[conversation.id] || [];
                             const updated = current.map(m =>
                                 m.id === messageId
                                     ? {
@@ -1118,9 +1271,22 @@ useEffect(() => {
                                       }
                                     : m
                             );
-                            return { ...prev, [profileId]: updated };
+                            return {
+                                ...prev,
+                                [profileId]: updated,
+                                [conversation.partnerId]: updated,
+                                [conversation.id]: updated
+                            };
                         });
+
+                        setConversations(prev => prev.map(c => c.id === conversation.id ? {
+                            ...c,
+                            lastMessage: sentMsg.text || 'Sent an attachment',
+                            lastMessageTime: sentMsg.createdAt || new Date().toISOString()
+                        } : c));
                     }
+                } else {
+                    console.error('Could not find target conversation for profileId:', profileId);
                 }
             } catch (err) {
                 console.error('Failed to send message via API:', err);
@@ -1174,20 +1340,27 @@ useEffect(() => {
         );
 
         const profileId = conversation?.partnerId || targetId;
-        const previous = chats[profileId] || [];
+        const convId = conversation?.id || targetId;
 
-        setStoredChatClear(profileId);
+        setStoredChatClear(profileId, convId, targetId, conversation?.partnerId);
 
         setChats(prev => {
             const next = { ...prev };
             delete next[profileId];
+            if (convId) delete next[convId];
+            if (targetId) delete next[targetId];
             return next;
         });
+
+        setConversations(prev => prev.map(c => 
+            (c.id === convId || c.partnerId === profileId)
+                ? { ...c, lastMessage: '', unreadCount: 0 }
+                : c
+        ));
 
         if (!api.isConfigured) return;
 
         try {
-            const convId = conversation?.id || targetId;
             await api.deleteConversationMessages(convId);
             fetchConversations();
         } catch (err) {
@@ -1196,7 +1369,9 @@ useEffect(() => {
         }
     };
 
-    return (
+        const chatUnreadCount = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
+
+        return (
         <AppContext.Provider value={{
             authLoading,
             isLoggedIn,
@@ -1221,6 +1396,10 @@ useEffect(() => {
             setConnections,
             receivedInvites,
             conversations,
+            chatUnreadCount,
+            toastNotifications,
+            addToast,
+            removeToast,
             blockedUsers,
             reportedUsers,
             supportTickets,
