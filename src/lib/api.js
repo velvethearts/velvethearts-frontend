@@ -174,6 +174,16 @@ export const api = {
         });
     },
 
+    unblockUser(blockedUserId) {
+        return request(`/api/v1/block/${blockedUserId}`, {
+            method: 'DELETE'
+        });
+    },
+
+    getBlockedUsers() {
+        return request('/api/v1/safety/blocked');
+    },
+
     reportUser(targetUserId, reason, comment) {
         return request('/api/v1/safety/reports', {
             method: 'POST',
@@ -188,7 +198,6 @@ export const api = {
     // ==========================================================
     // CHAT
     // ==========================================================
-
     getConversations() {
         return request('/api/v1/chat/conversations');
     },

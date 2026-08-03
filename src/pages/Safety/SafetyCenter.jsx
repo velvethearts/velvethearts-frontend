@@ -10,6 +10,7 @@ import { EmptyState } from '../../components/UI/EmptyState';
 
 export const SafetyCenter = () => {
   const { blockedUsers, unblockUser, reportedUsers, submitSupportTicket, setActiveTab, profiles } = useApp();
+  const [unblockingId, setUnblockingId] = useState(null);
   
   // Support Form State
   const [supportName, setSupportName] = useState('');
@@ -18,9 +19,15 @@ export const SafetyCenter = () => {
   const [supportText, setSupportText] = useState('');
   const [supportSubmitted, setSupportSubmitted] = useState(false);
 
-  const handleUnblock = (id) => {
-    unblockUser(id);
-    alert('User has been unblocked.');
+  const handleUnblock = async (id) => {
+    try {
+      setUnblockingId(id);
+      await unblockUser(id);
+    } catch (err) {
+      alert('Failed to unblock user. Please try again.');
+    } finally {
+      setUnblockingId(null);
+    }
   };
 
   const handleSupportSubmit = (e) => {
@@ -102,18 +109,34 @@ export const SafetyCenter = () => {
           <div className="blocked-list-wrapper">
             {blockedUsers && blockedUsers.length > 0 ? (
               <div className="blocked-items-list">
-                {blockedUsers.map(blockedId => {
+                {blockedUsers.map(item => {
+                  const blockedId = typeof item === 'string' ? item : (item.blockedUserId || item.id);
                   const blockedProfile = profiles.find(p => p.id === blockedId);
-                  const name = blockedProfile ? blockedProfile.name : blockedId;
-                  
+                  const name = typeof item === 'object' && item.name ? item.name : (blockedProfile ? blockedProfile.name : 'Blocked User');
+                  const avatar = typeof item === 'object' && item.avatar ? item.avatar : (blockedProfile?.photos?.[0] || null);
+
                   return (
                     <div key={blockedId} className="blocked-item-row">
                       <div className="blocked-user-details">
-                        <span className="blocked-name">{name}</span>
-                        <span className="blocked-status-badge">Blocked</span>
+                        {avatar ? (
+                          <img src={avatar} alt={name} className="blocked-avatar" />
+                        ) : (
+                          <div className="blocked-avatar-placeholder">
+                            {name ? name.charAt(0).toUpperCase() : 'U'}
+                          </div>
+                        )}
+                        <div className="blocked-user-info">
+                          <span className="blocked-name">{name}</span>
+                          <span className="blocked-status-badge">Blocked</span>
+                        </div>
                       </div>
-                      <Button variant="secondary" onClick={() => handleUnblock(blockedId)} className="unblock-btn-refactored">
-                        Unblock
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleUnblock(blockedId)}
+                        disabled={unblockingId === blockedId}
+                        className="unblock-btn-refactored"
+                      >
+                        {unblockingId === blockedId ? 'Unblocking...' : 'Unblock'}
                       </Button>
                     </div>
                   );
@@ -344,6 +367,33 @@ export const SafetyCenter = () => {
           display: flex;
           align-items: center;
           gap: var(--space-3);
+        }
+
+        .blocked-user-info {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+        }
+
+        .blocked-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid var(--border-subtle);
+        }
+
+        .blocked-avatar-placeholder {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background-color: var(--burgundy-100, #f3e5e8);
+          color: var(--burgundy-700, #7a1c31);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 14px;
         }
 
         .blocked-status-badge {

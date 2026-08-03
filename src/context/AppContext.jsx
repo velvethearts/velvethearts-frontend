@@ -323,6 +323,16 @@ export const AppProvider = ({ children }) => {
         }
     }, []);
 
+    const fetchBlockedUsers = useCallback(async () => {
+        if (!api.isConfigured) return;
+        try {
+            const res = await api.getBlockedUsers();
+            const list = res?.data || res || [];
+            setBlockedUsers(Array.isArray(list) ? list : []);
+        } catch (err) {
+            console.error('Failed to fetch blocked users:', err);
+        }
+    }, []);
 
     // ─── Load social data (discover, connections, conversations) ───────
 
@@ -332,12 +342,13 @@ export const AppProvider = ({ children }) => {
                 fetchDiscoverProfiles(),
                 fetchConnections(),
                 fetchConversations(),
-                fetchReceivedInvites()
+                fetchReceivedInvites(),
+                fetchBlockedUsers()
             ]);
         } catch (err) {
             console.error('Error loading social data:', err);
         }
-    }, []);
+    }, [fetchDiscoverProfiles, fetchConnections, fetchConversations, fetchReceivedInvites, fetchBlockedUsers]);
 
 
     // ─── Persistence for UI-only settings ──────────────────────────────
@@ -872,15 +883,28 @@ useEffect(() => {
             // Refresh data after block
             fetchConnections();
             fetchConversations();
+            fetchBlockedUsers();
+            fetchDiscoverProfiles();
         } catch (err) {
             console.error('Failed to block user:', err);
         }
     };
 
-    const unblockUser = (profileId) => {
-        setBlockedUsers(prev => prev.filter(id => id !== profileId));
-        // Note: No unblock backend endpoint exists in routes currently
-        // The UI state is updated optimistically
+    const unblockUser = async (profileId) => {
+        setBlockedUsers(prev => prev.filter(item => {
+            const id = typeof item === 'string' ? item : (item.blockedUserId || item.id);
+            return id !== profileId;
+        }));
+
+        try {
+            await api.unblockUser(profileId);
+            fetchBlockedUsers();
+            fetchDiscoverProfiles();
+            fetchConnections();
+            fetchConversations();
+        } catch (err) {
+            console.error('Failed to unblock user:', err);
+        }
     };
 
     const reportUser = async (profileId, reason, comment) => {
