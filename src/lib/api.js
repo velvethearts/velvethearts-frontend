@@ -227,6 +227,33 @@ export const api = {
     },
 
     // ==========================================================
+    // NOTIFICATIONS
+    // ==========================================================
+
+    getNotifications(page = 1, limit = 50) {
+        const qs = `?page=${page}&limit=${limit}`;
+        return request(`/api/v1/notifications${qs}`);
+    },
+
+    markNotificationRead(notificationId) {
+        return request(`/api/v1/notifications/${notificationId}/read`, {
+            method: 'POST'
+        });
+    },
+
+    markAllNotificationsRead() {
+        return request('/api/v1/notifications/read-all', {
+            method: 'POST'
+        });
+    },
+
+    deleteNotification(notificationId) {
+        return request(`/api/v1/notifications/${notificationId}`, {
+            method: 'DELETE'
+        });
+    },
+
+    // ==========================================================
     // UPLOAD
     // ==========================================================
 
@@ -239,6 +266,7 @@ export const api = {
             body: formData
         });
     },
+
 
     // ==========================================================
     // ADMIN

@@ -1,20 +1,21 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Compass, Heart, Chats, User, ShieldCheck, Sliders, Crown } from '@phosphor-icons/react';
+import { Compass, Heart, Chats, User, ShieldCheck, Sliders, Crown, Bell } from '@phosphor-icons/react';
 import { ThemeToggle } from './UI/ThemeToggle';
 import logo from "../assets/velvet-heart-logo.png";
 
 export const Navigation = ({ children }) => {
-  const { activeTab, setActiveTab, userProfile, userRole } = useApp();
+  const { activeTab, setActiveTab, userProfile, userRole, notificationUnreadCount } = useApp();
 
   const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
   const navItems = [
     { id: 'discover', label: 'Discover', icon: Compass },
     { id: 'matches', label: 'Matches', icon: Heart },
-    { id: 'chat', label: 'Chat', icon: Chats },
-    { id: 'profile', label: 'You', icon: User },
-    ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: Crown }] : []),
+  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'chat', label: 'Chat', icon: Chats },
+  { id: 'profile', label: 'You', icon: User },
+  ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: Crown }] : []),
   ];
 
   return (
@@ -39,6 +40,9 @@ export const Navigation = ({ children }) => {
                   >
                     <Icon size={24} weight={isActive ? 'fill' : 'regular'} />
                     <span>{item.label}</span>
+                    {item.id === 'notifications' && notificationUnreadCount > 0 && (
+                      <span className="nav-notif-badge">{notificationUnreadCount > 99 ? '99+' : notificationUnreadCount}</span>
+                    )}
                     {isActive && <span className="active-dot-sidebar" />}
                   </button>
                 </li>
@@ -180,6 +184,24 @@ export const Navigation = ({ children }) => {
           height: 6px;
           border-radius: 50%;
           background-color: var(--text-accent);
+        }
+
+        .nav-notif-badge {
+          position: absolute;
+          top: 6px;
+          right: 8px;
+          min-width: 18px;
+          height: 18px;
+          padding: 0 6px;
+          border-radius: 999px;
+          background-color: var(--text-accent);
+          color: var(--bg-surface);
+          font-size: 12px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+          border: 2px solid var(--bg-surface);
         }
 
         .sidebar-footer {

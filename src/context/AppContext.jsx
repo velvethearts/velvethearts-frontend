@@ -81,6 +81,12 @@ export const AppProvider = ({ children }) => {
         };
     });
 
+    // --- Notification Inbox ---
+    const [notificationItems, setNotificationItems] = useState([]); // recent notifications (server-side model)
+    const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
+    const [deepLinkConversationId, setDeepLinkConversationId] = useState(null); // used to deep-link into chat from a notification
+
+
     // --- Auth & Onboarding ---
     const [authLoading, setAuthLoading] = useState(true); // true until session restoration completes
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -490,6 +496,23 @@ export const AppProvider = ({ children }) => {
                     );
                 });
 
+                // Fetch initial notifications inbox on connect
+                try {
+                    fetchNotifications();
+                } catch (e) { /* ignore */ }
+
+                // Real-time notification delivery
+                socket.on('notification', ({ notification }) => {
+                    if (!notification) return;
+                    setNotificationItems(prev => [notification, ...prev]);
+                    setNotificationUnreadCount(prev => prev + (notification.isRead ? 0 : 1));
+                });
+
+                // When a match is created, refresh notifications to pick up server-side created rows
+                socket.on('matchCreated', ({ conversationId }) => {
+                    try { fetchNotifications(); } catch (e) { }
+                });
+
                 return () => {
                     disconnectSocket();
                 };
@@ -571,6 +594,52 @@ useEffect(() => {
 
 
     // ─── Actions ───────────────────────────────────────────────────────
+
+    // --- Notifications API / Inbox Actions ---
+    const fetchNotifications = useCallback(async (page = 1, limit = 50) => {
+        if (!api.isConfigured) return;
+        try {
+            const data = await api.getNotifications(page, limit);
+            // Controller returns array of notifications as data
+            setNotificationItems(Array.isArray(data) ? data : []);
+            setNotificationUnreadCount((Array.isArray(data) ? data : []).filter(n => !n.isRead).length);
+        } catch (err) {
+            console.error('Failed to fetch notifications:', err);
+        }
+    }, []);
+
+    const markNotificationRead = useCallback(async (id) => {
+        if (!api.isConfigured) return;
+        try {
+            await api.markNotificationRead(id);
+            setNotificationItems(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+            setNotificationUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (err) {
+            console.error('Failed to mark notification read:', err);
+        }
+    }, []);
+
+    const markAllNotificationsRead = useCallback(async () => {
+        if (!api.isConfigured) return;
+        try {
+            await api.markAllNotificationsRead();
+            setNotificationItems(prev => prev.map(n => ({ ...n, isRead: true })));
+            setNotificationUnreadCount(0);
+        } catch (err) {
+            console.error('Failed to mark all notifications read:', err);
+        }
+    }, []);
+
+    const deleteNotificationItem = useCallback(async (id) => {
+        if (!api.isConfigured) return;
+        try {
+            await api.deleteNotification(id);
+            setNotificationItems(prev => prev.filter(n => n.id !== id));
+        } catch (err) {
+            console.error('Failed to delete notification:', err);
+        }
+    }, []);
+
 
     const login = async (phoneNumber) => {
         if (!api.isConfigured) {
@@ -1058,6 +1127,16 @@ useEffect(() => {
             setAccessibility,
             notifications,
             setNotifications,
+            // Notification inbox state & actions
+            notificationItems,
+            setNotificationItems,
+            notificationUnreadCount,
+            fetchNotifications,
+            markNotificationRead,
+            markAllNotificationsRead,
+            deleteNotificationItem,
+            deepLinkConversationId,
+            setDeepLinkConversationId,
             login,
             loginWithGoogle,
             registerWithGoogle,

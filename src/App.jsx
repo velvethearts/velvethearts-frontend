@@ -17,6 +17,7 @@ import { YouProfile } from './pages/Profile/YouProfile';
 import { EditProfile } from './pages/Profile/EditProfile';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { SafetyCenter } from './pages/Safety/SafetyCenter';
+import { NotificationsPage } from './pages/Notifications/NotificationsPage';
 
 
 const AuthLoadingScreen = () => {
@@ -94,7 +95,7 @@ class ErrorBoundary extends Component {
 }
 
 function AppContent() {
-  const { authLoading, isLoggedIn, isOnboarded, activeTab, setActiveTab, approvalStatus, userRole } = useApp();
+  const { authLoading, isLoggedIn, isOnboarded, activeTab, setActiveTab, approvalStatus, userRole, deepLinkConversationId, setDeepLinkConversationId } = useApp();
 
   const [authInitialMode, setAuthInitialMode] = useState('signup');
 
@@ -119,6 +120,16 @@ function AppContent() {
   };
 
   const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+
+  // Deep-link into chat if triggered by a notification
+  React.useEffect(() => {
+    if (deepLinkConversationId) {
+      setPreselectedChatPartnerId(deepLinkConversationId);
+      setActiveTab('chat');
+      // Clear the deep link so subsequent navigations don't re-trigger automatically
+      setDeepLinkConversationId(null);
+    }
+  }, [deepLinkConversationId, setActiveTab, setDeepLinkConversationId]);
 
   const renderActivePage = () => {
    
@@ -154,6 +165,9 @@ function AppContent() {
           />
         );
         
+      case 'notifications':
+        return <NotificationsPage />;
+
       case 'profile':
         if (isEditingProfile) {
           return <EditProfile onBack={() => setIsEditingProfile(false)} />;
