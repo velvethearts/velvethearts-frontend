@@ -205,13 +205,14 @@ export const api = {
         );
     },
 
-    sendMessage(conversationId, text) {
+    sendMessage(conversationId, text, attachments) {
         return request(
             `/api/v1/chat/conversations/${conversationId}/messages`,
             {
                 method: 'POST',
                 body: {
-                    text
+                    text,
+                    attachments
                 }
             }
         );
@@ -266,6 +267,16 @@ export const api = {
     uploadPhoto(file) {
         const formData = new FormData();
         formData.append('photo', file);
+
+        return request('/api/v1/upload', {
+            method: 'POST',
+            body: formData
+        });
+    },
+
+    uploadFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
 
         return request('/api/v1/upload', {
             method: 'POST',

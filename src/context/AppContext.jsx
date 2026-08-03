@@ -1051,12 +1051,13 @@ useEffect(() => {
         }
     };
 
-    const sendMessage = async (profileId, text) => {
+    const sendMessage = async (profileId, text, attachments = []) => {
         const messageId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         const newMessage = {
             id: messageId,
             sender: 'user',
-            text,
+            text: text || '',
+            attachments: attachments || [],
             isDeleted: false,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -1076,7 +1077,7 @@ useEffect(() => {
                 const conversation = conversations.find(c => c.partnerId === profileId);
 
                 if (conversation) {
-                    await api.sendMessage(conversation.id, text);
+                    await api.sendMessage(conversation.id, text, attachments);
                 }
             } catch (err) {
                 console.error('Failed to send message via API:', err);

@@ -1,18 +1,106 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
-import { PaperPlaneRight, ArrowLeft, DotsThreeVertical, ShieldWarning, Prohibit, ChatCircleText, Trash } from '@phosphor-icons/react';
+import { api } from '../../lib/api';
+import { 
+  PaperPlaneRight, 
+  ArrowLeft, 
+  DotsThreeVertical, 
+  ShieldWarning, 
+  Prohibit, 
+  ChatCircleText, 
+  Trash,
+  Paperclip,
+  Image as ImageIcon,
+  FileText,
+  DownloadSimple,
+  X,
+  Spinner
+} from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { getSocket, joinConversation, leaveConversation, emitStartTyping, emitStopTyping } from '../../lib/socket';
 
+const formatFileSize = (bytes) => {
+  if (!bytes) return 'File';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, unmatchConnection, blockUser, reportUser, showConfirm, showAlert } = useApp();
-  const [activeChatId, setActiveChatId] = useState(preselectedConnectionId || null);
-  const [messageText, setMessageText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [localIsTyping, setLocalIsTyping] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const messagesEndRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
+  const [selectedAttachments, setSelectedAttachments] = useState([]);
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState(null);
+  const fileInputRef = useRef(null);
+  const photoInputRef = useRef(null);
+
+  const handleFileSelect = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setIsUploadingAttachment(true);
+    try {
+      for (const file of files) {
+        const isImg = file.type.startsWith('image/');
+        const isVid = file.type.startsWith('video/');
+        const fileType = isImg ? 'IMAGE' : isVid ? 'VIDEO' : 'DOCUMENT';
+        const previewUrl = URL.createObjectURL(file);
+
+        let uploadRes = null;
+        if (api.isConfigured) {
+          try {
+            const res = await api.uploadFile(file);
+            uploadRes = res?.data || res;
+          } catch (uploadErr) {
+            console.error('File upload error, using local fallback:', uploadErr);
+          }
+        }
+
+        const attachmentObj = {
+          id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          cloudinaryPublicId: uploadRes?.publicId || `local_${Date.now()}`,
+          secureUrl: uploadRes?.secureUrl || previewUrl,
+          fileType,
+          fileName: file.name,
+          fileSize: file.size,
+          mimeType: file.type,
+          localPreview: previewUrl
+        };
+
+        setSelectedAttachments(prev => [...prev, attachmentObj]);
+      }
+    } catch (err) {
+      await showAlert({ title: 'Upload Failed', message: 'Could not process attachment. Please try again.' });
+    } finally {
+      setIsUploadingAttachment(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleRemoveAttachment = (attId) => {
+    setSelectedAttachments(prev => prev.filter(a => a.id !== attId));
+  };
+
+  const handleSend = async (e) => {
+    if (e) e.preventDefault();
+    if ((!messageText.trim() && selectedAttachments.length === 0) || !activeChatId) return;
+
+    const textToSend = messageText.trim();
+    const attachmentsToSend = [...selectedAttachments];
+
+    setMessageText('');
+    setSelectedAttachments([]);
+
+    await sendMessage(activeChatId, textToSend, attachmentsToSend);
+
+    if (conversationId) {
+      setLocalIsTyping(false);
+      emitStopTyping(conversationId);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    }
+  };
 
   // Synchronize preselected chat from matches tab
   useEffect(() => {
@@ -69,22 +157,6 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
       setIsTyping(false);
     };
   }, [conversationId]);
-
-  const handleSend = (e) => {
-    if (e) e.preventDefault();
-    if (!messageText.trim() || !activeChatId) return;
-
-    sendMessage(activeChatId, messageText.trim());
-    setMessageText('');
-
-    if (conversationId) {
-      setLocalIsTyping(false);
-      emitStopTyping(conversationId);
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    }
-  };
 
   const handleInputChange = (e) => {
     const val = e.target.value;
@@ -315,13 +387,65 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
                   {activeMessages.map(msg => {
                     const isUser = msg.sender === 'user';
+                    const hasAttachments = Array.isArray(msg.attachments) && msg.attachments.length > 0;
+
                     return (
                       <div key={msg.id} className={`chat-message-bubble-row ${isUser ? 'user-sent' : 'partner-sent'}`}>
                         {!isUser && (
                           <img src={activePartner.photo} alt={activePartner.name} className="message-bubble-img" />
                         )}
                         <div className="message-bubble-content">
-                          <div className={`message-bubble-text font-body ${msg.isDeleted ? 'deleted' : ''}`}>{msg.text}</div>
+                          {/* Attachments rendering */}
+                          {hasAttachments && (
+                            <div className="message-attachments-container">
+                              {msg.attachments.map((att, idx) => {
+                                const url = att.secureUrl || att.localPreview;
+                                const isImg = att.fileType === 'IMAGE' || (att.mimeType && att.mimeType.startsWith('image/')) || (typeof url === 'string' && url.match(/\.(jpeg|jpg|gif|png|webp)/i));
+
+                                if (isImg) {
+                                  return (
+                                    <div 
+                                      key={att.id || idx} 
+                                      className="message-image-attachment"
+                                      onClick={() => setLightboxImage({ url, name: att.fileName || 'Image' })}
+                                    >
+                                      <img src={url} alt={att.fileName || 'Attachment'} className="chat-attached-img" />
+                                    </div>
+                                  );
+                                }
+
+                                return (
+                                  <a
+                                    key={att.id || idx}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download={att.fileName || 'download'}
+                                    className="message-file-attachment font-ui"
+                                  >
+                                    <div className="file-att-icon">
+                                      <FileText size={24} weight="duotone" />
+                                    </div>
+                                    <div className="file-att-details">
+                                      <span className="file-att-name">{att.fileName || 'Attachment File'}</span>
+                                      <span className="file-att-size">{formatFileSize(att.fileSize)}</span>
+                                    </div>
+                                    <div className="file-att-download">
+                                      <DownloadSimple size={18} />
+                                    </div>
+                                  </a>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Message text */}
+                          {msg.text && (
+                            <div className={`message-bubble-text font-body ${msg.isDeleted ? 'deleted' : ''}`}>
+                              {msg.text}
+                            </div>
+                          )}
+
                           {isUser && !msg.isDeleted && (
                             <button
                               type="button"
@@ -354,8 +478,84 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                 </div>
               </div>
 
+              {/* Pending Attachments Preview Bar */}
+              {(selectedAttachments.length > 0 || isUploadingAttachment) && (
+                <div className="chat-pending-attachments-bar font-ui">
+                  {selectedAttachments.map(att => {
+                    const url = att.secureUrl || att.localPreview;
+                    const isImg = att.fileType === 'IMAGE';
+
+                    return (
+                      <div key={att.id} className="pending-att-item">
+                        {isImg ? (
+                          <img src={url} alt={att.fileName} className="pending-att-thumb" />
+                        ) : (
+                          <div className="pending-att-file-badge">
+                            <FileText size={16} />
+                            <span className="pending-file-name">{att.fileName}</span>
+                            <span className="pending-file-size">({formatFileSize(att.fileSize)})</span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAttachment(att.id)}
+                          className="pending-att-remove-btn"
+                          aria-label="Remove attachment"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  {isUploadingAttachment && (
+                    <div className="pending-att-uploading">
+                      <Spinner size={16} className="spin-animation" />
+                      <span>Processing file...</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Input Footer */}
               <form onSubmit={handleSend} className="chat-input-footer">
+                <input
+                  type="file"
+                  ref={photoInputRef}
+                  onChange={handleFileSelect}
+                  accept="image/*,video/*"
+                  multiple
+                  style={{ display: 'none' }}
+                />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  accept="*/*"
+                  multiple
+                  style={{ display: 'none' }}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  className="chat-attach-btn"
+                  title="Attach Photo or Video"
+                  aria-label="Attach Photo or Video"
+                >
+                  <ImageIcon size={22} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="chat-attach-btn"
+                  title="Attach File or Document"
+                  aria-label="Attach File or Document"
+                >
+                  <Paperclip size={22} />
+                </button>
+
                 <input
                   type="text"
                   placeholder={`Send a warm message to ${activePartner.name}...`}
@@ -363,7 +563,13 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                   onChange={handleInputChange}
                   className="chat-text-input font-body"
                 />
-                <button type="submit" className="chat-send-btn" disabled={!messageText.trim()} aria-label="Send message">
+                
+                <button 
+                  type="submit" 
+                  className="chat-send-btn" 
+                  disabled={!messageText.trim() && selectedAttachments.length === 0} 
+                  aria-label="Send message"
+                >
                   <PaperPlaneRight size={20} weight="fill" />
                 </button>
               </form>
@@ -390,11 +596,25 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
       </div>
 
+      {/* Lightbox Modal */}
+      {lightboxImage && (
+        <div className="chat-lightbox-overlay" onClick={() => setLightboxImage(null)}>
+          <div className="chat-lightbox-content" onClick={e => e.stopPropagation()}>
+            <button className="chat-lightbox-close" onClick={() => setLightboxImage(null)}>
+              <X size={24} />
+            </button>
+            <img src={lightboxImage.url} alt={lightboxImage.name} className="chat-lightbox-img" />
+            <div className="chat-lightbox-footer font-ui">
+              <span>{lightboxImage.name}</span>
+              <a href={lightboxImage.url} target="_blank" rel="noopener noreferrer" download className="chat-lightbox-download">
+                <DownloadSimple size={20} />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
-        .chat-page {
-          height: 100vh;
-          width: 100%;
-          padding: 0;
           background-color: var(--bg-page);
         }
 
@@ -794,6 +1014,76 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           align-items: center;
           justify-content: center;
           transition: all var(--duration-fast);
+
+        .message-bubble-time {
+          font-size: 10px;
+          color: var(--text-muted);
+          margin-top: 1px;
+        }
+
+        .user-sent .message-bubble-time {
+          align-self: flex-end;
+        }
+
+        /* Typing indicator dots */
+        .typing-bubble {
+          background-color: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          padding: var(--space-3) var(--space-4);
+          border-radius: var(--radius-lg);
+          border-bottom-left-radius: var(--radius-sm);
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .typing-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background-color: var(--charcoal-500);
+          animation: dotPulse 1.2s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        /* Footer Input */
+        .chat-input-footer {
+          padding: var(--space-4) var(--space-6);
+          background-color: var(--bg-surface);
+          border-top: 1px solid var(--border-subtle);
+          display: flex;
+          gap: var(--space-4);
+          align-items: center;
+        }
+
+        .chat-text-input {
+          flex: 1;
+          border: 1.5px solid var(--border-default);
+          border-radius: var(--radius-full);
+          padding: var(--space-3) var(--space-5);
+          outline: none;
+          background-color: var(--bg-input);
+          color: var(--text-primary);
+          transition: all var(--duration-fast);
+        }
+
+        .chat-text-input:focus {
+          border-color: var(--border-focus);
+           background-color: var(--bg-input);
+        }
+
+        .chat-send-btn {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background-color: var(--burgundy-500);
+          color: #FFFFFF;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all var(--duration-fast);
         }
 
         .chat-send-btn:hover {
@@ -805,6 +1095,249 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           background-color: var(--charcoal-300);
           color: var(--charcoal-500);
           transform: none;
+        }
+
+        /* Attachments in messages */
+        .message-attachments-container {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-bottom: 4px;
+        }
+
+        .message-image-attachment {
+          border-radius: var(--radius-md);
+          overflow: hidden;
+          cursor: pointer;
+          max-width: 260px;
+          max-height: 260px;
+          border: 1px solid var(--border-subtle);
+          transition: transform var(--duration-fast);
+        }
+
+        .message-image-attachment:hover {
+          transform: scale(1.02);
+        }
+
+        .chat-attached-img {
+          width: 100%;
+          height: 100%;
+          max-height: 260px;
+          object-fit: cover;
+          display: block;
+        }
+
+        .message-file-attachment {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+          padding: var(--space-3) var(--space-4);
+          background-color: rgba(0, 0, 0, 0.05);
+          border-radius: var(--radius-md);
+          text-decoration: none;
+          color: inherit;
+          border: 1px solid var(--border-subtle);
+          transition: background-color var(--duration-fast);
+          max-width: 280px;
+        }
+
+        [data-theme="dark"] .message-file-attachment {
+          background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .user-sent .message-file-attachment {
+          background-color: rgba(255, 255, 255, 0.18);
+          color: #FFFFFF;
+        }
+
+        .message-file-attachment:hover {
+          opacity: 0.9;
+        }
+
+        .file-att-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .file-att-details {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          overflow: hidden;
+        }
+
+        .file-att-name {
+          font-weight: var(--weight-medium);
+          font-size: var(--text-body-sm);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .file-att-size {
+          font-size: 11px;
+          opacity: 0.8;
+        }
+
+        .file-att-download {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0.85;
+        }
+
+        /* Pending Attachments Preview Bar */
+        .chat-pending-attachments-bar {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+          padding: var(--space-3) var(--space-6);
+          background-color: var(--bg-surface);
+          border-top: 1px solid var(--border-subtle);
+          overflow-x: auto;
+        }
+
+        .pending-att-item {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .pending-att-thumb {
+          width: 54px;
+          height: 54px;
+          border-radius: var(--radius-md);
+          object-fit: cover;
+          border: 1px solid var(--border-subtle);
+        }
+
+        .pending-att-file-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          background-color: var(--bg-page);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-full);
+          font-size: 12px;
+        }
+
+        .pending-file-name {
+          max-width: 120px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .pending-file-size {
+          color: var(--text-muted);
+        }
+
+        .pending-att-remove-btn {
+          position: absolute;
+          top: -6px;
+          right: -6px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background-color: var(--burgundy-500);
+          color: #FFFFFF;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1.5px solid var(--bg-surface);
+          cursor: pointer;
+        }
+
+        .pending-att-uploading {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 12px;
+          color: var(--text-muted);
+        }
+
+        .spin-animation {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          100% { transform: rotate(360deg); }
+        }
+
+        .chat-attach-btn {
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          cursor: pointer;
+          padding: 6px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all var(--duration-fast);
+        }
+
+        .chat-attach-btn:hover {
+          color: var(--burgundy-500);
+          background-color: var(--bg-page);
+        }
+
+        /* Lightbox Modal */
+        .chat-lightbox-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 1000;
+          background-color: rgba(0, 0, 0, 0.85);
+          backdrop-filter: blur(4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: var(--space-6);
+        }
+
+        .chat-lightbox-content {
+          position: relative;
+          max-width: 90vw;
+          max-height: 90vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .chat-lightbox-close {
+          position: absolute;
+          top: -40px;
+          right: 0;
+          background: none;
+          border: none;
+          color: #FFFFFF;
+          cursor: pointer;
+        }
+
+        .chat-lightbox-img {
+          max-width: 100%;
+          max-height: 80vh;
+          border-radius: var(--radius-md);
+          object-fit: contain;
+          box-shadow: var(--shadow-xl);
+        }
+
+        .chat-lightbox-footer {
+          margin-top: var(--space-4);
+          color: #FFFFFF;
+          display: flex;
+          align-items: center;
+          gap: var(--space-4);
+          font-size: var(--text-body-sm);
+        }
+
+        .chat-lightbox-download {
+          color: #FFFFFF;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         /* Responsive behavior */
