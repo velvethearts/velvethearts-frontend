@@ -22,6 +22,7 @@ export const NotificationsPage = () => {
       case 'MESSAGE':
         return <ChatCircleText size={20} />;
       case 'MATCH':
+      case 'LIKE':
         return <Heart size={20} />;
       case 'SYSTEM':
         return <Info size={20} />;
@@ -35,15 +36,32 @@ export const NotificationsPage = () => {
       if (!n.isRead) await markNotificationRead(n.id);
     } catch (e) { }
 
-    // Navigate based on type
-    if (n.type === 'MATCH' || n.title?.toLowerCase().includes('connection') || n.title?.toLowerCase().includes('match')) {
+    const titleLower = n.title?.toLowerCase() || '';
+    const contentLower = n.content?.toLowerCase() || '';
+
+    // 1. Likes, matches, and connection notifications redirect to the Matches page
+    if (
+      n.type === 'LIKE' ||
+      n.type === 'MATCH' ||
+      titleLower.includes('like') ||
+      titleLower.includes('match') ||
+      titleLower.includes('connection') ||
+      contentLower.includes('liked you') ||
+      contentLower.includes('shared interest')
+    ) {
       setActiveTab('matches');
       return;
     }
 
-    if (n.type === 'MESSAGE' && n.relatedId) {
-      // relatedId is conversationId for messages
-      setDeepLinkConversationId(n.relatedId);
+    // 2. New message received notifications redirect to the Chat page
+    if (
+      n.type === 'MESSAGE' ||
+      titleLower.includes('message') ||
+      contentLower.includes('sent you a message')
+    ) {
+      if (n.relatedId) {
+        setDeepLinkConversationId(n.relatedId);
+      }
       setActiveTab('chat');
       return;
     }
