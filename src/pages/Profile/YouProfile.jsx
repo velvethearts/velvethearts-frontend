@@ -6,10 +6,16 @@ import { Card } from '../../components/UI/Card';
 import { getProfilePhoto } from '../../utils/avatar';
 
 export const YouProfile = ({ onEditProfile }) => {
-  const { userProfile, setActiveTab, logout } = useApp();
+  const { userProfile, setActiveTab, logout, showConfirm } = useApp();
 
-  const handleLogout = () => {
-    if (window.confirm("Are you sure you want to sign out?")) {
+  const handleLogout = async () => {
+    const confirmed = await showConfirm({
+      title: 'Sign Out',
+      message: 'Are you sure you want to sign out?',
+      okText: 'Sign Out',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       logout();
     }
   };

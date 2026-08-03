@@ -1,9 +1,11 @@
 import React from 'react';
+import { useApp } from '../../context/AppContext';
 import { Heart, ShieldCheck, Users, Bookmark, Sparkle } from '@phosphor-icons/react';
 import { ThemeToggle } from '../../components/UI/ThemeToggle';
 import logo from "../../assets/velvet-hearts-logo.jpeg";
 
 export const LandingPage = ({ onGetStarted, onSignIn }) => {
+  const { showAlert } = useApp();
   return (
     <div className="landing-container">
       {/* Decorative Gradient Background Elements */}
@@ -171,10 +173,10 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
       <footer className="landing-footer font-ui">
         <div className="footer-brand font-display">Velvet Hearts</div>
         <div className="footer-links">
-          <a href="#guidelines" onClick={(e) => { e.preventDefault(); alert("Community Guidelines: Be respectful, genuine, and kind."); }}>Community Guidelines</a>
-          <a href="#safety" onClick={(e) => { e.preventDefault(); alert("Safety Center: Report tools are available directly inside chat and profiles."); }}>Safety Center</a>
-          <a href="#privacy" onClick={(e) => { e.preventDefault(); alert("Privacy Policy: Your data is secure and never sold."); }}>Privacy Policy</a>
-          <a href="#terms" onClick={(e) => { e.preventDefault(); alert("Terms of Service: Agree to engage with care."); }}>Terms of Service</a>
+          <a href="#guidelines" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Community Guidelines', message: 'Be respectful, genuine, and kind.' }); }}>Community Guidelines</a>
+          <a href="#safety" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Safety Center', message: 'Report tools are available directly inside chat and profiles.' }); }}>Safety Center</a>
+          <a href="#privacy" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Privacy Policy', message: 'Your data is secure and never sold.' }); }}>Privacy Policy</a>
+          <a href="#terms" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Terms of Service', message: 'Agree to engage with care.' }); }}>Terms of Service</a>
         </div>
         <div className="footer-copy">
           Made with care. &copy; 2026 Velvet Hearts. All rights reserved.

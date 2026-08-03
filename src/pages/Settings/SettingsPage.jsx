@@ -16,7 +16,9 @@ export const SettingsPage = () => {
     notifications, 
     setNotifications,
     setActiveTab,
-    logout
+    logout,
+    showConfirm,
+    showAlert
   } = useApp();
 
   const [showNotifModal, setShowNotifModal] = useState(false);
@@ -35,16 +37,21 @@ export const SettingsPage = () => {
     setLocalNotifs(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const handleSaveNotifs = () => {
+  const handleSaveNotifs = async () => {
     setNotifications(localNotifs);
     setShowNotifModal(false);
-    alert('Notification preferences updated successfully!');
+    await showAlert({ title: 'Settings Saved', message: 'Notification preferences updated successfully!' });
   };
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm("CRITICAL: Are you sure you want to delete your profile? This deletes all connection histories, chat logs, and photos permanently. This action is irreversible.")) {
-      return;
-    }
+    const confirmed = await showConfirm({
+      title: 'Delete Account',
+      message: 'CRITICAL: Are you sure you want to delete your profile? This deletes all connection histories, chat logs, and photos permanently. This action is irreversible.',
+      okText: 'Delete Account',
+      cancelText: 'Cancel'
+    });
+
+    if (!confirmed) return;
 
     setDeletingAccount(true);
     try {
@@ -54,7 +61,7 @@ export const SettingsPage = () => {
       await logout();
       window.location.reload();
     } catch (err) {
-      alert(err.message || 'Failed to delete account. Please try again.');
+      await showAlert({ title: 'Delete Account Failed', message: err.message || 'Failed to delete account. Please try again.' });
     } finally {
       setDeletingAccount(false);
     }

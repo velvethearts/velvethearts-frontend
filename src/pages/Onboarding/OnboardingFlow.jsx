@@ -10,7 +10,7 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import { getDefaultAvatar } from '../../utils/avatar';
 
 export const OnboardingFlow = () => {
-    const { completeOnboarding, logout } = useApp();
+    const { completeOnboarding, logout, showConfirm } = useApp();
 
     const DRAFT_KEY = 'vh-onboarding-draft';
 
@@ -53,8 +53,14 @@ export const OnboardingFlow = () => {
     const [showAllErrors, setShowAllErrors] = useState(false);
     const [showDraftBanner, setShowDraftBanner] = useState(!!draft);
 
-    const handleStartFresh = () => {
-        if (window.confirm('Discard your saved progress and start the profile from the beginning?')) {
+    const handleStartFresh = async () => {
+        const confirmed = await showConfirm({
+            title: 'Discard Progress',
+            message: 'Discard your saved progress and start the profile from the beginning?',
+            okText: 'Discard',
+            cancelText: 'Cancel'
+        });
+        if (confirmed) {
             try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
             setFormData({
                 name: '', dobDay: '', dobMonth: '', dobYear: '', city: '',

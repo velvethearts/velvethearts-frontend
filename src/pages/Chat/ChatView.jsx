@@ -5,7 +5,7 @@ import { EmptyState } from '../../components/UI/EmptyState';
 import { getSocket, joinConversation, leaveConversation, emitStartTyping, emitStopTyping } from '../../lib/socket';
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
-  const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, unmatchConnection, blockUser, reportUser } = useApp();
+  const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, unmatchConnection, blockUser, reportUser, showConfirm, showAlert } = useApp();
   const [activeChatId, setActiveChatId] = useState(preselectedConnectionId || null);
   const [messageText, setMessageText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -107,8 +107,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     }, 2000);
   };
 
-  const handleUnmatch = () => {
-    if (window.confirm(`Remove ${activePartner.name} from your connections? You can rediscover each other later — this doesn't block them.`)) {
+  const handleUnmatch = async () => {
+    const confirmed = await showConfirm({
+      title: 'Remove Connection',
+      message: `Remove ${activePartner.name} from your connections? You can rediscover each other later — this doesn't block them.`,
+      okText: 'Remove',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       unmatchConnection(activePartner.matchId, activeChatId);
       setActiveChatId(null);
       setShowDropdown(false);
@@ -116,8 +122,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     }
   };
 
-  const handleBlock = () => {
-    if (window.confirm(`Block ${activePartner.name}? They will be permanently removed from your connections and won't be able to contact you again.`)) {
+  const handleBlock = async () => {
+    const confirmed = await showConfirm({
+      title: 'Block User',
+      message: `Block ${activePartner.name}? They will be permanently removed from your connections and won't be able to contact you again.`,
+      okText: 'Block',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       blockUser(activeChatId);
       setActiveChatId(null);
       setShowDropdown(false);
@@ -125,60 +137,60 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     }
   };
 
-  const handleReport = () => {
-    const reason = window.prompt(`Please enter the reason for reporting ${activePartner.name}:`);
-    if (reason) {
-      reportUser(activeChatId, 'Reported from Chat', reason);
+  const handleReport = async () => {
+    const confirmed = await showConfirm({
+      title: `Report & Block ${activePartner?.name || 'User'}`,
+      message: `Are you sure you want to report ${activePartner?.name || 'this user'}? They will be blocked and removed from your connections.`,
+      okText: 'Report & Block',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
+      reportUser(activeChatId, 'Reported from Chat', 'User reported via chat menu');
       setActiveChatId(null);
       setShowDropdown(false);
-      alert('Thank you for submitting the report. The user has been blocked.');
+      await showAlert({ title: 'Report Submitted', message: 'Thank you for submitting the report. The user has been blocked.' });
       if (onClearPreselected) onClearPreselected();
     }
   };
 
   const handleDeleteMessage = async (messageId) => {
     if (!activeChatId) return;
-    if (!window.confirm('Delete this message for everyone?')) return;
+    const confirmed = await showConfirm({
+      title: 'Delete Message',
+      message: 'Delete this message for everyone?',
+      okText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    if (!confirmed) return;
 
     try {
       await deleteMessage(activeChatId, messageId);
     } catch (err) {
-      alert(err.message || 'Could not delete this message.');
+      await showAlert({ title: 'Error', message: err.message || 'Could not delete this message.' });
     }
   };
 
   const handleDeleteChat = async () => {
     if (!activeChatId || !activePartner) return;
-    const confirmed = window.confirm(`Delete all messages you sent to ${activePartner.name}? Their messages will stay in the chat.`);
+    const confirmed = await showConfirm({
+      title: 'Clear Chat Messages',
+      message: `Delete all messages you sent to ${activePartner.name}? Their messages will stay in the chat.`,
+      okText: 'Delete Messages',
+      cancelText: 'Cancel'
+    });
     if (!confirmed) return;
 
     try {
       await deleteConversationMessages(activeChatId);
       setShowDropdown(false);
     } catch (err) {
-      alert(err.message || 'Could not delete this chat.');
+      await showAlert({ title: 'Error', message: err.message || 'Could not delete this chat.' });
     }
   };
-
-  const handleBackToList = () => {
-    setActiveChatId(null);
-    if (onClearPreselected) onClearPreselected();
-  };
-
-  const activeMessagesRaw = activeChatId ? chats[activeChatId] || [] : [];
-  const activeMessages = [];
-  const seenIds = new Set();
-  for (const m of activeMessagesRaw) {
-    if (!seenIds.has(m.id)) {
-      seenIds.add(m.id);
-      activeMessages.push(m);
-    }
-  }
 
   return (
     <div className="chat-page page-enter">
       <div className={`chat-layout ${activeChatId ? 'partner-selected' : ''}`}>
-        
         {/* Left Side Pane: Connection List */}
         <div className="chat-sidebar-pane">
           <header className="chat-pane-header font-ui">

@@ -9,7 +9,7 @@ import { Textarea } from '../../components/UI/Textarea';
 import { EmptyState } from '../../components/UI/EmptyState';
 
 export const SafetyCenter = () => {
-  const { blockedUsers, unblockUser, reportedUsers, submitSupportTicket, setActiveTab, profiles } = useApp();
+  const { blockedUsers, unblockUser, reportedUsers, submitSupportTicket, setActiveTab, profiles, showAlert } = useApp();
   const [unblockingId, setUnblockingId] = useState(null);
   
   // Support Form State
@@ -24,7 +24,7 @@ export const SafetyCenter = () => {
       setUnblockingId(id);
       await unblockUser(id);
     } catch (err) {
-      alert('Failed to unblock user. Please try again.');
+      await showAlert({ title: 'Unblock Failed', message: 'Failed to unblock user. Please try again.' });
     } finally {
       setUnblockingId(null);
     }

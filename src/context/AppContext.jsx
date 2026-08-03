@@ -12,6 +12,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { api } from '../lib/api';
 import { connectSocket, disconnectSocket } from '../lib/socket';
+import { ConfirmModal } from '../components/UI/ConfirmModal';
 const AppContext = createContext();
 const CHAT_CLEARS_STORAGE_KEY = 'vh-cleared-chats';
 
@@ -85,6 +86,52 @@ export const AppProvider = ({ children }) => {
     const [notificationItems, setNotificationItems] = useState([]); // recent notifications (server-side model)
     const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
     const [deepLinkConversationId, setDeepLinkConversationId] = useState(null); // used to deep-link into chat from a notification
+
+    // --- Global Confirm & Alert Dialog state ---
+    const [dialogConfig, setDialogConfig] = useState(null);
+
+    const showConfirm = useCallback((opts) => {
+        return new Promise((resolve) => {
+            const config = typeof opts === 'string' ? { message: opts } : opts;
+            setDialogConfig({
+                title: config.title || 'Confirm Action',
+                message: config.message || '',
+                okText: config.okText || 'OK',
+                cancelText: config.cancelText || 'Cancel',
+                variant: config.variant || 'primary',
+                showCancel: config.showCancel !== false,
+                onConfirm: () => {
+                    setDialogConfig(null);
+                    resolve(true);
+                },
+                onCancel: () => {
+                    setDialogConfig(null);
+                    resolve(false);
+                }
+            });
+        });
+    }, []);
+
+    const showAlert = useCallback((opts) => {
+        return new Promise((resolve) => {
+            const config = typeof opts === 'string' ? { message: opts } : opts;
+            setDialogConfig({
+                title: config.title || 'Notice',
+                message: config.message || '',
+                okText: config.okText || 'OK',
+                cancelText: config.cancelText || 'Cancel',
+                showCancel: config.showCancel ?? true,
+                onConfirm: () => {
+                    setDialogConfig(null);
+                    resolve(true);
+                },
+                onCancel: () => {
+                    setDialogConfig(null);
+                    resolve(false);
+                }
+            });
+        });
+    }, []);
 
 
     // --- Auth & Onboarding ---
@@ -1179,9 +1226,26 @@ useEffect(() => {
             fetchConnections,
             fetchReceivedInvites,
             fetchConversations,
-            loadSocialData
+            loadSocialData,
+            showConfirm,
+            showAlert
         }}>
             {children}
+            <ConfirmModal
+                isOpen={Boolean(dialogConfig)}
+                onClose={() => {
+                    if (dialogConfig?.onCancel) dialogConfig.onCancel();
+                    setDialogConfig(null);
+                }}
+                title={dialogConfig?.title}
+                message={dialogConfig?.message}
+                okText={dialogConfig?.okText}
+                cancelText={dialogConfig?.cancelText}
+                variant={dialogConfig?.variant}
+                showCancel={dialogConfig?.showCancel}
+                onConfirm={dialogConfig?.onConfirm}
+                onCancel={dialogConfig?.onCancel}
+            />
         </AppContext.Provider>
     );
 };

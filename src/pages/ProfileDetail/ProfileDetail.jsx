@@ -7,7 +7,7 @@ import { Modal } from '../../components/UI/Modal';
 import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
 
 export const ProfileDetail = ({ profile, onBack }) => {
-  const { interestsSent, sendInterest, reportUser, blockUser } = useApp();
+  const { interestsSent, sendInterest, reportUser, blockUser, showConfirm } = useApp();
   const [showReportSheet, setShowReportSheet] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportComment, setReportComment] = useState('');
@@ -31,8 +31,14 @@ export const ProfileDetail = ({ profile, onBack }) => {
     }, 2200);
   };
 
-  const handleBlockOnly = () => {
-    if (window.confirm(`Are you sure you want to remove ${profile.name}? you won't see them again.`)) {
+  const handleBlockOnly = async () => {
+    const confirmed = await showConfirm({
+      title: 'Remove Connection',
+      message: `Are you sure you want to remove ${profile.name}? You won't see them again.`,
+      okText: 'Remove',
+      cancelText: 'Cancel'
+    });
+    if (confirmed) {
       blockUser(profile.id);
       onBack();
     }
