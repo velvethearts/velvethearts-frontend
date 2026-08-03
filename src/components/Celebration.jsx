@@ -26,9 +26,8 @@ export const Celebration = () => {
   if (!showCelebration) return null;
 
   const handleStartChat = () => {
-    const targetId = showCelebration.id;
     setShowCelebration(null);
-    setActiveTab('chat');
+    setActiveTab('matches');
   };
 
   const handleClose = () => {

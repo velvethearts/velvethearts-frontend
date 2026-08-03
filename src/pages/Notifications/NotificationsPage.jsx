@@ -36,21 +36,15 @@ export const NotificationsPage = () => {
     } catch (e) { }
 
     // Navigate based on type
+    if (n.type === 'MATCH' || n.title?.toLowerCase().includes('connection') || n.title?.toLowerCase().includes('match')) {
+      setActiveTab('matches');
+      return;
+    }
+
     if (n.type === 'MESSAGE' && n.relatedId) {
       // relatedId is conversationId for messages
       setDeepLinkConversationId(n.relatedId);
       setActiveTab('chat');
-      return;
-    }
-
-    if (n.type === 'MATCH') {
-      // Open matches tab; server stores relatedId as conversationId for matches
-      if (n.relatedId) {
-        setDeepLinkConversationId(n.relatedId);
-        setActiveTab('chat');
-      } else {
-        setActiveTab('matches');
-      }
       return;
     }
 
