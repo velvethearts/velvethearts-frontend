@@ -193,6 +193,16 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     if (onClearPreselected) onClearPreselected();
   };
 
+  const activeMessagesRaw = activeChatId ? chats[activeChatId] || [] : [];
+  const activeMessages = [];
+  const seenIds = new Set();
+  for (const m of activeMessagesRaw) {
+    if (!seenIds.has(m.id)) {
+      seenIds.add(m.id);
+      activeMessages.push(m);
+    }
+  }
+
   return (
     <div className="chat-page page-enter">
       <div className={`chat-layout ${activeChatId ? 'partner-selected' : ''}`}>
