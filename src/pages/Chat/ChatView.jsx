@@ -27,7 +27,12 @@ const formatFileSize = (bytes) => {
 };
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
-  const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, unmatchConnection, blockUser, reportUser, showConfirm, showAlert } = useApp();
+  const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds } = useApp();
+  
+  const isUserOnline = (partner) => {
+    if (!partner) return false;
+    return Boolean(onlineUserIds && (onlineUserIds.has(partner.userId) || onlineUserIds.has(partner.id)));
+  };
   const [activeChatId, setActiveChatId] = useState(preselectedConnectionId || null);
   const [messageText, setMessageText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -109,24 +114,20 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     }
   };
 
-  // Synchronize preselected chat from matches tab
+  // Synchronize preselected chat from matches tab or select first connection on desktop
   useEffect(() => {
     if (preselectedConnectionId) {
       setActiveChatId(preselectedConnectionId);
+    } else if (!activeChatId && connections.length > 0 && window.innerWidth >= 768) {
+      setActiveChatId(connections[0].id);
     }
-  }, [preselectedConnectionId]);
+  }, [preselectedConnectionId, connections]);
 
-  // Find all active chat partners where both have sent messages to each other,
-  // or temporarily include the active chat partner if they are currently selected.
-  const chatPartners = connections.filter(conn => {
-    const partnerChats = chats[conn.id] || [];
-    const userSent = partnerChats.some(m => m.sender === 'user');
-    const partnerSent = partnerChats.some(m => m.sender === 'partner');
-    return (userSent && partnerSent) || conn.id === activeChatId;
-  });
+  // All connections are valid chat partners
+  const chatPartners = connections;
 
   // Find active chat partner details
-  const activePartner = connections.find(c => c.id === activeChatId);
+  const activePartner = connections.find(c => c.id === activeChatId || c.matchId === activeChatId || c.userId === activeChatId);
 
   const conversation = conversations.find(c => c.partnerId === activeChatId);
   const conversationId = conversation?.id;
@@ -202,14 +203,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   };
 
   const handleBlock = async () => {
+    if (!activePartner) return;
     const confirmed = await showConfirm({
       title: 'Block User',
       message: `Block ${activePartner.name}? They will be permanently removed from your connections and won't be able to contact you again.`,
       okText: 'Block',
-      cancelText: 'Cancel'
+      cancelText: 'Cancel',
+      variant: 'danger'
     });
     if (confirmed) {
-      blockUser(activeChatId);
+      const targetId = activePartner.userId || activePartner.id || activeChatId;
+      await blockUser(targetId);
       setActiveChatId(null);
       setShowDropdown(false);
       if (onClearPreselected) onClearPreselected();
@@ -217,14 +221,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   };
 
   const handleReport = async () => {
+    if (!activePartner) return;
     const confirmed = await showConfirm({
-      title: `Report & Block ${activePartner?.name || 'User'}`,
-      message: `Are you sure you want to report ${activePartner?.name || 'this user'}? They will be blocked and removed from your connections.`,
+      title: `Report & Block ${activePartner.name}`,
+      message: `Are you sure you want to report ${activePartner.name}? They will be blocked and removed from your connections.`,
       okText: 'Report & Block',
-      cancelText: 'Cancel'
+      cancelText: 'Cancel',
+      variant: 'danger'
     });
     if (confirmed) {
-      reportUser(activeChatId, 'Reported from Chat', 'User reported via chat menu');
+      const targetId = activePartner.userId || activePartner.id || activeChatId;
+      await reportUser(targetId, 'Reported from Chat', 'User reported via chat menu');
       setActiveChatId(null);
       setShowDropdown(false);
       await showAlert({ title: 'Report Submitted', message: 'Thank you for submitting the report. The user has been blocked.' });
@@ -238,14 +245,16 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
       title: 'Delete Message',
       message: 'Delete this message for everyone?',
       okText: 'Delete',
-      cancelText: 'Cancel'
+      cancelText: 'Cancel',
+      variant: 'danger'
     });
     if (!confirmed) return;
 
     try {
+      if (lightboxImage) setLightboxImage(null);
       await deleteMessage(activeChatId, messageId);
     } catch (err) {
-      await showAlert({ title: 'Error', message: err.message || 'Could not delete this message.' });
+      console.warn('handleDeleteMessage warning:', err);
     }
   };
 
@@ -255,7 +264,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
       title: 'Clear Chat Messages',
       message: `Delete all messages you sent to ${activePartner.name}? Their messages will stay in the chat.`,
       okText: 'Delete Messages',
-      cancelText: 'Cancel'
+      cancelText: 'Cancel',
+      variant: 'danger'
     });
     if (!confirmed) return;
 
@@ -263,7 +273,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
       await deleteConversationMessages(activeChatId);
       setShowDropdown(false);
     } catch (err) {
-      await showAlert({ title: 'Error', message: err.message || 'Could not delete this chat.' });
+      console.warn('handleDeleteChat warning:', err);
     }
   };
 
@@ -309,7 +319,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                   >
                     <div className="avatar-wrapper">
                       <img src={partner.photo} alt={partner.name} className="partner-item-img" />
-                      <span className="online-indicator-dot" />
+                      {isUserOnline(partner) && <span className="online-indicator-dot" />}
                     </div>
                     
                     <div className="partner-item-info">
@@ -349,7 +359,9 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                   <img src={activePartner.photo} alt={activePartner.name} className="active-header-img" />
                   <div>
                     <h2 className="active-header-name font-display">{activePartner.name}</h2>
-                    <span className="active-header-status font-ui">Online</span>
+                    <span className={`active-header-status font-ui ${isUserOnline(activePartner) ? 'online' : 'offline'}`}>
+                      {isUserOnline(activePartner) ? 'Online' : 'Offline'}
+                    </span>
                   </div>
                 </div>
 
@@ -394,7 +406,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
                   {activeMessages.map(msg => {
                     const isUser = msg.sender === 'user';
-                    const hasAttachments = Array.isArray(msg.attachments) && msg.attachments.length > 0;
+                    const hasAttachments = !msg.isDeleted && Array.isArray(msg.attachments) && msg.attachments.length > 0;
 
                     return (
                       <div key={msg.id} className={`chat-message-bubble-row ${isUser ? 'user-sent' : 'partner-sent'}`}>
@@ -414,42 +426,72 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                                     <div 
                                       key={att.id || idx} 
                                       className="message-image-attachment"
-                                      onClick={() => setLightboxImage({ url, name: att.fileName || 'Image' })}
+                                      onClick={() => setLightboxImage({ url, name: att.fileName || 'Image', messageId: msg.id, isUser })}
                                     >
                                       <img src={url} alt={att.fileName || 'Attachment'} className="chat-attached-img" />
+                                      {isUser && !msg.isDeleted && (
+                                        <button
+                                          type="button"
+                                          className="attachment-delete-overlay-btn"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteMessage(msg.id);
+                                          }}
+                                          aria-label="Delete photo"
+                                          title="Delete photo"
+                                        >
+                                          <Trash size={16} />
+                                        </button>
+                                      )}
                                     </div>
                                   );
                                 }
 
                                 return (
-                                  <a
-                                    key={att.id || idx}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    download={att.fileName || 'download'}
-                                    className="message-file-attachment font-ui"
-                                  >
-                                    <div className="file-att-icon">
-                                      <FileText size={24} weight="duotone" />
-                                    </div>
-                                    <div className="file-att-details">
-                                      <span className="file-att-name">{att.fileName || 'Attachment File'}</span>
-                                      <span className="file-att-size">{formatFileSize(att.fileSize)}</span>
-                                    </div>
-                                    <div className="file-att-download">
-                                      <DownloadSimple size={18} />
-                                    </div>
-                                  </a>
+                                  <div key={att.id || idx} className="message-file-attachment-wrapper">
+                                    <a
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      download={att.fileName || 'download'}
+                                      className="message-file-attachment font-ui"
+                                    >
+                                      <div className="file-att-icon">
+                                        <FileText size={24} weight="duotone" />
+                                      </div>
+                                      <div className="file-att-details">
+                                        <span className="file-att-name">{att.fileName || 'Attachment File'}</span>
+                                        <span className="file-att-size">{formatFileSize(att.fileSize)}</span>
+                                      </div>
+                                      <div className="file-att-download">
+                                        <DownloadSimple size={18} />
+                                      </div>
+                                    </a>
+                                    {isUser && !msg.isDeleted && (
+                                      <button
+                                        type="button"
+                                        className="file-att-delete-btn"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleDeleteMessage(msg.id);
+                                        }}
+                                        aria-label="Delete file"
+                                        title="Delete file"
+                                      >
+                                        <Trash size={16} />
+                                      </button>
+                                    )}
+                                  </div>
                                 );
                               })}
                             </div>
                           )}
 
                           {/* Message text */}
-                          {msg.text && (
+                          {(msg.text || msg.isDeleted) && (
                             <div className={`message-bubble-text font-body ${msg.isDeleted ? 'deleted' : ''}`}>
-                              {msg.text}
+                              {msg.isDeleted ? 'This message was deleted' : msg.text}
                             </div>
                           )}
 
@@ -613,16 +655,34 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
             <img src={lightboxImage.url} alt={lightboxImage.name} className="chat-lightbox-img" />
             <div className="chat-lightbox-footer font-ui">
               <span>{lightboxImage.name}</span>
-              <a href={lightboxImage.url} target="_blank" rel="noopener noreferrer" download className="chat-lightbox-download">
-                <DownloadSimple size={20} />
-              </a>
+              <div className="chat-lightbox-actions">
+                {lightboxImage.isUser && (
+                  <button
+                    type="button"
+                    className="chat-lightbox-delete-btn"
+                    onClick={() => handleDeleteMessage(lightboxImage.messageId)}
+                    title="Delete photo"
+                    aria-label="Delete photo"
+                  >
+                    <Trash size={20} />
+                  </button>
+                )}
+                <a href={lightboxImage.url} target="_blank" rel="noopener noreferrer" download className="chat-lightbox-download">
+                  <DownloadSimple size={20} />
+                </a>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       <style>{`
+        .chat-page {
+          height: 100vh;
+          width: 100%;
+          padding: 0;
           background-color: var(--bg-page);
+          overflow: hidden;
         }
 
         .chat-layout {
@@ -634,22 +694,25 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
         /* Sidebar list */
         .chat-sidebar-pane {
-          width: 100%;
+          width: 320px;
+          min-width: 320px;
           height: 100%;
           border-right: 1px solid var(--border-subtle);
           display: flex;
           flex-direction: column;
           background-color: var(--bg-surface);
+          flex-shrink: 0;
         }
 
         .chat-pane-header {
-          padding: var(--space-6) var(--space-4);
+          padding: var(--space-4) var(--space-6);
           border-bottom: 1px solid var(--border-subtle);
         }
 
         .chat-title {
           font-size: var(--text-heading);
           color: var(--burgundy-900);
+          margin: 0;
         }
 
         [data-theme="dark"] .chat-title {
@@ -671,6 +734,9 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           border-bottom: 1px solid var(--border-subtle);
           width: 100%;
           text-align: left;
+          background: none;
+          border-left: 3px solid transparent;
+          cursor: pointer;
           transition: all var(--duration-fast);
         }
 
@@ -680,19 +746,29 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
         .partner-list-item.active {
           background-color: var(--bg-accent-subtle);
+          border-left-color: var(--burgundy-500);
         }
 
         .avatar-wrapper {
           position: relative;
+          width: 48px;
+          height: 48px;
+          min-width: 48px;
+          min-height: 48px;
           flex-shrink: 0;
         }
 
         .partner-item-img {
-          width: 52px;
-          height: 52px;
+          width: 48px;
+          height: 48px;
+          min-width: 48px;
+          min-height: 48px;
+          max-width: 48px;
+          max-height: 48px;
           border-radius: 50%;
           object-fit: cover;
           border: 1px solid var(--border-subtle);
+          display: block;
         }
 
         .online-indicator-dot {
@@ -701,8 +777,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           border-radius: 50%;
           background-color: var(--success);
           position: absolute;
-          bottom: 2px;
-          right: 2px;
+          bottom: 0;
+          right: 0;
           border: 2px solid #FFFFFF;
         }
 
@@ -737,14 +813,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          margin: 0;
         }
 
         /* Message Area */
         .chat-messages-pane {
           flex: 1;
           height: 100%;
-          display: none;
+          display: flex;
+          flex-direction: column;
           background-color: var(--bg-page);
+          overflow: hidden;
         }
 
         .active-chat-wrapper {
@@ -765,10 +844,13 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
         }
 
         .chat-mobile-back-btn {
-          display: flex;
+          display: none;
           align-items: center;
           margin-right: var(--space-4);
           color: var(--text-secondary);
+          background: none;
+          border: none;
+          cursor: pointer;
         }
 
         .active-chat-meta {
@@ -779,21 +861,35 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
         }
 
         .active-header-img {
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
+          min-width: 44px;
+          min-height: 44px;
+          max-width: 44px;
+          max-height: 44px;
           border-radius: 50%;
           object-fit: cover;
+          border: 1px solid var(--border-subtle);
+          flex-shrink: 0;
         }
 
         .active-header-name {
           font-size: var(--text-subheading);
           color: var(--text-primary);
+          margin: 0;
         }
 
         .active-header-status {
-          font-size: 11px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .active-header-status.online {
           color: var(--success);
-          font-weight: bold;
+        }
+
+        .active-header-status.offline {
+          color: var(--text-muted);
         }
 
         .active-header-options {
@@ -804,6 +900,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           color: var(--text-secondary);
           display: flex;
           align-items: center;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 6px;
+          border-radius: 50%;
         }
 
         .options-dropdown {
@@ -819,6 +920,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           overflow: hidden;
           display: flex;
           flex-direction: column;
+          z-index: 100;
         }
 
         .dropdown-item {
@@ -830,6 +932,9 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           text-align: left;
           font-size: var(--text-body-sm);
           color: var(--text-primary);
+          background: none;
+          border: none;
+          cursor: pointer;
           transition: background-color var(--duration-fast);
         }
 
@@ -885,9 +990,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
         .message-bubble-img {
           width: 32px;
           height: 32px;
+          min-width: 32px;
+          min-height: 32px;
+          max-width: 32px;
+          max-height: 32px;
           border-radius: 50%;
           object-fit: cover;
           align-self: flex-end;
+          flex-shrink: 0;
         }
 
         .message-bubble-content {
@@ -900,8 +1010,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
         .message-bubble-text {
           padding: var(--space-3) var(--space-4);
           border-radius: var(--radius-lg);
-          font-size: var(--text-body-sm);
-          line-height: var(--leading-normal);
+          font-size: 15px;
+          line-height: 1.45;
         }
 
         .user-sent .message-bubble-text {
@@ -991,7 +1101,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           background-color: var(--bg-surface);
           border-top: 1px solid var(--border-subtle);
           display: flex;
-          gap: var(--space-4);
+          gap: var(--space-3);
           align-items: center;
         }
 
@@ -999,97 +1109,31 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           flex: 1;
           border: 1.5px solid var(--border-default);
           border-radius: var(--radius-full);
-          padding: var(--space-3) var(--space-5);
+          padding: 10px 18px;
           outline: none;
           background-color: var(--bg-input);
           color: var(--text-primary);
+          font-size: 15px;
           transition: all var(--duration-fast);
         }
 
         .chat-text-input:focus {
           border-color: var(--border-focus);
-           background-color: var(--bg-input);
+          background-color: var(--bg-input);
         }
 
         .chat-send-btn {
           width: 44px;
           height: 44px;
+          min-width: 44px;
           border-radius: 50%;
           background-color: var(--burgundy-500);
           color: #FFFFFF;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all var(--duration-fast);
-
-        .message-bubble-time {
-          font-size: 10px;
-          color: var(--text-muted);
-          margin-top: 1px;
-        }
-
-        .user-sent .message-bubble-time {
-          align-self: flex-end;
-        }
-
-        /* Typing indicator dots */
-        .typing-bubble {
-          background-color: var(--bg-surface);
-          border: 1px solid var(--border-subtle);
-          padding: var(--space-3) var(--space-4);
-          border-radius: var(--radius-lg);
-          border-bottom-left-radius: var(--radius-sm);
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .typing-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background-color: var(--charcoal-500);
-          animation: dotPulse 1.2s infinite;
-        }
-
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-        /* Footer Input */
-        .chat-input-footer {
-          padding: var(--space-4) var(--space-6);
-          background-color: var(--bg-surface);
-          border-top: 1px solid var(--border-subtle);
-          display: flex;
-          gap: var(--space-4);
-          align-items: center;
-        }
-
-        .chat-text-input {
-          flex: 1;
-          border: 1.5px solid var(--border-default);
-          border-radius: var(--radius-full);
-          padding: var(--space-3) var(--space-5);
-          outline: none;
-          background-color: var(--bg-input);
-          color: var(--text-primary);
-          transition: all var(--duration-fast);
-        }
-
-        .chat-text-input:focus {
-          border-color: var(--border-focus);
-           background-color: var(--bg-input);
-        }
-
-        .chat-send-btn {
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          background-color: var(--burgundy-500);
-          color: #FFFFFF;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          border: none;
+          cursor: pointer;
           transition: all var(--duration-fast);
         }
 
@@ -1102,6 +1146,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           background-color: var(--charcoal-300);
           color: var(--charcoal-500);
           transform: none;
+          cursor: not-allowed;
         }
 
         /* Attachments in messages */
@@ -1340,6 +1385,83 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           font-size: var(--text-body-sm);
         }
 
+        .message-image-attachment {
+          position: relative;
+        }
+
+        .attachment-delete-overlay-btn {
+          position: absolute;
+          top: 6px;
+          right: 6px;
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: rgba(0, 0, 0, 0.65);
+          color: #FFFFFF;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background 0.15s ease;
+          z-index: 10;
+        }
+
+        .attachment-delete-overlay-btn:hover {
+          background: rgba(220, 38, 38, 0.9);
+        }
+
+        .message-file-attachment-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .file-att-delete-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: var(--bg-surface-elevated);
+          color: var(--burgundy-400);
+          border: 1px solid var(--border-subtle);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          flex-shrink: 0;
+        }
+
+        .file-att-delete-btn:hover {
+          background: rgba(220, 38, 38, 0.15);
+          color: #EF4444;
+        }
+
+        .chat-lightbox-actions {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+          margin-left: auto;
+        }
+
+        .chat-lightbox-delete-btn {
+          background: rgba(220, 38, 38, 0.8);
+          color: #FFFFFF;
+          border: none;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+
+        .chat-lightbox-delete-btn:hover {
+          background: rgba(220, 38, 38, 1);
+        }
+
         .chat-lightbox-download {
           color: #FFFFFF;
           display: flex;
@@ -1349,23 +1471,70 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
         /* Responsive behavior */
         @media (max-width: 767px) {
+          .chat-page {
+            height: 100%;
+          }
+          .chat-sidebar-pane {
+            width: 100%;
+            min-width: 100%;
+          }
+          .chat-messages-pane {
+            display: none;
+            height: 100%;
+            overflow: hidden;
+          }
           .partner-selected .chat-sidebar-pane {
             display: none;
           }
           .partner-selected .chat-messages-pane {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            flex: 1;
+            overflow: hidden;
           }
-        }
-
-        @media (min-width: 768px) {
-          .chat-sidebar-pane {
-            width: 320px;
+          .active-chat-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            flex: 1;
+            overflow: hidden;
           }
-          .chat-messages-pane {
-            display: block;
+          .active-chat-header {
+            flex-shrink: 0;
+            padding: var(--space-3) var(--space-4);
           }
           .chat-mobile-back-btn {
-            display: none;
+            display: flex;
+          }
+          .chat-log-container {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: var(--space-3) var(--space-4);
+          }
+          .chat-pending-attachments-bar {
+            flex-shrink: 0;
+            padding: var(--space-2) var(--space-4);
+          }
+          .chat-input-footer {
+            flex-shrink: 0;
+            padding: var(--space-2) var(--space-3);
+            gap: var(--space-2);
+            background-color: var(--bg-surface);
+            border-top: 1px solid var(--border-subtle);
+          }
+          .chat-text-input {
+            font-size: 14px;
+            padding: 8px 14px;
+          }
+          .chat-send-btn {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+          }
+          .chat-attach-btn {
+            padding: 4px;
           }
         }
       `}</style>

@@ -80,7 +80,7 @@ export const Navigation = ({ children }) => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="main-content-layout">
+      <main className={`main-content-layout ${activeTab === 'chat' ? 'chat-active-layout' : ''}`}>
         {children}
       </main>
 
@@ -259,6 +259,13 @@ export const Navigation = ({ children }) => {
           padding-bottom: calc(var(--bottom-nav-height) + var(--space-6));
         }
 
+        .main-content-layout.chat-active-layout {
+          height: 100vh;
+          min-height: 100vh;
+          padding-bottom: var(--bottom-nav-height);
+          overflow: hidden;
+        }
+
         .mobile-bottom-nav {
           position: fixed;
           bottom: 0;
@@ -320,6 +327,12 @@ export const Navigation = ({ children }) => {
           .main-content-layout {
             padding-left: var(--sidebar-width);
             padding-bottom: var(--space-6);
+          }
+
+          .main-content-layout.chat-active-layout {
+            padding-bottom: 0;
+            height: 100vh;
+            overflow: hidden;
           }
 
           .mobile-bottom-nav {

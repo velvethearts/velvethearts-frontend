@@ -207,6 +207,7 @@ export const AppProvider = ({ children }) => {
 
     const [chats, setChats] = useState({});
     const [conversations, setConversations] = useState([]);
+    const [onlineUserIds, setOnlineUserIds] = useState(new Set());
 
     // UI state
     const [activeTab, setActiveTab] = useState('discover');
@@ -362,7 +363,8 @@ export const AppProvider = ({ children }) => {
                             id: m.id,
                             sender: m.senderId === conv.partnerId ? 'partner' : 'user',
                             text: m.text,
-                            isDeleted: m.isDeleted,
+                            attachments: m.attachments || [],
+                            isDeleted: Boolean(m.isDeleted),
                             timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         })).reverse();
 
@@ -490,24 +492,34 @@ export const AppProvider = ({ children }) => {
                         setChats(prevChats => {
                             const current = prevChats[conv.partnerId] || [];
                             
-                            // Find if there is an optimistic message with the same text to replace
+                            // Find if there is an optimistic message with the same ID or content
                             let optIndex = -1;
                             for (let i = current.length - 1; i >= 0; i--) {
-                                if (current[i].id.toString().includes('-') && current[i].text === message.text) {
+                                const item = current[i];
+                                if (
+                                    item.id === message.id ||
+                                    (item.id.toString().includes('-') && (
+                                        (message.text && item.text === message.text) ||
+                                        (Array.isArray(message.attachments) && message.attachments.length > 0)
+                                    ))
+                                ) {
                                     optIndex = i;
                                     break;
                                 }
                             }
 
+                            const formatted = {
+                                id: message.id,
+                                sender: message.senderId === conv.partnerId ? 'partner' : 'user',
+                                text: message.text,
+                                attachments: message.attachments || [],
+                                isDeleted: Boolean(message.isDeleted),
+                                timestamp: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            };
+
                             if (optIndex !== -1) {
                                 const updated = [...current];
-                                updated[optIndex] = {
-                                    id: message.id,
-                                    sender: message.senderId === conv.partnerId ? 'partner' : 'user',
-                                    text: message.text,
-                                    isDeleted: message.isDeleted,
-                                    timestamp: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                };
+                                updated[optIndex] = formatted;
                                 return {
                                     ...prevChats,
                                     [conv.partnerId]: updated
@@ -519,14 +531,6 @@ export const AppProvider = ({ children }) => {
                                 return prevChats;
                             }
 
-                            const formatted = {
-                                id: message.id,
-                                sender: message.senderId === conv.partnerId ? 'partner' : 'user',
-                                text: message.text,
-                                isDeleted: message.isDeleted,
-                                timestamp: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                            };
-                            
                             return {
                                 ...prevChats,
                                 [conv.partnerId]: [...current, formatted]
@@ -543,7 +547,7 @@ export const AppProvider = ({ children }) => {
                         ...prevChats,
                         [conv.partnerId]: (prevChats[conv.partnerId] || []).map(message =>
                             message.id === messageId
-                                ? { ...message, text: 'This message was deleted', isDeleted: true }
+                                ? { ...message, text: 'This message was deleted', isDeleted: true, attachments: [] }
                                 : message
                         )
                     }));
@@ -562,6 +566,25 @@ export const AppProvider = ({ children }) => {
                     setConversations(prevConversations =>
                         prevConversations.filter(conversation => conversation.id !== conversationId)
                     );
+                });
+
+                socket.on('online_users', (userIds) => {
+                    if (Array.isArray(userIds)) {
+                        setOnlineUserIds(new Set(userIds));
+                    }
+                });
+
+                socket.on('user_presence', ({ userId, isOnline }) => {
+                    if (!userId) return;
+                    setOnlineUserIds(prev => {
+                        const next = new Set(prev);
+                        if (isOnline) {
+                            next.add(userId);
+                        } else {
+                            next.delete(userId);
+                        }
+                        return next;
+                    });
                 });
 
                 // Fetch initial notifications inbox on connect
@@ -1077,7 +1100,27 @@ useEffect(() => {
                 const conversation = conversations.find(c => c.partnerId === profileId);
 
                 if (conversation) {
-                    await api.sendMessage(conversation.id, text, attachments);
+                    const res = await api.sendMessage(conversation.id, text, attachments);
+                    const sentMsg = res?.data || res;
+
+                    if (sentMsg && sentMsg.id) {
+                        setChats(prev => {
+                            const current = prev[profileId] || [];
+                            const updated = current.map(m =>
+                                m.id === messageId
+                                    ? {
+                                        id: sentMsg.id,
+                                        sender: 'user',
+                                        text: sentMsg.text || '',
+                                        attachments: sentMsg.attachments || [],
+                                        isDeleted: Boolean(sentMsg.isDeleted),
+                                        timestamp: new Date(sentMsg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                      }
+                                    : m
+                            );
+                            return { ...prev, [profileId]: updated };
+                        });
+                    }
                 }
             } catch (err) {
                 console.error('Failed to send message via API:', err);
@@ -1092,17 +1135,26 @@ useEffect(() => {
             ...prev,
             [profileId]: (prev[profileId] || []).map(message =>
                 message.id === messageId
-                    ? { ...message, text: 'This message was deleted', isDeleted: true }
+                    ? { ...message, text: 'This message was deleted', isDeleted: true, attachments: [] }
                     : message
             )
         }));
 
         if (!api.isConfigured) return;
 
+        // If messageId is a temporary client string, keep local state updated without crashing API
+        if (typeof messageId === 'string' && messageId.includes('-') && !messageId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+            return;
+        }
+
         try {
             await api.deleteMessage(messageId);
         } catch (err) {
-            console.error('Failed to delete message:', err);
+            console.warn('Failed to delete message on backend:', err?.message || err);
+            // If already deleted or not found on backend, maintain local deletion without throwing
+            if (err?.message && err.message.toLowerCase().includes('not found')) {
+                return;
+            }
             setChats(prev => ({
                 ...prev,
                 [profileId]: previous
@@ -1111,12 +1163,19 @@ useEffect(() => {
         }
     };
 
-    const deleteConversationMessages = async (profileId) => {
-        const previous = chats[profileId] || [];
-        const previousConversations = conversations;
-        const userMessagesToDelete = previous.filter(message =>
-            message.sender === 'user' && !message.isDeleted
+    const deleteConversationMessages = async (targetId) => {
+        const conversation = conversations.find(c =>
+            c.id === targetId ||
+            c.partnerId === targetId ||
+            c.matchId === targetId ||
+            c.userId === targetId ||
+            c.partner?.id === targetId ||
+            c.partner?.userId === targetId
         );
+
+        const profileId = conversation?.partnerId || targetId;
+        const previous = chats[profileId] || [];
+
         setStoredChatClear(profileId);
 
         setChats(prev => {
@@ -1124,45 +1183,16 @@ useEffect(() => {
             delete next[profileId];
             return next;
         });
-        setConversations(prev =>
-            prev.filter(conversation => conversation.partnerId !== profileId)
-        );
 
         if (!api.isConfigured) return;
 
         try {
-            const conversation = conversations.find(c => c.partnerId === profileId);
-            if (!conversation) {
-                throw new Error('Conversation not found');
-            }
-
-            await api.deleteConversationMessages(conversation.id);
+            const convId = conversation?.id || targetId;
+            await api.deleteConversationMessages(convId);
             fetchConversations();
         } catch (err) {
-            const canFallbackToMessageDeletes =
-                err.status === 404 ||
-                err.message?.toLowerCase().includes('resource not found');
-
-            if (canFallbackToMessageDeletes) {
-                const results = await Promise.allSettled(
-                    userMessagesToDelete.map(message => api.deleteMessage(message.id))
-                );
-                const failed = results.find(result => result.status === 'rejected');
-
-                if (!failed) {
-                    fetchConversations();
-                    return;
-                }
-            }
-
-            console.error('Failed to delete chat messages:', err);
-            removeStoredChatClear(profileId);
-            setChats(prev => ({
-                ...prev,
-                [profileId]: previous
-            }));
-            setConversations(previousConversations);
-            throw err;
+            console.warn('deleteConversationMessages warning:', err?.message || err);
+            // Maintain local deletion cleanly even if backend returned 404/not found
         }
     };
 
@@ -1234,6 +1264,7 @@ useEffect(() => {
             deleteMessage,
             deleteConversationMessages,
             logout,
+            onlineUserIds,
             fetchDiscoverProfiles,
             fetchConnections,
             fetchReceivedInvites,
