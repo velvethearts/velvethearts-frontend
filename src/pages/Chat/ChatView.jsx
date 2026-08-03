@@ -28,9 +28,16 @@ const formatFileSize = (bytes) => {
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, unmatchConnection, blockUser, reportUser, showConfirm, showAlert } = useApp();
+  const [activeChatId, setActiveChatId] = useState(preselectedConnectionId || null);
+  const [messageText, setMessageText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [localIsTyping, setLocalIsTyping] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [selectedAttachments, setSelectedAttachments] = useState([]);
   const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const photoInputRef = useRef(null);
 
