@@ -53,9 +53,6 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     
     // Enforce Age filter bounds
     if (profile.age < filters.ageMin || profile.age > filters.ageMax) return false;
-    
-    // Enforce Verified Only
-    if (filters.verifiedOnly && !profile.verified) return false;
 
     return true;
   });
@@ -69,8 +66,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       city: '',
       ageMin: 18,
       ageMax: 60,
-      distanceMax: 50,
-      verifiedOnly: false
+      distanceMax: 50
     });
   };
 
@@ -79,8 +75,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     filters.relationshipIntent !== 'All' || 
     filters.city || 
     filters.ageMin > 18 || 
-    filters.ageMax < 60 || 
-    filters.verifiedOnly;
+    filters.ageMax < 60;
 
   return (
     <div className="discover-feed-page page-enter">

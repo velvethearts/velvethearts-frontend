@@ -33,8 +33,7 @@ export const DiscoverPreferences = ({ onClose }) => {
       city: '',
       ageMin: 18,
       ageMax: 60,
-      distanceMax: 50,
-      verifiedOnly: false
+      distanceMax: 50
     });
   };
 
@@ -149,18 +148,6 @@ export const DiscoverPreferences = ({ onClose }) => {
             onChange={(e) => setLocalFilters(prev => ({ ...prev, city: e.target.value }))}
             className="pref-text-input font-ui"
           />
-        </div>
-
-        {/* Verified Profile Checkbox */}
-        <div className="pref-item-section border-top">
-          <label className="checkbox-label font-ui">
-            <input
-              type="checkbox"
-              checked={localFilters.verifiedOnly}
-              onChange={() => handleToggle('verifiedOnly')}
-            />
-            <span>Show verified profiles only</span>
-          </label>
         </div>
       </div>
 

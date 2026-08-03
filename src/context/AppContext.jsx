@@ -158,8 +158,7 @@ export const AppProvider = ({ children }) => {
         city: '',
         ageMin: 18,
         ageMax: 60,
-        distanceMax: 50,
-        verifiedOnly: false
+        distanceMax: 50
     });
 
     // ─── Helper: hydrate state from /profile/me response ───────────────

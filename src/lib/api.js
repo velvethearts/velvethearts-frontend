@@ -119,9 +119,6 @@ export const api = {
         if (filters.ageMax)
             params.set('ageMax', String(filters.ageMax));
 
-        if (filters.verifiedOnly)
-            params.set('verifiedOnly', 'true');
-
         const qs = params.toString();
 
         return request(`/api/v1/discover${qs ? `?${qs}` : ''}`);
@@ -275,7 +272,6 @@ export const api = {
             body: formData
         });
     },
-
 
     // ==========================================================
     // ADMIN
