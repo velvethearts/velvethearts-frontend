@@ -188,6 +188,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     }
   };
 
+  const handleBackToList = () => {
+    setActiveChatId(null);
+    if (onClearPreselected) onClearPreselected();
+  };
+
   return (
     <div className="chat-page page-enter">
       <div className={`chat-layout ${activeChatId ? 'partner-selected' : ''}`}>
