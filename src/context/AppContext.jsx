@@ -435,6 +435,41 @@ export const AppProvider = ({ children }) => {
         }
     }, []);
 
+    // Fetches messages for a single conversation and hydrates chats state.
+    // Called by ChatView when a conversation becomes active (on mount or ID change).
+    const fetchConversationMessages = useCallback(async (conversationId, partnerId) => {
+        if (!api.isConfigured || !conversationId) return;
+        try {
+            const messages = await api.getMessages(conversationId);
+            if (!Array.isArray(messages)) return;
+            const chatClears = getStoredChatClears();
+            const clearedAt = chatClears[partnerId] || chatClears[conversationId];
+            const visible = messages.filter(m => {
+                if (m.isDeleted) return false;
+                if (clearedAt && new Date(m.createdAt) <= new Date(clearedAt)) return false;
+                return true;
+            });
+            const mapped = visible.map(m => ({
+                id: m.id,
+                sender: m.senderId === partnerId ? 'partner' : 'user',
+                text: m.text,
+                attachments: m.attachments || [],
+                isDeleted: Boolean(m.isDeleted),
+                seen: Boolean(m.seen),
+                createdAt: m.createdAt,
+                timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            })).reverse();
+
+            setChats(prev => ({
+                ...prev,
+                [conversationId]: mapped,
+                ...(partnerId ? { [partnerId]: mapped } : {})
+            }));
+        } catch (err) {
+            console.error(`Failed to fetch messages for conversation ${conversationId}:`, err);
+        }
+    }, []);
+
     const fetchBlockedUsers = useCallback(async () => {
         if (!api.isConfigured) return;
         try {
@@ -1540,6 +1575,7 @@ useEffect(() => {
             fetchConnections,
             fetchReceivedInvites,
             fetchConversations,
+            fetchConversationMessages,
             loadSocialData,
             showConfirm,
             showAlert

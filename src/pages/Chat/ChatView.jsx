@@ -27,7 +27,7 @@ const formatFileSize = (bytes) => {
 };
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
-  const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds } = useApp();
+  const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages } = useApp();
   
   const isUserOnline = (partner) => {
     if (!partner) return false;
@@ -200,6 +200,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
       markConversationSeen(activeChatId);
     }
   }, [conversationId, activeChatId, markConversationSeen]);
+
+  // Fetch fresh messages (including attachments) whenever the active conversation changes.
+  // This ensures messages are never stale after a page refresh or re-entering a chat.
+  useEffect(() => {
+    if (conversationId && activePartner) {
+      fetchConversationMessages(conversationId, activePartner.id);
+    }
+  }, [conversationId, activePartner?.id]);
 
   // Listen for real-time typing events via socket
   useEffect(() => {
