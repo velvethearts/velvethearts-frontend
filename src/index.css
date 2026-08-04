@@ -182,6 +182,11 @@
   --border-subtle: var(--charcoal-700);
   --border-focus: var(--burgundy-400);
 
+  --success-light: rgba(92, 154, 110, 0.2);
+  --warning-light: rgba(196, 154, 74, 0.2);
+  --error-light: rgba(196, 90, 90, 0.2);
+  --info-light: rgba(90, 138, 196, 0.2);
+
   --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.2);
   --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.25);
   --shadow-lg:   0 8px 24px rgba(0, 0, 0, 0.3);

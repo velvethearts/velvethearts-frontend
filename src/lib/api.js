@@ -5,6 +5,10 @@ const tokenStore = {
         return localStorage.getItem('vh-firebase-token') || '';
     },
 
+    get() {
+        return this.getToken();
+    },
+
     setToken(token) {
         if (token) {
             localStorage.setItem('vh-firebase-token', token);
@@ -82,6 +86,17 @@ export const api = {
 
     getMe() {
         return request('/api/v1/profile/me');
+    },
+
+    getSettings() {
+        return request('/api/v1/profile/settings');
+    },
+
+    updateSettings(settings) {
+        return request('/api/v1/profile/settings', {
+            method: 'PUT',
+            body: settings
+        });
     },
 
     saveProfile(profile) {

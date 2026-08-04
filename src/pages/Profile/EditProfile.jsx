@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../lib/api';
 import { ArrowLeft, Camera, Trash, ArrowUp, ArrowDown } from '@phosphor-icons/react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
@@ -9,10 +10,11 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import { getProfilePhoto } from '../../utils/avatar';
 
 export const EditProfile = ({ onBack }) => {
-  const { userProfile, setUserProfile } = useApp();
+  const { userProfile, setUserProfile, updateUserProfile, showAlert } = useApp();
   const [localProfile, setLocalProfile] = useState({ ...userProfile });
   const [validationErrors, setValidationErrors] = useState({});
   const [uploadProgress, setUploadProgress] = useState(null); // null or { index, percent }
+  const [isSaving, setIsSaving] = useState(false);
 
   const interestOptions = [
     'Books', 'Music', 'Art', 'Nature', 'Movies', 'Food', 
@@ -39,34 +41,47 @@ export const EditProfile = ({ onBack }) => {
     });
   };
 
-  // Simulated Photo Manager Upload
-  const handlePhotoUpload = (e, index) => {
+  // Real Cloudinary / DataURL Photo Manager Upload
+  const handlePhotoUpload = async (e, index) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Trigger simulated progress bar
-    setUploadProgress({ index, percent: 0 });
-    let currentPct = 0;
-    const interval = setInterval(() => {
-      currentPct += 20;
-      setUploadProgress({ index, percent: currentPct });
-      
-      if (currentPct >= 100) {
-        clearInterval(interval);
-        
-        // Read file contents
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setLocalProfile(prev => {
-            const nextPhotos = [...prev.photos];
-            nextPhotos[index] = reader.result;
-            return { ...prev, photos: nextPhotos };
-          });
-          setUploadProgress(null);
-        };
-        reader.readAsDataURL(file);
+    setUploadProgress({ index, percent: 30 });
+
+    try {
+      let finalUrl = null;
+      if (api.isConfigured) {
+        setUploadProgress({ index, percent: 60 });
+        try {
+          const res = await api.uploadFile(file);
+          if (res?.secureUrl) {
+            finalUrl = res.secureUrl;
+          }
+        } catch (uploadErr) {
+          console.error('File upload error:', uploadErr);
+        }
       }
-    }, 200);
+
+      if (!finalUrl) {
+        // Fallback to data URL
+        finalUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      setUploadProgress({ index, percent: 100 });
+      setLocalProfile(prev => {
+        const nextPhotos = [...(prev.photos || [])];
+        nextPhotos[index] = finalUrl;
+        return { ...prev, photos: nextPhotos };
+      });
+    } catch (err) {
+      console.error('Photo upload failed:', err);
+    } finally {
+      setTimeout(() => setUploadProgress(null), 300);
+    }
   };
 
   const handleDeletePhoto = (index) => {
@@ -123,12 +138,26 @@ export const EditProfile = ({ onBack }) => {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (!isFormValid()) return;
+    if (!isFormValid() || isSaving) return;
 
-    setUserProfile(localProfile);
-    onBack();
+    setIsSaving(true);
+    try {
+      if (updateUserProfile) {
+        await updateUserProfile(localProfile);
+      } else {
+        setUserProfile(localProfile);
+      }
+      onBack();
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+      if (showAlert) {
+        await showAlert({ title: 'Save Failed', message: err.message || 'Could not save profile updates.' });
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getAge = () => {
@@ -318,8 +347,8 @@ export const EditProfile = ({ onBack }) => {
             <Button onClick={onBack} variant="secondary">
               Cancel
             </Button>
-            <Button type="submit" variant="primary" disabled={!isFormValid()}>
-              Save Changes
+            <Button type="submit" variant="primary" disabled={!isFormValid() || isSaving}>
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
 

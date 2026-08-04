@@ -85,6 +85,49 @@ export const AppProvider = ({ children }) => {
         };
     });
 
+    const notificationsRef = useRef(notifications);
+    useEffect(() => {
+        notificationsRef.current = notifications;
+        try {
+            localStorage.setItem('vh-notifications', JSON.stringify(notifications));
+        } catch (e) { }
+    }, [notifications]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('vh-accessibility', JSON.stringify(accessibility));
+        } catch (e) { }
+    }, [accessibility]);
+
+    const updateNotificationSettings = useCallback(async (newNotifs) => {
+        setNotifications(newNotifs);
+        notificationsRef.current = newNotifs;
+        try {
+            localStorage.setItem('vh-notifications', JSON.stringify(newNotifs));
+        } catch (e) { }
+        if (api.isConfigured && api.tokenStore.getToken()) {
+            try {
+                await api.updateSettings(newNotifs);
+            } catch (err) {
+                console.warn('Failed to sync notification settings to backend:', err);
+            }
+        }
+    }, []);
+
+    const updateAccessibilitySettings = useCallback(async (newAccess) => {
+        setAccessibility(newAccess);
+        try {
+            localStorage.setItem('vh-accessibility', JSON.stringify(newAccess));
+        } catch (e) { }
+        if (api.isConfigured && api.tokenStore.getToken()) {
+            try {
+                await api.updateSettings(newAccess);
+            } catch (err) {
+                console.warn('Failed to sync accessibility settings to backend:', err);
+            }
+        }
+    }, []);
+
     // --- Notification Inbox ---
     const [notificationItems, setNotificationItems] = useState([]); // recent notifications (server-side model)
     const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
@@ -706,7 +749,7 @@ export const AppProvider = ({ children }) => {
                             const activeChatCur = sessionStorage.getItem('vh-active-chat-id');
                             const isCurrentlyChatting = activeTabCur === 'chat' && activeChatCur === partnerId;
 
-                            if (!isCurrentlyChatting) {
+                            if (!isCurrentlyChatting && notificationsRef.current?.chatNotifs !== false) {
                                 addToast({
                                     partnerId,
                                     conversationId,
@@ -805,6 +848,11 @@ export const AppProvider = ({ children }) => {
                 // Real-time notification delivery (Likes, Matches, System)
                 socket.on('notification', ({ notification }) => {
                     if (!notification || notification.type === 'MESSAGE') return;
+
+                    // Filter incoming socket notifications based on user preferences
+                    if (notification.type === 'LIKE' && notificationsRef.current?.interestNotifs === false) return;
+                    if (notification.type === 'MATCH' && notificationsRef.current?.matchNotifs === false) return;
+
                     setNotificationItems(prev => {
                         const exists = prev.some(n => n.id === notification.id);
                         const updated = exists
@@ -1036,6 +1084,21 @@ useEffect(() => {
         } catch (err) {
             console.error('Failed to save profile:', err);
             throw err; // Let the caller handle the error
+        }
+    };
+
+    const updateUserProfile = async (profileData) => {
+        setUserProfile(profileData);
+        if (api.isConfigured && api.tokenStore.getToken()) {
+            try {
+                const saved = await api.saveProfile(profileData);
+                if (saved) {
+                    hydrateFromProfile(saved);
+                }
+            } catch (err) {
+                console.error('Failed to save profile updates:', err);
+                throw err;
+            }
         }
     };
 
@@ -1530,8 +1593,10 @@ useEffect(() => {
             resolvedTheme,
             accessibility,
             setAccessibility,
+            updateAccessibilitySettings,
             notifications,
             setNotifications,
+            updateNotificationSettings,
             // Notification inbox state & actions
             notificationItems,
             setNotificationItems,
@@ -1546,6 +1611,7 @@ useEffect(() => {
             loginWithGoogle,
             registerWithGoogle,
             completeOnboarding,
+            updateUserProfile,
             sendInterest,
             toggleSaveProfile,
             unmatchConnection,

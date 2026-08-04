@@ -275,16 +275,27 @@ export const YouProfile = ({ onEditProfile }) => {
           font-size: var(--text-body);
           font-weight: 600;
           color: var(--text-primary);
+          transition: color var(--duration-fast);
         }
 
         .tile-desc {
           font-size: var(--text-body-sm);
           color: var(--text-secondary);
+          transition: color var(--duration-fast);
         }
 
         .sign-out-tile:hover {
           border-color: var(--error);
           background-color: var(--error-light);
+        }
+
+        .sign-out-tile:hover .tile-title,
+        .sign-out-tile:hover .tile-icon {
+          color: var(--error);
+        }
+
+        .sign-out-tile:hover .tile-desc {
+          color: var(--text-primary);
         }
       `}</style>
     </div>

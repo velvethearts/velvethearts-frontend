@@ -12,9 +12,11 @@ export const SettingsPage = () => {
     theme, 
     setTheme, 
     accessibility, 
-    setAccessibility, 
+    setAccessibility,
+    updateAccessibilitySettings,
     notifications, 
     setNotifications,
+    updateNotificationSettings,
     setActiveTab,
     logout,
     showConfirm,
@@ -30,15 +32,33 @@ export const SettingsPage = () => {
   };
 
   const handleAccessibilityChange = (key, value) => {
-    setAccessibility(prev => ({ ...prev, [key]: value }));
+    const updated = { ...accessibility, [key]: value };
+    if (updateAccessibilitySettings) {
+      updateAccessibilitySettings(updated);
+    } else {
+      setAccessibility(updated);
+    }
   };
 
   const handleNotifToggle = (key) => {
     setLocalNotifs(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleDirectNotifToggle = (key) => {
+    const updated = { ...notifications, [key]: !notifications[key] };
+    if (updateNotificationSettings) {
+      updateNotificationSettings(updated);
+    } else {
+      setNotifications(updated);
+    }
+  };
+
   const handleSaveNotifs = async () => {
-    setNotifications(localNotifs);
+    if (updateNotificationSettings) {
+      await updateNotificationSettings(localNotifs);
+    } else {
+      setNotifications(localNotifs);
+    }
     setShowNotifModal(false);
     await showAlert({ title: 'Settings Saved', message: 'Notification preferences updated successfully!' });
   };
@@ -172,23 +192,78 @@ export const SettingsPage = () => {
           </div>
         </section>
 
-        {/* Action Toggles */}
+        {/* Notification Toggles */}
         <section className="settings-section border-top" aria-labelledby="notif-heading">
           <h2 id="notif-heading" className="section-title">
             <Bell size={20} className="section-title-icon" />
             <span>Notification Preferences</span>
           </h2>
-          <div className="danger-actions-list">
-            <button 
-              onClick={() => {
-                setLocalNotifs({ ...notifications });
-                setShowNotifModal(true);
-              }}
-              className="option-action-row"
-            >
-              <span>Manage Notifications Settings</span>
-              <span className="arrow-indicator">&rarr;</span>
-            </button>
+          <div className="settings-options-list">
+            
+            {/* New Connections */}
+            <div className="option-item">
+              <div className="option-text">
+                <span className="option-label">New Connections</span>
+                <span className="option-desc">Alert when someone sends mutual interest</span>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={Boolean(notifications?.matchNotifs)}
+                  onChange={() => handleDirectNotifToggle('matchNotifs')}
+                />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="option-item">
+              <div className="option-text">
+                <span className="option-label">Chat Messages</span>
+                <span className="option-desc">Alert when you receive a new chat message</span>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={Boolean(notifications?.chatNotifs)}
+                  onChange={() => handleDirectNotifToggle('chatNotifs')}
+                />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+
+            {/* Incoming Interests */}
+            <div className="option-item">
+              <div className="option-text">
+                <span className="option-label">Incoming Interests</span>
+                <span className="option-desc">Alert when someone likes your story or profile</span>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={Boolean(notifications?.interestNotifs)}
+                  onChange={() => handleDirectNotifToggle('interestNotifs')}
+                />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+
+            {/* Email digests */}
+            <div className="option-item">
+              <div className="option-text">
+                <span className="option-label">Email Digests</span>
+                <span className="option-desc">Receive periodic email digests on active matches</span>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={Boolean(notifications?.emailNotifs)}
+                  onChange={() => handleDirectNotifToggle('emailNotifs')}
+                />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+
           </div>
         </section>
 
