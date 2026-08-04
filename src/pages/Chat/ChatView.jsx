@@ -957,6 +957,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
         /* Message Area */
         .chat-messages-pane {
           flex: 1;
+          min-width: 0;
           height: 100%;
           display: flex;
           flex-direction: column;
@@ -1643,20 +1644,25 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
         }
 
         /* Responsive behavior */
-        @media (max-width: 767px) {
-          .chat-page {
-            height: 100%;
+        @media (max-width: 1024px) {
+          .chat-sidebar-pane {
+            width: 250px;
+            min-width: 230px;
+          }
+          .chat-mobile-back-btn {
+            display: flex;
+          }
+        }
+
+        @media (max-width: 850px) {
+          .partner-selected .chat-sidebar-pane {
+            display: none;
           }
           .chat-sidebar-pane {
             width: 100%;
             min-width: 100%;
           }
           .chat-messages-pane {
-            display: none;
-            height: 100%;
-            overflow: hidden;
-          }
-          .partner-selected .chat-sidebar-pane {
             display: none;
           }
           .partner-selected .chat-messages-pane {
@@ -1665,6 +1671,12 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
             height: 100%;
             flex: 1;
             overflow: hidden;
+          }
+        }
+
+        @media (max-width: 767px) {
+          .chat-page {
+            height: 100%;
           }
           .active-chat-wrapper {
             display: flex;
@@ -1676,9 +1688,6 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           .active-chat-header {
             flex-shrink: 0;
             padding: var(--space-3) var(--space-4);
-          }
-          .chat-mobile-back-btn {
-            display: flex;
           }
           .chat-log-container {
             flex: 1;

@@ -845,6 +845,12 @@ useEffect(() => {
 
             api.tokenStore.setToken(firebaseIdToken);
 
+            try {
+                await api.login(firebaseIdToken);
+            } catch (loginErr) {
+                console.warn('api.login during onAuthStateChanged failed:', loginErr);
+            }
+
             const profileData = await api.getMe();
 
             hydrateFromProfile(profileData);
@@ -860,7 +866,7 @@ useEffect(() => {
                 loadSocialData();
             }
         } catch (err) {
-            console.error(err);
+            console.error('Session restoration error:', err);
 
             api.tokenStore.clear();
 
@@ -965,97 +971,48 @@ useEffect(() => {
         api.tokenStore.setToken(firebaseIdToken);
 
         // Set auth state
-        setPhone(data.user.phoneNumber);
+        setPhone(data.user.phoneNumber || phoneNumber || '');
         setIsLoggedIn(true);
-        setApprovalStatus(normalizeApprovalStatus(data.user.approvalStatus));
+        const status = normalizeApprovalStatus(data.user.approvalStatus);
+        setApprovalStatus(status);
         setUserRole(data.user.role || 'USER');
-        setIsOnboarded(data.user.isOnboarded || false);
+
         // Store userId early so socket handler can identify self
         if (data.user.id) {
             setUserProfile(prev => ({ ...prev, userId: data.user.id }));
         }
 
-        // If user is already onboarded and approved, load their profile and social data
-        if (data.user.isOnboarded) {
-            try {
-                const profileData = await api.getMe();
+        // Fetch full profile to accurately check onboarding status and hydrate state
+        let hasProfile = false;
+        try {
+            const profileData = await api.getMe();
+            if (profileData && (profileData.name || profileData.profile?.name)) {
                 hydrateFromProfile(profileData);
-            } catch {
-                // Profile fetch failed — user can still proceed
+                hasProfile = true;
+            } else {
+                setIsOnboarded(false);
+            }
+        } catch (profileErr) {
+            console.error('Failed to load profile in login:', profileErr);
+            if (data.user?.profile?.name) {
+                hydrateFromProfile(data.user.profile);
+                hasProfile = true;
+            } else {
+                setIsOnboarded(false);
             }
         }
 
-        if (data.user.isOnboarded && data.user.approvalStatus !== 'PENDING') {
+        if (hasProfile && status === 'approved') {
             loadSocialData();
         }
     };
 
     const loginWithGoogle = async (googleToken) => {
-        if (!api.isConfigured) {
-            // Fallback for mock mode
-            setPhone("+919999988888");
-            setIsLoggedIn(true);
-            setApprovalStatus('pending');
-            setIsOnboarded(false);
-            return;
-        }
-
-        // Google sign-in is now handled via Firebase itself (signInWithPopup/
-        // signInWithRedirect elsewhere); the passed-in googleToken is no longer
-        // used since the backend only accepts a Firebase ID token.
-        const firebaseIdToken = await auth.currentUser.getIdToken();
-        const data = await api.login(firebaseIdToken);
-
-        // Store the Firebase ID token
-        api.tokenStore.setToken(firebaseIdToken);
-
-        // Set auth state
-        setPhone(data.user.phoneNumber);
-        setIsLoggedIn(true);
-        setApprovalStatus(normalizeApprovalStatus(data.user.approvalStatus));
-        setUserRole(data.user.role || 'USER');
-        setIsOnboarded(data.user.isOnboarded || false);
-
-        // If user is already onboarded, load their profile and social data
-        if (data.user.isOnboarded) {
-            try {
-                const profileData = await api.getMe();
-                hydrateFromProfile(profileData);
-            } catch {
-                // Profile fetch failed — user can still proceed
-            }
-        }
-
-        if (data.user.isOnboarded && normalizeApprovalStatus(data.user.approvalStatus) === 'approved') {
-            loadSocialData();
-        }
+        return login();
     };
 
     const registerWithGoogle = async (phoneNumber, googleToken) => {
-        if (!api.isConfigured) {
-            // Fallback for mock mode
-            setPhone(phoneNumber);
-            setIsLoggedIn(true);
-            setApprovalStatus('pending');
-            setIsOnboarded(false);
-            return;
-        }
-
-        // Registration is now handled by the same Firebase-backed login
-        // endpoint; the backend upserts the user from the Firebase ID token.
-        // The passed-in googleToken is no longer used.
-        const firebaseIdToken = await auth.currentUser.getIdToken();
-        const data = await api.login(firebaseIdToken);
-
-        // Store the Firebase ID token
-        api.tokenStore.setToken(firebaseIdToken);
-
-        // Set auth state
-        setPhone(data.user.phoneNumber || phoneNumber);
-        setIsLoggedIn(true);
-        setApprovalStatus(normalizeApprovalStatus(data.user.approvalStatus));
-        setUserRole(data.user.role || 'USER');
-        setIsOnboarded(data.user.isOnboarded || false);
+        return login(phoneNumber);
     };
 
     const completeOnboarding = async (profileData) => {

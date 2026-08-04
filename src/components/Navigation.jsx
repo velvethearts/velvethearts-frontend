@@ -371,6 +371,40 @@ export const Navigation = ({ children }) => {
             display: none;
           }
         }
+
+        @media (min-width: 768px) and (max-width: 1024px) {
+          .desktop-sidebar {
+            width: 80px;
+            padding: var(--space-4) var(--space-2);
+            align-items: center;
+          }
+
+          .sidebar-logo {
+            justify-content: center;
+          }
+
+          .sidebar-link span,
+          .sidebar-link-footer span,
+          .sidebar-theme-toggle-wrap .theme-toggle-label,
+          .sidebar-credits {
+            display: none;
+          }
+
+          .sidebar-link,
+          .sidebar-link-footer {
+            justify-content: center;
+            padding: var(--space-3);
+          }
+
+          .sidebar-theme-toggle-wrap {
+            justify-content: center;
+            padding: var(--space-2) 0;
+          }
+
+          .main-content-layout {
+            padding-left: 80px;
+          }
+        }
       `}</style>
     </div>
   );

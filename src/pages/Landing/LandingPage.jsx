@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Heart, ShieldCheck, Users, Bookmark, Sparkle } from '@phosphor-icons/react';
 import { ThemeToggle } from '../../components/UI/ThemeToggle';
-import logo from "../../assets/velvet-hearts-logo.jpeg";
+import logo from "../../assets/velvet-heart-logo.png";
 
 export const LandingPage = ({ onGetStarted, onSignIn }) => {
   const { showAlert } = useApp();
@@ -11,11 +11,10 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
       {/* Decorative Gradient Background Elements */}
       <div className="gradient-glow glow-1"></div>
       <div className="gradient-glow glow-2"></div>
-      
+
       <header className="landing-header">
         <div className="landing-logo">
-
-</div>
+        </div>
         <div className="landing-header-actions">
           <ThemeToggle />
           <button onClick={onSignIn} className="sign-in-btn font-ui">
@@ -31,11 +30,14 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
             <Sparkle size={16} weight="fill" />
             <span>A Different Kind of Dating Space</span>
           </div>
-          
-          <h1 className="hero-title font-display">
-            Where every<br />heart belongs.
-          </h1>
-          
+
+          <div className="hero-title-logo-row">
+            <h1 className="hero-title font-display">
+              Where every<br />heart belongs.
+            </h1>
+            <img src={logo} alt="Velvet Hearts Logo" className="hero-inline-logo" />
+          </div>
+
           <p className="hero-description font-body">
             A dating experience built on warmth, safety, and the belief that everyone deserves to be seen for who they truly are. No gamified swiping. No superficial checklist matching. Just human connection.
           </p>
@@ -49,7 +51,7 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
             </button>
           </div>
         </div>
-        
+
         {/* Asymmetric Graphical Display representing intimacy */}
         <div className="hero-visual">
           <div className="visual-card card-main">
@@ -113,7 +115,7 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
       {/* How it Works Section */}
       <section className="how-it-works-section">
         <h2 className="section-title font-display text-center">Your journey to connection</h2>
-        
+
         <div className="steps-container">
           <div className="step-item">
             <div className="step-num font-display">01</div>
@@ -171,7 +173,10 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
 
       {/* Footer */}
       <footer className="landing-footer font-ui">
-        <div className="footer-brand font-display">Velvet Hearts</div>
+        <div className="footer-brand font-display">
+          <img src={logo} alt="Velvet Hearts Logo" className="footer-logo-image" />
+          <span>Velvet Hearts</span>
+        </div>
         <div className="footer-links">
           <a href="#guidelines" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Community Guidelines', message: 'Be respectful, genuine, and kind.' }); }}>Community Guidelines</a>
           <a href="#safety" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Safety Center', message: 'Report tools are available directly inside chat and profiles.' }); }}>Safety Center</a>
@@ -316,10 +321,57 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
           margin-bottom: var(--space-6);
         }
 
+        .hero-title-logo-row {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: nowrap;
+          align-items: center;
+          gap: var(--space-6);
+          margin-bottom: var(--space-4);
+        }
+
         .hero-title {
           font-size: var(--text-hero);
           color: var(--burgundy-900);
-          margin-bottom: var(--space-4);
+          margin-bottom: 0;
+          line-height: 1.15;
+          flex: 1 1 auto;
+        }
+
+        .hero-inline-logo {
+          width: 220px;
+          height: auto;
+          object-fit: contain;
+          flex-shrink: 0;
+          margin: 0;
+          padding: 0;
+          filter: drop-shadow(0 10px 28px rgba(184, 67, 106, 0.3));
+          transition: transform 0.3s ease;
+          animation: floatLogo 4s ease-in-out infinite alternate;
+        }
+
+        .hero-inline-logo:hover {
+          transform: scale(1.08) rotate(3deg);
+        }
+
+        @keyframes floatLogo {
+          0% { transform: translateY(0px) rotate(0deg); }
+          100% { transform: translateY(-6px) rotate(2deg); }
+        }
+
+        @media (max-width: 991px) {
+          .hero-inline-logo {
+            width: 180px;
+          }
+        }
+
+        @media (max-width: 576px) {
+          .hero-title-logo-row {
+            gap: var(--space-3);
+          }
+          .hero-inline-logo {
+            width: 150px;
+          }
         }
 
         [data-theme="dark"] .hero-title {
@@ -646,9 +698,23 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
         }
 
         .footer-brand {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
           font-size: var(--text-heading);
           color: var(--text-accent);
           font-weight: bold;
+        }
+
+        .footer-logo-image {
+          height: 32px;
+          width: auto;
+          object-fit: contain;
+          transition: transform var(--duration-fast);
+        }
+
+        .footer-brand:hover .footer-logo-image {
+          transform: scale(1.08);
         }
 
         .footer-links {
