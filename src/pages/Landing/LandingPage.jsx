@@ -356,7 +356,7 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
 
         @keyframes floatLogo {
           0% { transform: translateY(0px) rotate(0deg); }
-          100% { transform: translateY(-6px) rotate(2deg); }
+          70% { transform: translateY(-20px) rotate(5deg); }
         }
 
         @media (max-width: 991px) {
