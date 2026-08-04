@@ -11,7 +11,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 import { auth } from '../lib/firebase';
 import { api } from '../lib/api';
-import { connectSocket, disconnectSocket } from '../lib/socket';
+import { connectSocket, disconnectSocket, emitMarkSeen } from '../lib/socket';
 import { ConfirmModal } from '../components/UI/ConfirmModal';
 const AppContext = createContext();
 const CHAT_CLEARS_STORAGE_KEY = 'vh-cleared-chats';
@@ -415,6 +415,8 @@ export const AppProvider = ({ children }) => {
                             text: m.text,
                             attachments: m.attachments || [],
                             isDeleted: Boolean(m.isDeleted),
+                            seen: Boolean(m.seen),
+                            createdAt: m.createdAt,
                             timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         })).reverse();
 
@@ -580,6 +582,8 @@ export const AppProvider = ({ children }) => {
                             text: message.text || '',
                             attachments: message.attachments || [],
                             isDeleted: Boolean(message.isDeleted),
+                            seen: Boolean(message.seen),
+                            createdAt: message.createdAt || new Date().toISOString(),
                             timestamp: new Date(message.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         };
 
@@ -659,6 +663,36 @@ export const AppProvider = ({ children }) => {
                     }
                 });
 
+                socket.on('messages_seen', ({ conversationId, readerId, seenAt }) => {
+                    const myUserId = currentUserIdRef.current;
+                    if (readerId === myUserId) return;
+
+                    const conv = conversationsRef.current.find(c => c.id === conversationId);
+                    const partnerId = conv?.partnerId;
+                    const cutoffTime = new Date(seenAt || Date.now()).getTime();
+
+                    setChats(prevChats => {
+                        const targetKeys = [partnerId, conversationId].filter(Boolean);
+                        if (targetKeys.length === 0) return prevChats;
+
+                        const nextChats = { ...prevChats };
+                        for (const key of targetKeys) {
+                            if (nextChats[key]) {
+                                nextChats[key] = nextChats[key].map(msg => {
+                                    if (msg.sender === 'user') {
+                                        const msgTime = new Date(msg.createdAt || Date.now()).getTime();
+                                        if (!msg.seen && (isNaN(msgTime) || msgTime <= cutoffTime)) {
+                                            return { ...msg, seen: true, seenAt };
+                                        }
+                                    }
+                                    return msg;
+                                });
+                            }
+                        }
+                        return nextChats;
+                    });
+                });
+
                 socket.on('message_deleted', ({ conversationId, messageId }) => {
                     const conv = conversationsRef.current.find(c => c.id === conversationId);
                     if (!conv) return;
@@ -712,11 +746,17 @@ export const AppProvider = ({ children }) => {
                     fetchNotifications();
                 } catch (e) { /* ignore */ }
 
-                // Real-time notification delivery
+                // Real-time notification delivery (Likes, Matches, System)
                 socket.on('notification', ({ notification }) => {
-                    if (!notification) return;
-                    setNotificationItems(prev => [notification, ...prev]);
-                    setNotificationUnreadCount(prev => prev + (notification.isRead ? 0 : 1));
+                    if (!notification || notification.type === 'MESSAGE') return;
+                    setNotificationItems(prev => {
+                        const exists = prev.some(n => n.id === notification.id);
+                        const updated = exists
+                            ? prev.map(n => n.id === notification.id ? notification : n)
+                            : [notification, ...prev];
+                        setNotificationUnreadCount(updated.filter(n => !n.isRead).length);
+                        return updated;
+                    });
                 });
 
                 // When a match is created, refresh notifications to pick up server-side created rows
@@ -811,9 +851,11 @@ useEffect(() => {
         if (!api.isConfigured) return;
         try {
             const data = await api.getNotifications(page, limit);
-            // Controller returns array of notifications as data
-            setNotificationItems(Array.isArray(data) ? data : []);
-            setNotificationUnreadCount((Array.isArray(data) ? data : []).filter(n => !n.isRead).length);
+            const rawList = Array.isArray(data) ? data : (data?.notifications || []);
+            // Notifications page handles Likes, Matches, System updates — chat messages show counters on the Chat tab/conversations
+            const list = rawList.filter(n => n.type !== 'MESSAGE');
+            setNotificationItems(list);
+            setNotificationUnreadCount(list.filter(n => !n.isRead).length);
         } catch (err) {
             console.error('Failed to fetch notifications:', err);
         }
@@ -1198,13 +1240,19 @@ useEffect(() => {
         }
     };
 
-    const sendMessage = async (profileId, text, attachments = []) => {
+    const sendMessage = async (profileId, text, attachments = [], attachmentsForOptimistic = null) => {
         const messageId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        // For the optimistic message shown immediately to the sender, prefer
+        // attachmentsForOptimistic (which may contain localPreview for the
+        // thumbnail) but fall back to attachments.
+        // The API always receives the clean `attachments` array (Cloudinary
+        // URLs only, no blob: URLs or client-only fields).
+        const optimisticAttachments = attachmentsForOptimistic || attachments || [];
         const newMessage = {
             id: messageId,
             sender: 'user',
             text: text || '',
-            attachments: attachments || [],
+            attachments: optimisticAttachments,
             isDeleted: false,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -1254,9 +1302,19 @@ useEffect(() => {
                     });
 
                     const res = await api.sendMessage(conversation.id, text, attachments);
-                    const sentMsg = res?.data || res;
+                    // api.js already unwraps payload.data, so res IS the message object
+                    const sentMsg = res;
 
                     if (sentMsg && sentMsg.id) {
+                        // Revoke any blob: localPreview URLs from the optimistic
+                        // attachment objects to free browser memory
+                        const prevOptimistic = optimisticAttachments;
+                        prevOptimistic.forEach(att => {
+                            if (att.localPreview && att.localPreview.startsWith('blob:')) {
+                                try { URL.revokeObjectURL(att.localPreview); } catch (_) {}
+                            }
+                        });
+
                         setChats(prev => {
                             const current = prev[profileId] || prev[conversation.partnerId] || prev[conversation.id] || [];
                             const updated = current.map(m =>
@@ -1369,6 +1427,38 @@ useEffect(() => {
         }
     };
 
+    const markConversationSeen = useCallback(async (targetId) => {
+        if (!targetId) return;
+
+        const conversation = conversationsRef.current.find(c => 
+            c.id === targetId || 
+            c.partnerId === targetId || 
+            c.matchId === targetId
+        );
+
+        const convId = conversation?.id || targetId;
+        const partnerId = conversation?.partnerId || targetId;
+
+        // Reset unread count for this conversation in local state
+        setConversations(prev => prev.map(c => 
+            (c.id === convId || c.partnerId === partnerId)
+                ? { ...c, unreadCount: 0 }
+                : c
+        ));
+
+        // Emit socket mark_seen & trigger API call
+        if (convId) {
+            emitMarkSeen(convId);
+            if (api.isConfigured) {
+                try {
+                    await api.markSeen(convId);
+                } catch (err) {
+                    console.warn('markConversationSeen warning:', err?.message || err);
+                }
+            }
+        }
+    }, []);
+
         const chatUnreadCount = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
 
         return (
@@ -1442,6 +1532,7 @@ useEffect(() => {
             sendMessage,
             deleteMessage,
             deleteConversationMessages,
+            markConversationSeen,
             logout,
             onlineUserIds,
             fetchDiscoverProfiles,

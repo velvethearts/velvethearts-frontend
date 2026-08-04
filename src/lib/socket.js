@@ -67,3 +67,9 @@ export function emitStopTyping(conversationId) {
     socket.emit('typing_stop', conversationId);
   }
 }
+
+export function emitMarkSeen(conversationId) {
+  if (socket && conversationId) {
+    socket.emit('mark_seen', conversationId);
+  }
+}

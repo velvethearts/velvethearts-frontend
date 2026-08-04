@@ -7,6 +7,8 @@ import { Bell, ChatCircleText, Heart, Info } from '@phosphor-icons/react';
 export const NotificationsPage = () => {
   const { notificationItems, notificationUnreadCount, markNotificationRead, markAllNotificationsRead, deleteNotificationItem, setActiveTab, setDeepLinkConversationId } = useApp();
 
+  const hasUnread = notificationUnreadCount > 0 || notificationItems.some(n => !n.isRead);
+
   const timeAgo = (d) => {
     const now = Date.now();
     const diff = Math.floor((now - d.getTime()) / 1000);
@@ -75,13 +77,13 @@ export const NotificationsPage = () => {
   return (
     <div className="notifications-page page-enter">
       <PageHeader
-        title={`Notifications`}
-        subtitle={notificationUnreadCount > 0 ? `${notificationUnreadCount} unread` : 'All notifications'}
-        actions={(
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="ghost" onClick={markAllNotificationsRead}>Mark all read</Button>
-          </div>
-        )}
+        title="Notifications"
+        subtitle={hasUnread ? `${notificationUnreadCount} unread` : 'All notifications'}
+        actions={hasUnread ? (
+          <Button variant="ghost" onClick={markAllNotificationsRead}>
+            Mark all read
+          </Button>
+        ) : null}
       />
 
       <div className="notifications-list">

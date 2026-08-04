@@ -27,7 +27,7 @@ const formatFileSize = (bytes) => {
 };
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
-  const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds } = useApp();
+  const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds } = useApp();
   
   const isUserOnline = (partner) => {
     if (!partner) return false;
@@ -62,32 +62,50 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     if (files.length === 0) return;
 
     setIsUploadingAttachment(true);
+    const failedFiles = [];
     try {
       for (const file of files) {
         const isImg = file.type.startsWith('image/');
         const isVid = file.type.startsWith('video/');
         const fileType = isImg ? 'IMAGE' : isVid ? 'VIDEO' : 'DOCUMENT';
-        const previewUrl = URL.createObjectURL(file);
+        // localPreview is only used for the pending-attachments thumbnail
+        // before the message is sent. It is NEVER stored in the DB or sent
+        // to the other user — only the Cloudinary secureUrl is.
+        const localPreview = URL.createObjectURL(file);
 
         let uploadRes = null;
         if (api.isConfigured) {
           try {
             const res = await api.uploadFile(file);
-            uploadRes = res?.data || res;
+            // api.js already unwraps payload.data, so res IS the data object
+            uploadRes = res;
           } catch (uploadErr) {
-            console.error('File upload error, using local fallback:', uploadErr);
+            console.error('File upload error:', uploadErr);
+            failedFiles.push(file.name);
+            URL.revokeObjectURL(localPreview);
+            continue; // skip this file — do NOT fall back to blob URL
           }
         }
 
+        if (!uploadRes?.secureUrl) {
+          // Backend not configured or upload returned no URL — skip
+          failedFiles.push(file.name);
+          URL.revokeObjectURL(localPreview);
+          continue;
+        }
+
         const attachmentObj = {
+          // Internal client-side id (used for React key and removal)
           id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          cloudinaryPublicId: uploadRes?.publicId || `local_${Date.now()}`,
-          secureUrl: uploadRes?.secureUrl || previewUrl,
+          // Fields persisted to DB and sent to other user:
+          cloudinaryPublicId: uploadRes.publicId,
+          secureUrl: uploadRes.secureUrl,  // real Cloudinary HTTPS URL
           fileType,
           fileName: file.name,
           fileSize: file.size,
+          // Client-only fields (used for local preview thumbnail, NOT sent to API):
           mimeType: file.type,
-          localPreview: previewUrl
+          localPreview,
         };
 
         setSelectedAttachments(prev => [...prev, attachmentObj]);
@@ -97,6 +115,13 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     } finally {
       setIsUploadingAttachment(false);
       if (e.target) e.target.value = '';
+    }
+
+    if (failedFiles.length > 0) {
+      await showAlert({
+        title: 'Upload Failed',
+        message: `Could not upload: ${failedFiles.join(', ')}. Please check your connection and try again.`
+      });
     }
   };
 
@@ -109,12 +134,23 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     if ((!messageText.trim() && selectedAttachments.length === 0) || !activeChatId) return;
 
     const textToSend = messageText.trim();
-    const attachmentsToSend = [...selectedAttachments];
+    // Strip client-only fields before sending to the API so only
+    // backend-compatible fields (cloudinaryPublicId, secureUrl, fileType,
+    // fileName, fileSize) reach the server and are stored in the DB.
+    const attachmentsToSend = selectedAttachments.map(({ cloudinaryPublicId, secureUrl, fileType, fileName, fileSize }) => ({
+      cloudinaryPublicId,
+      secureUrl,
+      fileType,
+      fileName,
+      fileSize,
+    }));
+    // Keep the full objects (with localPreview) for the optimistic UI update
+    const attachmentsForOptimistic = [...selectedAttachments];
 
     setMessageText('');
     setSelectedAttachments([]);
 
-    await sendMessage(activeChatId, textToSend, attachmentsToSend);
+    await sendMessage(activeChatId, textToSend, attachmentsToSend, attachmentsForOptimistic);
 
     if (conversationId) {
       setLocalIsTyping(false);
@@ -148,15 +184,18 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chats, activeChatId, isTyping]);
 
-  // Join/Leave conversation rooms
+  // Join/Leave conversation rooms & Mark conversation as seen
   useEffect(() => {
     if (conversationId) {
       joinConversation(conversationId);
+      markConversationSeen(conversationId);
       return () => {
         leaveConversation(conversationId);
       };
+    } else if (activeChatId) {
+      markConversationSeen(activeChatId);
     }
-  }, [conversationId]);
+  }, [conversationId, activeChatId, markConversationSeen]);
 
   // Listen for real-time typing events via socket
   useEffect(() => {
@@ -324,6 +363,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                 const partnerChats = chats[partner.id] || [];
                 const lastMsg = partnerChats[partnerChats.length - 1];
                 const isActive = partner.id === activeChatId;
+                const partnerConv = conversations.find(c => c.partnerId === partner.id || c.id === partner.id);
+                const unreadCount = partnerConv?.unreadCount || 0;
 
                 return (
                   <button
@@ -344,9 +385,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                         <span className="partner-item-name font-ui">{partner.name}</span>
                         {lastMsg && <span className="partner-item-time font-ui">{lastMsg.timestamp}</span>}
                       </div>
-                      <p className="partner-item-preview font-body">
-                        {lastMsg ? lastMsg.text : 'Start a warm conversation...'}
-                      </p>
+                      <div className="partner-item-preview-row">
+                        <p className="partner-item-preview font-body">
+                          {lastMsg ? (lastMsg.text || 'Sent an attachment') : 'Start a warm conversation...'}
+                        </p>
+                        {unreadCount > 0 && !isActive && (
+                          <span className="partner-unread-badge font-ui">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                        )}
+                      </div>
                     </div>
                   </button>
                 );
@@ -523,7 +569,12 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                               <Trash size={14} />
                             </button>
                           )}
-                          <span className="message-bubble-time font-ui">{msg.timestamp}</span>
+                          <div className="message-bubble-footer font-ui">
+                            <span className="message-bubble-time">{msg.timestamp}</span>
+                            {isUser && !msg.isDeleted && msg.seen && (
+                              <span className="seen-status-text page-enter">• Seen</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -824,6 +875,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           color: var(--text-muted);
         }
 
+        .partner-item-preview-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--space-2);
+          width: 100%;
+        }
+
         .partner-item-preview {
           font-size: var(--text-body-sm);
           color: var(--text-secondary);
@@ -831,6 +890,23 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           overflow: hidden;
           text-overflow: ellipsis;
           margin: 0;
+          flex: 1;
+        }
+
+        .partner-unread-badge {
+          background-color: var(--burgundy-500);
+          color: #FFFFFF;
+          font-size: 11px;
+          font-weight: 700;
+          min-width: 18px;
+          height: 18px;
+          padding: 0 6px;
+          border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+          flex-shrink: 0;
         }
 
         /* Message Area */
@@ -1079,14 +1155,31 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           background-color: var(--error-light);
         }
 
-        .message-bubble-time {
+        .message-bubble-footer {
+          display: flex;
+          align-items: center;
+          gap: 4px;
           font-size: 10px;
           color: var(--text-muted);
           margin-top: 1px;
         }
 
-        .user-sent .message-bubble-time {
+        .user-sent .message-bubble-footer {
           align-self: flex-end;
+        }
+
+        .seen-status-text {
+          color: var(--burgundy-400);
+          font-weight: 600;
+        }
+
+        [data-theme="dark"] .seen-status-text {
+          color: var(--burgundy-300);
+        }
+
+        .delivered-status-text {
+          color: var(--text-tertiary);
+          font-weight: 500;
         }
 
         /* Typing indicator dots */
@@ -1552,6 +1645,24 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           }
           .chat-attach-btn {
             padding: 4px;
+          }
+          .message-status-receipt {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 2px;
+            padding-right: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            user-select: none;
+          }
+          .seen-text {
+            color: var(--burgundy-500);
+          }
+          [data-theme="dark"] .seen-text {
+            color: var(--burgundy-300);
+          }
+          .delivered-text {
+            color: var(--text-tertiary);
           }
         }
       `}</style>

@@ -10,8 +10,8 @@ export const PageHeader = ({
 }) => {
   return (
     <header className={`vh-page-header ${className}`}>
-      <div className="vh-header-top-row">
-        {onBack && (
+      {onBack && (
+        <div className="vh-header-top-row">
           <button 
             onClick={onBack} 
             className="vh-header-back-btn font-ui" 
@@ -20,15 +20,32 @@ export const PageHeader = ({
             <ArrowLeft size={20} />
             <span>Back</span>
           </button>
-        )}
-        {actions && <div className="vh-header-actions-wrap">{actions}</div>}
-      </div>
-      {(title || subtitle) && (
+        </div>
+      )}
+      {(title || subtitle || actions) && (
         <div className="vh-header-title-block">
-          {title && <h1 className="vh-page-title font-display">{title}</h1>}
+          <div className="vh-header-title-row">
+            {title && <h1 className="vh-page-title font-display">{title}</h1>}
+            {actions && <div className="vh-header-actions-wrap">{actions}</div>}
+          </div>
           {subtitle && <p className="vh-page-subtitle font-body">{subtitle}</p>}
         </div>
       )}
+
+      <style>{`
+        .vh-header-title-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          gap: var(--space-4);
+        }
+        .vh-header-actions-wrap {
+          margin-left: auto;
+          display: flex;
+          align-items: center;
+        }
+      `}</style>
     </header>
   );
 };
