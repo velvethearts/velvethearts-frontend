@@ -482,14 +482,20 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                             <div className="message-attachments-container">
                               {msg.attachments.map((att, idx) => {
                                 const url = att.secureUrl || att.localPreview;
-                                const isImg = att.fileType === 'IMAGE' || (att.mimeType && att.mimeType.startsWith('image/')) || (typeof url === 'string' && url.match(/\.(jpeg|jpg|gif|png|webp)/i));
+                                const isImg = att.fileType === 'IMAGE' ||
+                                              (att.mimeType && att.mimeType.startsWith('image/')) ||
+                                              (typeof url === 'string' && (Boolean(url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i)) || url.includes('/image/upload/')));
+
+                                const isVid = att.fileType === 'VIDEO' ||
+                                              (att.mimeType && att.mimeType.startsWith('video/')) ||
+                                              (typeof url === 'string' && (Boolean(url.match(/\.(mp4|webm|mov|ogg|m4v)/i)) || url.includes('/video/upload/')));
 
                                 if (isImg) {
                                   return (
                                     <div 
                                       key={att.id || idx} 
                                       className="message-image-attachment"
-                                      onClick={() => setLightboxImage({ url, name: att.fileName || 'Image', messageId: msg.id, isUser })}
+                                      onClick={() => setLightboxImage({ type: 'image', url, name: att.fileName || 'Image', messageId: msg.id, isUser })}
                                     >
                                       <img src={url} alt={att.fileName || 'Attachment'} className="chat-attached-img" />
                                       {isUser && !msg.isDeleted && (
@@ -502,6 +508,33 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                                           }}
                                           aria-label="Delete photo"
                                           title="Delete photo"
+                                        >
+                                          <Trash size={16} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                }
+
+                                if (isVid) {
+                                  return (
+                                    <div key={att.id || idx} className="message-video-attachment-wrapper">
+                                      <video
+                                        src={url}
+                                        controls
+                                        preload="metadata"
+                                        className="chat-attached-video"
+                                      />
+                                      {isUser && !msg.isDeleted && (
+                                        <button
+                                          type="button"
+                                          className="attachment-delete-overlay-btn"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteMessage(msg.id);
+                                          }}
+                                          aria-label="Delete video"
+                                          title="Delete video"
                                         >
                                           <Trash size={16} />
                                         </button>
@@ -1287,6 +1320,24 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           max-height: 260px;
           object-fit: cover;
           display: block;
+        }
+
+        .message-video-attachment-wrapper {
+          position: relative;
+          border-radius: var(--radius-md);
+          overflow: hidden;
+          max-width: 280px;
+          max-height: 280px;
+          border: 1px solid var(--border-subtle);
+          background-color: #000000;
+        }
+
+        .chat-attached-video {
+          width: 100%;
+          max-height: 280px;
+          display: block;
+          border-radius: var(--radius-md);
+          outline: none;
         }
 
         .message-file-attachment {

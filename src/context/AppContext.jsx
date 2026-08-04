@@ -397,8 +397,8 @@ export const AppProvider = ({ children }) => {
             });
             setConversations(visibleConversations);
 
-            // Fetch messages for each conversation to populate the chats state
-            for (const conv of visibleConversations) {
+            // Fetch messages for each conversation concurrently to prevent sequential network bottlenecks
+            await Promise.all(visibleConversations.map(async (conv) => {
                 try {
                     const messages = await api.getMessages(conv.id);
                     if (Array.isArray(messages)) {
@@ -420,15 +420,23 @@ export const AppProvider = ({ children }) => {
                             timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         })).reverse();
 
+                        const partnerConn = connectionsRef.current.find(c =>
+                            c.id === conv.partnerId ||
+                            c.userId === conv.partnerId
+                        );
+                        const partnerProfileId = partnerConn?.id;
+
                         setChats(prev => ({
                             ...prev,
-                            [conv.partnerId]: mapped
+                            [conv.partnerId]: mapped,
+                            [conv.id]: mapped,
+                            ...(partnerProfileId ? { [partnerProfileId]: mapped } : {})
                         }));
                     }
                 } catch (msgErr) {
                     console.error(`Failed to fetch messages for conv ${conv.id}:`, msgErr);
                 }
-            }
+            }));
         } catch (err) {
             console.error('Failed to fetch conversations:', err);
         }
