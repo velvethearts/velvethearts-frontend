@@ -420,11 +420,19 @@ export const AppProvider = ({ children }) => {
                             timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         })).reverse();
 
-                        setChats(prev => ({
-                            ...prev,
-                            [conv.partnerId]: mapped,
-                            [conv.id]: mapped
-                        }));
+                        setChats(prev => {
+                            const existing = prev[conv.partnerId] || prev[conv.id] || [];
+                            const fetchedIds = new Set(mapped.map(m => m.id));
+                            const pendingOptimistic = existing.filter(
+                                m => !fetchedIds.has(m.id) && typeof m.id === 'string' && m.id.includes('-') && !m.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+                            );
+                            const merged = [...mapped, ...pendingOptimistic];
+                            return {
+                                ...prev,
+                                [conv.partnerId]: merged,
+                                [conv.id]: merged
+                            };
+                        });
                     }
                 } catch (msgErr) {
                     console.error(`Failed to fetch messages for conv ${conv.id}:`, msgErr);
@@ -1335,66 +1343,75 @@ useEffect(() => {
                     );
                 }
 
-                if (conversation) {
-                    // Update optimistic message key under conversation ID & partner ID as well
+                const targetId = conversation?.id || profileId;
+
+                // Update optimistic message key under conversation ID & partner ID as well
+                setChats(prev => {
+                    const current = prev[profileId] || (conversation?.partnerId ? prev[conversation.partnerId] : []) || (conversation?.id ? prev[conversation.id] : []) || [];
+                    const hasMsg = current.some(m => m.id === messageId);
+                    const nextList = hasMsg ? current : [...current, newMessage];
+                    return {
+                        ...prev,
+                        [profileId]: nextList,
+                        ...(conversation?.partnerId ? { [conversation.partnerId]: nextList } : {}),
+                        ...(conversation?.id ? { [conversation.id]: nextList } : {})
+                    };
+                });
+
+                const res = await api.sendMessage(targetId, text, attachments);
+                // api.js already unwraps payload.data, so res IS the message object
+                const sentMsg = res;
+
+                if (sentMsg && sentMsg.id) {
+                    // Defer blob URL revocation to avoid revoking a URL that is still
+                    // actively displayed in the optimistic message bubble
+                    const prevOptimistic = optimisticAttachments;
+                    setTimeout(() => {
+                        prevOptimistic.forEach(att => {
+                            if (att.localPreview && att.localPreview.startsWith('blob:')) {
+                                try { URL.revokeObjectURL(att.localPreview); } catch (_) {}
+                            }
+                        });
+                    }, 5000);
+
+                    const resolvedConvId = sentMsg.conversationId || conversation?.id || profileId;
+
                     setChats(prev => {
-                        const current = prev[profileId] || prev[conversation.partnerId] || prev[conversation.id] || [];
-                        const hasMsg = current.some(m => m.id === messageId);
-                        const nextList = hasMsg ? current : [...current, newMessage];
+                        const current = prev[profileId] || prev[resolvedConvId] || (conversation?.partnerId ? prev[conversation.partnerId] : []) || [];
+                        const updated = current.map(m =>
+                            m.id === messageId
+                                ? {
+                                    id: sentMsg.id,
+                                    sender: 'user',
+                                    text: sentMsg.text || '',
+                                    attachments: sentMsg.attachments || [],
+                                    isDeleted: Boolean(sentMsg.isDeleted),
+                                    timestamp: new Date(sentMsg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                  }
+                                : m
+                        );
                         return {
                             ...prev,
-                            [profileId]: nextList,
-                            [conversation.partnerId]: nextList,
-                            [conversation.id]: nextList
+                            [profileId]: updated,
+                            [resolvedConvId]: updated,
+                            ...(conversation?.partnerId ? { [conversation.partnerId]: updated } : {})
                         };
                     });
 
-                    const res = await api.sendMessage(conversation.id, text, attachments);
-                    // api.js already unwraps payload.data, so res IS the message object
-                    const sentMsg = res;
-
-                    if (sentMsg && sentMsg.id) {
-                        // Defer blob URL revocation to avoid revoking a URL that is still
-                        // actively displayed in the optimistic message bubble
-                        const prevOptimistic = optimisticAttachments;
-                        setTimeout(() => {
-                            prevOptimistic.forEach(att => {
-                                if (att.localPreview && att.localPreview.startsWith('blob:')) {
-                                    try { URL.revokeObjectURL(att.localPreview); } catch (_) {}
-                                }
-                            });
-                        }, 5000);
-
-                        setChats(prev => {
-                            const current = prev[profileId] || prev[conversation.partnerId] || prev[conversation.id] || [];
-                            const updated = current.map(m =>
-                                m.id === messageId
-                                    ? {
-                                        id: sentMsg.id,
-                                        sender: 'user',
-                                        text: sentMsg.text || '',
-                                        attachments: sentMsg.attachments || [],
-                                        isDeleted: Boolean(sentMsg.isDeleted),
-                                        timestamp: new Date(sentMsg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                      }
-                                    : m
-                            );
-                            return {
-                                ...prev,
-                                [profileId]: updated,
-                                [conversation.partnerId]: updated,
-                                [conversation.id]: updated
-                            };
-                        });
-
-                        setConversations(prev => prev.map(c => c.id === conversation.id ? {
-                            ...c,
-                            lastMessage: sentMsg.text || 'Sent an attachment',
-                            lastMessageTime: sentMsg.createdAt || new Date().toISOString()
-                        } : c));
-                    }
-                } else {
-                    console.error('Could not find target conversation for profileId:', profileId);
+                    setConversations(prev => {
+                        const exists = prev.some(c => c.id === resolvedConvId);
+                        if (exists) {
+                            return prev.map(c => c.id === resolvedConvId ? {
+                                ...c,
+                                lastMessage: sentMsg.text || (Array.isArray(sentMsg.attachments) && sentMsg.attachments.length > 0 ? 'Sent an attachment' : 'Sent a message'),
+                                lastMessageTime: sentMsg.createdAt || new Date().toISOString()
+                            } : c);
+                        } else {
+                            // Re-fetch conversations to pick up the newly created conversation record
+                            fetchConversations();
+                            return prev;
+                        }
+                    });
                 }
             } catch (err) {
                 console.error('Failed to send message via API:', err);
