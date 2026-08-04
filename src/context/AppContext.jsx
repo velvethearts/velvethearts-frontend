@@ -437,6 +437,7 @@ export const AppProvider = ({ children }) => {
 
     // Fetches messages for a single conversation and hydrates chats state.
     // Called by ChatView when a conversation becomes active (on mount or ID change).
+    // Merges with existing state so optimistic/in-flight messages are preserved.
     const fetchConversationMessages = useCallback(async (conversationId, partnerId) => {
         if (!api.isConfigured || !conversationId) return;
         try {
@@ -449,7 +450,7 @@ export const AppProvider = ({ children }) => {
                 if (clearedAt && new Date(m.createdAt) <= new Date(clearedAt)) return false;
                 return true;
             });
-            const mapped = visible.map(m => ({
+            const fetchedMapped = visible.map(m => ({
                 id: m.id,
                 sender: m.senderId === partnerId ? 'partner' : 'user',
                 text: m.text,
@@ -460,11 +461,22 @@ export const AppProvider = ({ children }) => {
                 timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             })).reverse();
 
-            setChats(prev => ({
-                ...prev,
-                [conversationId]: mapped,
-                ...(partnerId ? { [partnerId]: mapped } : {})
-            }));
+            // Merge: keep any optimistic (temp-ID) messages that are NOT yet confirmed in DB,
+            // so an in-flight send is never wiped by a concurrent fetch.
+            setChats(prev => {
+                const existing = prev[conversationId] || prev[partnerId] || [];
+                const fetchedIds = new Set(fetchedMapped.map(m => m.id));
+                // Optimistic messages have temp IDs (e.g. "1722774827000-abc"); keep them
+                const pendingOptimistic = existing.filter(
+                    m => !fetchedIds.has(m.id) && typeof m.id === 'string' && m.id.includes('-') && !m.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+                );
+                const merged = [...fetchedMapped, ...pendingOptimistic];
+                return {
+                    ...prev,
+                    [conversationId]: merged,
+                    ...(partnerId ? { [partnerId]: merged } : {})
+                };
+            });
         } catch (err) {
             console.error(`Failed to fetch messages for conversation ${conversationId}:`, err);
         }
@@ -1342,14 +1354,16 @@ useEffect(() => {
                     const sentMsg = res;
 
                     if (sentMsg && sentMsg.id) {
-                        // Revoke any blob: localPreview URLs from the optimistic
-                        // attachment objects to free browser memory
+                        // Defer blob URL revocation to avoid revoking a URL that is still
+                        // actively displayed in the optimistic message bubble
                         const prevOptimistic = optimisticAttachments;
-                        prevOptimistic.forEach(att => {
-                            if (att.localPreview && att.localPreview.startsWith('blob:')) {
-                                try { URL.revokeObjectURL(att.localPreview); } catch (_) {}
-                            }
-                        });
+                        setTimeout(() => {
+                            prevOptimistic.forEach(att => {
+                                if (att.localPreview && att.localPreview.startsWith('blob:')) {
+                                    try { URL.revokeObjectURL(att.localPreview); } catch (_) {}
+                                }
+                            });
+                        }, 5000);
 
                         setChats(prev => {
                             const current = prev[profileId] || prev[conversation.partnerId] || prev[conversation.id] || [];
