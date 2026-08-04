@@ -176,7 +176,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   // Find active chat partner details
   const activePartner = connections.find(c => c.id === activeChatId || c.matchId === activeChatId || c.userId === activeChatId);
 
-  const conversation = conversations.find(c => c.partnerId === activeChatId);
+  const conversation = conversations.find(c => 
+    c.id === activeChatId || 
+    c.partnerId === activeChatId || 
+    (activePartner && (c.partnerId === activePartner.userId || c.partnerId === activePartner.id))
+  );
   const conversationId = conversation?.id;
 
   // Scroll to bottom on new message
@@ -334,9 +338,9 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
   const activeMessagesRaw = activeChatId ? (
     chats[activeChatId] || 
-    chats[conversationId] || 
-    (activePartner?.id ? chats[activePartner.id] : null) || 
     (activePartner?.userId ? chats[activePartner.userId] : null) || 
+    (conversationId ? chats[conversationId] : null) || 
+    (activePartner?.id ? chats[activePartner.id] : null) || 
     []
   ) : [];
   const activeMessages = [];

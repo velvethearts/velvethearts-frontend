@@ -420,17 +420,10 @@ export const AppProvider = ({ children }) => {
                             timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         })).reverse();
 
-                        const partnerConn = connectionsRef.current.find(c =>
-                            c.id === conv.partnerId ||
-                            c.userId === conv.partnerId
-                        );
-                        const partnerProfileId = partnerConn?.id;
-
                         setChats(prev => ({
                             ...prev,
                             [conv.partnerId]: mapped,
-                            [conv.id]: mapped,
-                            ...(partnerProfileId ? { [partnerProfileId]: mapped } : {})
+                            [conv.id]: mapped
                         }));
                     }
                 } catch (msgErr) {
