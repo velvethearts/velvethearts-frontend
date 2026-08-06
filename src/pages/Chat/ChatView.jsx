@@ -16,7 +16,10 @@ import {
   FileText,
   DownloadSimple,
   X,
-  Spinner
+  Spinner,
+  Microphone,
+  Play,
+  Pause
 } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { getSocket, joinConversation, leaveConversation, emitStartTyping, emitStopTyping } from '../../lib/socket';
@@ -26,6 +29,190 @@ const formatFileSize = (bytes) => {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const VoiceNotePlayer = ({ url, isUser }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const audioRef = useRef(null);
+  const waveformRef = useRef(null);
+  const isDraggingRef = useRef(false);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      document.querySelectorAll('audio').forEach(a => {
+        if (a !== audioRef.current) a.pause();
+      });
+      audioRef.current.play().catch(e => console.error('Audio play error:', e));
+    }
+  };
+
+  const toggleSpeed = (e) => {
+    e.stopPropagation();
+    const nextRate = playbackRate === 1 ? 1.5 : playbackRate === 1.5 ? 2 : 1;
+    setPlaybackRate(nextRate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = nextRate;
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current && !isDraggingRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+      if (audioRef.current.duration && isFinite(audioRef.current.duration) && audioRef.current.duration > 0) {
+        setDuration(audioRef.current.duration);
+      }
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (!audioRef.current) return;
+    audioRef.current.playbackRate = playbackRate;
+    const d = audioRef.current.duration;
+    if (d && isFinite(d) && d > 0) {
+      setDuration(d);
+    } else {
+      // Force WebM audio streams without duration header to calculate real duration
+      try {
+        audioRef.current.currentTime = 1e101;
+        audioRef.current.ontimeupdate = function () {
+          this.ontimeupdate = handleTimeUpdate;
+          const realDur = this.currentTime;
+          this.currentTime = 0;
+          if (realDur && isFinite(realDur) && realDur > 0) {
+            setDuration(realDur);
+          }
+        };
+      } catch (err) {
+        console.warn('WebM duration resolution fallback:', err);
+      }
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+  };
+
+  const seekFromPointer = (e) => {
+    if (!waveformRef.current || !audioRef.current) return;
+    
+    let validDuration = duration;
+    if (!validDuration || !isFinite(validDuration) || validDuration <= 0) {
+      if (audioRef.current.duration && isFinite(audioRef.current.duration) && audioRef.current.duration > 0) {
+        validDuration = audioRef.current.duration;
+      }
+    }
+
+    const rect = waveformRef.current.getBoundingClientRect();
+    const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const pct = clickX / rect.width;
+    
+    if (validDuration && isFinite(validDuration) && validDuration > 0) {
+      const newTime = pct * validDuration;
+      setCurrentTime(newTime);
+      try {
+        audioRef.current.currentTime = newTime;
+      } catch (err) {
+        console.warn('Audio seek error:', err);
+      }
+    }
+  };
+
+  const handlePointerDown = (e) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    seekFromPointer(e);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
+
+  const handlePointerMove = (e) => {
+    if (isDraggingRef.current) {
+      seekFromPointer(e);
+    }
+  };
+
+  const handlePointerUp = () => {
+    isDraggingRef.current = false;
+    window.removeEventListener('pointermove', handlePointerMove);
+    window.removeEventListener('pointerup', handlePointerUp);
+  };
+
+  const formatAudioTime = (sec) => {
+    if (isNaN(sec) || !isFinite(sec)) return '0:00';
+    const mins = Math.floor(sec / 60);
+    const secs = Math.floor(sec % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const waveformHeights = [35, 55, 85, 45, 95, 65, 35, 75, 100, 55, 85, 40, 70, 90, 45, 60, 80, 35, 95, 50, 75, 30, 65, 40, 75, 45];
+
+  return (
+    <div className={`voice-note-player font-ui ${isUser ? 'user-voice' : 'partner-voice'}`}>
+      <audio
+        ref={audioRef}
+        src={url}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        onPlay={() => {
+          setIsPlaying(true);
+          if (audioRef.current) audioRef.current.playbackRate = playbackRate;
+        }}
+        onPause={() => setIsPlaying(false)}
+        preload="metadata"
+      />
+      <button
+        type="button"
+        onClick={togglePlay}
+        className="voice-play-btn"
+        aria-label={isPlaying ? 'Pause Voice Note' : 'Play Voice Note'}
+      >
+        {isPlaying ? <Pause size={16} weight="fill" /> : <Play size={16} weight="fill" />}
+      </button>
+
+      <div className="voice-player-track">
+        <div
+          ref={waveformRef}
+          onPointerDown={handlePointerDown}
+          className="voice-waveform-visual"
+          title="Click or drag to seek"
+        >
+          {waveformHeights.map((heightPct, idx) => {
+            const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
+            const barPct = (idx / waveformHeights.length) * 100;
+            const isPlayed = barPct <= progressPct;
+
+            return (
+              <span
+                key={idx}
+                className={`waveform-bar ${isPlayed ? 'played' : ''}`}
+                style={{ height: `${heightPct}%` }}
+              />
+            );
+          })}
+        </div>
+
+        <div className="voice-timer-row font-ui">
+          <span>{isPlaying || currentTime > 0 ? formatAudioTime(currentTime) : (duration ? formatAudioTime(duration) : '0:00')}</span>
+          <button
+            type="button"
+            onClick={toggleSpeed}
+            className={`voice-speed-btn ${playbackRate > 1 ? 'active-speed' : ''}`}
+            title="Toggle playback speed (1x, 1.5x, 2x)"
+          >
+            {playbackRate}x
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
@@ -95,6 +282,154 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const photoInputRef = useRef(null);
+
+  // Voice note recording hooks
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [isUploadingVoice, setIsUploadingVoice] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
+  const audioStreamRef = useRef(null);
+
+  // Clean up microphone stream on unmount
+  useEffect(() => {
+    return () => {
+      if (audioStreamRef.current) {
+        audioStreamRef.current.getTracks().forEach(t => t.stop());
+        audioStreamRef.current = null;
+      }
+    };
+  }, []);
+
+  const getAudioStream = async () => {
+    if (audioStreamRef.current && audioStreamRef.current.active) {
+      const liveTracks = audioStreamRef.current.getAudioTracks().filter(t => t.readyState === 'live');
+      if (liveTracks.length > 0) {
+        return audioStreamRef.current;
+      }
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioStreamRef.current = stream;
+    return stream;
+  };
+
+  const startRecording = async () => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        await showAlert({
+          title: 'Not Supported',
+          message: 'Audio recording is not supported on your current browser.'
+        });
+        return;
+      }
+      const stream = await getAudioStream();
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mediaRecorder.start(100);
+      setIsRecording(true);
+      setRecordingTime(0);
+
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error('Microphone permission error:', err);
+      await showAlert({
+        title: 'Microphone Access Denied',
+        message: 'Please allow microphone access in your browser settings to record voice notes.'
+      });
+    }
+  };
+
+  const stopAndSendRecording = async () => {
+    if (!mediaRecorderRef.current || !isRecording) return;
+
+    clearInterval(recordingTimerRef.current);
+    setIsRecording(false);
+    setIsUploadingVoice(true);
+
+    const mediaRecorder = mediaRecorderRef.current;
+    
+    mediaRecorder.onstop = async () => {
+      const mimeType = mediaRecorder.mimeType || 'audio/webm';
+      const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+      const ext = mimeType.includes('mp4') || mimeType.includes('aac') ? 'm4a' : 'webm';
+      const audioFile = new File([audioBlob], `voice-note-${Date.now()}.${ext}`, { type: mimeType });
+
+      const localPreview = URL.createObjectURL(audioBlob);
+
+      try {
+        let uploadRes = null;
+        if (api.isConfigured) {
+          uploadRes = await api.uploadFile(audioFile);
+        }
+
+        if (!uploadRes?.secureUrl) {
+          uploadRes = {
+            publicId: `voice-${Date.now()}`,
+            secureUrl: localPreview,
+          };
+        }
+
+        const attachmentObj = {
+          id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          cloudinaryPublicId: uploadRes.publicId,
+          secureUrl: uploadRes.secureUrl,
+          fileType: 'AUDIO',
+          fileName: audioFile.name,
+          fileSize: audioFile.size,
+          mimeType: audioFile.type,
+          localPreview,
+        };
+
+        const textToSend = '';
+        const attachmentsToSend = [{
+          cloudinaryPublicId: attachmentObj.cloudinaryPublicId,
+          secureUrl: attachmentObj.secureUrl,
+          fileType: 'AUDIO',
+          fileName: attachmentObj.fileName,
+          fileSize: attachmentObj.fileSize,
+        }];
+
+        await sendMessage(activeChatId, textToSend, attachmentsToSend, [attachmentObj]);
+      } catch (err) {
+        console.error('Voice note send failure:', err);
+        await showAlert({ title: 'Recording Failed', message: 'Could not upload voice note. Please try again.' });
+      } finally {
+        setIsUploadingVoice(false);
+        setRecordingTime(0);
+      }
+    };
+
+    mediaRecorder.stop();
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      clearInterval(recordingTimerRef.current);
+      mediaRecorderRef.current.onstop = () => {
+        audioChunksRef.current = [];
+      };
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+    setRecordingTime(0);
+  };
+
+  const formatTimer = (sec) => {
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -533,13 +868,44 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                             <div className="message-attachments-container">
                               {msg.attachments.map((att, idx) => {
                                 const url = att.secureUrl || att.localPreview;
-                                const isImg = att.fileType === 'IMAGE' ||
-                                              (att.mimeType && att.mimeType.startsWith('image/')) ||
-                                              (typeof url === 'string' && (Boolean(url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i)) || url.includes('/image/upload/')));
+                                const isAud = att.fileType === 'AUDIO' ||
+                                              (att.mimeType && att.mimeType.startsWith('audio/')) ||
+                                              (att.fileName && att.fileName.includes('voice-note')) ||
+                                              (typeof url === 'string' && (Boolean(url.match(/\.(mp3|wav|ogg|m4a|aac)/i)) || url.includes('voice-note') || url.includes('/raw/upload/')));
 
-                                const isVid = att.fileType === 'VIDEO' ||
+                                const isImg = !isAud && (
+                                              att.fileType === 'IMAGE' ||
+                                              (att.mimeType && att.mimeType.startsWith('image/')) ||
+                                              (typeof url === 'string' && (Boolean(url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i)) || url.includes('/image/upload/')))
+                                            );
+
+                                const isVid = !isAud && !isImg && (
+                                              att.fileType === 'VIDEO' ||
                                               (att.mimeType && att.mimeType.startsWith('video/')) ||
-                                              (typeof url === 'string' && (Boolean(url.match(/\.(mp4|webm|mov|ogg|m4v)/i)) || url.includes('/video/upload/')));
+                                              (typeof url === 'string' && (Boolean(url.match(/\.(mp4|mov|m4v)/i)) || url.includes('/video/upload/')))
+                                            );
+
+                                if (isAud) {
+                                  return (
+                                    <div key={att.id || idx} className="message-audio-attachment-wrapper">
+                                      <VoiceNotePlayer url={url} isUser={isUser} />
+                                      {isUser && !msg.isDeleted && (
+                                        <button
+                                          type="button"
+                                          className="attachment-delete-overlay-btn audio-del"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteMessage(msg.id);
+                                          }}
+                                          aria-label="Delete voice note"
+                                          title="Delete voice note"
+                                        >
+                                          <Trash size={16} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                }
 
                                 if (isImg) {
                                   return (
@@ -765,62 +1131,108 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                 </div>
               )}
 
-              {/* Input Footer */}
-              <form onSubmit={handleSend} className="chat-input-footer">
-                <input
-                  type="file"
-                  ref={photoInputRef}
-                  onChange={handleFileSelect}
-                  accept="image/*,video/*"
-                  multiple
-                  style={{ display: 'none' }}
-                />
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                  accept="*/*"
-                  multiple
-                  style={{ display: 'none' }}
-                />
+              {/* Input Footer or Recording Bar */}
+              {isRecording ? (
+                <div className="chat-recording-footer font-ui page-enter">
+                  <div className="recording-indicator">
+                    <span className="recording-dot-pulse" />
+                    <span className="recording-timer">{formatTimer(recordingTime)}</span>
+                  </div>
+                  <div className="recording-wave-visual">
+                    <span className="rec-bar" />
+                    <span className="rec-bar" />
+                    <span className="rec-bar" />
+                    <span className="rec-bar" />
+                  </div>
+                  <div className="recording-actions">
+                    <button
+                      type="button"
+                      onClick={cancelRecording}
+                      className="recording-cancel-btn"
+                      title="Cancel recording"
+                      aria-label="Cancel recording"
+                    >
+                      <Trash size={20} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopAndSendRecording}
+                      className="recording-send-btn"
+                      title="Send voice note"
+                      aria-label="Send voice note"
+                      disabled={isUploadingVoice}
+                    >
+                      {isUploadingVoice ? <Spinner size={20} className="spin-animation" /> : <PaperPlaneRight size={20} weight="fill" />}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSend} className="chat-input-footer">
+                  <input
+                    type="file"
+                    ref={photoInputRef}
+                    onChange={handleFileSelect}
+                    accept="image/*,video/*"
+                    multiple
+                    style={{ display: 'none' }}
+                  />
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="*/*"
+                    multiple
+                    style={{ display: 'none' }}
+                  />
 
-                <button
-                  type="button"
-                  onClick={() => photoInputRef.current?.click()}
-                  className="chat-attach-btn"
-                  title="Attach Photo or Video"
-                  aria-label="Attach Photo or Video"
-                >
-                  <ImageIcon size={22} />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => photoInputRef.current?.click()}
+                    className="chat-attach-btn"
+                    title="Attach Photo or Video"
+                    aria-label="Attach Photo or Video"
+                  >
+                    <ImageIcon size={22} />
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="chat-attach-btn"
-                  title="Attach File or Document"
-                  aria-label="Attach File or Document"
-                >
-                  <Paperclip size={22} />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="chat-attach-btn"
+                    title="Attach File or Document"
+                    aria-label="Attach File or Document"
+                  >
+                    <Paperclip size={22} />
+                  </button>
 
-                <input
-                  type="text"
-                  placeholder={`Send a warm message to ${activePartner.name}...`}
-                  value={messageText}
-                  onChange={handleInputChange}
-                  className="chat-text-input font-body"
-                />
-                
-                <button 
-                  type="submit" 
-                  className="chat-send-btn" 
-                  disabled={!messageText.trim() && selectedAttachments.length === 0} 
-                  aria-label="Send message"
-                >
-                  <PaperPlaneRight size={20} weight="fill" />
-                </button>
-              </form>
+                  <button
+                    type="button"
+                    onClick={startRecording}
+                    className="chat-attach-btn voice-mic-btn"
+                    title="Record Voice Note"
+                    aria-label="Record Voice Note"
+                  >
+                    <Microphone size={22} />
+                  </button>
+
+                  <input
+                    type="text"
+                    placeholder={`Send a warm message to ${activePartner.name}...`}
+                    value={messageText}
+                    onChange={handleInputChange}
+                    className="chat-text-input font-body"
+                  />
+                  
+                  <button 
+                    type="submit" 
+                    className="chat-send-btn" 
+                    disabled={!messageText.trim() && selectedAttachments.length === 0} 
+                    aria-label="Send message"
+                  >
+                    <PaperPlaneRight size={20} weight="fill" />
+                  </button>
+                </form>
+              )}
             </div>
           ) : (
             <EmptyState
@@ -1803,11 +2215,306 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           background: rgba(220, 38, 38, 1);
         }
 
-        .chat-lightbox-download {
-          color: #FFFFFF;
+        /* Attachment buttons in footer */
+        .chat-attach-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-tertiary);
+          padding: 6px;
+          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .chat-attach-btn:hover {
+          color: var(--burgundy-400);
+          background: rgba(184, 67, 106, 0.12);
+          transform: scale(1.08);
+          filter: drop-shadow(0 0 6px rgba(184, 67, 106, 0.5));
+        }
+
+        .chat-recording-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: var(--space-3) var(--space-4);
+          background: var(--bg-surface-elevated);
+          border-top: 1px solid var(--border-subtle);
+          gap: var(--space-3);
+          min-height: 54px;
+        }
+
+        .recording-indicator {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 80px;
+        }
+
+        .recording-dot-pulse {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: #EF4444;
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+          animation: pulseRed 1.2s infinite;
+        }
+
+        @keyframes pulseRed {
+          0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+          }
+          70% {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+          }
+          100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+          }
+        }
+
+        .recording-timer {
+          font-weight: 600;
+          font-size: 14px;
+          color: var(--text-primary);
+          font-variant-numeric: tabular-nums;
+        }
+
+        .recording-wave-visual {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          height: 20px;
+          flex: 1;
+          justify-content: center;
+        }
+
+        .rec-bar {
+          width: 3px;
+          height: 100%;
+          background: var(--burgundy-400);
+          border-radius: 2px;
+          animation: soundWave 0.8s ease-in-out infinite alternate;
+        }
+
+        .rec-bar:nth-child(1) { animation-delay: 0.1s; }
+        .rec-bar:nth-child(2) { animation-delay: 0.3s; }
+        .rec-bar:nth-child(3) { animation-delay: 0.2s; }
+        .rec-bar:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes soundWave {
+          0% { height: 4px; opacity: 0.4; }
+          100% { height: 20px; opacity: 1; }
+        }
+
+        .recording-actions {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+        }
+
+        .recording-cancel-btn {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: rgba(239, 68, 68, 0.12);
+          color: #EF4444;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+
+        .recording-cancel-btn:hover {
+          background: rgba(239, 68, 68, 0.25);
+        }
+
+        .recording-send-btn {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--burgundy-600) 0%, var(--burgundy-700) 100%);
+          color: #FFFFFF;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(184, 67, 106, 0.3);
+          transition: transform 0.15s ease;
+        }
+
+        .recording-send-btn:hover:not(:disabled) {
+          transform: scale(1.05);
+        }
+
+        /* Message Voice Note Player */
+        .message-audio-attachment-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 210px;
+          max-width: 280px;
+        }
+
+        .attachment-delete-overlay-btn.audio-del {
+          position: static;
+          width: 28px;
+          height: 28px;
+          flex-shrink: 0;
+          background: rgba(239, 68, 68, 0.15);
+          color: #EF4444;
+        }
+
+        .attachment-delete-overlay-btn.audio-del:hover {
+          background: rgba(239, 68, 68, 0.3);
+        }
+
+        .voice-note-player {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 8px 12px;
+          border-radius: 18px;
+          background: var(--bg-surface-elevated);
+          border: 1px solid var(--border-subtle);
+          width: 100%;
+        }
+
+        .user-sent .voice-note-player {
+          background: rgba(255, 255, 255, 0.15);
+          border-color: rgba(255, 255, 255, 0.2);
+          color: #FFFFFF;
+        }
+
+        .voice-play-btn {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: var(--burgundy-500);
+          color: #FFFFFF;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .voice-play-btn:hover {
+          transform: scale(1.06);
+          background: var(--burgundy-600);
+        }
+
+        .user-sent .voice-play-btn {
+          background: #FFFFFF;
+          color: var(--burgundy-700);
+        }
+
+        .user-sent .voice-play-btn:hover {
+          background: rgba(255, 255, 255, 0.9);
+        }
+
+        .voice-player-track {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+          flex: 1;
+          position: relative;
+        }
+
+        .voice-waveform-visual {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          height: 24px;
+          width: 100%;
+          cursor: pointer;
+          padding: 2px 0;
+          touch-action: none;
+          user-select: none;
+        }
+
+        .waveform-bar {
+          flex: 1;
+          background: var(--border-default);
+          border-radius: 2px;
+          transition: background 0.15s ease;
+          pointer-events: none;
+        }
+
+        .user-sent .waveform-bar {
+          background: rgba(255, 255, 255, 0.35);
+        }
+
+        .waveform-bar.played {
+          background: var(--burgundy-500);
+        }
+
+        .user-sent .waveform-bar.played {
+          background: #FFFFFF;
+        }
+
+        .voice-timer-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: 11px;
+          opacity: 0.9;
+          font-weight: 500;
+          margin-top: 2px;
+        }
+
+        .voice-speed-btn {
+          font-size: 10px;
+          font-weight: 700;
+          padding: 2px 6px;
+          border-radius: 10px;
+          background: var(--bg-surface);
+          color: var(--text-secondary);
+          border: 1px solid var(--border-subtle);
+          cursor: pointer;
+          transition: all 0.15s ease;
+          line-height: 1;
+        }
+
+        .user-sent .voice-speed-btn {
+          background: rgba(255, 255, 255, 0.2);
+          color: #FFFFFF;
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .voice-speed-btn:hover {
+          transform: scale(1.08);
+          background: var(--burgundy-500);
+          color: #FFFFFF;
+          border-color: var(--burgundy-500);
+        }
+
+        .user-sent .voice-speed-btn:hover {
+          background: #FFFFFF;
+          color: var(--burgundy-700);
+          border-color: #FFFFFF;
+        }
+
+        .voice-speed-btn.active-speed {
+          background: var(--burgundy-500);
+          color: #FFFFFF;
+          border-color: var(--burgundy-500);
+        }
+
+        .user-sent .voice-speed-btn.active-speed {
+          background: #FFFFFF;
+          color: var(--burgundy-700);
+          border-color: #FFFFFF;
         }
 
         /* Responsive behavior */

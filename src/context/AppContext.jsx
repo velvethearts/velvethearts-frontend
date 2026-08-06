@@ -823,16 +823,22 @@ export const AppProvider = ({ children }) => {
 
                 socket.on('message_deleted', ({ conversationId, messageId }) => {
                     const conv = conversationsRef.current.find(c => c.id === conversationId);
-                    if (!conv) return;
+                    const partnerId = conv?.partnerId;
 
-                    setChats(prevChats => ({
-                        ...prevChats,
-                        [conv.partnerId]: (prevChats[conv.partnerId] || []).map(message =>
-                            message.id === messageId
-                                ? { ...message, text: 'This message was deleted', isDeleted: true, attachments: [] }
-                                : message
-                        )
-                    }));
+                    setChats(prevChats => {
+                        const targetKeys = Array.from(new Set([partnerId, conversationId].filter(Boolean)));
+                        const next = { ...prevChats };
+                        for (const key of targetKeys) {
+                            if (next[key]) {
+                                next[key] = next[key].map(message =>
+                                    message.id === messageId
+                                        ? { ...message, text: 'This message was deleted', isDeleted: true, attachments: [] }
+                                        : message
+                                );
+                            }
+                        }
+                        return next;
+                    });
                 });
 
                 socket.on('message_edited', ({ conversationId, messageId, text, isEdited }) => {
@@ -1531,16 +1537,25 @@ useEffect(() => {
     };
 
     const deleteMessage = async (profileId, messageId) => {
-        const previous = chats[profileId] || [];
+        const conversation = conversations.find(c =>
+            c.partnerId === profileId || c.id === profileId || c.matchId === profileId
+        );
+        const targetKeys = Array.from(new Set([profileId, conversation?.id, conversation?.partnerId].filter(Boolean)));
+        const previousChats = { ...chats };
 
-        setChats(prev => ({
-            ...prev,
-            [profileId]: (prev[profileId] || []).map(message =>
-                message.id === messageId
-                    ? { ...message, text: 'This message was deleted', isDeleted: true, attachments: [] }
-                    : message
-            )
-        }));
+        setChats(prev => {
+            const next = { ...prev };
+            for (const key of targetKeys) {
+                if (next[key]) {
+                    next[key] = next[key].map(message =>
+                        message.id === messageId
+                            ? { ...message, text: 'This message was deleted', isDeleted: true, attachments: [] }
+                            : message
+                    );
+                }
+            }
+            return next;
+        });
 
         if (!api.isConfigured) return;
 
@@ -1553,14 +1568,10 @@ useEffect(() => {
             await api.deleteMessage(messageId);
         } catch (err) {
             console.warn('Failed to delete message on backend:', err?.message || err);
-            // If already deleted or not found on backend, maintain local deletion without throwing
             if (err?.message && err.message.toLowerCase().includes('not found')) {
                 return;
             }
-            setChats(prev => ({
-                ...prev,
-                [profileId]: previous
-            }));
+            setChats(previousChats);
             throw err;
         }
     };
