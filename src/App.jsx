@@ -15,6 +15,7 @@ import { MatchesList } from './pages/Matches/MatchesList';
 import { ChatView } from './pages/Chat/ChatView';
 import { YouProfile } from './pages/Profile/YouProfile';
 import { EditProfile } from './pages/Profile/EditProfile';
+import { SavedProfilesPage } from './pages/Profile/SavedProfilesPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { SafetyCenter } from './pages/Safety/SafetyCenter';
 import { NotificationsPage } from './pages/Notifications/NotificationsPage';
@@ -107,6 +108,7 @@ function AppContent() {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [preselectedChatPartnerId, setPreselectedChatPartnerId] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isViewingSavedProfiles, setIsViewingSavedProfiles] = useState(false);
 
   // Helper to clear profile details and return to discover feed
   const handleBackToDiscover = () => {
@@ -170,7 +172,21 @@ function AppContent() {
         if (isEditingProfile) {
           return <EditProfile onBack={() => setIsEditingProfile(false)} />;
         }
-        return <YouProfile onEditProfile={() => setIsEditingProfile(true)} />;
+        if (isViewingSavedProfiles) {
+          return (
+            <SavedProfilesPage
+              onBack={() => setIsViewingSavedProfiles(false)}
+              onSelectProfile={setSelectedProfile}
+            />
+          );
+        }
+        return (
+          <YouProfile
+            onEditProfile={() => setIsEditingProfile(true)}
+            onOpenSavedProfiles={() => setIsViewingSavedProfiles(true)}
+            onSelectProfile={setSelectedProfile}
+          />
+        );
         
       case 'settings':
         return <SettingsPage />;

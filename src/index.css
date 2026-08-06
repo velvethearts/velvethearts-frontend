@@ -1236,3 +1236,71 @@ html {
   width: var(--visual-circle-2-size);
   height: var(--visual-circle-2-size);
 }
+
+/* ============================================================
+   GLOBAL PHOTO CAROUSEL NAVIGATION STYLES
+   ============================================================ */
+.card-photo-dots {
+  position: absolute;
+  top: var(--space-2);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  z-index: 12;
+  width: calc(100% - 24px);
+  max-width: 140px;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.card-photo-dot {
+  flex: 1;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  transition: background-color var(--duration-fast);
+}
+
+.card-photo-dot.active {
+  background-color: #FFFFFF;
+}
+
+.card-photo-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(26, 21, 23, 0.7);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 25;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: all var(--duration-fast);
+  opacity: 0.9;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card-photo-nav-btn:hover {
+  opacity: 1;
+  background-color: rgba(26, 21, 23, 0.95);
+  transform: translateY(-50%) scale(1.1);
+  border-color: #FFFFFF;
+}
+
+.card-photo-nav-btn.prev {
+  left: var(--space-2);
+}
+
+.card-photo-nav-btn.next {
+  right: var(--space-2);
+}
+

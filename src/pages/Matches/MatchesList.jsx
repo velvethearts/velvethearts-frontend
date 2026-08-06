@@ -7,7 +7,7 @@ import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
 
 export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
   const { connections, interestsSent, interestStatuses, profiles, receivedInvites, setActiveTab, sendInterest } = useApp();
- const activeConnections = connections;
+  const activeConnections = connections;
 
   // Sent interests that are still pending matching (status 'sent' or 'pending')
   const pendingInterests = profiles.filter(p => {
@@ -64,12 +64,12 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                 <Button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    onSelectConnection(conn);
+                    if (onSelectProfile) onSelectProfile(conn);
                   }}
                   variant="secondary"
-                  className="chat-cta-btn-refactored"
+                  className="chat-cta-btn-refactored font-ui"
                 >
-                  Chat
+                  View Profile
                 </Button>
               </div>
             ))}

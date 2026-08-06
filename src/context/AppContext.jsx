@@ -199,24 +199,30 @@ export const AppProvider = ({ children }) => {
     const [userRole, setUserRole] = useState('USER');
     const [isOnboarded, setIsOnboarded] = useState(false);
     const [onboardingStep, setOnboardingStep] = useState(1);
-    const [userProfile, setUserProfile] = useState({
-        name: '',
-        dobDay: '',
-        dobMonth: '',
-        dobYear: '',
-        city: '',
-        gender: 'Woman',
-        showGender: true,
-        orientation: 'Straight',
-        showOrientation: true,
-        relationshipIntent: 'Long-term Relationship',
-        relationshipStatus: 'Single',
-        interests: [],
-        story: '',
-        hasDisability: false,
-        disabilityInfo: '',
-        showDisability: false,
-        photos: []
+    const [userProfile, setUserProfile] = useState(() => {
+        try {
+            const saved = localStorage.getItem('vh-user-profile');
+            if (saved) return JSON.parse(saved);
+        } catch (e) { }
+        return {
+            name: '',
+            dobDay: '',
+            dobMonth: '',
+            dobYear: '',
+            city: '',
+            gender: 'Woman',
+            showGender: true,
+            orientation: 'Straight',
+            showOrientation: true,
+            relationshipIntent: 'Long-term Relationship',
+            relationshipStatus: 'Single',
+            interests: [],
+            story: '',
+            hasDisability: false,
+            disabilityInfo: '',
+            showDisability: false,
+            photos: []
+        };
     });
 
     // --- Discover ---
@@ -231,6 +237,14 @@ export const AppProvider = ({ children }) => {
             if (saved) return JSON.parse(saved);
         } catch (e) { }
         return [];
+    });
+
+    const [savedProfileDetails, setSavedProfileDetails] = useState(() => {
+        try {
+            const saved = localStorage.getItem('vh-saved-profile-details');
+            if (saved) return JSON.parse(saved);
+        } catch (e) { }
+        return {};
     });
 
     const [interestsSent, setInterestsSent] = useState([]);
@@ -457,6 +471,7 @@ export const AppProvider = ({ children }) => {
                             sender: m.senderId === conv.partnerId ? 'partner' : 'user',
                             text: m.text,
                             attachments: m.attachments || [],
+                            isEdited: Boolean(m.isEdited),
                             isDeleted: Boolean(m.isDeleted),
                             seen: Boolean(m.seen),
                             createdAt: m.createdAt,
@@ -506,6 +521,7 @@ export const AppProvider = ({ children }) => {
                 sender: m.senderId === partnerId ? 'partner' : 'user',
                 text: m.text,
                 attachments: m.attachments || [],
+                isEdited: Boolean(m.isEdited),
                 isDeleted: Boolean(m.isDeleted),
                 seen: Boolean(m.seen),
                 createdAt: m.createdAt,
@@ -566,6 +582,18 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('vh-saved-profiles', JSON.stringify(savedProfiles));
     }, [savedProfiles]);
+
+    useEffect(() => {
+        localStorage.setItem('vh-user-profile', JSON.stringify(userProfile));
+    }, [userProfile]);
+
+    useEffect(() => {
+        localStorage.setItem('vh-saved-profile-details', JSON.stringify(savedProfileDetails));
+    }, [savedProfileDetails]);
+
+    const savedProfileObjects = savedProfiles.map(id => {
+        return savedProfileDetails[id] || profiles.find(p => p.id === id) || connections.find(c => c.id === id || c.userId === id) || null;
+    }).filter(Boolean);
 
     useEffect(() => {
         localStorage.setItem('vh-support-tickets', JSON.stringify(supportTickets));
@@ -680,6 +708,7 @@ export const AppProvider = ({ children }) => {
                             sender: isFromPartner ? 'partner' : 'user',
                             text: message.text || '',
                             attachments: message.attachments || [],
+                            isEdited: Boolean(message.isEdited),
                             isDeleted: Boolean(message.isDeleted),
                             seen: Boolean(message.seen),
                             createdAt: message.createdAt || new Date().toISOString(),
@@ -804,6 +833,40 @@ export const AppProvider = ({ children }) => {
                                 : message
                         )
                     }));
+                });
+
+                socket.on('message_edited', ({ conversationId, messageId, text, isEdited }) => {
+                    const conv = conversationsRef.current.find(c => c.id === conversationId);
+                    const partnerId = conv?.partnerId;
+
+                    setChats(prevChats => {
+                        const targetKeys = [partnerId, conversationId].filter(Boolean);
+                        if (targetKeys.length === 0) return prevChats;
+
+                        const next = { ...prevChats };
+                        for (const key of targetKeys) {
+                            if (next[key]) {
+                                next[key] = next[key].map(msg =>
+                                    msg.id === messageId
+                                        ? { ...msg, text, isEdited: Boolean(isEdited ?? true) }
+                                        : msg
+                                );
+                            }
+                        }
+                        return next;
+                    });
+
+                    setConversations(prevConvs =>
+                        prevConvs.map(c => {
+                            if (c.id === conversationId || c.partnerId === partnerId) {
+                                return {
+                                    ...c,
+                                    lastMessage: text
+                                };
+                            }
+                            return c;
+                        })
+                    );
                 });
 
                 socket.on('conversation_cleared', ({ conversationId }) => {
@@ -1149,13 +1212,26 @@ useEffect(() => {
         }
     };
 
-    const toggleSaveProfile = (profileId) => {
+    const toggleSaveProfile = (profileId, profileObj = null) => {
         setSavedProfiles(prev => {
             if (prev.includes(profileId)) {
                 return prev.filter(id => id !== profileId);
             } else {
                 return [...prev, profileId];
             }
+        });
+
+        setSavedProfileDetails(prev => {
+            const next = { ...prev };
+            if (next[profileId]) {
+                delete next[profileId];
+            } else {
+                const found = profileObj || profiles.find(p => p.id === profileId) || connections.find(c => c.id === profileId || c.userId === profileId);
+                if (found) {
+                    next[profileId] = found;
+                }
+            }
+            return next;
         });
     };
 
@@ -1165,6 +1241,11 @@ useEffect(() => {
         setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId));
         setInterestsSent(prev => prev.filter(id => id !== profileId));
         setInterestStatuses(prev => {
+            const next = { ...prev };
+            delete next[profileId];
+            return next;
+        });
+        setChats(prev => {
             const next = { ...prev };
             delete next[profileId];
             return next;
@@ -1185,10 +1266,20 @@ useEffect(() => {
     const blockUser = async (profileId) => {
         // Optimistic local cleanup
         setSavedProfiles(prev => prev.filter(id => id !== profileId));
+        setSavedProfileDetails(prev => {
+            const next = { ...prev };
+            delete next[profileId];
+            return next;
+        });
         setConnections(prev => prev.filter(c => (c.id || c) !== profileId));
         setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId));
         setInterestsSent(prev => prev.filter(id => id !== profileId));
         setInterestStatuses(prev => {
+            const next = { ...prev };
+            delete next[profileId];
+            return next;
+        });
+        setChats(prev => {
             const next = { ...prev };
             delete next[profileId];
             return next;
@@ -1474,6 +1565,63 @@ useEffect(() => {
         }
     };
 
+    const editMessage = async (profileId, messageId, newText) => {
+        const conversation = conversations.find(c =>
+            c.partnerId === profileId ||
+            c.id === profileId ||
+            c.matchId === profileId
+        );
+        const convId = conversation?.id;
+
+        const updateLocalState = (text, isEdited) => {
+            setChats(prev => {
+                const targetKeys = Array.from(new Set([profileId, convId, conversation?.partnerId].filter(Boolean)));
+                const nextChats = { ...prev };
+                for (const key of targetKeys) {
+                    if (nextChats[key]) {
+                        nextChats[key] = nextChats[key].map(m =>
+                            m.id === messageId ? { ...m, text, isEdited } : m
+                        );
+                    }
+                }
+                return nextChats;
+            });
+
+            setConversations(prevConvs =>
+                prevConvs.map(c => {
+                    if (c.id === convId || c.partnerId === profileId) {
+                        return { ...c, lastMessage: text };
+                    }
+                    return c;
+                })
+            );
+        };
+
+        const currentMsgs = chats[profileId] || (convId ? chats[convId] : []) || [];
+        const existingMsg = currentMsgs.find(m => m.id === messageId);
+        const prevText = existingMsg ? existingMsg.text : '';
+
+        // Optimistically update
+        updateLocalState(newText, true);
+
+        if (!api.isConfigured) return;
+
+        // If messageId is a temporary client string, maintain local edit
+        if (typeof messageId === 'string' && messageId.includes('-') && !messageId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+            return;
+        }
+
+        try {
+            await api.editMessage(messageId, newText);
+        } catch (err) {
+            console.error('Failed to edit message on backend:', err);
+            if (existingMsg) {
+                updateLocalState(prevText, Boolean(existingMsg.isEdited));
+            }
+            throw err;
+        }
+    };
+
     const deleteConversationMessages = async (targetId) => {
         const conversation = conversations.find(c =>
             c.id === targetId ||
@@ -1567,6 +1715,7 @@ useEffect(() => {
             loadingProfiles,
             errorProfiles,
             savedProfiles,
+            savedProfileObjects,
             interestsSent,
             interestStatuses,
             connections,
@@ -1620,6 +1769,7 @@ useEffect(() => {
             reportUser,
             submitSupportTicket,
             sendMessage,
+            editMessage,
             deleteMessage,
             deleteConversationMessages,
             markConversationSeen,

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { CheckCircle, Heart, DotsThreeVertical, Bookmark, Prohibit, ShieldWarning } from '@phosphor-icons/react';
-import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
+import { CheckCircle, Heart, DotsThreeVertical, Bookmark, Prohibit, ShieldWarning, CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 
 export const ProfileCard = ({
   profile,
@@ -14,7 +14,21 @@ export const ProfileCard = ({
   className = ''
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const dropdownRef = useRef(null);
+
+  const extractedPhotos = extractPhotoUrls(profile);
+  const photosList = extractedPhotos.length > 0 ? extractedPhotos : [getDefaultAvatar(profile?.gender)];
+
+  const handlePrevPhoto = (e) => {
+    e.stopPropagation();
+    setCurrentPhotoIndex(prev => Math.max(prev - 1, 0));
+  };
+
+  const handleNextPhoto = (e) => {
+    e.stopPropagation();
+    setCurrentPhotoIndex(prev => Math.min(prev + 1, photosList.length - 1));
+  };
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -49,14 +63,55 @@ export const ProfileCard = ({
     >
       <div className="profile-img-wrap">
         <img
-            src={getProfilePhoto(profile)}
-            alt={`Photo of ${profile.name}`}
+            src={photosList[currentPhotoIndex] || getDefaultAvatar(profile?.gender)}
+            alt={`Photo ${currentPhotoIndex + 1} of ${profile.name}`}
             className="profile-card-image"
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = getDefaultAvatar(profile?.gender);
             }}
         />
+
+        {/* Photo Navigation Indicators */}
+        {photosList.length > 1 && (
+          <div className="card-photo-dots">
+            {photosList.map((_, idx) => (
+              <span
+                key={idx}
+                className={`card-photo-dot ${idx === currentPhotoIndex ? 'active' : ''}`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Photo Navigation Arrows */}
+        {photosList.length > 1 && (
+          <>
+            {currentPhotoIndex > 0 && (
+              <button
+                type="button"
+                className="card-photo-nav-btn prev"
+                onClick={handlePrevPhoto}
+                aria-label="Previous photo"
+                title="Previous photo"
+              >
+                <CaretLeft size={16} weight="bold" />
+              </button>
+            )}
+
+            {currentPhotoIndex < photosList.length - 1 && (
+              <button
+                type="button"
+                className="card-photo-nav-btn next"
+                onClick={handleNextPhoto}
+                aria-label="Next photo"
+                title="Next photo"
+              >
+                <CaretRight size={16} weight="bold" />
+              </button>
+            )}
+          </>
+        )}
         
         {/* Verification Badges */}
         <div className="profile-badge-row">
@@ -180,6 +235,68 @@ export const ProfileCard = ({
           aspect-ratio: 4/5;
           background-color: var(--charcoal-200);
           overflow: hidden;
+        }
+
+        /* Photo dots indicators */
+        .card-photo-dots {
+          position: absolute;
+          top: var(--space-2);
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 4px;
+          z-index: 12;
+          width: calc(100% - 24px);
+          max-width: 140px;
+          justify-content: center;
+        }
+
+        .card-photo-dot {
+          flex: 1;
+          height: 3px;
+          background-color: rgba(255, 255, 255, 0.4);
+          border-radius: 999px;
+          transition: background-color var(--duration-fast);
+        }
+
+        .card-photo-dot.active {
+          background-color: #FFFFFF;
+        }
+
+        /* Photo navigation arrows */
+        .card-photo-nav-btn {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background-color: rgba(26, 21, 23, 0.65);
+          color: #FFFFFF;
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 15;
+          cursor: pointer;
+          backdrop-filter: blur(4px);
+          transition: all var(--duration-fast);
+          opacity: 0.85;
+          padding: 0;
+        }
+
+        .card-photo-nav-btn:hover {
+          opacity: 1;
+          background-color: rgba(26, 21, 23, 0.9);
+          transform: translateY(-50%) scale(1.08);
+        }
+
+        .card-photo-nav-btn.prev {
+          left: var(--space-2);
+        }
+
+        .card-photo-nav-btn.next {
+          right: var(--space-2);
         }
 
         /* Badges overlay */

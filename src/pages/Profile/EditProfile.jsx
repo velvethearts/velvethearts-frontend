@@ -142,12 +142,15 @@ export const EditProfile = ({ onBack }) => {
     if (e) e.preventDefault();
     if (!isFormValid() || isSaving) return;
 
+    const cleanedPhotos = (localProfile.photos || []).filter(Boolean);
+    const updatedProfile = { ...localProfile, photos: cleanedPhotos };
+
     setIsSaving(true);
     try {
       if (updateUserProfile) {
-        await updateUserProfile(localProfile);
+        await updateUserProfile(updatedProfile);
       } else {
-        setUserProfile(localProfile);
+        setUserProfile(updatedProfile);
       }
       onBack();
     } catch (err) {

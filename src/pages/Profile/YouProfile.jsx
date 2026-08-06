@@ -1,12 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { PencilSimple, Sliders, ShieldCheck, SignOut } from '@phosphor-icons/react';
+import { PencilSimple, Sliders, ShieldCheck, SignOut, Bookmark, Heart, Trash, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Card } from '../../components/UI/Card';
-import { getProfilePhoto } from '../../utils/avatar';
+import { getProfilePhoto, extractPhotoUrls } from '../../utils/avatar';
 
-export const YouProfile = ({ onEditProfile }) => {
-  const { userProfile, setActiveTab, logout, showConfirm } = useApp();
+export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile }) => {
+  const { userProfile, setActiveTab, logout, showConfirm, savedProfileObjects = [] } = useApp();
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
+  const userPhotosList = extractPhotoUrls(userProfile);
+  const displayUserPhotos = userPhotosList.length > 0 ? userPhotosList : [getProfilePhoto(userProfile)];
+
+  const handlePrevUserPhoto = (e) => {
+    e.stopPropagation();
+    setCurrentPhotoIndex(prev => Math.max(prev - 1, 0));
+  };
+
+  const handleNextUserPhoto = (e) => {
+    e.stopPropagation();
+    setCurrentPhotoIndex(prev => Math.min(prev + 1, displayUserPhotos.length - 1));
+  };
 
   const handleLogout = async () => {
     const confirmed = await showConfirm({
@@ -38,10 +52,47 @@ export const YouProfile = ({ onEditProfile }) => {
           <div className="profile-preview-card">
             <div className="preview-img-wrap">
               <img 
-                src={getProfilePhoto(userProfile)} 
+                src={displayUserPhotos[currentPhotoIndex] || getProfilePhoto(userProfile)} 
                 alt={userProfile.name} 
                 className="preview-photo"
               />
+
+              {displayUserPhotos.length > 1 && (
+                <div className="card-photo-dots">
+                  {displayUserPhotos.map((_, idx) => (
+                    <span
+                      key={idx}
+                      className={`card-photo-dot ${idx === currentPhotoIndex ? 'active' : ''}`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {displayUserPhotos.length > 1 && (
+                <>
+                  {currentPhotoIndex > 0 && (
+                    <button
+                      type="button"
+                      className="card-photo-nav-btn prev"
+                      onClick={handlePrevUserPhoto}
+                      aria-label="Previous photo"
+                    >
+                      <CaretLeft size={16} weight="bold" />
+                    </button>
+                  )}
+
+                  {currentPhotoIndex < displayUserPhotos.length - 1 && (
+                    <button
+                      type="button"
+                      className="card-photo-nav-btn next"
+                      onClick={handleNextUserPhoto}
+                      aria-label="Next photo"
+                    >
+                      <CaretRight size={16} weight="bold" />
+                    </button>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="preview-card-details">
@@ -108,6 +159,16 @@ export const YouProfile = ({ onEditProfile }) => {
             </div>
           </Card>
 
+          <Card hoverable onClick={onOpenSavedProfiles} className="you-tile-card">
+            <div className="you-tile-btn-body">
+              <Bookmark size={24} className="tile-icon font-accent" weight="fill" />
+              <div className="tile-text">
+                <span className="tile-title">Saved Profiles ({savedProfileObjects.length})</span>
+                <span className="tile-desc">View and manage your bookmarked profiles</span>
+              </div>
+            </div>
+          </Card>
+
           <Card hoverable onClick={handleLogout} className="you-tile-card sign-out-tile">
             <div className="you-tile-btn-body">
               <SignOut size={24} className="tile-icon font-error" />
@@ -157,8 +218,10 @@ export const YouProfile = ({ onEditProfile }) => {
         }
 
         .preview-img-wrap {
+          position: relative;
           aspect-ratio: 3/4;
           background-color: var(--charcoal-200);
+          overflow: hidden;
         }
 
         .preview-photo {
@@ -296,6 +359,207 @@ export const YouProfile = ({ onEditProfile }) => {
 
         .sign-out-tile:hover .tile-desc {
           color: var(--text-primary);
+        }
+
+        /* Saved Profiles Section */
+        .saved-profiles-panel {
+          background-color: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-lg);
+          padding: var(--space-4) var(--space-5);
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-4);
+          box-shadow: var(--shadow-sm);
+        }
+
+        .saved-section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .saved-title-wrap {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+        }
+
+        .saved-section-title {
+          font-size: var(--text-subheading);
+          color: var(--text-primary);
+          margin: 0;
+        }
+
+        .saved-count-badge {
+          background-color: var(--bg-accent-subtle);
+          color: var(--burgundy-500);
+          font-size: var(--text-caption);
+          font-weight: 700;
+          min-width: 22px;
+          height: 22px;
+          padding: 0 6px;
+          border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .saved-profiles-list {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-3);
+          max-height: 360px;
+          overflow-y: auto;
+          padding-right: 2px;
+        }
+
+        .saved-profile-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: var(--space-3);
+          background-color: var(--bg-page);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          gap: var(--space-3);
+        }
+
+        .saved-profile-card:hover {
+          background-color: var(--bg-surface-warm);
+          border-color: var(--burgundy-300);
+          transform: translateY(-1px);
+        }
+
+        .saved-card-main {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+          min-width: 0;
+          flex: 1;
+        }
+
+        .saved-card-photo {
+          width: 46px;
+          height: 46px;
+          min-width: 46px;
+          min-height: 46px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid var(--border-subtle);
+        }
+
+        .saved-card-info {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          overflow: hidden;
+        }
+
+        .saved-card-name-row {
+          display: flex;
+          align-items: baseline;
+        }
+
+        .saved-card-name {
+          font-size: var(--text-body);
+          font-weight: 600;
+          color: var(--text-primary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .saved-card-age {
+          font-size: var(--text-body-sm);
+          color: var(--text-secondary);
+        }
+
+        .saved-card-city {
+          font-size: var(--text-caption);
+          color: var(--text-tertiary);
+          font-weight: 500;
+        }
+
+        .saved-card-intent {
+          font-size: 11px;
+          color: var(--text-accent);
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        .saved-card-actions {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+          flex-shrink: 0;
+        }
+
+        .saved-card-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 5px 10px;
+          border-radius: var(--radius-full);
+          font-size: 12px;
+          font-weight: 600;
+          border: 1px solid var(--border-subtle);
+          background-color: var(--bg-surface);
+          color: var(--text-secondary);
+          cursor: pointer;
+          transition: all var(--duration-fast);
+        }
+
+        .saved-card-btn.unsave:hover {
+          color: var(--error);
+          background-color: var(--error-light);
+          border-color: var(--error);
+        }
+
+        .saved-card-btn.interest {
+          background-color: var(--burgundy-500);
+          color: #FFFFFF;
+          border-color: var(--burgundy-500);
+        }
+
+        .saved-card-btn.interest:hover {
+          background-color: var(--burgundy-600);
+        }
+
+        .saved-card-btn.interest.sent {
+          background-color: var(--success);
+          border-color: var(--success);
+        }
+
+        .saved-empty-card {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          padding: var(--space-6) var(--space-4);
+          background-color: var(--bg-page);
+          border: 1px dashed var(--border-default);
+          border-radius: var(--radius-md);
+          gap: var(--space-2);
+        }
+
+        .empty-bookmark-icon {
+          color: var(--text-muted);
+          margin-bottom: var(--space-1);
+        }
+
+        .empty-title {
+          font-size: var(--text-body);
+          font-weight: 600;
+          color: var(--text-primary);
+        }
+
+        .empty-desc {
+          font-size: var(--text-body-sm);
+          color: var(--text-secondary);
+          max-width: 280px;
         }
       `}</style>
     </div>

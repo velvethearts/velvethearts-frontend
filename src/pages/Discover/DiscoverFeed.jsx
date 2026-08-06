@@ -151,7 +151,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
               isInterestSent={interestsSent.includes(profile.id)}
               isSaved={savedProfiles.includes(profile.id)}
               onSendInterest={sendInterest}
-              onSave={toggleSaveProfile}
+              onSave={(id) => toggleSaveProfile(id, profile)}
               onBlock={blockUser}
               onReport={(id) => {
                 const reason = window.prompt(`Report ${profile.name} - Enter reason:`);

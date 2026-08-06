@@ -9,6 +9,8 @@ import {
   Prohibit, 
   ChatCircleText, 
   Trash,
+  PencilSimple,
+  Check,
   Paperclip,
   Image as ImageIcon,
   FileText,
@@ -27,7 +29,7 @@ const formatFileSize = (bytes) => {
 };
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
-  const { connections, conversations, chats, sendMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages } = useApp();
+  const { connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages } = useApp();
   
   const isUserOnline = (partner) => {
     if (!partner) return false;
@@ -46,6 +48,43 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     setActiveChatIdState(id);
   };
   const [messageText, setMessageText] = useState('');
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editingText, setEditingText] = useState('');
+
+  const canEditMessage = (msg) => {
+    if (!msg || msg.isDeleted || !msg.text) return false;
+    const createdTime = msg.createdAt ? new Date(msg.createdAt).getTime() : 0;
+    if (!createdTime || isNaN(createdTime)) return true;
+    const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
+    return Date.now() - createdTime <= FIFTEEN_MINUTES_MS;
+  };
+
+  const handleStartEdit = (msg) => {
+    if (!canEditMessage(msg)) {
+      showAlert({ title: 'Cannot Edit', message: 'Messages can only be edited within 15 minutes of sending.' });
+      return;
+    }
+    setEditingMessageId(msg.id);
+    setEditingText(msg.text || '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessageId(null);
+    setEditingText('');
+  };
+
+  const handleSaveEdit = async (messageId) => {
+    if (!editingText.trim() || !activeChatId) return;
+    const newText = editingText.trim();
+    setEditingMessageId(null);
+    setEditingText('');
+
+    try {
+      await editMessage(activeChatId, messageId, newText);
+    } catch (err) {
+      await showAlert({ title: 'Edit Failed', message: err?.message || 'Could not update message. Messages can only be edited within 15 minutes of sending.' });
+    }
+  };
   const [isTyping, setIsTyping] = useState(false);
   const [localIsTyping, setLocalIsTyping] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -596,26 +635,73 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                             </div>
                           )}
 
-                          {/* Message text */}
+                          {/* Message text / inline edit field */}
                           {(msg.text || msg.isDeleted) && (
-                            <div className={`message-bubble-text font-body ${msg.isDeleted ? 'deleted' : ''}`}>
-                              {msg.isDeleted ? 'This message was deleted' : msg.text}
-                            </div>
+                            editingMessageId === msg.id ? (
+                              <div className="message-inline-edit-box font-body">
+                                <input
+                                  type="text"
+                                  className="message-edit-input font-body"
+                                  value={editingText}
+                                  onChange={(e) => setEditingText(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      handleSaveEdit(msg.id);
+                                    } else if (e.key === 'Escape') {
+                                      e.preventDefault();
+                                      handleCancelEdit();
+                                    }
+                                  }}
+                                  autoFocus
+                                />
+                                <div className="message-edit-btns font-ui">
+                                  <button type="button" className="edit-btn save" onClick={() => handleSaveEdit(msg.id)} title="Save (Enter)">
+                                    <Check size={14} weight="bold" />
+                                    <span>Save</span>
+                                  </button>
+                                  <button type="button" className="edit-btn cancel" onClick={handleCancelEdit} title="Cancel (Esc)">
+                                    <X size={14} weight="bold" />
+                                    <span>Cancel</span>
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className={`message-bubble-text font-body ${msg.isDeleted ? 'deleted' : ''}`}>
+                                {msg.isDeleted ? 'This message was deleted' : msg.text}
+                              </div>
+                            )
                           )}
 
-                          {isUser && !msg.isDeleted && (
-                            <button
-                              type="button"
-                              className="message-delete-btn"
-                              onClick={() => handleDeleteMessage(msg.id)}
-                              aria-label="Delete message"
-                              title="Delete message"
-                            >
-                              <Trash size={14} />
-                            </button>
+                          {isUser && !msg.isDeleted && editingMessageId !== msg.id && (
+                            <div className="message-bubble-actions">
+                              {canEditMessage(msg) && (
+                                <button
+                                  type="button"
+                                  className="message-action-btn edit"
+                                  onClick={() => handleStartEdit(msg)}
+                                  aria-label="Edit message"
+                                  title="Edit message (available for 15 mins)"
+                                >
+                                  <PencilSimple size={14} />
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="message-action-btn delete"
+                                onClick={() => handleDeleteMessage(msg.id)}
+                                aria-label="Delete message"
+                                title="Delete message"
+                              >
+                                <Trash size={14} />
+                              </button>
+                            </div>
                           )}
                           <div className="message-bubble-footer font-ui">
                             <span className="message-bubble-time">{msg.timestamp}</span>
+                            {msg.isEdited && !msg.isDeleted && (
+                              <span className="edited-status-text">• Edited</span>
+                            )}
                             {isUser && !msg.isDeleted && msg.seen && (
                               <span className="seen-status-text page-enter">• Seen</span>
                             )}
@@ -1171,34 +1257,110 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           opacity: 0.72;
         }
 
-        .message-delete-btn {
+        .message-bubble-actions {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          position: absolute;
+          top: 50%;
+          right: calc(100% + var(--space-2));
+          transform: translateY(-50%);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity var(--duration-fast);
+        }
+
+        .chat-message-bubble-row.user-sent:hover .message-bubble-actions,
+        .message-bubble-actions:focus-within {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .message-action-btn {
           width: 28px;
           height: 28px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          position: absolute;
-          top: 50%;
-          right: calc(100% + var(--space-2));
-          transform: translateY(-50%);
           color: var(--text-muted);
           background-color: var(--bg-surface);
           border: 1px solid var(--border-subtle);
-          opacity: 0;
-          pointer-events: none;
-          transition: opacity var(--duration-fast), color var(--duration-fast), background-color var(--duration-fast);
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          box-shadow: var(--shadow-sm);
         }
 
-        .chat-message-bubble-row.user-sent:hover .message-delete-btn,
-        .message-delete-btn:focus-visible {
-          opacity: 1;
-          pointer-events: auto;
+        .message-action-btn.edit:hover {
+          color: var(--burgundy-500);
+          background-color: var(--bg-accent-subtle);
+          border-color: var(--burgundy-300);
         }
 
-        .message-delete-btn:hover {
+        .message-action-btn.delete:hover {
           color: var(--error);
           background-color: var(--error-light);
+          border-color: var(--error);
+        }
+
+        /* Inline edit mode */
+        .message-inline-edit-box {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          min-width: 220px;
+          max-width: 100%;
+        }
+
+        .message-edit-input {
+          width: 100%;
+          padding: 8px 12px;
+          border-radius: var(--radius-md);
+          border: 1.5px solid var(--burgundy-400);
+          background-color: var(--bg-surface);
+          color: var(--text-primary);
+          font-size: 14px;
+          outline: none;
+          box-shadow: 0 0 0 2px var(--bg-accent-subtle);
+        }
+
+        .message-edit-btns {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 6px;
+        }
+
+        .edit-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 10px;
+          border-radius: var(--radius-sm);
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          border: none;
+          transition: background-color var(--duration-fast);
+        }
+
+        .edit-btn.save {
+          background-color: var(--burgundy-500);
+          color: #FFFFFF;
+        }
+
+        .edit-btn.save:hover {
+          background-color: var(--burgundy-600);
+        }
+
+        .edit-btn.cancel {
+          background-color: var(--bg-surface-warm);
+          color: var(--text-secondary);
+          border: 1px solid var(--border-subtle);
+        }
+
+        .edit-btn.cancel:hover {
+          background-color: var(--border-subtle);
         }
 
         .message-bubble-footer {
@@ -1212,6 +1374,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
         .user-sent .message-bubble-footer {
           align-self: flex-end;
+        }
+
+        .edited-status-text {
+          font-style: italic;
+          opacity: 0.8;
         }
 
         .seen-status-text {

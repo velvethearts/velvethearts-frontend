@@ -24,21 +24,50 @@ export function getDefaultAvatar(gender) {
 }
 
 /**
- * Returns the profile photo or fallback avatar based on gender.
+ * Returns an array of valid photo URL strings from a profile object.
+ * @param {object} profile - Profile object
+ * @returns {string[]} Array of image URL strings
+ */
+export function extractPhotoUrls(profile) {
+  if (!profile) return [];
+
+  let list = [];
+
+  if (Array.isArray(profile.photos) && profile.photos.length > 0) {
+    list = profile.photos.map(p => {
+      if (!p) return null;
+      if (typeof p === 'string') return p.trim() || null;
+      if (typeof p === 'object') {
+        return p.secureUrl || p.url || p.cloudinaryPublicId || p.src || null;
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
+  if (list.length === 0 && profile.photo) {
+    const p = profile.photo;
+    const url = typeof p === 'string' ? p.trim() : (p && typeof p === 'object' ? p.secureUrl || p.url : null);
+    if (url) list.push(url);
+  }
+
+  if (list.length === 0 && profile.avatar) {
+    list = [profile.avatar];
+  }
+
+  return list;
+}
+
+/**
+ * Returns the primary profile photo or fallback avatar based on gender.
  * @param {object} profile - Profile object
  * @param {string} [fallbackGender] - Optional fallback gender
  * @returns {string} Image URL
  */
 export function getProfilePhoto(profile, fallbackGender) {
-  if (!profile) return getDefaultAvatar(fallbackGender);
-
-  if (Array.isArray(profile.photos) && profile.photos.length > 0 && profile.photos[0]) {
-    return profile.photos[0];
+  const photos = extractPhotoUrls(profile);
+  if (photos.length > 0) {
+    return photos[0];
   }
 
-  if (profile.photo) {
-    return profile.photo;
-  }
-
-  return getDefaultAvatar(profile.gender || fallbackGender);
+  return getDefaultAvatar(profile?.gender || fallbackGender);
 }

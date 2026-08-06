@@ -233,6 +233,13 @@ export const api = {
         );
     },
 
+    editMessage(messageId, text) {
+        return request(`/api/v1/chat/messages/${messageId}`, {
+            method: 'PUT',
+            body: { text }
+        });
+    },
+
     deleteMessage(messageId) {
         return request(`/api/v1/chat/messages/${messageId}`, {
             method: 'DELETE'

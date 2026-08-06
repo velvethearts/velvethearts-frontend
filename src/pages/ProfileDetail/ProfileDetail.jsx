@@ -1,19 +1,36 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { CheckCircle, Heart, ShieldWarning, Prohibit, X } from '@phosphor-icons/react';
+import { CheckCircle, Heart, ShieldWarning, Prohibit, X, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
-import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
+import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 
 export const ProfileDetail = ({ profile, onBack }) => {
-  const { interestsSent, sendInterest, reportUser, blockUser, showConfirm } = useApp();
+  const { connections, interestsSent, sendInterest, reportUser, blockUser, showConfirm } = useApp();
   const [showReportSheet, setShowReportSheet] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportComment, setReportComment] = useState('');
   const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-  const isInterestSent = interestsSent.includes(profile.id);
+  if (!profile) return null;
+
+  const photosList = extractPhotoUrls(profile);
+  const displayPhotos = photosList.length > 0 ? photosList : [getProfilePhoto(profile)];
+
+  const handlePrevPhoto = (e) => {
+    e.stopPropagation();
+    setCurrentPhotoIndex(prev => Math.max(prev - 1, 0));
+  };
+
+  const handleNextPhoto = (e) => {
+    e.stopPropagation();
+    setCurrentPhotoIndex(prev => Math.min(prev + 1, displayPhotos.length - 1));
+  };
+
+  const isInterestSent = Array.isArray(interestsSent) && interestsSent.includes(profile.id);
+  const isMatched = Boolean(profile.matchId) || (Array.isArray(connections) && connections.some(c => c.id === profile.id || c.userId === profile.id));
 
   const handleReportSubmit = (e) => {
     if (e) e.preventDefault();
@@ -74,9 +91,9 @@ export const ProfileDetail = ({ profile, onBack }) => {
 
       <div className="detail-content-container">
         {/* Asymmetric Profile Structure */}
-        <div className="detail-image-panel">
+        <div className="detail-image-panel" style={{ position: 'relative', overflow: 'hidden' }}>
           <img 
-            src={getProfilePhoto(profile)} 
+            src={displayPhotos[currentPhotoIndex] || getDefaultAvatar(profile?.gender)} 
             alt={profile.name} 
             className="detail-hero-img" 
             onError={(e) => {
@@ -84,6 +101,44 @@ export const ProfileDetail = ({ profile, onBack }) => {
               e.currentTarget.src = getDefaultAvatar(profile?.gender);
             }}
           />
+
+          {displayPhotos.length > 1 && (
+            <div className="card-photo-dots">
+              {displayPhotos.map((_, idx) => (
+                <span
+                  key={idx}
+                  className={`card-photo-dot ${idx === currentPhotoIndex ? 'active' : ''}`}
+                />
+              ))}
+            </div>
+          )}
+
+          {displayPhotos.length > 1 && (
+            <>
+              {currentPhotoIndex > 0 && (
+                <button
+                  type="button"
+                  className="card-photo-nav-btn prev"
+                  onClick={handlePrevPhoto}
+                  aria-label="Previous photo"
+                >
+                  <CaretLeft size={16} weight="bold" />
+                </button>
+              )}
+
+              {currentPhotoIndex < displayPhotos.length - 1 && (
+                <button
+                  type="button"
+                  className="card-photo-nav-btn next"
+                  onClick={handleNextPhoto}
+                  aria-label="Next photo"
+                >
+                  <CaretRight size={16} weight="bold" />
+                </button>
+              )}
+            </>
+          )}
+
           <div className="detail-img-badges">
             {profile.verified && (
               <span className="badge-verified font-ui">
@@ -137,32 +192,36 @@ export const ProfileDetail = ({ profile, onBack }) => {
           )}
 
           {/* Interests */}
-          <div className="detail-interests-section border-top">
-            <h3 className="detail-section-title">Interests & Hobbies</h3>
-            <div className="detail-interests-grid">
-              {profile.interests.map(interest => (
-                <span key={interest} className="detail-interest-pill">
-                  {interest}
-                </span>
-              ))}
+          {Array.isArray(profile.interests) && profile.interests.length > 0 && (
+            <div className="detail-interests-section border-top">
+              <h3 className="detail-section-title">Interests & Hobbies</h3>
+              <div className="detail-interests-grid">
+                {profile.interests.map(interest => (
+                  <span key={interest} className="detail-interest-pill">
+                    {interest}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Persistent Sticky Bottom Action */}
-      <div className="detail-action-footer">
-        <Button 
-          variant="primary"
-          onClick={() => sendInterest(profile.id)}
-          className={`detail-heart-action-btn ${isInterestSent ? 'sent' : ''}`}
-        >
-          <Heart size={24} weight={isInterestSent ? 'fill' : 'regular'} className={isInterestSent ? 'heart-beat-active' : ''} />
-          <span>
-            {isInterestSent ? 'Interest Sent' : 'Send Interest'}
-          </span>
-        </Button>
-      </div>
+      {/* Persistent Sticky Bottom Action (Only if not already matched) */}
+      {!isMatched && (
+        <div className="detail-action-footer">
+          <Button 
+            variant="primary"
+            onClick={() => sendInterest(profile.id)}
+            className={`detail-heart-action-btn ${isInterestSent ? 'sent' : ''}`}
+          >
+            <Heart size={24} weight={isInterestSent ? 'fill' : 'regular'} className={isInterestSent ? 'heart-beat-active' : ''} />
+            <span>
+              {isInterestSent ? 'Interest Sent' : 'Send Interest'}
+            </span>
+          </Button>
+        </div>
+      )}
 
       {/* Report User Modal Wrapper */}
       <Modal
