@@ -283,6 +283,28 @@ export const api = {
     },
 
     // ==========================================================
+    // WEB PUSH
+    // ==========================================================
+
+    getVapidPublicKey() {
+        return request('/api/v1/push/vapid-public-key');
+    },
+
+    subscribePush(subscription) {
+        return request('/api/v1/push/subscribe', {
+            method: 'POST',
+            body: { subscription }
+        });
+    },
+
+    unsubscribePush(endpoint) {
+        return request('/api/v1/push/unsubscribe', {
+            method: 'POST',
+            body: { endpoint }
+        });
+    },
+
+    // ==========================================================
     // UPLOAD
     // ==========================================================
 

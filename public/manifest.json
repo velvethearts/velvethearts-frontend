@@ -1,0 +1,18 @@
+{
+  "short_name": "Velvet Hearts",
+  "name": "Velvet Hearts Relationships",
+  "description": "Inclusive, high-intent relationship platform with voice notes, accessibility options, and real-time connections.",
+  "icons": [
+    {
+      "src": "/velvet-heart-logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0d090b",
+  "theme_color": "#b8436a",
+  "display": "standalone",
+  "orientation": "portrait"
+}

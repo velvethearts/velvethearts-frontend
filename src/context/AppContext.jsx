@@ -12,6 +12,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { api } from '../lib/api';
 import { connectSocket, disconnectSocket, emitMarkSeen } from '../lib/socket';
+import { registerPushNotifications } from '../lib/pushManager';
 import { ConfirmModal } from '../components/UI/ConfirmModal';
 const AppContext = createContext();
 const CHAT_CLEARS_STORAGE_KEY = 'vh-cleared-chats';
@@ -672,9 +673,12 @@ export const AppProvider = ({ children }) => {
 
     useEffect(() => {
         if (isLoggedIn && isOnboarded && approvalStatus === 'approved') {
-          const token = api.tokenStore.getToken();
+            const token = api.tokenStore.getToken();
             if (token) {
                 const socket = connectSocket(token);
+
+                // Register Web Push Notifications subscription with backend
+                registerPushNotifications().catch(() => {});
 
                 socket.on('new_message', ({ conversationId, message }) => {
                     if (!message) return;
