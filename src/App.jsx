@@ -134,6 +134,30 @@ function AppContent() {
     }
   }, [deepLinkConversationId, setActiveTab, setDeepLinkConversationId]);
 
+  // Handle Service Worker postMessage navigation when app is already open
+  React.useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      const handleSwMessage = (e) => {
+        const targetTab = e.data?.tab || (e.data?.url?.includes('notifications') ? 'notifications' : e.data?.url?.includes('chat') ? 'chat' : null);
+        if (e.data?.type === 'NAVIGATE' && targetTab) {
+          setActiveTab(targetTab);
+        }
+      };
+      navigator.serviceWorker.addEventListener('message', handleSwMessage);
+      return () => navigator.serviceWorker.removeEventListener('message', handleSwMessage);
+    }
+  }, [setActiveTab]);
+
+  // Handle URL query parameter deep linking (e.g. /?tab=chat) when opening from push notification
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && ['discover', 'chat', 'notifications', 'profile'].includes(tabParam)) {
+      setActiveTab(tabParam);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [setActiveTab]);
+
   const renderActivePage = () => {
     switch (activeTab) {
       case 'discover':

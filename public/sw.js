@@ -52,14 +52,15 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  const targetUrl = event.notification.data?.url || '/';
+  const targetTab = event.notification.data?.tab || 'chat';
+  const targetUrl = event.notification.data?.url || `/?tab=${targetTab}`;
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if (client.url && 'focus' in client) {
           client.focus();
-          client.postMessage({ type: 'NAVIGATE', url: targetUrl });
+          client.postMessage({ type: 'NAVIGATE', tab: targetTab, url: targetUrl });
           return;
         }
       }
