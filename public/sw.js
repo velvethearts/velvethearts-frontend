@@ -44,7 +44,16 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(notificationData.title, options)
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If the user currently has the Velvet Hearts app open and in active focus,
+      // let in-app toasts handle it without popping up a system OS banner.
+      const isFocused = clientList.some((client) => client.focused);
+      if (isFocused) {
+        return;
+      }
+
+      return self.registration.showNotification(notificationData.title, options);
+    })
   );
 });
 
