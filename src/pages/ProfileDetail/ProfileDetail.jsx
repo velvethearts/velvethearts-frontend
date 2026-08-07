@@ -7,7 +7,7 @@ import { Modal } from '../../components/UI/Modal';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 
 export const ProfileDetail = ({ profile, onBack }) => {
-  const { connections, interestsSent, sendInterest, reportUser, blockUser, showConfirm } = useApp();
+  const { connections, interestsSent, sendInterest, unsendInterest, reportUser, blockUser, showConfirm } = useApp();
   const [showReportSheet, setShowReportSheet] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportComment, setReportComment] = useState('');
@@ -212,12 +212,18 @@ export const ProfileDetail = ({ profile, onBack }) => {
         <div className="detail-action-footer">
           <Button 
             variant="primary"
-            onClick={() => sendInterest(profile.id)}
+            onClick={() => {
+              if (isInterestSent) {
+                unsendInterest(profile.id, profile.name);
+              } else {
+                sendInterest(profile.id);
+              }
+            }}
             className={`detail-heart-action-btn ${isInterestSent ? 'sent' : ''}`}
           >
             <Heart size={24} weight={isInterestSent ? 'fill' : 'regular'} className={isInterestSent ? 'heart-beat-active' : ''} />
             <span>
-              {isInterestSent ? 'Interest Sent' : 'Send Interest'}
+              {isInterestSent ? 'Invite Sent' : 'Send Interest'}
             </span>
           </Button>
         </div>

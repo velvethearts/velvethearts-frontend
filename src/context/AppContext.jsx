@@ -1222,6 +1222,42 @@ useEffect(() => {
         }
     };
 
+    const unsendInterest = useCallback(async (profileId, profileName = 'this user') => {
+        const confirmed = await showConfirm({
+            title: 'Unsend Invite?',
+            message: `Are you sure you want to unsend your invite to ${profileName}?`,
+            confirmText: 'Unsend Invite',
+            cancelText: 'Keep Invite',
+            danger: true,
+        });
+
+        if (!confirmed) return false;
+
+        // Optimistically remove from state
+        setInterestsSent(prev => prev.filter(id => id !== profileId));
+        setInterestStatuses(prev => {
+            const next = { ...prev };
+            delete next[profileId];
+            return next;
+        });
+
+        try {
+            if (api.isConfigured) {
+                await api.unlikeProfile(profileId);
+            }
+            return true;
+        } catch (err) {
+            // Rollback on failure
+            setInterestsSent(prev => [...prev, profileId]);
+            setInterestStatuses(prev => ({ ...prev, [profileId]: 'sent' }));
+            showAlert({
+                title: 'Error',
+                message: err.message || 'Failed to unsend invite.',
+            });
+            return false;
+        }
+    }, [showConfirm, showAlert]);
+
     const toggleSaveProfile = (profileId, profileObj = null) => {
         setSavedProfiles(prev => {
             if (prev.includes(profileId)) {
@@ -1777,6 +1813,7 @@ useEffect(() => {
             completeOnboarding,
             updateUserProfile,
             sendInterest,
+            unsendInterest,
             toggleSaveProfile,
             unmatchConnection,
             blockUser,

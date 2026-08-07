@@ -11,7 +11,8 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     profiles, 
     loadingProfiles, 
     interestsSent, 
-    sendInterest, 
+    sendInterest,
+    unsendInterest,
     savedProfiles,
     toggleSaveProfile,
     blockUser,
@@ -151,6 +152,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
               isInterestSent={interestsSent.includes(profile.id)}
               isSaved={savedProfiles.includes(profile.id)}
               onSendInterest={sendInterest}
+              onUnsendInterest={unsendInterest}
               onSave={(id) => toggleSaveProfile(id, profile)}
               onBlock={blockUser}
               onReport={(id) => {

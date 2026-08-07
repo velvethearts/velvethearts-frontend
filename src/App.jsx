@@ -20,6 +20,7 @@ import { SettingsPage } from './pages/Settings/SettingsPage';
 import { SafetyCenter } from './pages/Safety/SafetyCenter';
 import { NotificationsPage } from './pages/Notifications/NotificationsPage';
 import { ToastContainer } from './components/UI/ToastContainer';
+import { PWAInstallModal } from './components/UI/PWAInstallModal';
 
 const AuthLoadingScreen = () => {
   return (
@@ -232,6 +233,7 @@ function AppContent() {
   return (
     <Navigation>
       {renderActivePage()}
+      <PWAInstallModal isLoggedIn={isLoggedIn} isOnboarded={isOnboarded} />
     </Navigation>
   );
 }

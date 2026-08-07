@@ -7,6 +7,7 @@ export const ProfileCard = ({
   isInterestSent = false,
   isSaved = false,
   onSendInterest,
+  onUnsendInterest,
   onSave,
   onBlock,
   onReport,
@@ -215,14 +216,19 @@ export const ProfileCard = ({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onSendInterest(profile.id);
+              if (isInterestSent) {
+                if (onUnsendInterest) onUnsendInterest(profile.id, profile.name);
+              } else {
+                if (onSendInterest) onSendInterest(profile.id);
+              }
             }}
             className={`vh-btn vh-btn-primary interest-action-btn ${isInterestSent ? 'sent' : ''}`}
-            aria-label={isInterestSent ? `Interest sent to ${profile.name}` : `Send interest to ${profile.name}`}
+            aria-label={isInterestSent ? `Unsend invite to ${profile.name}` : `Send interest to ${profile.name}`}
+            title={isInterestSent ? "Click to unsend invite" : "Send interest"}
           >
             <Heart size={18} weight={isInterestSent ? 'fill' : 'regular'} />
             <span className="font-ui">
-              {isInterestSent ? 'Interest Sent' : 'Send Interest'}
+              {isInterestSent ? 'Invite Sent' : 'Send Interest'}
             </span>
           </button>
         </div>
@@ -393,13 +399,15 @@ export const ProfileCard = ({
 
         .interest-action-btn.sent {
           background-color: var(--success) !important;
-          cursor: default;
+          cursor: pointer;
+          transition: all var(--duration-fast);
         }
 
         .interest-action-btn.sent:hover:not(:disabled) {
-          background-color: var(--success) !important;
-          transform: none !important;
-          box-shadow: none !important;
+          background-color: var(--burgundy-700) !important;
+          border-color: var(--burgundy-700) !important;
+          transform: scale(1.02) !important;
+          box-shadow: 0 4px 12px rgba(184, 67, 106, 0.3) !important;
         }
 
         /* Card footer */

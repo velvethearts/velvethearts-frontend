@@ -11,7 +11,8 @@ export const SavedProfilesPage = ({ onBack, onSelectProfile }) => {
     savedProfiles = [], 
     toggleSaveProfile, 
     interestsSent = [], 
-    sendInterest, 
+    sendInterest,
+    unsendInterest,
     blockUser, 
     reportUser 
   } = useApp();
@@ -33,6 +34,7 @@ export const SavedProfilesPage = ({ onBack, onSelectProfile }) => {
               isInterestSent={interestsSent.includes(profile.id)}
               isSaved={savedProfiles.includes(profile.id)}
               onSendInterest={sendInterest}
+              onUnsendInterest={unsendInterest}
               onSave={(id) => toggleSaveProfile(id, profile)}
               onBlock={blockUser}
               onReport={(id) => {
