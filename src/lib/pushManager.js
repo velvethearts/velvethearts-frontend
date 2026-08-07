@@ -16,9 +16,16 @@ export async function registerPushNotifications() {
     return false;
   }
 
+  const token = api.tokenStore.getToken();
+  if (!token) {
+    console.warn('Postponing Push Registration: Auth token not present yet');
+    return false;
+  }
+
   try {
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
+      console.log('Notification permission status:', permission);
       return false;
     }
 

@@ -34,7 +34,10 @@ self.addEventListener('push', (event) => {
     icon: notificationData.icon || '/velvet-heart-logo.png',
     badge: notificationData.badge || '/velvet-heart-logo.png',
     data: notificationData.data || { url: '/notifications' },
-    vibrate: [100, 50, 100],
+    vibrate: [200, 100, 200],
+    tag: `vh-notif-${Date.now()}`,
+    renotify: true,
+    requireInteraction: true,
     actions: [
       { action: 'open', title: 'Open Velvet Hearts' }
     ]

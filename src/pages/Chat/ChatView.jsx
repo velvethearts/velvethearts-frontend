@@ -223,16 +223,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     return Boolean(onlineUserIds && (onlineUserIds.has(partner.userId) || onlineUserIds.has(partner.id)));
   };
   const [activeChatId, setActiveChatIdState] = useState(() => {
-    return preselectedConnectionId || sessionStorage.getItem('vh-active-chat-id') || null;
+    return preselectedConnectionId || null;
   });
 
   const setActiveChatId = (id) => {
-    if (id) {
-      sessionStorage.setItem('vh-active-chat-id', id);
-    } else {
-      sessionStorage.removeItem('vh-active-chat-id');
-    }
-    setActiveChatIdState(id);
+    setActiveChatIdState(id || null);
   };
   const [messageText, setMessageText] = useState('');
   const [editingMessageId, setEditingMessageId] = useState(null);
@@ -535,14 +530,12 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     }
   };
 
-  // Synchronize preselected chat from matches tab or select first connection on desktop
+  // Synchronize preselected chat from matches tab or notification deep links
   useEffect(() => {
     if (preselectedConnectionId) {
       setActiveChatId(preselectedConnectionId);
-    } else if (!activeChatId && connections.length > 0 && window.innerWidth >= 768) {
-      setActiveChatId(connections[0].id);
     }
-  }, [preselectedConnectionId, connections]);
+  }, [preselectedConnectionId]);
 
   // All connections are valid chat partners
   const chatPartners = connections;
