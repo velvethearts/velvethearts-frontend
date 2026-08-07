@@ -1,5 +1,6 @@
 import React, { useState, Component } from 'react';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navigation } from './components/Navigation';
 import { Celebration } from './components/Celebration';
@@ -271,6 +272,7 @@ function App() {
         <Celebration />
         <ToastContainer />
         <Analytics />
+        <SpeedInsights />
       </AppProvider>
     </ErrorBoundary>
   );
