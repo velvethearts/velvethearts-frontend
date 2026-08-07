@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sliders, MagnifyingGlass, X, HeartBreak, ShieldCheck } from '@phosphor-icons/react';
+import { Sliders, MagnifyingGlass, X, HeartBreak, Cards, SquaresFour } from '@phosphor-icons/react';
 import { DiscoverPreferences } from './DiscoverPreferences';
 import { ProfileCard } from '../../components/UI/ProfileCard';
+import { StoryDeck } from '../../components/UI/StoryDeck';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { PageHeader } from '../../components/UI/PageHeader';
 
@@ -11,6 +12,8 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     profiles, 
     loadingProfiles, 
     interestsSent, 
+    interestStatuses = {},
+    connections = [],
     sendInterest,
     unsendInterest,
     savedProfiles,
@@ -18,12 +21,18 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     blockUser,
     reportUser,
     filters, 
-    setFilters 
+    setFilters,
+    userProfile,
+    passedProfileIds,
+    setPassedProfileIds,
+    passProfile,
+    unpassProfile
   } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeQuickFilter, setActiveQuickFilter] = useState('All');
   const [showPreferences, setShowPreferences] = useState(false);
+  const [viewMode, setViewMode] = useState('deck'); // 'deck' | 'grid'
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -31,6 +40,15 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
   // Perform search and filter locally
   const filteredProfiles = profiles.filter(profile => {
+    // 0. Exclude own profile
+    if (userProfile && (profile.id === userProfile.id || profile.userId === userProfile.userId || profile.id === userProfile.userId || profile.userId === userProfile.id)) return false;
+    
+    // Disappear from Discover ONLY if a mutual match/connection is formed
+    const isMatched = interestStatuses[profile.id] === 'mutual' || (profile.userId && interestStatuses[profile.userId] === 'mutual') || connections.some(c => c.id === profile.id || c.userId === profile.id || c.partnerId === profile.id);
+    if (isMatched) return false;
+
+    if (passedProfileIds.includes(profile.id)) return false;
+
     // 1. Search term match
     const searchString = searchTerm.trim().toLowerCase();
     if (searchString) {
@@ -48,12 +66,24 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     if (activeQuickFilter === 'New' && !profile.verified) return false; // Verified acts as new
 
     // 3. Panel Filters
-    if (filters.gender !== 'All' && profile.gender !== filters.gender) return false;
-    if (filters.relationshipIntent !== 'All' && profile.relationshipIntent !== filters.relationshipIntent) return false;
-    if (filters.city && !profile.city.toLowerCase().includes(filters.city.toLowerCase())) return false;
+    const normalizeGender = (g) => {
+      if (!g) return '';
+      const str = g.toLowerCase();
+      if (str === 'woman' || str === 'female' || str === 'women') return 'woman';
+      if (str === 'man' || str === 'male' || str === 'men') return 'man';
+      return str;
+    };
+
+    if (filters.gender !== 'All' && normalizeGender(profile.gender) !== normalizeGender(filters.gender)) return false;
+
+    if (filters.relationshipIntent !== 'All' && profile.relationshipIntent && 
+        !profile.relationshipIntent.toLowerCase().includes(filters.relationshipIntent.toLowerCase()) &&
+        !filters.relationshipIntent.toLowerCase().includes(profile.relationshipIntent.toLowerCase())) return false;
+
+    if (filters.city && !profile.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
     
     // Enforce Age filter bounds
-    if (profile.age < filters.ageMin || profile.age > filters.ageMax) return false;
+    if (typeof profile.age === 'number' && (profile.age < filters.ageMin || profile.age > filters.ageMax)) return false;
 
     return true;
   });
@@ -61,6 +91,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
   const handleResetFilters = () => {
     setSearchTerm('');
     setActiveQuickFilter('All');
+    setPassedProfileIds([]);
     setFilters({
       gender: 'All',
       relationshipIntent: 'All',
@@ -85,15 +116,41 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         title="Discover"
         subtitle="Find someone who sees you."
         actions={
-          <button 
-            onClick={() => setShowPreferences(true)} 
-            className="filters-toggle-btn font-ui"
-            aria-label="Filter preferences drawer"
-          >
-            <Sliders size={20} />
-            <span>Preferences</span>
-            {hasActiveFilters && <span className="active-filters-indicator" />}
-          </button>
+          <div className="discover-header-actions">
+            {/* View Mode Switcher */}
+            <div className="view-mode-toggle-group font-ui" role="group" aria-label="Browse view mode">
+              <button
+                type="button"
+                className={`view-mode-btn ${viewMode === 'deck' ? 'active' : ''}`}
+                onClick={() => setViewMode('deck')}
+                aria-label="Story Deck view"
+                title="Story Deck View"
+              >
+                <Cards size={18} weight={viewMode === 'deck' ? 'fill' : 'regular'} />
+                <span>Deck</span>
+              </button>
+              <button
+                type="button"
+                className={`view-mode-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                onClick={() => setViewMode('grid')}
+                aria-label="Gallery Wall view"
+                title="Gallery Wall View"
+              >
+                <SquaresFour size={18} weight={viewMode === 'grid' ? 'fill' : 'regular'} />
+                <span>Grid</span>
+              </button>
+            </div>
+
+            <button 
+              onClick={() => setShowPreferences(true)} 
+              className="filters-toggle-btn font-ui"
+              aria-label="Filter preferences drawer"
+            >
+              <Sliders size={20} />
+              <span>Preferences</span>
+              {hasActiveFilters && <span className="active-filters-indicator" />}
+            </button>
+          </div>
         }
       />
 
@@ -144,25 +201,43 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           ))}
         </div>
       ) : filteredProfiles.length > 0 ? (
-        <div className="gallery-wall-grid">
-          {filteredProfiles.map((profile) => (
-            <ProfileCard
-              key={profile.id}
-              profile={profile}
-              isInterestSent={interestsSent.includes(profile.id)}
-              isSaved={savedProfiles.includes(profile.id)}
-              onSendInterest={sendInterest}
-              onUnsendInterest={unsendInterest}
-              onSave={(id) => toggleSaveProfile(id, profile)}
-              onBlock={blockUser}
-              onReport={(id) => {
-                const reason = window.prompt(`Report ${profile.name} - Enter reason:`);
-                if (reason) reportUser(id, 'Reported from Card', reason);
-              }}
-              onClick={() => onSelectProfile(profile)}
-            />
-          ))}
-        </div>
+        viewMode === 'deck' ? (
+          <StoryDeck
+            profiles={filteredProfiles}
+            interestsSent={interestsSent}
+            savedProfiles={savedProfiles}
+            userProfile={userProfile}
+            onSendInterest={sendInterest}
+            onUnsendInterest={unsendInterest}
+            onPassProfile={passProfile}
+            onUnpassProfile={unpassProfile}
+            onSaveProfile={(id) => {
+              const p = profiles.find(item => item.id === id);
+              if (p) toggleSaveProfile(id, p);
+            }}
+            onSelectProfile={onSelectProfile}
+          />
+        ) : (
+          <div className="gallery-wall-grid">
+            {filteredProfiles.map((profile) => (
+              <ProfileCard
+                key={profile.id}
+                profile={profile}
+                isInterestSent={interestsSent.includes(profile.id)}
+                isSaved={savedProfiles.includes(profile.id)}
+                onSendInterest={sendInterest}
+                onUnsendInterest={unsendInterest}
+                onSave={(id) => toggleSaveProfile(id, profile)}
+                onBlock={blockUser}
+                onReport={(id) => {
+                  const reason = window.prompt(`Report ${profile.name} - Enter reason:`);
+                  if (reason) reportUser(id, 'Reported from Card', reason);
+                }}
+                onClick={() => onSelectProfile(profile)}
+              />
+            ))}
+          </div>
+        )
       ) : (
         <EmptyState
           title="No profiles found"
@@ -183,6 +258,42 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           max-width: var(--content-max-width);
           margin: 0 auto;
           padding: var(--space-6) var(--space-4);
+        }
+
+        .discover-header-actions {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+        }
+
+        .view-mode-toggle-group {
+          display: inline-flex;
+          align-items: center;
+          background-color: var(--bg-surface-warm);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-full);
+          padding: 3px;
+        }
+
+        .view-mode-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 10px;
+          border-radius: var(--radius-full);
+          border: none;
+          background: transparent;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--text-secondary);
+          cursor: pointer;
+          transition: all var(--duration-fast);
+        }
+
+        .view-mode-btn.active {
+          background-color: var(--bg-surface);
+          color: var(--text-primary);
+          box-shadow: var(--shadow-sm);
         }
 
         .filters-toggle-btn {

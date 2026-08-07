@@ -248,8 +248,51 @@ export const AppProvider = ({ children }) => {
         return {};
     });
 
-    const [interestsSent, setInterestsSent] = useState([]);
-    const [interestStatuses, setInterestStatuses] = useState({});
+    const [interestsSent, setInterestsSent] = useState(() => {
+        try {
+            const saved = localStorage.getItem('vh-interests-sent');
+            if (saved) return JSON.parse(saved);
+        } catch (e) { }
+        return [];
+    });
+
+    const [interestStatuses, setInterestStatuses] = useState(() => {
+        try {
+            const saved = localStorage.getItem('vh-interest-statuses');
+            if (saved) return JSON.parse(saved);
+        } catch (e) { }
+        return {};
+    });
+
+    const [sentInvitesList, setSentInvitesList] = useState(() => {
+        try {
+            const saved = localStorage.getItem('vh-sent-invites-list');
+            if (saved) return JSON.parse(saved);
+        } catch (e) { }
+        return [];
+    });
+
+    const [passedProfileIds, setPassedProfileIds] = useState(() => {
+        try {
+            const saved = localStorage.getItem('vh-passed-profiles');
+            if (saved) return JSON.parse(saved);
+        } catch (e) { }
+        return [];
+    });
+
+    useEffect(() => {
+        localStorage.setItem('vh-passed-profiles', JSON.stringify(passedProfileIds));
+    }, [passedProfileIds]);
+
+    const passProfile = useCallback((profileId) => {
+        if (!profileId) return;
+        setPassedProfileIds(prev => Array.from(new Set([...prev, profileId])));
+    }, []);
+
+    const unpassProfile = useCallback((profileId) => {
+        if (!profileId) return;
+        setPassedProfileIds(prev => prev.filter(id => id !== profileId));
+    }, []);
 
     const [connections, setConnections] = useState([]);
     const [receivedInvites, setReceivedInvites] = useState([]);
@@ -389,7 +432,8 @@ export const AppProvider = ({ children }) => {
 
         try {
             const data = await api.getDiscover(filters);
-            setProfiles(Array.isArray(data) ? data : []);
+            const list = Array.isArray(data) ? data : (Array.isArray(data?.profiles) ? data.profiles : []);
+            setProfiles(list);
         } catch (err) {
             setErrorProfiles(err.message || 'Failed to load profiles');
             setProfiles([]);
@@ -397,6 +441,12 @@ export const AppProvider = ({ children }) => {
             setLoadingProfiles(false);
         }
     }, [filters]);
+
+    useEffect(() => {
+        if (api.isConfigured && api.tokenStore.getToken()) {
+            fetchDiscoverProfiles();
+        }
+    }, [fetchDiscoverProfiles]);
 
 
     // ─── Connections (API-driven) ──────────────────────────────────────
@@ -435,6 +485,28 @@ export const AppProvider = ({ children }) => {
             setReceivedInvites(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Failed to fetch received invites:', err);
+        }
+    }, []);
+
+    const fetchSentInvites = useCallback(async () => {
+        if (!api.isConfigured) return;
+        try {
+            const data = await api.getSentInvites();
+            const list = Array.isArray(data) ? data : [];
+            setSentInvitesList(list);
+
+            const sentIds = list.map(item => item.id);
+            setInterestsSent(Array.from(new Set(sentIds)));
+
+            setInterestStatuses(prev => {
+                const next = { ...prev };
+                list.forEach(item => {
+                    next[item.id] = item.isSuper || item.isSuperSpark ? 'super' : 'sent';
+                });
+                return next;
+            });
+        } catch (err) {
+            console.error('Failed to fetch sent invites:', err);
         }
     }, []);
 
@@ -570,12 +642,13 @@ export const AppProvider = ({ children }) => {
                 fetchConnections(),
                 fetchConversations(),
                 fetchReceivedInvites(),
+                fetchSentInvites(),
                 fetchBlockedUsers()
             ]);
         } catch (err) {
             console.error('Error loading social data:', err);
         }
-    }, [fetchDiscoverProfiles, fetchConnections, fetchConversations, fetchReceivedInvites, fetchBlockedUsers]);
+    }, [fetchDiscoverProfiles, fetchConnections, fetchConversations, fetchReceivedInvites, fetchSentInvites, fetchBlockedUsers]);
 
 
     // ─── Persistence for UI-only settings ──────────────────────────────
@@ -583,6 +656,14 @@ export const AppProvider = ({ children }) => {
     useEffect(() => {
         localStorage.setItem('vh-saved-profiles', JSON.stringify(savedProfiles));
     }, [savedProfiles]);
+
+    useEffect(() => {
+        localStorage.setItem('vh-interests-sent', JSON.stringify(interestsSent));
+    }, [interestsSent]);
+
+    useEffect(() => {
+        localStorage.setItem('vh-interest-statuses', JSON.stringify(interestStatuses));
+    }, [interestStatuses]);
 
     useEffect(() => {
         localStorage.setItem('vh-user-profile', JSON.stringify(userProfile));
@@ -1077,15 +1158,24 @@ useEffect(() => {
     }, []);
 
 
-    const login = async (phoneNumber) => {
+    const login = async (phoneNumber, customToken = null) => {
         if (!api.isConfigured) {
             // Fallback for when backend is not running
-            setPhone(phoneNumber);
+            setPhone(phoneNumber || '');
             setIsLoggedIn(true);
             return;
         }
 
-        const firebaseIdToken = await auth.currentUser.getIdToken();
+        let firebaseIdToken = customToken;
+        if (!firebaseIdToken && auth.currentUser) {
+            try {
+                firebaseIdToken = await auth.currentUser.getIdToken(true);
+            } catch (e) { }
+        }
+        if (!firebaseIdToken) {
+            firebaseIdToken = localStorage.getItem('vh-firebase-token') || 'dev-google:test-onboard@gmail.com';
+        }
+
         const data = await api.login(firebaseIdToken);
 
         // Store the Firebase ID token
@@ -1175,23 +1265,35 @@ useEffect(() => {
         }
     };
 
-    const sendInterest = async (profileId) => {
+    const sendInterest = async (profileId, comment = null, reactionData = null) => {
         if (interestsSent.includes(profileId)) return;
+
+        const isSuper = Boolean(reactionData?.isSuper || reactionData?.type === 'super' || reactionData === 'super');
+        const targetProfile = profiles.find(p => p.id === profileId) || savedProfileDetails[profileId];
+
+        if (targetProfile) {
+            setSentInvitesList(prev => [
+                { ...targetProfile, isSuper, isSuperSpark: isSuper },
+                ...prev.filter(item => item.id !== profileId)
+            ]);
+        }
 
         // Optimistic: mark as sent
         setInterestsSent(prev => [...prev, profileId]);
-        setInterestStatuses(prev => ({ ...prev, [profileId]: 'sent' }));
+        setInterestStatuses(prev => ({ ...prev, [profileId]: isSuper ? 'super' : 'sent' }));
 
         try {
-            const data = await api.likeProfile(profileId);
+            const reactionComment = comment || reactionData?.comment || null;
+            const data = await api.likeProfile(profileId, isSuper, reactionComment);
 
             if (data.match) {
                 // It's a mutual match!
                 setInterestStatuses(prev => ({ ...prev, [profileId]: 'mutual' }));
                 setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId));
+                setSentInvitesList(prev => prev.filter(item => item.id !== profileId));
 
                 // Add to connections
-                const matchedProfile = profiles.find(p => p.id === profileId);
+                const matchedProfile = targetProfile || profiles.find(p => p.id === profileId);
                 if (matchedProfile) {
                     setConnections(prev => {
                         const ids = prev.map(c => c.id || c);
@@ -1200,7 +1302,7 @@ useEffect(() => {
                         }
                         return prev;
                     });
-                    setShowCelebration(matchedProfile);
+                    setShowCelebration({ ...matchedProfile, conversationId: data.conversationId });
                 }
 
                 // Refresh connections from server
@@ -1208,11 +1310,12 @@ useEffect(() => {
                 fetchConversations();
                 fetchReceivedInvites();
             } else {
-                setInterestStatuses(prev => ({ ...prev, [profileId]: 'sent' }));
+                setInterestStatuses(prev => ({ ...prev, [profileId]: isSuper ? 'super' : 'sent' }));
             }
         } catch (err) {
             // Rollback on failure
             setInterestsSent(prev => prev.filter(id => id !== profileId));
+            setSentInvitesList(prev => prev.filter(item => item.id !== profileId));
             setInterestStatuses(prev => {
                 const next = { ...prev };
                 delete next[profileId];
@@ -1235,6 +1338,7 @@ useEffect(() => {
 
         // Optimistically remove from state
         setInterestsSent(prev => prev.filter(id => id !== profileId));
+        setSentInvitesList(prev => prev.filter(item => item.id !== profileId));
         setInterestStatuses(prev => {
             const next = { ...prev };
             delete next[profileId];
@@ -1244,6 +1348,7 @@ useEffect(() => {
         try {
             if (api.isConfigured) {
                 await api.unlikeProfile(profileId);
+                fetchDiscoverProfiles();
             }
             return true;
         } catch (err) {
@@ -1256,7 +1361,7 @@ useEffect(() => {
             });
             return false;
         }
-    }, [showConfirm, showAlert]);
+    }, [showConfirm, showAlert, fetchDiscoverProfiles]);
 
     const toggleSaveProfile = (profileId, profileObj = null) => {
         setSavedProfiles(prev => {
@@ -1286,6 +1391,7 @@ useEffect(() => {
         setConnections(prev => prev.filter(c => (c.id || c) !== profileId));
         setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId));
         setInterestsSent(prev => prev.filter(id => id !== profileId));
+        setSentInvitesList(prev => prev.filter(item => item.id !== profileId));
         setInterestStatuses(prev => {
             const next = { ...prev };
             delete next[profileId];
@@ -1302,6 +1408,7 @@ useEffect(() => {
             // Refresh data after unmatch
             fetchConnections();
             fetchConversations();
+            fetchDiscoverProfiles();
         } catch (err) {
             console.error('Failed to unmatch:', err);
             // Roll back optimistic removal on failure by re-syncing from server
@@ -1320,6 +1427,7 @@ useEffect(() => {
         setConnections(prev => prev.filter(c => (c.id || c) !== profileId));
         setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId));
         setInterestsSent(prev => prev.filter(id => id !== profileId));
+        setSentInvitesList(prev => prev.filter(item => item.id !== profileId));
         setInterestStatuses(prev => {
             const next = { ...prev };
             delete next[profileId];
@@ -1343,6 +1451,7 @@ useEffect(() => {
             fetchConnections();
             fetchConversations();
             fetchBlockedUsers();
+            fetchSentInvites();
             fetchDiscoverProfiles();
         } catch (err) {
             console.error('Failed to block user:', err);
@@ -1769,6 +1878,12 @@ useEffect(() => {
             savedProfileObjects,
             interestsSent,
             interestStatuses,
+            sentInvitesList,
+            fetchSentInvites,
+            passedProfileIds,
+            setPassedProfileIds,
+            passProfile,
+            unpassProfile,
             connections,
             setConnections,
             receivedInvites,

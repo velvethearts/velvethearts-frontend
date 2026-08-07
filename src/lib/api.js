@@ -20,7 +20,22 @@ const tokenStore = {
     }
 };
 
-const request = async (path, options = {}) => {
+import { auth } from './firebase';
+
+const getDeviceId = () => {
+    try {
+        let deviceId = localStorage.getItem('vh-device-id');
+        if (!deviceId) {
+            deviceId = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('vh-device-id', deviceId);
+        }
+        return deviceId;
+    } catch (e) {
+        return 'dev_unknown';
+    }
+};
+
+const request = async (path, options = {}, isRetry = false) => {
     if (!API_URL) {
         throw new Error(
             'Backend API URL is not configured. Set VITE_API_URL in your environment.'
@@ -35,7 +50,9 @@ const request = async (path, options = {}) => {
         headers.set('Content-Type', 'application/json');
     }
 
-    const firebaseToken = tokenStore.getToken();
+    headers.set('X-Device-Id', getDeviceId());
+
+    let firebaseToken = tokenStore.getToken();
 
     if (firebaseToken && !headers.has('Authorization')) {
         headers.set('Authorization', `Bearer ${firebaseToken}`);
@@ -47,6 +64,17 @@ const request = async (path, options = {}) => {
         credentials: 'include',
         body: hasBody ? JSON.stringify(options.body) : options.body
     });
+
+    // Handle token expiration automatically
+    if (response.status === 401 && !isRetry && auth?.currentUser) {
+        try {
+            const freshToken = await auth.currentUser.getIdToken(true);
+            tokenStore.setToken(freshToken);
+            return request(path, options, true);
+        } catch (refreshErr) {
+            console.error('Failed auto-refreshing Firebase ID Token:', refreshErr);
+        }
+    }
 
     const payload = await response.json().catch(() => null);
 
@@ -143,10 +171,12 @@ export const api = {
     // MATCH
     // ==========================================================
 
-    likeProfile(receiverId) {
+    likeProfile(receiverId, isSuper = false, comment = null) {
+        const body = { receiverId, isSuper: Boolean(isSuper) };
+        if (comment) body.comment = comment;
         return request('/api/v1/match/like', {
             method: 'POST',
-            body: { receiverId }
+            body
         });
     },
 
@@ -170,6 +200,10 @@ export const api = {
 
     getReceivedInvites() {
         return request('/api/v1/match/received-invites');
+    },
+
+    getSentInvites() {
+        return request('/api/v1/match/sent-invites');
     },
 
     // ==========================================================

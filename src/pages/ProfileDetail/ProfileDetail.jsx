@@ -7,7 +7,7 @@ import { Modal } from '../../components/UI/Modal';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 
 export const ProfileDetail = ({ profile, onBack }) => {
-  const { connections, interestsSent, sendInterest, unsendInterest, reportUser, blockUser, showConfirm } = useApp();
+  const { connections, interestsSent, sendInterest, unsendInterest, reportUser, blockUser, showConfirm, unmatchConnection } = useApp();
   const [showReportSheet, setShowReportSheet] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportComment, setReportComment] = useState('');
@@ -48,16 +48,36 @@ export const ProfileDetail = ({ profile, onBack }) => {
     }, 2200);
   };
 
-  const handleBlockOnly = async () => {
-    const confirmed = await showConfirm({
-      title: 'Remove Connection',
-      message: `Are you sure you want to remove ${profile.name}? You won't see them again.`,
-      okText: 'Remove',
-      cancelText: 'Cancel'
-    });
-    if (confirmed) {
-      blockUser(profile.id);
+  const handleRemoveConnection = async () => {
+    const foundConnection = connections?.find(c => c.id === profile.id || c.userId === profile.id || c.partnerId === profile.id);
+    const mId = profile.matchId || foundConnection?.matchId || foundConnection?.id;
+
+    if (mId) {
+      const confirmed = await showConfirm({
+        title: 'Remove Connection',
+        message: `Remove ${profile.name} from your connections? You can rediscover each other later.`,
+        okText: 'Remove Connection',
+        cancelText: 'Keep Connection',
+        danger: true
+      });
+      if (confirmed) {
+        await unmatchConnection(mId, profile.id);
+        onBack();
+      }
+    } else if (isInterestSent) {
+      await unsendInterest(profile.id, profile.name);
       onBack();
+    } else {
+      const confirmed = await showConfirm({
+        title: 'Remove Profile',
+        message: `Are you sure you want to remove ${profile.name}?`,
+        okText: 'Remove',
+        cancelText: 'Cancel'
+      });
+      if (confirmed) {
+        blockUser(profile.id);
+        onBack();
+      }
     }
   };
 
@@ -70,6 +90,12 @@ export const ProfileDetail = ({ profile, onBack }) => {
     'Something else'
   ];
 
+  const foundConnection = connections?.find(c => c.id === profile.id || c.userId === profile.id || c.partnerId === profile.id);
+  const mId = profile.matchId || foundConnection?.matchId || foundConnection?.id;
+  const isMatchedConnection = Boolean(mId);
+
+  const actionButtonLabel = isMatchedConnection ? 'Remove Connection' : isInterestSent ? 'Unsend Invite' : 'Remove Profile';
+
   return (
     <div className="profile-detail-page page-enter">
       {/* Aligned PageHeader */}
@@ -79,8 +105,8 @@ export const ProfileDetail = ({ profile, onBack }) => {
         onBack={onBack}
         actions={
           <div className="detail-header-actions">
-            <Button variant="ghost" onClick={handleBlockOnly}>
-              Remove
+            <Button variant="ghost" onClick={handleRemoveConnection}>
+              {actionButtonLabel}
             </Button>
             <Button variant="ghost" onClick={() => setShowReportSheet(true)} className="danger">
               Report

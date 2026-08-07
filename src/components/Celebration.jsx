@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Heart } from '@phosphor-icons/react';
+import { Heart, Sparkle, ChatCircleText } from '@phosphor-icons/react';
 import { getProfilePhoto, getDefaultAvatar } from '../utils/avatar';
+import { playHapticSound, triggerHaptic } from '../utils/haptics';
 
 export const Celebration = () => {
-  const { showCelebration, setShowCelebration, userProfile, setActiveTab } = useApp();
+  const { showCelebration, setShowCelebration, userProfile, setActiveTab, sendMessage, setDeepLinkConversationId } = useApp();
   const [particles, setParticles] = useState([]);
 
   useEffect(() => {
     if (showCelebration) {
+      triggerHaptic('match');
+      playHapticSound('match');
+
       // Generate some confetti particles in brand colors
       const colors = ['#B8436A', '#D4AD6A', '#F0A0AD', '#FAEEE0'];
-      const newParticles = Array.from({ length: 40 }).map((_, i) => ({
+      const newParticles = Array.from({ length: 45 }).map((_, i) => ({
         id: i,
         color: colors[Math.floor(Math.random() * colors.length)],
         left: `${Math.random() * 100}%`,
@@ -26,14 +30,30 @@ export const Celebration = () => {
 
   if (!showCelebration) return null;
 
-  const handleStartChat = () => {
+  const handleStartChat = (icebreakerText = '') => {
+    const partnerId = showCelebration.id;
+    const conversationId = showCelebration.conversationId;
+    const targetId = conversationId || partnerId;
+
+    if (icebreakerText && typeof icebreakerText === 'string') {
+      sendMessage(targetId, icebreakerText);
+    }
+    if (setDeepLinkConversationId && partnerId) {
+      setDeepLinkConversationId(partnerId);
+    }
     setShowCelebration(null);
-    setActiveTab('matches');
+    setActiveTab('chat');
   };
 
   const handleClose = () => {
     setShowCelebration(null);
   };
+
+  // Shared interests for icebreaker suggestions
+  const userInterests = userProfile?.interests || [];
+  const partnerInterests = showCelebration?.interests || [];
+  const shared = partnerInterests.filter(i => userInterests.includes(i));
+  const icebreakerTopic = shared.length > 0 ? shared[0] : (partnerInterests[0] || 'interests');
 
   return (
     <div className="celebration-overlay" role="dialog" aria-modal="true">
@@ -62,9 +82,15 @@ export const Celebration = () => {
           <Heart size={32} color="#D4AD6A" weight="fill" className="pulse-heart-2" />
         </div>
 
+        {/* Vibe Match Radar Indicator */}
+        <div className="celebration-vibe-badge font-ui">
+          <Sparkle size={14} color="#D4AD6A" weight="fill" />
+          <span>94% Vibe Match</span>
+        </div>
+
         <h2 className="celebration-title font-display">It's a Connection!</h2>
         <p className="celebration-subtitle font-body">
-          You and <strong>{showCelebration.name}</strong> have both shown interest.
+          You and <strong>{showCelebration.name}</strong> have both shown mutual interest.
         </p>
 
         {/* Avatars */}
@@ -98,9 +124,31 @@ export const Celebration = () => {
           </div>
         </div>
 
+        {/* 1-Tap Icebreaker Starters */}
+        <div className="celebration-icebreaker-wrap font-ui">
+          <span className="icebreaker-label">1-Tap Icebreakers:</span>
+          <div className="icebreaker-chips">
+            <button 
+              type="button" 
+              onClick={() => handleStartChat(`👋 Hey ${showCelebration.name}!`)} 
+              className="icebreaker-chip"
+            >
+              👋 &ldquo;Hey {showCelebration.name}!&rdquo;
+            </button>
+            <button 
+              type="button" 
+              onClick={() => handleStartChat(`☕ Tell me more about your interest in ${icebreakerTopic}!`)} 
+              className="icebreaker-chip"
+            >
+              ☕ &ldquo;Ask about {icebreakerTopic}&rdquo;
+            </button>
+          </div>
+        </div>
+
         <div className="celebration-actions">
           <button onClick={handleStartChat} className="primary-btn-celebration font-ui">
-            Send a Warm Message
+            <ChatCircleText size={16} weight="fill" />
+            <span>Send a Warm Message</span>
           </button>
           <button onClick={handleClose} className="secondary-btn-celebration font-ui">
             Keep Discovering
@@ -153,6 +201,21 @@ export const Celebration = () => {
           animation-delay: 0.3s;
         }
 
+        .celebration-vibe-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(212, 173, 106, 0.15);
+          border: 1px solid rgba(212, 173, 106, 0.4);
+          color: #F0D4A0;
+          font-size: var(--text-body-sm);
+          font-weight: 600;
+          padding: 4px var(--space-4);
+          border-radius: var(--radius-full);
+          margin-bottom: var(--space-3);
+          backdrop-filter: blur(4px);
+        }
+
         .celebration-title {
           font-size: var(--text-display);
           color: var(--cream-100);
@@ -163,7 +226,48 @@ export const Celebration = () => {
         .celebration-subtitle {
           color: var(--charcoal-300);
           font-size: var(--text-body);
-          margin-bottom: var(--space-8);
+          margin-bottom: var(--space-6);
+        }
+
+        .celebration-icebreaker-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--space-2);
+          margin-bottom: var(--space-6);
+          width: 100%;
+        }
+
+        .icebreaker-label {
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: var(--tracking-wide);
+          color: var(--charcoal-400);
+          font-weight: 600;
+        }
+
+        .icebreaker-chips {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: var(--space-2);
+        }
+
+        .icebreaker-chip {
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #FFFFFF;
+          padding: 6px var(--space-3);
+          border-radius: var(--radius-full);
+          font-size: var(--text-body-sm);
+          cursor: pointer;
+          transition: all var(--duration-fast);
+        }
+
+        .icebreaker-chip:hover {
+          background: rgba(184, 67, 106, 0.4);
+          border-color: var(--burgundy-300);
+          transform: translateY(-1px);
         }
 
         .avatar-meet-container {
@@ -217,40 +321,97 @@ export const Celebration = () => {
           z-index: 10;
         }
 
+        .celebration-icebreaker-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          margin-top: var(--space-4);
+          margin-bottom: var(--space-1);
+        }
+
+        .icebreaker-label {
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.6);
+          font-weight: 500;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+        }
+
+        .icebreaker-chips {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 8px;
+        }
+
+        .icebreaker-chip {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: #FFFFFF;
+          font-size: 12px;
+          font-weight: 500;
+          padding: 6px 14px;
+          border-radius: var(--radius-full);
+          cursor: pointer;
+          transition: all var(--duration-fast);
+        }
+
+        .icebreaker-chip:hover {
+          background: rgba(212, 173, 106, 0.25);
+          border-color: var(--gold-400);
+          color: var(--gold-300);
+          transform: translateY(-1px);
+        }
+
         .celebration-actions {
           display: flex;
           flex-direction: column;
-          gap: var(--space-3);
+          gap: 10px;
           width: 100%;
+          max-width: 320px;
+          margin-top: var(--space-3);
         }
 
         .primary-btn-celebration {
           width: 100%;
+          height: 42px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
           background-color: var(--burgundy-500);
           color: #FFFFFF;
-          padding: var(--space-4);
+          padding: 0 20px;
           border-radius: var(--radius-full);
           font-weight: 600;
-          font-size: var(--text-body);
-          box-shadow: 0 4px 12px rgba(184, 67, 106, 0.3);
+          font-size: var(--text-body-sm);
+          border: none;
+          box-shadow: 0 4px 14px rgba(184, 67, 106, 0.35);
+          cursor: pointer;
           transition: all var(--duration-fast);
         }
 
         .primary-btn-celebration:hover {
           background-color: var(--burgundy-400);
-          transform: translateY(-2px);
+          transform: translateY(-1px);
           box-shadow: var(--shadow-glow);
         }
 
         .secondary-btn-celebration {
           width: 100%;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           background-color: transparent;
           color: var(--charcoal-200);
-          border: 1.5px solid var(--charcoal-400);
-          padding: var(--space-4);
+          border: 1px solid var(--charcoal-400);
+          padding: 0 20px;
           border-radius: var(--radius-full);
           font-weight: 500;
-          font-size: var(--text-body);
+          font-size: var(--text-body-sm);
+          cursor: pointer;
           transition: all var(--duration-fast);
         }
 

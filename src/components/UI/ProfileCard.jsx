@@ -226,7 +226,11 @@ export const ProfileCard = ({
             aria-label={isInterestSent ? `Unsend invite to ${profile.name}` : `Send interest to ${profile.name}`}
             title={isInterestSent ? "Click to unsend invite" : "Send interest"}
           >
-            <Heart size={18} weight={isInterestSent ? 'fill' : 'regular'} />
+            {isInterestSent ? (
+              <CheckCircle size={18} weight="fill" />
+            ) : (
+              <Heart size={18} weight="regular" />
+            )}
             <span className="font-ui">
               {isInterestSent ? 'Invite Sent' : 'Send Interest'}
             </span>
@@ -251,96 +255,194 @@ export const ProfileCard = ({
           transform: translateX(-50%);
           display: flex;
           gap: 4px;
-          z-index: 12;
-          width: calc(100% - 24px);
-          max-width: 140px;
-          justify-content: center;
+          z-index: 5;
+          background-color: rgba(0, 0, 0, 0.35);
+          padding: 3px var(--space-2);
+          border-radius: var(--radius-full);
+          backdrop-filter: blur(4px);
         }
 
         .card-photo-dot {
-          flex: 1;
-          height: 3px;
-          background-color: rgba(255, 255, 255, 0.4);
-          border-radius: 999px;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background-color: rgba(255, 255, 255, 0.5);
           transition: background-color var(--duration-fast);
         }
 
         .card-photo-dot.active {
-          background-color: #FFFFFF;
+          background-color: var(--pink-gold);
+          width: 14px;
+          border-radius: 3px;
         }
 
-        /* Photo navigation arrows */
-        .card-photo-nav-btn {
+        /* Photo navigation tap overlays */
+        .photo-nav-overlay {
           position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 30px;
-          height: 30px;
+          top: 0;
+          bottom: 0;
+          width: 40%;
+          z-index: 4;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          opacity: 0;
+          transition: opacity var(--duration-fast);
+          background: transparent;
+          border: none;
+          color: white;
+        }
+
+        .photo-nav-overlay.prev {
+          left: 0;
+          justify-content: flex-start;
+          padding-left: var(--space-2);
+        }
+
+        .photo-nav-overlay.next {
+          right: 0;
+          justify-content: flex-end;
+          padding-right: var(--space-2);
+        }
+
+        .profile-img-wrap:hover .photo-nav-overlay {
+          opacity: 0.75;
+        }
+
+        .photo-nav-overlay:hover {
+          opacity: 1 !important;
+        }
+
+        .nav-arrow-bg {
+          background: rgba(0, 0, 0, 0.4);
           border-radius: 50%;
-          background-color: rgba(26, 21, 23, 0.65);
-          color: #FFFFFF;
-          border: 1px solid rgba(255, 255, 255, 0.25);
+          padding: 4px;
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 15;
-          cursor: pointer;
-          backdrop-filter: blur(4px);
-          transition: all var(--duration-fast);
-          opacity: 0.85;
-          padding: 0;
         }
 
-        .card-photo-nav-btn:hover {
-          opacity: 1;
-          background-color: rgba(26, 21, 23, 0.9);
-          transform: translateY(-50%) scale(1.08);
+        .profile-card-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
         }
 
-        .card-photo-nav-btn.prev {
-          left: var(--space-2);
-        }
-
-        .card-photo-nav-btn.next {
-          right: var(--space-2);
-        }
-
-        /* Badges overlay */
-        .profile-badge-row {
+        /* Badges */
+        .profile-card-badges {
           position: absolute;
-          top: var(--space-3);
-          left: var(--space-3);
+          bottom: var(--space-2);
+          left: var(--space-2);
           display: flex;
-          gap: var(--space-2);
-          z-index: 10;
+          flex-wrap: wrap;
+          gap: var(--space-1);
+          z-index: 5;
         }
 
         .badge-verified {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          background: rgba(92, 154, 110, 0.9);
-          color: #FFFFFF;
-          font-size: 10px;
-          font-weight: 700;
-          padding: 3px var(--space-2);
+          gap: 3px;
+          background: rgba(46, 125, 50, 0.9);
+          color: white;
+          font-size: var(--text-caption);
+          padding: 2px 6px;
           border-radius: var(--radius-full);
+          font-weight: 500;
           backdrop-filter: blur(4px);
         }
 
         .badge-premium {
-          background: linear-gradient(135deg, rgba(196, 150, 74, 0.95), rgba(212, 173, 106, 0.95));
-          color: #FFFFFF;
-          font-size: 10px;
-          font-weight: 700;
-          padding: 3px var(--space-2);
+          display: inline-flex;
+          align-items: center;
+          background: linear-gradient(135deg, #D4AF37, #AA7C11);
+          color: white;
+          font-size: var(--text-caption);
+          padding: 2px 6px;
           border-radius: var(--radius-full);
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
           backdrop-filter: blur(4px);
         }
 
-        /* Card text content */
+        /* Options Dropdown */
+        .profile-card-options-wrap {
+          position: absolute;
+          top: var(--space-2);
+          right: var(--space-2);
+          z-index: 10;
+        }
+
+        .profile-card-options-btn {
+          background: rgba(0, 0, 0, 0.4);
+          border: none;
+          color: white;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          backdrop-filter: blur(4px);
+          transition: background var(--duration-fast);
+        }
+
+        .profile-card-options-btn:hover {
+          background: rgba(0, 0, 0, 0.7);
+        }
+
+        .profile-card-dropdown {
+          position: absolute;
+          right: 0;
+          top: 100%;
+          margin-top: var(--space-1);
+          background-color: var(--surface-overlay);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-lg);
+          min-width: 160px;
+          overflow: hidden;
+          z-index: 20;
+        }
+
+        .dropdown-item {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+          padding: var(--space-2) var(--space-3);
+          border: none;
+          background: transparent;
+          color: var(--text-primary);
+          font-size: var(--text-body-sm);
+          text-align: left;
+          cursor: pointer;
+          transition: background var(--duration-fast);
+        }
+
+        .dropdown-item:hover {
+          background-color: var(--surface-hover);
+        }
+
+        .dropdown-item.item-active {
+          color: var(--burgundy-500);
+          font-weight: 600;
+        }
+
+        .dropdown-item.danger {
+          color: var(--burgundy-500);
+        }
+
+        .dropdown-item.danger:hover {
+          background-color: rgba(229, 115, 115, 0.1);
+        }
+
+        /* Profile details container */
         .profile-card-details {
-          padding: var(--space-4) var(--space-4) var(--space-3);
+          padding: var(--space-3);
           display: flex;
           flex-direction: column;
           gap: var(--space-1);
@@ -349,32 +451,47 @@ export const ProfileCard = ({
         .card-name-row {
           display: flex;
           align-items: baseline;
-          gap: 2px;
         }
 
         .card-name {
-          font-size: var(--text-subheading);
+          font-size: var(--text-heading-sm);
           color: var(--text-primary);
-          line-height: 1.2;
+          margin: 0;
+          font-weight: 600;
         }
 
         .card-age {
-          font-size: var(--text-body);
+          font-size: var(--text-heading-sm);
           color: var(--text-secondary);
+          margin-left: 2px;
         }
 
         .card-location {
           font-size: var(--text-body-sm);
           color: var(--text-tertiary);
-          font-weight: 500;
+          margin: 0;
         }
 
         .card-intent {
           font-size: var(--text-caption);
-          color: var(--text-accent);
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: var(--tracking-wide);
+          color: var(--burgundy-400);
+          font-weight: 500;
+        }
+
+        .card-interests-wrap {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--space-1);
+          margin-top: var(--space-1);
+        }
+
+        .card-interest-tag {
+          font-size: var(--text-caption);
+          background-color: var(--surface-raised);
+          color: var(--text-secondary);
+          padding: 2px 8px;
+          border-radius: var(--radius-full);
+          border: 1px solid var(--border-subtle);
         }
 
         .card-story-clamp {
@@ -398,16 +515,18 @@ export const ProfileCard = ({
         }
 
         .interest-action-btn.sent {
-          background-color: var(--success) !important;
+          background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+          border-color: #059669 !important;
+          color: #FFFFFF !important;
           cursor: pointer;
           transition: all var(--duration-fast);
         }
 
         .interest-action-btn.sent:hover:not(:disabled) {
-          background-color: var(--burgundy-700) !important;
-          border-color: var(--burgundy-700) !important;
+          background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+          border-color: #047857 !important;
           transform: scale(1.02) !important;
-          box-shadow: 0 4px 12px rgba(184, 67, 106, 0.3) !important;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
         }
 
         /* Card footer */

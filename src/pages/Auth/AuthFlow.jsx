@@ -18,8 +18,8 @@ export const AuthFlow = ({ onBack }) => {
   setLoading(true);
 
   try {
-    await signInWithGoogle();
-    await login();
+    const authRes = await signInWithGoogle();
+    await login(authRes?.user?.phoneNumber || '', authRes?.idToken);
   } catch (err) {
     console.error("Google Auth error:", err);
     setError(

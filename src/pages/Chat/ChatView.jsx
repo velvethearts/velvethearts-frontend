@@ -818,10 +818,6 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
                   {showDropdown && (
                     <div className="options-dropdown font-ui" role="menu">
-                      <button onClick={handleUnmatch} role="menuitem" className="dropdown-item">
-                        <Prohibit size={16} />
-                        <span>Remove Connection</span>
-                      </button>
                       <button onClick={handleDeleteChat} role="menuitem" className="dropdown-item danger">
                         <Trash size={16} />
                         <span>Delete my chat</span>
