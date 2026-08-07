@@ -36,12 +36,20 @@ export async function registerPushNotifications() {
     const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
 
     let subscription = await reg.pushManager.getSubscription();
-    if (!subscription) {
-      subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: convertedKey,
-      });
+
+    // Reset old subscription if present to guarantee alignment with current VAPID key
+    if (subscription) {
+      try {
+        await subscription.unsubscribe();
+      } catch (e) {
+        console.warn('Unsubscribe previous push subscription error:', e);
+      }
     }
+
+    subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: convertedKey,
+    });
 
     // Send subscription object to backend
     await api.subscribePush(subscription);
