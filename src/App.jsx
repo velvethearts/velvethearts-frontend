@@ -1,4 +1,4 @@
-import React, { useState, Component, lazy, Suspense } from 'react';
+import React, { useState, Component } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navigation } from './components/Navigation';
 import { Celebration } from './components/Celebration';
@@ -106,7 +106,7 @@ function AppContent() {
   console.log('APPCONTENT_RENDER:', { authLoading, isLoggedIn, isOnboarded, approvalStatus, userRole, activeTab });
 
   const [showAuth, setShowAuth] = useState(false);
-  
+
   // Specific detail sub-page triggers
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [preselectedChatPartnerId, setPreselectedChatPartnerId] = useState(null);
@@ -165,14 +165,14 @@ function AppContent() {
       case 'discover':
         if (selectedProfile) {
           return (
-            <ProfileDetail 
-              profile={selectedProfile} 
-              onBack={handleBackToDiscover} 
+            <ProfileDetail
+              profile={selectedProfile}
+              onBack={handleBackToDiscover}
             />
           );
         }
         return <DiscoverFeed onSelectProfile={setSelectedProfile} />;
-        
+
       case 'matches':
         if (selectedProfile) {
           return (
@@ -183,15 +183,15 @@ function AppContent() {
           );
         }
         return <MatchesList onSelectConnection={handleSelectConnection} onSelectProfile={setSelectedProfile} />;
-        
+
       case 'chat':
         return (
-          <ChatView 
-            preselectedConnectionId={preselectedChatPartnerId} 
+          <ChatView
+            preselectedConnectionId={preselectedChatPartnerId}
             onClearPreselected={() => setPreselectedChatPartnerId(null)}
           />
         );
-        
+
       case 'notifications':
         return <NotificationsPage />;
 
@@ -214,10 +214,10 @@ function AppContent() {
             onSelectProfile={setSelectedProfile}
           />
         );
-        
+
       case 'settings':
         return <SettingsPage />;
-        
+
       case 'safety':
         return <SafetyCenter />;
 
@@ -277,6 +277,8 @@ function App() {
         <AppContent />
         <Celebration />
         <ToastContainer />
+        <Analytics />
+        <SpeedInsights />
       </AppProvider>
     </ErrorBoundary>
   );
