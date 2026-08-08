@@ -1,12 +1,15 @@
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Heart, ChatCircleText, Sparkle, Lightning, Star } from '@phosphor-icons/react';
+import { Heart, ChatCircleText, Sparkle, Lightning, Star, HandWaving, Coffee, Microphone, Play, Pause } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { Button } from '../../components/UI/Button';
 import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
+import { computeVibeMatch } from '../../utils/vibe';
+import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 
 export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
-  const { connections, interestsSent, interestStatuses, profiles, receivedInvites, sentInvitesList, setActiveTab, sendInterest, unsendInterest, onlineUserIds } = useApp();
+  const { connections, interestsSent, interestStatuses, profiles, receivedInvites, sentInvitesList, setActiveTab, sendInterest, unsendInterest, onlineUserIds, sendMessage, nudgeSpark, userProfile, conversations = [], chats = {}, addToast } = useApp();
   const activeConnections = connections;
 
   // Sent interests that are still pending matching
@@ -15,45 +18,310 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
     return status !== 'mutual';
   });
 
+  // Active audio player state for voice intros
+  const [activeVoiceId, setActiveVoiceId] = useState(null);
+  const audioRef = useRef(null);
+  const longPressTimerRef = useRef(null);
+  const isLongPressHandledRef = useRef(false);
+
+  // Quick Icebreaker Popover state
+  const [activeIcebreakerId, setActiveIcebreakerId] = useState(null);
+
+  // Confetti particles state
+  const [confettiBurst, setConfettiBurst] = useState([]);
+
+  // Handle 3-second long press on Recent Spark to play voice intro
+  const handlePressStart = (conn) => {
+    isLongPressHandledRef.current = false;
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+
+    longPressTimerRef.current = setTimeout(() => {
+      isLongPressHandledRef.current = true;
+      if (conn.voiceIntroUrl) {
+        triggerHaptic('heavy');
+        playHapticSound('pop');
+        if (audioRef.current) audioRef.current.pause();
+        audioRef.current = new Audio(conn.voiceIntroUrl);
+        audioRef.current.onended = () => setActiveVoiceId(null);
+        audioRef.current.play();
+        setActiveVoiceId(conn.id);
+      } else {
+        triggerHaptic('light');
+        if (addToast) {
+          addToast({
+            title: 'No Voice Intro 🎙️',
+            message: `${conn.name} hasn't recorded a voice intro yet.`,
+          });
+        }
+      }
+    }, 3000);
+  };
+
+  const handlePressEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  // Handle Spark Click with Confetti Burst
+  const handleSparkClick = (e, conn) => {
+    triggerHaptic('medium');
+    playHapticSound('match');
+
+    // Trigger Heart Confetti Burst
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+
+    const newParticles = Array.from({ length: 12 }).map((_, i) => ({
+      id: Date.now() + i,
+      x: x + (Math.random() - 0.5) * 80,
+      y: y + (Math.random() - 0.5) * 80,
+      scale: Math.random() * 0.8 + 0.6,
+      color: i % 2 === 0 ? '#F3C68F' : '#FF6B81'
+    }));
+
+    setConfettiBurst(newParticles);
+    setTimeout(() => setConfettiBurst([]), 1000);
+
+    onSelectConnection(conn);
+  };
+
+  // Handle Quick Icebreaker Send
+  const handleSendIcebreaker = (conn, text) => {
+    triggerHaptic('heavy');
+    playHapticSound('pop');
+    sendMessage(conn.id, text);
+    setActiveIcebreakerId(null);
+    onSelectConnection(conn);
+  };
+
+  // Handle Voice Intro Toggle (up to 2 mins)
+  const handleToggleVoiceIntro = (e, conn) => {
+    e.stopPropagation();
+    if (!conn.voiceIntroUrl) return;
+
+    if (activeVoiceId === conn.id) {
+      if (audioRef.current) audioRef.current.pause();
+      setActiveVoiceId(null);
+    } else {
+      if (audioRef.current) audioRef.current.pause();
+      audioRef.current = new Audio(conn.voiceIntroUrl);
+      audioRef.current.onended = () => setActiveVoiceId(null);
+      audioRef.current.play();
+      setActiveVoiceId(conn.id);
+      triggerHaptic('light');
+    }
+  };
+
+  // 24h Unsent Spark Notification Check
+  useEffect(() => {
+    activeConnections.forEach(conn => {
+      const conv = conversations.find(c => c.partnerId === conn.id || c.partnerId === conn.userId || c.id === conn.id);
+      const connChats = chats[conn.id] || chats[conn.userId] || [];
+      const hasChatted = Boolean((conv?.lastMessage && conv.lastMessage.trim()) || connChats.length > 0);
+
+      const matchTime = new Date(conn.createdAt || Date.now()).getTime();
+      const hoursElapsed = (Date.now() - matchTime) / (1000 * 60 * 60);
+
+      const notifKey = `vh-24h-notified-${conn.id}`;
+      if (hoursElapsed >= 24 && !hasChatted && !sessionStorage.getItem(notifKey)) {
+        sessionStorage.setItem(notifKey, 'true');
+        if (addToast) {
+          addToast({
+            title: '24h Spark Notice ⏱️',
+            message: `24 hours completed without texting ${conn.name}.`,
+            photo: getProfilePhoto(conn)
+          });
+        }
+      }
+    });
+  }, [activeConnections, conversations, chats, addToast]);
+
   const handleGoDiscover = () => {
     setActiveTab('discover');
   };
 
   return (
     <div className="matches-page page-enter">
+      {/* Floating Confetti Particle Overlay */}
+      {confettiBurst.length > 0 && (
+        <div className="confetti-overlay" aria-hidden="true">
+          {confettiBurst.map(p => (
+            <div
+              key={p.id}
+              className="confetti-heart"
+              style={{
+                left: `${p.x}px`,
+                top: `${p.y}px`,
+                transform: `scale(${p.scale})`,
+                color: p.color
+              }}
+            >
+              <Heart size={20} weight="fill" />
+            </div>
+          ))}
+        </div>
+      )}
+
       <PageHeader
         title="Your Connections"
         subtitle="People you've shared mutual interest with."
       />
 
-      {/* New Match Story Ring Highlights Carousel */}
+      {/* Interactive Recent Sparks Story Ring Carousel */}
       {activeConnections.length > 0 && (
         <div className="recent-matches-carousel-wrap">
           <h3 className="carousel-section-title font-ui">Recent Sparks</h3>
+
           <div className="recent-matches-row">
             {activeConnections.map(conn => {
               const isOnline = onlineUserIds?.has(conn.id) || onlineUserIds?.has(conn.userId);
+              const vibeScore = computeVibeMatch(userProfile, conn);
+              const hasVoiceIntro = Boolean(conn.voiceIntroUrl);
+              const isPlayingVoice = activeVoiceId === conn.id;
+              const showIcebreaker = activeIcebreakerId === conn.id;
+
+              // Check if users have exchanged messages
+              const conv = conversations.find(c => c.partnerId === conn.id || c.partnerId === conn.userId || c.id === conn.id);
+              const connChats = chats[conn.id] || chats[conn.userId] || [];
+              const hasChatted = Boolean((conv?.lastMessage && conv.lastMessage.trim()) || connChats.length > 0);
+
+              // 24-hour match warmth timer
+              const matchDate = new Date(conn.createdAt || Date.now()).getTime();
+              const hoursElapsed = (Date.now() - matchDate) / (1000 * 60 * 60);
+              const isTimerActive = hoursElapsed < 24 && !hasChatted;
+              const hoursRemaining = Math.max(24 - hoursElapsed, 0.5);
+              const timerPercent = Math.min(Math.max((hoursRemaining / 24) * 100, 5), 100);
+
+              const ringClassName = isPlayingVoice
+                ? 'highlight-avatar-ring is-playing-audio'
+                : isTimerActive 
+                  ? 'highlight-avatar-ring is-timer-ring' 
+                  : isOnline 
+                    ? 'highlight-avatar-ring is-online-ring' 
+                    : 'highlight-avatar-ring';
+
               return (
-                <button
-                  key={conn.id}
-                  type="button"
-                  className="story-highlight-circle"
-                  onClick={() => onSelectConnection(conn)}
-                  title={`Chat with ${conn.name}`}
-                >
-                  <div className="highlight-avatar-ring">
-                    <img
-                      src={getProfilePhoto(conn)}
-                      alt={conn.name}
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = getDefaultAvatar(conn?.gender);
-                      }}
-                    />
-                    {isOnline && <span className="online-presence-dot" title="Online now" />}
-                  </div>
-                  <span className="highlight-name font-ui">{conn.name}</span>
-                </button>
+                <div key={conn.id} className="spark-card-item-wrap">
+                  <button
+                    type="button"
+                    className="story-highlight-circle"
+                    onMouseDown={() => handlePressStart(conn)}
+                    onMouseUp={handlePressEnd}
+                    onMouseLeave={() => {
+                      handlePressEnd();
+                      setActiveIcebreakerId(null);
+                    }}
+                    onTouchStart={() => handlePressStart(conn)}
+                    onTouchEnd={handlePressEnd}
+                    onClick={(e) => {
+                      if (isLongPressHandledRef.current) {
+                        e.stopPropagation();
+                        isLongPressHandledRef.current = false;
+                        return;
+                      }
+                      handleSparkClick(e, conn);
+                    }}
+                    onMouseEnter={() => setActiveIcebreakerId(conn.id)}
+                    title={isTimerActive ? `Hold 3s for voice intro | ~${Math.round(hoursRemaining)}h remaining` : `Hold 3s for voice intro | Chat with ${conn.name}`}
+                  >
+                    <div className={ringClassName}>
+                      {/* Live Animated Equalizer Overlay while Voice Intro plays */}
+                      {isPlayingVoice && (
+                        <div className="voice-playing-equalizer" title="Playing Voice Intro">
+                          <span className="eq-bar" />
+                          <span className="eq-bar" />
+                          <span className="eq-bar" />
+                          <span className="eq-bar" />
+                        </div>
+                      )}
+
+                      {/* Rose Gold SVG 24h Countdown Ring — Rendered ONLY during first 24h if no chat */}
+                      {isTimerActive && !isPlayingVoice && (
+                        <svg className="countdown-ring-svg" viewBox="0 0 76 76">
+                          <defs>
+                            <linearGradient id={`timerGrad-${conn.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#F3C68F" />
+                              <stop offset="100%" stopColor="#FF6B81" />
+                            </linearGradient>
+                          </defs>
+                          <circle cx="38" cy="38" r="35" className="ring-bg" />
+                          <circle
+                            cx="38"
+                            cy="38"
+                            r="35"
+                            className="ring-progress"
+                            style={{
+                              strokeDasharray: 220,
+                              strokeDashoffset: 220 - (220 * timerPercent) / 100,
+                              stroke: `url(#timerGrad-${conn.id})`
+                            }}
+                          />
+                        </svg>
+                      )}
+
+                      <img
+                        src={getProfilePhoto(conn)}
+                        alt={conn.name}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = getDefaultAvatar(conn?.gender);
+                        }}
+                      />
+
+                      {/* 2-Min Voice Intro Button */}
+                      {hasVoiceIntro && (
+                        <button
+                          type="button"
+                          className={`voice-ring-btn ${isPlayingVoice ? 'playing' : ''}`}
+                          onClick={(e) => handleToggleVoiceIntro(e, conn)}
+                          title="Listen to 2-Min Voice Intro"
+                        >
+                          {isPlayingVoice ? <Pause size={12} weight="fill" /> : <Microphone size={12} weight="fill" />}
+                        </button>
+                      )}
+                    </div>
+
+                    <span className="highlight-name font-ui">{conn.name}</span>
+                  </button>
+
+                  {/* Quick Icebreaker & Nudge Floating Popover */}
+                  {showIcebreaker && (
+                    <div className="icebreaker-popover font-ui">
+                      <button
+                        type="button"
+                        className="icebreaker-chip"
+                        onClick={() => handleSendIcebreaker(conn, "👋 Hey! Loved your story.")}
+                      >
+                        <HandWaving size={14} color="#F3C68F" weight="fill" />
+                        <span>Say Hello</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="icebreaker-chip"
+                        onClick={() => handleSendIcebreaker(conn, "☕ Up for coffee sometime soon?")}
+                      >
+                        <Coffee size={14} color="#FF6B81" weight="fill" />
+                        <span>Coffee?</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="icebreaker-chip nudge-chip"
+                        onClick={() => {
+                          nudgeSpark(conn.id, conn.name);
+                          setActiveIcebreakerId(null);
+                        }}
+                      >
+                        <Lightning size={14} color="#F3C68F" weight="fill" />
+                        <span>Nudge Spark</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -267,6 +535,43 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           padding: var(--space-6) var(--space-4);
         }
 
+        .confetti-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          pointer-events: none;
+          z-index: 9999;
+        }
+
+        .confetti-heart {
+          position: absolute;
+          animation: burstUp 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes burstUp {
+          0% { opacity: 1; transform: translateY(0) scale(0.5); }
+          100% { opacity: 0; transform: translateY(-70px) scale(1.4); }
+        }
+
+        .carousel-section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: var(--space-3);
+        }
+
+        .spark-count-badge {
+          font-size: var(--text-caption);
+          color: var(--gold-400);
+          font-weight: 600;
+          background: rgba(243, 198, 143, 0.1);
+          padding: 2px 8px;
+          border-radius: var(--radius-full);
+          border: 1px solid rgba(243, 198, 143, 0.3);
+        }
+
         /* Recent Sparks Story Carousel */
         .recent-matches-carousel-wrap {
           margin-bottom: var(--space-6);
@@ -278,13 +583,14 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           text-transform: uppercase;
           color: var(--text-muted);
           letter-spacing: var(--tracking-wide);
-          margin-bottom: var(--space-3);
+          margin-bottom: var(--space-4);
         }
 
         .recent-matches-row {
           display: flex;
           gap: var(--space-4);
           overflow-x: auto;
+          padding-top: var(--space-2);
           padding-bottom: var(--space-3);
           scrollbar-width: none;
         }
@@ -293,20 +599,25 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           display: none;
         }
 
+        .spark-card-item-wrap {
+          position: relative;
+        }
+
         .story-highlight-circle {
           background: transparent;
           border: none;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: var(--space-1);
+          gap: 4px;
           cursor: pointer;
           flex-shrink: 0;
           transition: transform var(--duration-fast);
         }
 
-        .story-highlight-circle:hover {
-          transform: scale(1.06);
+        .story-highlight-circle:hover,
+        .story-highlight-circle:active {
+          transform: translateY(-2px);
         }
 
         .highlight-avatar-ring {
@@ -315,8 +626,183 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           height: 68px;
           border-radius: 50%;
           padding: 3px;
-          background: linear-gradient(135deg, var(--burgundy-400), var(--gold-400));
-          box-shadow: 0 4px 12px rgba(184, 67, 106, 0.25);
+          background: linear-gradient(135deg, #800020, #4A0E17);
+          border: 2px solid #F3C68F;
+          box-shadow: 0 4px 14px rgba(128, 0, 32, 0.5);
+          transition: all 0.3s ease;
+        }
+
+        .highlight-avatar-ring.is-playing-audio {
+          background: linear-gradient(135deg, #F3C68F, #FF6B81);
+          border: none;
+          box-shadow: 0 0 20px rgba(243, 198, 143, 0.85), 0 0 35px rgba(255, 107, 129, 0.6);
+          animation: audioGlowPulse 1.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes audioGlowPulse {
+          0% { box-shadow: 0 0 12px rgba(243, 198, 143, 0.6), 0 0 20px rgba(255, 107, 129, 0.4); transform: scale(1); }
+          100% { box-shadow: 0 0 24px rgba(243, 198, 143, 0.95), 0 0 40px rgba(255, 107, 129, 0.85); transform: scale(1.04); }
+        }
+
+        .voice-playing-equalizer {
+          position: absolute;
+          inset: 3px;
+          border-radius: 50%;
+          background: rgba(18, 14, 16, 0.65);
+          backdrop-filter: blur(2px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          z-index: 8;
+        }
+
+        .voice-playing-equalizer .eq-bar {
+          width: 3px;
+          background-color: #F3C68F;
+          border-radius: 2px;
+          animation: eqBouncing 0.7s ease-in-out infinite alternate;
+        }
+
+        .voice-playing-equalizer .eq-bar:nth-child(1) { height: 10px; animation-delay: 0.1s; }
+        .voice-playing-equalizer .eq-bar:nth-child(2) { height: 20px; animation-delay: 0.3s; }
+        .voice-playing-equalizer .eq-bar:nth-child(3) { height: 14px; animation-delay: 0.2s; }
+        .voice-playing-equalizer .eq-bar:nth-child(4) { height: 22px; animation-delay: 0.4s; }
+
+        @keyframes eqBouncing {
+          0% { transform: scaleY(0.3); }
+          100% { transform: scaleY(1.3); }
+        }
+
+        .highlight-avatar-ring.is-timer-ring {
+          background: transparent;
+          border: none;
+          box-shadow: 0 4px 14px rgba(243, 198, 143, 0.35);
+        }
+
+        .highlight-avatar-ring.is-online-ring {
+          background: linear-gradient(135deg, #34D399, #10B981, #059669);
+          border: none;
+          box-shadow: 0 0 16px rgba(16, 185, 129, 0.75), 0 0 6px rgba(52, 211, 153, 0.9);
+          animation: onlineGlowPulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+        }
+
+        @keyframes onlineGlowPulse {
+          0% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.5), 0 0 3px rgba(52, 211, 153, 0.7); }
+          100% { box-shadow: 0 0 22px rgba(16, 185, 129, 0.95), 0 0 8px rgba(52, 211, 153, 1); }
+        }
+
+        .countdown-ring-svg {
+          position: absolute;
+          top: -4px;
+          left: -4px;
+          width: 76px;
+          height: 76px;
+          transform: rotate(-90deg);
+          pointer-events: none;
+        }
+
+        .countdown-ring-svg .ring-bg {
+          fill: none;
+          stroke: rgba(255, 255, 255, 0.1);
+          stroke-width: 3;
+        }
+
+        .countdown-ring-svg .ring-progress {
+          fill: none;
+          stroke-width: 3;
+          stroke-linecap: round;
+          transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .voice-ring-btn {
+          position: absolute;
+          top: -2px;
+          right: -2px;
+          background: var(--burgundy-500);
+          color: #FFFFFF;
+          border: 1.5px solid var(--bg-surface);
+          border-radius: 50%;
+          width: 22px;
+          height: 22px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 10;
+          box-shadow: var(--shadow-sm);
+        }
+
+        .voice-ring-btn.playing {
+          background: var(--gold-400);
+          color: var(--charcoal-900);
+          animation: pulseAudio 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseAudio {
+          0% { transform: scale(1); }
+          100% { transform: scale(1.2); }
+        }
+
+        .spark-vibe-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 2px;
+          font-size: 10px;
+          font-weight: 700;
+          color: #F3C68F;
+          margin-top: 2px;
+        }
+
+        .icebreaker-popover {
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          margin-top: 4px;
+          background: rgba(18, 14, 16, 0.95);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          border-radius: var(--radius-md);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+          padding: 6px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          z-index: 100;
+          white-space: nowrap;
+          animation: popFade 0.2s ease-out;
+        }
+
+        @keyframes popFade {
+          0% { opacity: 0; transform: translate(-50%, -6px); }
+          100% { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        .icebreaker-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: transparent;
+          border: none;
+          color: #FFFFFF;
+          font-size: var(--text-caption);
+          font-weight: 500;
+          padding: 4px 8px;
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+          transition: background var(--duration-fast);
+        }
+
+        .icebreaker-chip:hover {
+          background-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .icebreaker-chip.nudge-chip {
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          color: #F3C68F;
+          font-weight: 600;
         }
 
         .highlight-avatar-ring img {

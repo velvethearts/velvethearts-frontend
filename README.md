@@ -1,6 +1,6 @@
 # Velvet Hearts Frontend
 
-Last updated: August 6th, 2026  
+Last updated: August 8th, 2026  
 Source of truth: `/docs/Administrator_Manual.docx` and `/docs/User_Manual.docx`
 
 This folder contains the Velvet Hearts browser application. It is a Vite + React single-page application that serves the public landing page, registration/login flow, onboarding, discover, matching, chat, profile, settings, safety center, and admin UI surfaces.
@@ -11,26 +11,29 @@ Velvet Hearts is a safety-oriented dating and connection platform. The frontend 
 
 | Path | Purpose |
 |---|---|
-| `src/App.jsx` | Top-level application shell, tab routing, approval-gated UI states, and admin sub-page routing. |
+| `src/App.jsx` | Top-level application shell, tab routing, approval-gated UI states, route-level `React.lazy()` code splitting with `<Suspense>`, and admin sub-page routing. |
 | `src/context/AppContext.jsx` | Main client state provider: session restoration, profile hydration, discover/match/chat actions, local settings, and Socket.IO lifecycle. |
 | `src/lib/api.js` | REST API client, access/refresh token storage, automatic token refresh retry on `401`, and endpoint wrappers. |
 | `src/lib/firebase.js` | Firebase Web SDK initialization and Google popup sign-in helper. |
 | `src/lib/socket.js` | Socket.IO client setup and helpers for joining/leaving conversations and typing events. |
 | `src/pages/Auth` | Phone number entry, Google account linking, and Google sign-in screens. |
-| `src/pages/Onboarding` | Multi-step profile setup flow. |
+| `src/pages/Onboarding` | Multi-step profile setup flow including Step 4 2-minute voice snippet recording. |
 | `src/pages/Discover` | Discover feed, profile search/filtering, and discover preferences. |
-| `src/pages/Matches` | Mutual connections and sent interests. |
+| `src/pages/Matches` | Mutual connections, Recent Sparks carousel, 24h spark countdown ring, 3s long press voice playback, sound equalizer, and sent interests. |
 | `src/pages/Chat` | Chat list, conversation view, typing events, block/report actions. |
-| `src/pages/Profile`, `src/pages/ProfileDetail` | Own-profile view/editing and profile detail views. |
+| `src/pages/Profile`, `src/pages/ProfileDetail` | Own-profile view/editing, 2-minute voice intro management (play, 1-tap delete, re-record), and profile detail views. |
 | `src/pages/Settings` | Theme, accessibility, notification preferences, and account deletion. |
 | `src/pages/Safety` | Safety center, blocked users, report history, and support entry. |
 | `src/pages/Admin` | Admin dashboard, pending verification queue, and phone/audit history UI. |
+| `src/components/UI/VoiceRecorder.jsx` | HTML5 MediaRecorder 2-minute voice snippet recorder component. |
+| `src/components/UI/PWAInstallModal.jsx` | PWA install prompt modal with custom pill-shaped action buttons. |
 | `src/components` | Shared UI and app components. |
 | `src/assets` | Static images used by the app. |
-| `public` | Public static assets such as favicon and icons. |
+| `public/robots.txt` & `public/sitemap.xml` | Search engine indexing and crawler directive files. |
+| `public` | Public static assets such as favicon, icons, manifest, and service worker. |
 | `.env.example` | Example frontend environment variable names. Values are placeholders only. |
 | `package.json` | Frontend scripts and dependencies. |
-| `vite.config.js` | Vite configuration. |
+| `vite.config.js` | Vite configuration with Rollup `manualChunks` code splitting and `esbuild` console drop. |
 
 ## Main responsibilities
 
@@ -213,7 +216,7 @@ Important: Vite client environment variables are baked into the build. If you ch
 
 ### Landing and authentication
 
-- Public landing page introduces the platform.
+- Public landing page introduces the platform with preloaded high-priority hero branding (`velvet-heart-logo.png`).
 - Sign-up collects phone number and then links a Google account.
 - Sign-in authenticates returning users through the registered Google account.
 
@@ -227,6 +230,7 @@ Collects profile information used for approval and discovery:
 - Relationship intent and relationship status.
 - Interests.
 - Story/about section.
+- 2-Minute Voice Intro Snippet recording option (Step 4).
 - Disability information and visibility preference.
 - Photos.
 
@@ -238,15 +242,40 @@ Pending users see an under-review state for restricted social features. Full acc
 
 Approved users can:
 
-- Browse the discover feed.
+- Browse the discover feed with Vibe Match calculations (starting from 50%).
 - Search and filter profiles.
 - Save profiles locally.
 - Send interests.
 - Create mutual matches when interest is reciprocal.
+- Access the **Recent Sparks** interactive story carousel:
+  - **24-Hour Spark Countdown Ring**: Rose-gold SVG timer ring (`#F3C68F` → `#FF6B81`) displayed during the first 24 hours of matching if no text has been sent yet.
+  - **24h Unsent Notice Toast**: Automatic notification toast triggered after 24 hours if users haven't chatted.
+  - **3-Second Long Press Voice Playback**: Holding any spark circle for 3 seconds plays their 2-minute voice snippet with live animated sound equalizer waves overlay and glowing pulse aura.
+  - **Quick Icebreaker Popover**: Floating chips (`Say Hello`, `Coffee?`, `Nudge Spark`) for instant connection starters.
+  - **Dynamic Avatar Rings**: Emerald green glowing rings for online matches, Velvet Burgundy & Rose Gold borders for offline matches.
 
 ### Chat
 
 Approved matched users can chat. The frontend uses REST for persisted messages and Socket.IO helpers for room/typing behavior.
+
+### Profile management
+
+Users can:
+- Review public profile details and photos.
+- Edit profile attributes.
+- Manage 2-minute Voice Intro Snippets (play, 1-tap delete, or re-record) with direct database persistence.
+
+### PWA and Installation
+
+- Custom PWA install prompt modal (`PWAInstallModal.jsx`) featuring redesigned pill-shaped **Install App** and **Not Now** action buttons.
+- Standalone offline manifest support (`public/manifest.json`).
+
+### Performance & Vercel Optimizations
+
+- **LCP Preloading**: `velvet-heart-logo.png` preloaded in `index.html` head (`<link rel="preload" as="image" href="/velvet-heart-logo.png" type="image/png" fetchpriority="high" />`). Primary profile card images set to `fetchpriority="high"` and `decoding="async"`.
+- **Bundle Code Splitting**: Rollup `manualChunks` in `vite.config.js` (`vendor-react`, `vendor-icons`, `vendor-utils`) and route-level `React.lazy()` code splitting with `<Suspense>` fallbacks in `App.jsx`.
+- **Production Console Drop**: `esbuild: { drop: ['console', 'debugger'] }` strips logging statements in production builds to optimize main thread CPU performance.
+- **SEO & Search Indexing**: Canonical link (`https://velvethearts.app/`), OpenGraph, Twitter Cards, `WebApplication` JSON-LD schema, `public/robots.txt`, and `public/sitemap.xml`.
 
 ### Safety and settings
 

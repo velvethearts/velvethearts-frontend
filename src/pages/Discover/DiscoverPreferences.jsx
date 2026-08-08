@@ -9,6 +9,12 @@ export const DiscoverPreferences = ({ onClose }) => {
 
   const genderOptions = ['All', 'Woman', 'Man', 'Non-binary'];
   const intentOptions = ['All', 'Long-term Relationship', 'Getting to Know People', 'Companionship', 'Open to Anything Meaningful'];
+  const sortByOptions = [
+    { label: 'Default Vibe', value: 'default' },
+    { label: 'Newest First', value: 'newest' },
+    { label: 'Profile Completion', value: 'profileCompletion' },
+    { label: 'Name (A-Z)', value: 'name' }
+  ];
 
   const handleGenderSelect = (gender) => {
     setLocalFilters(prev => ({ ...prev, gender }));
@@ -16,6 +22,10 @@ export const DiscoverPreferences = ({ onClose }) => {
 
   const handleIntentSelect = (relationshipIntent) => {
     setLocalFilters(prev => ({ ...prev, relationshipIntent }));
+  };
+
+  const handleSortSelect = (sortBy) => {
+    setLocalFilters(prev => ({ ...prev, sortBy }));
   };
 
   const handleSliderChange = (field, val) => {
@@ -33,7 +43,8 @@ export const DiscoverPreferences = ({ onClose }) => {
       city: '',
       ageMin: 18,
       ageMax: 60,
-      distanceMax: 50
+      distanceMax: 50,
+      sortBy: 'default'
     });
   };
 
@@ -50,8 +61,25 @@ export const DiscoverPreferences = ({ onClose }) => {
       variant="bottom-drawer"
     >
       <div className="pref-body-content font-ui">
-        {/* Gender Preference */}
+        {/* Sort Results By */}
         <div className="pref-item-section">
+          <span className="pref-item-label">Sort Results By</span>
+          <div className="pref-item-chips">
+            {sortByOptions.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => handleSortSelect(opt.value)}
+                className={`pref-item-chip ${(localFilters.sortBy || 'default') === opt.value ? 'active' : ''}`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Gender Preference */}
+        <div className="pref-item-section border-top">
           <span className="pref-item-label">Gender Preference</span>
           <div className="pref-item-chips">
             {genderOptions.map(g => (

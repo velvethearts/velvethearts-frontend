@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { CheckCircle, Heart, ShieldWarning, Prohibit, X, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
@@ -27,6 +27,48 @@ export const ProfileDetail = ({ profile, onBack }) => {
   const handleNextPhoto = (e) => {
     e.stopPropagation();
     setCurrentPhotoIndex(prev => Math.min(prev + 1, displayPhotos.length - 1));
+  };
+
+  const photoTouchRef = useRef(null);
+
+  const handlePhotoTouchStart = (e) => {
+    const touch = e.touches ? e.touches[0] : e;
+    photoTouchRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+  };
+
+  const handlePhotoTouchEnd = (e) => {
+    if (!photoTouchRef.current) return;
+    const touch = e.changedTouches ? e.changedTouches[0] : e;
+    const deltaX = touch.clientX - photoTouchRef.current.x;
+    const deltaY = touch.clientY - photoTouchRef.current.y;
+    const duration = Date.now() - photoTouchRef.current.time;
+    photoTouchRef.current = null;
+
+    if (Math.abs(deltaX) > 25 && Math.abs(deltaX) > Math.abs(deltaY) && duration < 500) {
+      e.stopPropagation();
+      if (deltaX < 0 && currentPhotoIndex < displayPhotos.length - 1) {
+        handleNextPhoto(e);
+      } else if (deltaX > 0 && currentPhotoIndex > 0) {
+        handlePrevPhoto(e);
+      }
+    }
+  };
+
+  const handlePhotoClick = (e) => {
+    if (displayPhotos.length <= 1) return;
+    if (e.target.closest('button')) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = x / rect.width;
+
+    if (ratio < 0.35 && currentPhotoIndex > 0) {
+      e.stopPropagation();
+      handlePrevPhoto(e);
+    } else if (ratio > 0.65 && currentPhotoIndex < displayPhotos.length - 1) {
+      e.stopPropagation();
+      handleNextPhoto(e);
+    }
   };
 
   const isInterestSent = Array.isArray(interestsSent) && interestsSent.includes(profile.id);
@@ -117,7 +159,15 @@ export const ProfileDetail = ({ profile, onBack }) => {
 
       <div className="detail-content-container">
         {/* Asymmetric Profile Structure */}
-        <div className="detail-image-panel" style={{ position: 'relative', overflow: 'hidden' }}>
+        <div 
+          className="detail-image-panel" 
+          style={{ position: 'relative', overflow: 'hidden', cursor: displayPhotos.length > 1 ? 'grab' : 'default' }}
+          onTouchStart={handlePhotoTouchStart}
+          onTouchEnd={handlePhotoTouchEnd}
+          onMouseDown={handlePhotoTouchStart}
+          onMouseUp={handlePhotoTouchEnd}
+          onClick={handlePhotoClick}
+        >
           <img 
             src={displayPhotos[currentPhotoIndex] || getDefaultAvatar(profile?.gender)} 
             alt={profile.name} 

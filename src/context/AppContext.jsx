@@ -363,7 +363,8 @@ export const AppProvider = ({ children }) => {
         city: '',
         ageMin: 18,
         ageMax: 60,
-        distanceMax: 50
+        distanceMax: 50,
+        sortBy: 'default'
     });
 
     // ─── Helper: hydrate state from /profile/me response ───────────────
@@ -981,6 +982,13 @@ export const AppProvider = ({ children }) => {
                     }
                 });
 
+                socket.on('spark_nudged', ({ senderName, message }) => {
+                    addToast({
+                        title: 'Spark Nudge ✨',
+                        message: message || `${senderName} nudged your spark! Say hi 👋`,
+                    });
+                });
+
                 socket.on('user_presence', ({ userId, isOnline }) => {
                     if (!userId) return;
                     setOnlineUserIds(prev => {
@@ -1283,8 +1291,28 @@ useEffect(() => {
         setInterestStatuses(prev => ({ ...prev, [profileId]: isSuper ? 'super' : 'sent' }));
 
         try {
-            const reactionComment = comment || reactionData?.comment || null;
-            const data = await api.likeProfile(profileId, isSuper, reactionComment);
+            let formattedComment = comment || reactionData?.comment || null;
+
+            if (reactionData && typeof reactionData === 'object') {
+                if (reactionData.targetType === 'interest' && reactionData.targetContent) {
+                    formattedComment = reactionData.comment 
+                        ? `[Reacted to interest "${reactionData.targetContent}"]: ${reactionData.comment}`
+                        : `Liked your interest "${reactionData.targetContent}"`;
+                } else if (reactionData.targetType === 'story' && reactionData.targetContent) {
+                    const preview = reactionData.targetContent.length > 35 
+                        ? reactionData.targetContent.substring(0, 35) + '...' 
+                        : reactionData.targetContent;
+                    formattedComment = reactionData.comment 
+                        ? `[Commented on story "${preview}"]: ${reactionData.comment}`
+                        : `Liked your story "${preview}"`;
+                } else if (reactionData.targetType === 'photo') {
+                    formattedComment = reactionData.comment 
+                        ? `[Commented on your photo]: ${reactionData.comment}`
+                        : `Liked your photo`;
+                }
+            }
+
+            const data = await api.likeProfile(profileId, isSuper, formattedComment);
 
             if (data.match) {
                 // It's a mutual match!
@@ -1854,10 +1882,26 @@ useEffect(() => {
         }
     }, []);
 
+    const nudgeSpark = (targetUserId, targetName) => {
+        const socket = getSocket();
+        if (socket) {
+            socket.emit('nudge_spark', {
+                targetUserId,
+                senderName: userProfile?.name || 'Someone'
+            });
+        }
+        showAlert({
+            title: 'Spark Nudged! ✨',
+            message: `You sent a playful nudge to ${targetName}.`,
+            variant: 'info'
+        });
+    };
+
         const chatUnreadCount = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
 
         return (
         <AppContext.Provider value={{
+            nudgeSpark,
             authLoading,
             isLoggedIn,
             setIsLoggedIn,

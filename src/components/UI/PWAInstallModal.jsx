@@ -87,18 +87,18 @@ export const PWAInstallModal = ({ isLoggedIn, isOnboarded }) => {
         <div className="pwa-modal-actions">
           <button
             type="button"
-            className="btn btn-primary btn-md pwa-install-btn"
+            className="pwa-dismiss-btn font-ui"
+            onClick={handleDismiss}
+          >
+            Not Now
+          </button>
+          <button
+            type="button"
+            className="pwa-install-btn font-ui"
             onClick={handleInstallClick}
           >
             <DownloadSimple size={18} weight="bold" />
             Install App
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary btn-md pwa-dismiss-btn"
-            onClick={handleDismiss}
-          >
-            Not Now
           </button>
         </div>
       </div>
@@ -108,8 +108,8 @@ export const PWAInstallModal = ({ isLoggedIn, isOnboarded }) => {
           position: fixed;
           inset: 0;
           z-index: 99999;
-          background: rgba(13, 9, 11, 0.75);
-          backdrop-filter: blur(8px);
+          background: rgba(13, 9, 11, 0.82);
+          backdrop-filter: blur(10px);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -120,11 +120,11 @@ export const PWAInstallModal = ({ isLoggedIn, isOnboarded }) => {
           position: relative;
           width: 100%;
           max-width: 400px;
-          background: var(--bg-surface-elevated, #1a1417);
-          border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+          background: #191216;
+          border: 1px solid rgba(255, 255, 255, 0.12);
           border-radius: 24px;
           padding: 28px 24px 24px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(184, 67, 106, 0.2);
+          box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 30px rgba(184, 67, 106, 0.25);
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -139,7 +139,7 @@ export const PWAInstallModal = ({ isLoggedIn, isOnboarded }) => {
           height: 32px;
           border-radius: 50%;
           background: rgba(255, 255, 255, 0.08);
-          color: var(--text-secondary, #e2d9dc);
+          color: #e2d9dc;
           border: none;
           display: flex;
           align-items: center;
@@ -157,13 +157,13 @@ export const PWAInstallModal = ({ isLoggedIn, isOnboarded }) => {
           width: 68px;
           height: 68px;
           border-radius: 20px;
-          background: linear-gradient(135deg, rgba(184, 67, 106, 0.25) 0%, rgba(30, 20, 25, 0.8) 100%);
-          border: 1px solid rgba(184, 67, 106, 0.4);
+          background: linear-gradient(135deg, rgba(184, 67, 106, 0.3) 0%, rgba(30, 20, 25, 0.9) 100%);
+          border: 1px solid rgba(184, 67, 106, 0.45);
           display: flex;
           align-items: center;
           justify-content: center;
           margin: 0 auto 16px;
-          box-shadow: 0 8px 20px rgba(184, 67, 106, 0.25);
+          box-shadow: 0 8px 20px rgba(184, 67, 106, 0.3);
         }
 
         .pwa-logo-img {
@@ -174,13 +174,13 @@ export const PWAInstallModal = ({ isLoggedIn, isOnboarded }) => {
         .pwa-modal-title {
           font-size: 22px;
           font-weight: 700;
-          color: var(--text-primary, #fff);
+          color: #ffffff;
           margin-bottom: 6px;
         }
 
         .pwa-modal-subtitle {
           font-size: 13.5px;
-          color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+          color: rgba(255, 255, 255, 0.75);
           line-height: 1.45;
           margin-bottom: 20px;
         }
@@ -190,10 +190,10 @@ export const PWAInstallModal = ({ isLoggedIn, isOnboarded }) => {
           display: flex;
           flex-direction: column;
           gap: 10px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 16px;
-          padding: 12px 14px;
+          padding: 14px 16px;
           margin-bottom: 22px;
           text-align: left;
         }
@@ -202,42 +202,72 @@ export const PWAInstallModal = ({ isLoggedIn, isOnboarded }) => {
           display: flex;
           align-items: center;
           gap: 10px;
-          font-size: 12.5px;
-          color: var(--text-secondary, #e2d9dc);
+          font-size: 13px;
+          color: #e2d9dc;
           font-weight: 500;
         }
 
         .pwa-feature-icon {
-          color: var(--burgundy-400, #d95b83);
+          color: #F3C68F;
           flex-shrink: 0;
         }
 
         .pwa-modal-actions {
           width: 100%;
           display: flex;
-          flex-direction: column;
-          gap: 8px;
+          align-items: center;
+          gap: 12px;
         }
 
         .pwa-install-btn {
-          width: 100%;
+          flex: 1;
+          display: inline-flex;
+          align-items: center;
           justify-content: center;
           gap: 8px;
+          height: 46px;
+          padding: 0 18px;
+          border-radius: 9999px;
+          background: linear-gradient(135deg, #B8436A 0%, #E86B93 100%);
+          color: #ffffff;
+          font-size: 14.5px;
           font-weight: 600;
-          box-shadow: 0 4px 16px rgba(184, 67, 106, 0.4);
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 6px 20px rgba(184, 67, 106, 0.45);
+          transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        .pwa-install-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(184, 67, 106, 0.6);
+          filter: brightness(1.08);
+        }
+
+        .pwa-install-btn:active {
+          transform: translateY(0);
         }
 
         .pwa-dismiss-btn {
-          width: 100%;
+          display: inline-flex;
+          align-items: center;
           justify-content: center;
-          background: transparent;
-          border-color: transparent;
-          color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+          height: 46px;
+          padding: 0 18px;
+          border-radius: 9999px;
+          background: rgba(255, 255, 255, 0.07);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          color: #e2d9dc;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
         }
 
         .pwa-dismiss-btn:hover {
-          color: var(--text-primary, #fff);
-          background: rgba(255, 255, 255, 0.06);
+          background: rgba(255, 255, 255, 0.14);
+          color: #ffffff;
+          border-color: rgba(255, 255, 255, 0.25);
         }
       `}</style>
     </div>

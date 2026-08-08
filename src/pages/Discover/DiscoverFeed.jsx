@@ -48,6 +48,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     if (isMatched) return false;
 
     if (passedProfileIds.includes(profile.id)) return false;
+    if (interestsSent.includes(profile.id) || (profile.userId && interestsSent.includes(profile.userId))) return false;
 
     // 1. Search term match
     const searchString = searchTerm.trim().toLowerCase();
@@ -74,18 +75,53 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       return str;
     };
 
-    if (filters.gender !== 'All' && normalizeGender(profile.gender) !== normalizeGender(filters.gender)) return false;
+    if (filters.gender && filters.gender !== 'All') {
+      const targetG = normalizeGender(filters.gender);
+      const profG = normalizeGender(profile.gender);
+      if (targetG && profG !== targetG) return false;
+    }
 
-    if (filters.relationshipIntent !== 'All' && profile.relationshipIntent && 
-        !profile.relationshipIntent.toLowerCase().includes(filters.relationshipIntent.toLowerCase()) &&
-        !filters.relationshipIntent.toLowerCase().includes(profile.relationshipIntent.toLowerCase())) return false;
+    if (filters.relationshipIntent && filters.relationshipIntent !== 'All') {
+      if (!profile.relationshipIntent) return false;
+      const fIntent = filters.relationshipIntent.toLowerCase();
+      const pIntent = profile.relationshipIntent.toLowerCase();
+      if (!pIntent.includes(fIntent) && !fIntent.includes(pIntent)) return false;
+    }
 
-    if (filters.city && !profile.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
+    if (filters.city && filters.city.trim()) {
+      if (!profile.city?.toLowerCase().includes(filters.city.trim().toLowerCase())) return false;
+    }
     
     // Enforce Age filter bounds
-    if (typeof profile.age === 'number' && (profile.age < filters.ageMin || profile.age > filters.ageMax)) return false;
+    if (typeof profile.age === 'number') {
+      if (profile.age < (filters.ageMin ?? 18) || profile.age > (filters.ageMax ?? 60)) return false;
+    }
+
+    // Enforce Distance filter bounds
+    if (filters.distanceMax && profile.distance) {
+      const distNum = parseFloat(profile.distance);
+      if (!isNaN(distNum) && distNum > filters.distanceMax) return false;
+    }
 
     return true;
+  });
+
+  // Apply sorting to filtered profiles
+  const sortedProfiles = [...filteredProfiles].sort((a, b) => {
+    const currentSort = filters.sortBy || 'default';
+    if (currentSort === 'newest') {
+      const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tB - tA;
+    }
+    if (currentSort === 'profileCompletion') {
+      return (b.profileCompletion || 0) - (a.profileCompletion || 0);
+    }
+    if (currentSort === 'name') {
+      return (a.name || '').localeCompare(b.name || '');
+    }
+    // Default: Vibe match & profile completion
+    return (b.profileCompletion || 80) - (a.profileCompletion || 80);
   });
 
   const handleResetFilters = () => {
@@ -98,16 +134,19 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       city: '',
       ageMin: 18,
       ageMax: 60,
-      distanceMax: 50
+      distanceMax: 50,
+      sortBy: 'default'
     });
   };
 
   const hasActiveFilters = 
-    filters.gender !== 'All' || 
-    filters.relationshipIntent !== 'All' || 
-    filters.city || 
-    filters.ageMin > 18 || 
-    filters.ageMax < 60;
+    (filters.gender && filters.gender !== 'All') || 
+    (filters.relationshipIntent && filters.relationshipIntent !== 'All') || 
+    Boolean(filters.city) || 
+    (filters.ageMin && filters.ageMin > 18) || 
+    (filters.ageMax && filters.ageMax < 60) ||
+    (filters.distanceMax && filters.distanceMax < 50) ||
+    (filters.sortBy && filters.sortBy !== 'default');
 
   return (
     <div className="discover-feed-page page-enter">
@@ -143,7 +182,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
             <button 
               onClick={() => setShowPreferences(true)} 
-              className="filters-toggle-btn font-ui"
+              className={`filters-toggle-btn font-ui ${hasActiveFilters ? 'has-active' : ''}`}
               aria-label="Filter preferences drawer"
             >
               <Sliders size={20} />
@@ -200,10 +239,10 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
             </div>
           ))}
         </div>
-      ) : filteredProfiles.length > 0 ? (
+      ) : sortedProfiles.length > 0 ? (
         viewMode === 'deck' ? (
           <StoryDeck
-            profiles={filteredProfiles}
+            profiles={sortedProfiles}
             interestsSent={interestsSent}
             savedProfiles={savedProfiles}
             userProfile={userProfile}
@@ -219,7 +258,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           />
         ) : (
           <div className="gallery-wall-grid">
-            {filteredProfiles.map((profile) => (
+            {sortedProfiles.map((profile) => (
               <ProfileCard
                 key={profile.id}
                 profile={profile}

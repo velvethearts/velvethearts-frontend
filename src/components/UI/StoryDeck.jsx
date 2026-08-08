@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { computeVibeMatch } from '../../utils/vibe';
 import { 
   Heart, 
   X, 
@@ -48,20 +49,7 @@ export const StoryDeck = ({
 
   const activeProfile = profiles[currentIndex] || null;
 
-  // Compute Vibe Match percentage based on shared interests & intent
-  const computeVibeMatch = (profile) => {
-    if (!profile) return 80;
-    let score = 75;
-    const userInterests = userProfile?.interests || [];
-    const profileInterests = profile?.interests || [];
-    const sharedCount = profileInterests.filter(i => userInterests.includes(i)).length;
-
-    score += sharedCount * 6;
-    if (userProfile?.relationshipIntent === profile?.relationshipIntent) score += 10;
-    if (userProfile?.city === profile?.city) score += 5;
-
-    return Math.min(Math.max(score, 70), 99);
-  };
+  const vibeScore = computeVibeMatch(userProfile, activeProfile);
 
   // Current photo index for active profile
   const currentPhotoIndex = activeProfile ? (photoIndices[activeProfile.id] || 0) : 0;
@@ -205,6 +193,18 @@ export const StoryDeck = ({
     if (!isDragging) return;
     setIsDragging(false);
 
+    // Moderate swipe on photo area changes photo if multiple photos exist
+    const isModerateSwipe = Math.abs(dragOffset.x) >= 25 && Math.abs(dragOffset.x) < 100 && Math.abs(dragOffset.y) < 60;
+    if (isModerateSwipe && displayPhotos.length > 1) {
+      if (dragOffset.x < 0 && currentPhotoIndex < displayPhotos.length - 1) {
+        handleNextPhoto();
+      } else if (dragOffset.x > 0 && currentPhotoIndex > 0) {
+        handlePrevPhoto();
+      }
+      setDragOffset({ x: 0, y: 0 });
+      return;
+    }
+
     if (dragOffset.x > 100) {
       handleSwipe('right');
     } else if (dragOffset.x < -100) {
@@ -233,6 +233,18 @@ export const StoryDeck = ({
     if (!isDragging) return;
     setIsDragging(false);
 
+    // Moderate swipe on photo area changes photo if multiple photos exist
+    const isModerateSwipe = Math.abs(dragOffset.x) >= 25 && Math.abs(dragOffset.x) < 100 && Math.abs(dragOffset.y) < 60;
+    if (isModerateSwipe && displayPhotos.length > 1) {
+      if (dragOffset.x < 0 && currentPhotoIndex < displayPhotos.length - 1) {
+        handleNextPhoto();
+      } else if (dragOffset.x > 0 && currentPhotoIndex > 0) {
+        handlePrevPhoto();
+      }
+      setDragOffset({ x: 0, y: 0 });
+      return;
+    }
+
     if (dragOffset.x > 100) {
       handleSwipe('right');
     } else if (dragOffset.x < -100) {
@@ -241,6 +253,23 @@ export const StoryDeck = ({
       handleSwipe('super');
     } else {
       setDragOffset({ x: 0, y: 0 });
+    }
+  };
+
+  const handleHeroClick = (e) => {
+    if (displayPhotos.length <= 1) return;
+    if (e.target.closest('button') || e.target.closest('.story-top-badges') || e.target.closest('.card-gesture-guide-overlay')) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = x / rect.width;
+
+    if (ratio < 0.35 && currentPhotoIndex > 0) {
+      e.stopPropagation();
+      handlePrevPhoto(e);
+    } else if (ratio > 0.65 && currentPhotoIndex < displayPhotos.length - 1) {
+      e.stopPropagation();
+      handleNextPhoto(e);
     }
   };
 
@@ -313,7 +342,6 @@ export const StoryDeck = ({
   }
 
   const isSaved = savedProfiles.includes(activeProfile.id);
-  const vibeScore = computeVibeMatch(activeProfile);
 
   // Rotation tilt angle based on drag x offset
   const rotateDeg = dragOffset.x * 0.06;
@@ -376,7 +404,7 @@ export const StoryDeck = ({
         </div>
 
         {/* Hero Photo Panel */}
-        <div className="story-card-hero">
+        <div className="story-card-hero" onClick={handleHeroClick}>
           {/* Session-Based Gesture Guide Overlay */}
           {showSwipeGuide && (
             <div className="card-gesture-guide-overlay font-ui" onClick={completeSwipeGuide}>
@@ -582,40 +610,7 @@ export const StoryDeck = ({
           aria-label="Undo last swipe"
           title="Undo (Backspace)"
         >
-          <ArrowLeft size={22} weight="bold" />
-        </button>
-
-        {/* Pass Softly (X) */}
-        <button
-          type="button"
-          onClick={() => handleSwipe('left')}
-          className="action-btn btn-pass"
-          aria-label="Pass softly"
-          title="Pass (Left Arrow)"
-        >
-          <X size={26} weight="bold" />
-        </button>
-
-        {/* Super Spark (Star) */}
-        <button
-          type="button"
-          onClick={() => handleSwipe('super')}
-          className="action-btn btn-super"
-          aria-label="Super spark"
-          title="Super Spark (Up Arrow)"
-        >
-          <Star size={24} weight="fill" />
-        </button>
-
-        {/* Send Spark (Heart) */}
-        <button
-          type="button"
-          onClick={() => handleSwipe('right')}
-          className="action-btn btn-spark"
-          aria-label="Send spark"
-          title="Send Spark (Right Arrow)"
-        >
-          <Heart size={26} weight="fill" />
+          <ArrowLeft size={24} weight="bold" />
         </button>
       </div>
 
@@ -639,16 +634,33 @@ export const StoryDeck = ({
           flex-direction: column;
           align-items: center;
           position: relative;
-          max-width: 380px;
+          width: 100%;
+          max-width: 440px;
           margin: 0 auto;
           user-select: none;
+        }
+
+        @media (max-width: 640px) {
+          .story-deck-wrapper {
+            max-width: 100%;
+            width: 100%;
+          }
+
+          .story-card-container {
+            border-radius: 20px;
+          }
+
+          .story-card-hero {
+            aspect-ratio: 3/4 !important;
+            min-height: 390px;
+          }
         }
 
         .story-card-container {
           width: 100%;
           background-color: var(--bg-surface);
           border: 1.5px solid var(--border-subtle);
-          border-radius: var(--radius-2xl);
+          border-radius: 22px;
           overflow: hidden;
           box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
           position: relative;
@@ -746,7 +758,7 @@ export const StoryDeck = ({
         /* Hero Photo */
         .story-card-hero {
           position: relative;
-          aspect-ratio: 16/13;
+          aspect-ratio: 4/5;
           width: 100%;
           background-color: var(--charcoal-200);
         }

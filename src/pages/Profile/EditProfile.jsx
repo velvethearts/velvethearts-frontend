@@ -7,6 +7,7 @@ import { Input } from '../../components/UI/Input';
 import { Textarea } from '../../components/UI/Textarea';
 import { Select } from '../../components/UI/Select';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { VoiceRecorder } from '../../components/UI/VoiceRecorder';
 import { getProfilePhoto } from '../../utils/avatar';
 
 export const EditProfile = ({ onBack }) => {
@@ -30,6 +31,8 @@ export const EditProfile = ({ onBack }) => {
     setLocalProfile(prev => ({ ...prev, [field]: value }));
   };
 
+  const [customInterestInput, setCustomInterestInput] = useState('');
+
   const handleInterestToggle = (interest) => {
     setLocalProfile(prev => {
       const current = prev.interests;
@@ -39,6 +42,16 @@ export const EditProfile = ({ onBack }) => {
         return { ...prev, interests: [...current, interest] };
       }
     });
+  };
+
+  const handleAddCustomInterest = (e) => {
+    if (e) e.preventDefault();
+    const trimmed = customInterestInput.trim();
+    if (!trimmed) return;
+    if (!localProfile.interests.includes(trimmed)) {
+      setLocalProfile(prev => ({ ...prev, interests: [...prev.interests, trimmed] }));
+    }
+    setCustomInterestInput('');
   };
 
   // Real Cloudinary / DataURL Photo Manager Upload
@@ -308,10 +321,62 @@ export const EditProfile = ({ onBack }) => {
                   </button>
                 );
               })}
+              {/* Custom interests added by user */}
+              {localProfile.interests
+                .filter(i => !interestOptions.includes(i))
+                .map(customI => (
+                  <button
+                    key={customI}
+                    type="button"
+                    onClick={() => handleInterestToggle(customI)}
+                    className="edit-chip active custom-chip"
+                    title="Click to remove custom interest"
+                  >
+                    <span>{customI}</span>
+                    <span className="chip-remove-x">×</span>
+                  </button>
+                ))
+              }
             </div>
+
+            {/* Custom Interest Input */}
+            <div className="custom-interest-row font-ui">
+              <input
+                type="text"
+                placeholder="Add a custom interest (e.g. Astro-photography, Skateboarding)..."
+                value={customInterestInput}
+                onChange={(e) => setCustomInterestInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCustomInterest();
+                  }
+                }}
+                className="custom-interest-input"
+                maxLength={30}
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomInterest}
+                disabled={!customInterestInput.trim()}
+                className="custom-interest-add-btn"
+              >
+                + Add
+              </button>
+            </div>
+
             {validationErrors.interests && (
               <span className="vh-input-error font-ui" role="alert">{validationErrors.interests}</span>
             )}
+          </div>
+
+          {/* 2-Min Voice Intro Snippet */}
+          <div className="edit-form-group border-top">
+            <VoiceRecorder
+              initialAudioUrl={localProfile.voiceIntroUrl}
+              onSaveAudio={(audioUrl) => handleFieldChange('voiceIntroUrl', audioUrl)}
+              maxDurationSeconds={120}
+            />
           </div>
 
           {/* Disability Options */}
@@ -670,6 +735,58 @@ export const EditProfile = ({ onBack }) => {
           display: flex;
           flex-direction: column;
           gap: var(--space-2);
+        }
+
+        .custom-interest-row {
+          display: flex;
+          gap: var(--space-2);
+          margin-top: var(--space-3);
+          width: 100%;
+        }
+
+        .custom-interest-input {
+          flex: 1;
+          background-color: var(--bg-surface-warm);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-full);
+          padding: var(--space-2) var(--space-4);
+          font-size: var(--text-body-sm);
+          color: var(--text-primary);
+          outline: none;
+          transition: border-color var(--duration-fast);
+        }
+
+        .custom-interest-input:focus {
+          border-color: var(--burgundy-500);
+        }
+
+        .custom-interest-add-btn {
+          background-color: var(--burgundy-500);
+          color: #FFFFFF;
+          border: none;
+          border-radius: var(--radius-full);
+          padding: var(--space-2) var(--space-4);
+          font-size: var(--text-body-sm);
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          white-space: nowrap;
+        }
+
+        .custom-interest-add-btn:hover:not(:disabled) {
+          background-color: var(--burgundy-600);
+        }
+
+        .custom-interest-add-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .chip-remove-x {
+          margin-left: 5px;
+          font-weight: bold;
+          opacity: 0.85;
+          font-size: 14px;
         }
 
         .preview-name-row {

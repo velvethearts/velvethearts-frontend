@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { CheckCircle, Heart, DotsThreeVertical, Bookmark, Prohibit, ShieldWarning, CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { useApp } from '../../context/AppContext';
+import { CheckCircle, Heart, DotsThreeVertical, Bookmark, Prohibit, ShieldWarning, CaretLeft, CaretRight, Sparkle } from '@phosphor-icons/react';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
+import { computeVibeMatch } from '../../utils/vibe';
 
 export const ProfileCard = ({
   profile,
@@ -14,9 +16,12 @@ export const ProfileCard = ({
   onClick,
   className = ''
 }) => {
+  const { userProfile } = useApp();
   const [showDropdown, setShowDropdown] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const dropdownRef = useRef(null);
+
+  const vibeScore = computeVibeMatch(userProfile, profile);
 
   const extractedPhotos = extractPhotoUrls(profile);
   const photosList = extractedPhotos.length > 0 ? extractedPhotos : [getDefaultAvatar(profile?.gender)];
@@ -49,6 +54,48 @@ export const ProfileCard = ({
     setShowDropdown(prev => !prev);
   };
 
+  const photoTouchRef = useRef(null);
+
+  const handlePhotoTouchStart = (e) => {
+    const touch = e.touches ? e.touches[0] : e;
+    photoTouchRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+  };
+
+  const handlePhotoTouchEnd = (e) => {
+    if (!photoTouchRef.current) return;
+    const touch = e.changedTouches ? e.changedTouches[0] : e;
+    const deltaX = touch.clientX - photoTouchRef.current.x;
+    const deltaY = touch.clientY - photoTouchRef.current.y;
+    const duration = Date.now() - photoTouchRef.current.time;
+    photoTouchRef.current = null;
+
+    if (Math.abs(deltaX) > 25 && Math.abs(deltaX) > Math.abs(deltaY) && duration < 500) {
+      e.stopPropagation();
+      if (deltaX < 0 && currentPhotoIndex < photosList.length - 1) {
+        handleNextPhoto(e);
+      } else if (deltaX > 0 && currentPhotoIndex > 0) {
+        handlePrevPhoto(e);
+      }
+    }
+  };
+
+  const handlePhotoClick = (e) => {
+    if (photosList.length <= 1) return;
+    if (e.target.closest('button') || e.target.closest('.profile-card-options-wrap')) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = x / rect.width;
+
+    if (ratio < 0.35 && currentPhotoIndex > 0) {
+      e.stopPropagation();
+      handlePrevPhoto(e);
+    } else if (ratio > 0.65 && currentPhotoIndex < photosList.length - 1) {
+      e.stopPropagation();
+      handleNextPhoto(e);
+    }
+  };
+
   return (
     <div 
       className={`vh-profile-card ${className}`} 
@@ -62,11 +109,20 @@ export const ProfileCard = ({
         }
       }}
     >
-      <div className="profile-img-wrap">
+      <div 
+        className="profile-img-wrap"
+        onTouchStart={handlePhotoTouchStart}
+        onTouchEnd={handlePhotoTouchEnd}
+        onMouseDown={handlePhotoTouchStart}
+        onMouseUp={handlePhotoTouchEnd}
+        onClick={handlePhotoClick}
+      >
         <img
             src={photosList[currentPhotoIndex] || getDefaultAvatar(profile?.gender)}
             alt={`Photo ${currentPhotoIndex + 1} of ${profile.name}`}
             className="profile-card-image"
+            fetchpriority={currentPhotoIndex === 0 ? "high" : "auto"}
+            decoding="async"
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src = getDefaultAvatar(profile?.gender);
@@ -114,8 +170,12 @@ export const ProfileCard = ({
           </>
         )}
         
-        {/* Verification Badges */}
-        <div className="profile-badge-row">
+        {/* Vibe Match & Verification Badges */}
+        <div className="profile-badge-row font-ui">
+          <span className="badge-vibe-pill font-ui" title={`${vibeScore}% Vibe Match`}>
+            <Sparkle size={12} color="#F3C68F" weight="fill" />
+            <span>{vibeScore}% Vibe</span>
+          </span>
           {profile.verified && (
             <span className="badge-verified font-ui">
               <CheckCircle size={12} weight="fill" />
@@ -330,14 +390,31 @@ export const ProfileCard = ({
         }
 
         /* Badges */
+        .profile-badge-row,
         .profile-card-badges {
           position: absolute;
           bottom: var(--space-2);
           left: var(--space-2);
           display: flex;
           flex-wrap: wrap;
-          gap: var(--space-1);
+          align-items: center;
+          gap: 6px;
           z-index: 5;
+        }
+
+        .badge-vibe-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(18, 14, 16, 0.85);
+          border: 1px solid rgba(243, 198, 143, 0.5);
+          color: #F3C68F;
+          font-size: var(--text-caption);
+          padding: 2px 7px;
+          border-radius: var(--radius-full);
+          font-weight: 600;
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
         }
 
         .badge-verified {
@@ -398,46 +475,52 @@ export const ProfileCard = ({
           position: absolute;
           right: 0;
           top: 100%;
-          margin-top: var(--space-1);
-          background-color: var(--surface-overlay);
-          border: 1px solid var(--border-subtle);
+          margin-top: var(--space-2);
+          background: rgba(18, 14, 16, 0.95);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.18);
           border-radius: var(--radius-md);
-          box-shadow: var(--shadow-lg);
-          min-width: 160px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+          min-width: 170px;
           overflow: hidden;
-          z-index: 20;
+          z-index: 50;
         }
 
         .dropdown-item {
           width: 100%;
           display: flex;
           align-items: center;
-          gap: var(--space-2);
-          padding: var(--space-2) var(--space-3);
+          gap: var(--space-3);
+          padding: var(--space-3) var(--space-4);
           border: none;
           background: transparent;
-          color: var(--text-primary);
+          color: #FFFFFF;
           font-size: var(--text-body-sm);
+          font-weight: 500;
           text-align: left;
           cursor: pointer;
-          transition: background var(--duration-fast);
+          transition: all var(--duration-fast);
         }
 
         .dropdown-item:hover {
-          background-color: var(--surface-hover);
+          background-color: rgba(255, 255, 255, 0.12);
+          color: #FFFFFF;
         }
 
         .dropdown-item.item-active {
-          color: var(--burgundy-500);
+          color: #F3C68F;
           font-weight: 600;
         }
 
         .dropdown-item.danger {
-          color: var(--burgundy-500);
+          color: #FF6B81;
+          font-weight: 600;
         }
 
         .dropdown-item.danger:hover {
-          background-color: rgba(229, 115, 115, 0.1);
+          background-color: rgba(255, 107, 129, 0.2);
+          color: #FF8EA0;
         }
 
         /* Profile details container */

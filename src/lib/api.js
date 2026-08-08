@@ -162,6 +162,12 @@ export const api = {
         if (filters.ageMax)
             params.set('ageMax', String(filters.ageMax));
 
+        if (filters.sortBy)
+            params.set('sortBy', filters.sortBy);
+
+        if (filters.distanceMax)
+            params.set('distanceMax', String(filters.distanceMax));
+
         const qs = params.toString();
 
         return request(`/api/v1/discover${qs ? `?${qs}` : ''}`);

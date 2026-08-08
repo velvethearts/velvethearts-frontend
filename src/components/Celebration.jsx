@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Heart, Sparkle, ChatCircleText } from '@phosphor-icons/react';
 import { getProfilePhoto, getDefaultAvatar } from '../utils/avatar';
 import { playHapticSound, triggerHaptic } from '../utils/haptics';
+import { computeVibeMatch } from '../utils/vibe';
 
 export const Celebration = () => {
   const { showCelebration, setShowCelebration, userProfile, setActiveTab, sendMessage, setDeepLinkConversationId } = useApp();
@@ -85,7 +86,7 @@ export const Celebration = () => {
         {/* Vibe Match Radar Indicator */}
         <div className="celebration-vibe-badge font-ui">
           <Sparkle size={14} color="#D4AD6A" weight="fill" />
-          <span>94% Vibe Match</span>
+          <span>{computeVibeMatch(userProfile, showCelebration)}% Vibe Match</span>
         </div>
 
         <h2 className="celebration-title font-display">It's a Connection!</h2>

@@ -7,6 +7,7 @@ import { Input } from '../../components/UI/Input';
 import { Textarea } from '../../components/UI/Textarea';
 import { Select } from '../../components/UI/Select';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { VoiceRecorder } from '../../components/UI/VoiceRecorder';
 import { getDefaultAvatar } from '../../utils/avatar';
 
 export const OnboardingFlow = () => {
@@ -43,7 +44,8 @@ export const OnboardingFlow = () => {
         hasDisability: false,
         disabilityInfo: '',
         showDisability: false,
-        photos: []
+        photos: [],
+        voiceIntroUrl: null
     });
 
     const [photoPreviews, setPhotoPreviews] = useState(draft?.photoPreviews || []);
@@ -134,6 +136,8 @@ export const OnboardingFlow = () => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const [customInterestInput, setCustomInterestInput] = useState('');
+
     const handleInterestToggle = (interest) => {
         setFormData(prev => {
             const current = prev.interests;
@@ -143,6 +147,16 @@ export const OnboardingFlow = () => {
                 return { ...prev, interests: [...current, interest] };
             }
         });
+    };
+
+    const handleAddCustomInterest = (e) => {
+        if (e) e.preventDefault();
+        const trimmed = customInterestInput.trim();
+        if (!trimmed) return;
+        if (!formData.interests.includes(trimmed)) {
+            setFormData(prev => ({ ...prev, interests: [...prev.interests, trimmed] }));
+        }
+        setCustomInterestInput('');
     };
 
     const [uploadingCount, setUploadingCount] = useState(0);
@@ -893,7 +907,51 @@ export const OnboardingFlow = () => {
                                                 </button>
                                             );
                                         })}
+                                        {/* Custom interests added by user */}
+                                        {formData.interests
+                                            .filter(i => !interestOptions.includes(i))
+                                            .map(customI => (
+                                                <button
+                                                    key={customI}
+                                                    type="button"
+                                                    onClick={() => handleInterestToggle(customI)}
+                                                    className="selection-chip font-ui active-burgundy custom-chip"
+                                                    title="Click to remove custom interest"
+                                                >
+                                                    <span className="selected-dot-chip" />
+                                                    <span>{customI}</span>
+                                                    <span className="chip-remove-x">×</span>
+                                                </button>
+                                            ))
+                                        }
                                     </div>
+
+                                    {/* Custom Interest Input */}
+                                    <div className="custom-interest-row">
+                                        <input
+                                            type="text"
+                                            placeholder="Add a custom interest (e.g. Astro-photography, Skateboarding)..."
+                                            value={customInterestInput}
+                                            onChange={(e) => setCustomInterestInput(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleAddCustomInterest();
+                                                }
+                                            }}
+                                            className="custom-interest-input font-ui"
+                                            maxLength={30}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleAddCustomInterest}
+                                            disabled={!customInterestInput.trim()}
+                                            className="custom-interest-add-btn font-ui"
+                                        >
+                                            + Add
+                                        </button>
+                                    </div>
+
                                     {validationErrors.interests ? (
                                         <span className="vh-input-error font-ui" role="alert">{validationErrors.interests}</span>
                                     ) : (
@@ -913,6 +971,19 @@ export const OnboardingFlow = () => {
                                         helperText="Write at least 20 characters."
                                         onEnterSubmit={handleFormSubmit}
                                         required
+                                    />
+                                </div>
+
+                                {/* 2-Min Voice Intro Snippet */}
+                                <div className="form-group border-top">
+                                    <label className="form-label font-ui">Voice Intro Snippet (Optional)</label>
+                                    <p className="step-description font-body" style={{ marginBottom: '12px' }}>
+                                        Record up to a 2-minute voice intro to add authentic warmth and personality to your profile.
+                                    </p>
+                                    <VoiceRecorder
+                                        initialAudioUrl={formData.voiceIntroUrl}
+                                        onSaveAudio={(audioUrl) => handleChange('voiceIntroUrl', audioUrl)}
+                                        maxDurationSeconds={120}
                                     />
                                 </div>
 
@@ -1681,6 +1752,58 @@ export const OnboardingFlow = () => {
           display: flex;
           flex-direction: column;
           gap: var(--space-2);
+        }
+
+        .custom-interest-row {
+          display: flex;
+          gap: var(--space-2);
+          margin-top: var(--space-3);
+          width: 100%;
+        }
+
+        .custom-interest-input {
+          flex: 1;
+          background-color: var(--bg-surface-warm);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-full);
+          padding: var(--space-2) var(--space-4);
+          font-size: var(--text-body-sm);
+          color: var(--text-primary);
+          outline: none;
+          transition: border-color var(--duration-fast);
+        }
+
+        .custom-interest-input:focus {
+          border-color: var(--burgundy-500);
+        }
+
+        .custom-interest-add-btn {
+          background-color: var(--burgundy-500);
+          color: #FFFFFF;
+          border: none;
+          border-radius: var(--radius-full);
+          padding: var(--space-2) var(--space-4);
+          font-size: var(--text-body-sm);
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          white-space: nowrap;
+        }
+
+        .custom-interest-add-btn:hover:not(:disabled) {
+          background-color: var(--burgundy-600);
+        }
+
+        .custom-interest-add-btn:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        .chip-remove-x {
+          margin-left: 5px;
+          font-weight: bold;
+          opacity: 0.85;
+          font-size: 14px;
         }
 
         .profile-name-row {

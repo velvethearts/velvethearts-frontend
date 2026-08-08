@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { PencilSimple, Sliders, ShieldCheck, SignOut, Bookmark, Heart, Trash, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
@@ -20,6 +20,48 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
   const handleNextUserPhoto = (e) => {
     e.stopPropagation();
     setCurrentPhotoIndex(prev => Math.min(prev + 1, displayUserPhotos.length - 1));
+  };
+
+  const photoTouchRef = useRef(null);
+
+  const handlePhotoTouchStart = (e) => {
+    const touch = e.touches ? e.touches[0] : e;
+    photoTouchRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+  };
+
+  const handlePhotoTouchEnd = (e) => {
+    if (!photoTouchRef.current) return;
+    const touch = e.changedTouches ? e.changedTouches[0] : e;
+    const deltaX = touch.clientX - photoTouchRef.current.x;
+    const deltaY = touch.clientY - photoTouchRef.current.y;
+    const duration = Date.now() - photoTouchRef.current.time;
+    photoTouchRef.current = null;
+
+    if (Math.abs(deltaX) > 25 && Math.abs(deltaX) > Math.abs(deltaY) && duration < 500) {
+      e.stopPropagation();
+      if (deltaX < 0 && currentPhotoIndex < displayUserPhotos.length - 1) {
+        handleNextUserPhoto(e);
+      } else if (deltaX > 0 && currentPhotoIndex > 0) {
+        handlePrevUserPhoto(e);
+      }
+    }
+  };
+
+  const handlePhotoClick = (e) => {
+    if (displayUserPhotos.length <= 1) return;
+    if (e.target.closest('button')) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = x / rect.width;
+
+    if (ratio < 0.35 && currentPhotoIndex > 0) {
+      e.stopPropagation();
+      handlePrevUserPhoto(e);
+    } else if (ratio > 0.65 && currentPhotoIndex < displayUserPhotos.length - 1) {
+      e.stopPropagation();
+      handleNextUserPhoto(e);
+    }
   };
 
   const handleLogout = async () => {
@@ -50,7 +92,15 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
         {/* Profile Card Preview */}
         <div className="you-preview-panel">
           <div className="profile-preview-card">
-            <div className="preview-img-wrap">
+            <div 
+              className="preview-img-wrap"
+              style={{ cursor: displayUserPhotos.length > 1 ? 'grab' : 'default' }}
+              onTouchStart={handlePhotoTouchStart}
+              onTouchEnd={handlePhotoTouchEnd}
+              onMouseDown={handlePhotoTouchStart}
+              onMouseUp={handlePhotoTouchEnd}
+              onClick={handlePhotoClick}
+            >
               <img 
                 src={displayUserPhotos[currentPhotoIndex] || getProfilePhoto(userProfile)} 
                 alt={userProfile.name} 

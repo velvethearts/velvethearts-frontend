@@ -1,26 +1,28 @@
-import React, { useState, Component } from 'react';
+import React, { useState, Component, lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navigation } from './components/Navigation';
 import { Celebration } from './components/Celebration';
 import { Clock, SpinnerGap } from '@phosphor-icons/react';
 import velvetHeartLogo from './assets/velvet-heart-logo.png';
 
-// Page Imports
+// Critical Route Imports
 import { LandingPage } from './pages/Landing/LandingPage';
 import { AuthFlow } from './pages/Auth/AuthFlow';
-import { OnboardingFlow } from './pages/Onboarding/OnboardingFlow';
 import { DiscoverFeed } from './pages/Discover/DiscoverFeed';
-import { ProfileDetail } from './pages/ProfileDetail/ProfileDetail';
 import { MatchesList } from './pages/Matches/MatchesList';
 import { ChatView } from './pages/Chat/ChatView';
 import { YouProfile } from './pages/Profile/YouProfile';
-import { EditProfile } from './pages/Profile/EditProfile';
-import { SavedProfilesPage } from './pages/Profile/SavedProfilesPage';
-import { SettingsPage } from './pages/Settings/SettingsPage';
-import { SafetyCenter } from './pages/Safety/SafetyCenter';
-import { NotificationsPage } from './pages/Notifications/NotificationsPage';
+import { ProfileDetail } from './pages/ProfileDetail/ProfileDetail';
 import { ToastContainer } from './components/UI/ToastContainer';
 import { PWAInstallModal } from './components/UI/PWAInstallModal';
+
+// Lazy-loaded Secondary Routes for Performance Optimization
+const OnboardingFlow = lazy(() => import('./pages/Onboarding/OnboardingFlow').then(m => ({ default: m.OnboardingFlow })));
+const EditProfile = lazy(() => import('./pages/Profile/EditProfile').then(m => ({ default: m.EditProfile })));
+const SavedProfilesPage = lazy(() => import('./pages/Profile/SavedProfilesPage').then(m => ({ default: m.SavedProfilesPage })));
+const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const SafetyCenter = lazy(() => import('./pages/Safety/SafetyCenter').then(m => ({ default: m.SafetyCenter })));
+const NotificationsPage = lazy(() => import('./pages/Notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 
 const AuthLoadingScreen = () => {
   return (
@@ -250,13 +252,19 @@ function AppContent() {
 
   // 2. Authenticated but Onboarding Incomplete
   if (!isOnboarded) {
-    return <OnboardingFlow />;
+    return (
+      <Suspense fallback={<AuthLoadingScreen />}>
+        <OnboardingFlow />
+      </Suspense>
+    );
   }
 
   // 3. Authenticated and Onboarded: Layout wrapping Main Navigation
   return (
     <Navigation>
-      {renderActivePage()}
+      <Suspense fallback={<AuthLoadingScreen />}>
+        {renderActivePage()}
+      </Suspense>
       <PWAInstallModal isLoggedIn={isLoggedIn} isOnboarded={isOnboarded} />
     </Navigation>
   );
