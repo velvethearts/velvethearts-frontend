@@ -37,11 +37,12 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
     longPressTimerRef.current = setTimeout(() => {
       isLongPressHandledRef.current = true;
-      if (conn.voiceIntroUrl) {
+      const voiceUrl = conn.voiceIntroUrl || conn.profile?.voiceIntroUrl;
+      if (voiceUrl) {
         triggerHaptic('heavy');
         playHapticSound('pop');
         if (audioRef.current) audioRef.current.pause();
-        audioRef.current = new Audio(conn.voiceIntroUrl);
+        audioRef.current = new Audio(voiceUrl);
         audioRef.current.onended = () => setActiveVoiceId(null);
         audioRef.current.play();
         setActiveVoiceId(conn.id);

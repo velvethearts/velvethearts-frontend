@@ -48,7 +48,6 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     if (isMatched) return false;
 
     if (passedProfileIds.includes(profile.id)) return false;
-    if (interestsSent.includes(profile.id) || (profile.userId && interestsSent.includes(profile.userId))) return false;
 
     // 1. Search term match
     const searchString = searchTerm.trim().toLowerCase();
