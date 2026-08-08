@@ -1,8 +1,10 @@
-import React, { useState, Component } from 'react';
+import React, { useState, Component, lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navigation } from './components/Navigation';
 import { Celebration } from './components/Celebration';
 import { Clock, SpinnerGap } from '@phosphor-icons/react';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import velvetHeartLogo from './assets/velvet-heart-logo.png';
 
 // Critical Route Imports
