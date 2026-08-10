@@ -216,7 +216,7 @@ Important: Vite client environment variables are baked into the build. If you ch
 
 ### Landing and authentication
 
-- Public landing page introduces the platform with preloaded high-priority hero branding (`velvet-heart-logo.png`).
+- Public landing page introduces the platform with preloaded high-priority hero branding (`velvet-heart-logo.png`), semantic `<main>` HTML5 layout, and an interactive **Frequently Asked Questions (FAQ) Accordion**.
 - Sign-up collects phone number and then links a Google account.
 - Sign-in authenticates returning users through the registered Google account.
 
@@ -244,6 +244,8 @@ Approved users can:
 
 - Browse the discover feed with Vibe Match calculations (starting from 50%).
 - Search and filter profiles.
+- **0ms Instant Discover Render**: LocalStorage profile caching (`vh-discover-profiles`) with quiet background syncing and preloaded candidate card images.
+- **Super Spark & Card Progression**: Instant card deck progression when sending an interest or Super Sparking (`'super'`).
 - Save profiles locally.
 - Send interests.
 - Create mutual matches when interest is reciprocal.
@@ -257,6 +259,8 @@ Approved users can:
 ### Chat
 
 Approved matched users can chat. The frontend uses REST for persisted messages and Socket.IO helpers for room/typing behavior.
+- **Message Replies**: quoted replies, active glassmorphic reply banner, quoted cards inside message bubbles, and smooth scroll-to-quoted-message with rounded pulse highlight animation (`.voice-note-player`, `.message-bubble-text`, `.message-image-attachment`, `.message-video-attachment-wrapper`, `.message-file-attachment`, `.quoted-reply-card`).
+- **Low-Latency Messaging**: Optimized in-memory conversation target resolution (eliminating blocking `await api.getConversations()` calls) and non-blocking background push notification dispatching.
 
 ### Profile management
 
@@ -264,6 +268,7 @@ Users can:
 - Review public profile details and photos.
 - Edit profile attributes.
 - Manage 2-minute Voice Intro Snippets (play, 1-tap delete, or re-record) with direct database persistence.
+- **Deleted Account Fail-Safe Protection**: Global `handleUserNotFound(profileId)` auto-purges deleted accounts from local state/cache and alerts `"This user no longer exists or has deleted their account."` when attempting to interact with a non-existent account.
 
 ### PWA and Installation
 
@@ -275,7 +280,7 @@ Users can:
 - **LCP Preloading**: `velvet-heart-logo.png` preloaded in `index.html` head (`<link rel="preload" as="image" href="/velvet-heart-logo.png" type="image/png" fetchpriority="high" />`). Primary profile card images set to `fetchpriority="high"` and `decoding="async"`.
 - **Bundle Code Splitting**: Rollup `manualChunks` in `vite.config.js` (`vendor-react`, `vendor-icons`, `vendor-utils`) and route-level `React.lazy()` code splitting with `<Suspense>` fallbacks in `App.jsx`.
 - **Production Console Drop**: `esbuild: { drop: ['console', 'debugger'] }` strips logging statements in production builds to optimize main thread CPU performance.
-- **SEO & Search Indexing**: Canonical link (`https://velvethearts.app/`), OpenGraph, Twitter Cards, `WebApplication` JSON-LD schema, `public/robots.txt`, and `public/sitemap.xml`.
+- **SEO & Search Indexing**: Canonical link (`https://velvethearts.app/`), OpenGraph 1200x630 sharing cards, Twitter Cards, `WebApplication` + `Organization` + `FAQPage` JSON-LD schemas, `public/robots.txt` (`Disallow: /api/`), and `public/sitemap.xml`.
 
 ### Safety and settings
 
