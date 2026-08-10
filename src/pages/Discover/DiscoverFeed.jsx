@@ -43,16 +43,22 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     // 0. Exclude own profile
     if (userProfile && (profile.id === userProfile.id || profile.userId === userProfile.userId || profile.id === userProfile.userId || profile.userId === userProfile.id)) return false;
     
-    // Disappear from Discover if interest/super spark sent, mutual match formed, or passed
-    const isSentOrMatched = 
-      interestsSent.includes(profile.id) ||
-      (profile.userId && interestsSent.includes(profile.userId)) ||
-      Boolean(interestStatuses[profile.id]) ||
-      (profile.userId && Boolean(interestStatuses[profile.userId])) ||
-      connections.some(c => c.id === profile.id || c.userId === profile.id || c.partnerId === profile.id);
-    if (isSentOrMatched) return false;
+    // Always exclude mutual matches and passed profiles
+    const isMatchedOrPassed = 
+      connections.some(c => c.id === profile.id || c.userId === profile.id || c.partnerId === profile.id) ||
+      passedProfileIds.includes(profile.id);
+    if (isMatchedOrPassed) return false;
 
-    if (passedProfileIds.includes(profile.id)) return false;
+    // In Deck View ('deck'), exclude sent interests so candidate deck advances smoothly
+    // In Grid View ('grid'), KEEP sent interests visible so the user sees 'Invite Sent ✓' on the card
+    if (viewMode === 'deck') {
+      const isSentOrMatched = 
+        interestsSent.includes(profile.id) ||
+        (profile.userId && interestsSent.includes(profile.userId)) ||
+        Boolean(interestStatuses[profile.id]) ||
+        (profile.userId && Boolean(interestStatuses[profile.userId]));
+      if (isSentOrMatched) return false;
+    }
 
     // 1. Search term match
     const searchString = searchTerm.trim().toLowerCase();
@@ -278,7 +284,12 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
               <ProfileCard
                 key={profile.id}
                 profile={profile}
-                isInterestSent={interestsSent.includes(profile.id)}
+                isInterestSent={
+                  interestsSent.includes(profile.id) ||
+                  (profile.userId && interestsSent.includes(profile.userId)) ||
+                  Boolean(interestStatuses[profile.id]) ||
+                  (profile.userId && Boolean(interestStatuses[profile.userId]))
+                }
                 isSaved={savedProfiles.includes(profile.id)}
                 onSendInterest={sendInterest}
                 onUnsendInterest={unsendInterest}

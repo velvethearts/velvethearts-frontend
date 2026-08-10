@@ -48,8 +48,8 @@ export const EditProfile = ({ onBack }) => {
   latestLocalProfile.current = localProfile;
 
   const interestOptions = [
-    'Books', 'Music', 'Art', 'Nature', 'Movies', 'Food', 
-    'Fitness', 'Travel', 'Games', 'Photo', 'Wellness', 'Animals', 
+    'Books', 'Music', 'Art', 'Nature', 'Movies', 'Food',
+    'Fitness', 'Travel', 'Games', 'Photo', 'Wellness', 'Animals',
     'Technology', 'Sports', 'Theater', 'Social Causes', 'Podcasts'
   ];
 
@@ -312,7 +312,7 @@ export const EditProfile = ({ onBack }) => {
     }
     return (
       <span className="auto-save-status-pill idle font-ui">
-        ✨ Auto-save active
+        🔄️ Auto-save active
       </span>
     );
   };
@@ -327,10 +327,10 @@ export const EditProfile = ({ onBack }) => {
       />
 
       <div className="edit-split-container">
-        
+
         {/* Left pane: Forms & Photos */}
         <form onSubmit={handleSubmit} className="edit-form-panel font-ui">
-          
+
           {/* Photo Management */}
           <div className="edit-form-section">
             <span className="edit-section-label">Photos (Up to 6, drag-and-drop placeholder)</span>
@@ -350,18 +350,18 @@ export const EditProfile = ({ onBack }) => {
                       <div className="photo-active-wrap">
                         <img src={img} alt={`Profile slot ${idx + 1}`} />
                         <div className="slot-actions">
-                          <button 
-                            type="button" 
-                            onClick={() => handleDeletePhoto(idx)} 
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePhoto(idx)}
                             className="slot-act-btn delete"
                             title="Delete photo"
                           >
                             <Trash size={14} />
                           </button>
                           {idx > 0 && (
-                            <button 
-                              type="button" 
-                              onClick={() => handleMovePhoto(idx, 'up')} 
+                            <button
+                              type="button"
+                              onClick={() => handleMovePhoto(idx, 'up')}
                               className="slot-act-btn"
                               title="Move up"
                             >
@@ -369,9 +369,9 @@ export const EditProfile = ({ onBack }) => {
                             </button>
                           )}
                           {idx < localProfile.photos.length - 1 && (
-                            <button 
-                              type="button" 
-                              onClick={() => handleMovePhoto(idx, 'down')} 
+                            <button
+                              type="button"
+                              onClick={() => handleMovePhoto(idx, 'down')}
                               className="slot-act-btn"
                               title="Move down"
                             >
@@ -383,11 +383,11 @@ export const EditProfile = ({ onBack }) => {
                       </div>
                     ) : (
                       <label className="photo-upload-label">
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={(e) => handlePhotoUpload(e, idx)} 
-                          className="sr-only" 
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePhotoUpload(e, idx)}
+                          className="sr-only"
                         />
                         <Camera size={20} className="camera-icon" />
                         <span className="upload-btn-text">Add</span>
@@ -565,9 +565,9 @@ export const EditProfile = ({ onBack }) => {
           <div className="profile-preview-sticky">
             <div className="profile-preview-card">
               <div className="preview-img-wrap">
-                <img 
-                  src={getProfilePhoto(localProfile)} 
-                  alt={localProfile.name || 'Preview'} 
+                <img
+                  src={getProfilePhoto(localProfile)}
+                  alt={localProfile.name || 'Preview'}
                   className="preview-photo"
                 />
               </div>

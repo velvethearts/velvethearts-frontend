@@ -1,16 +1,37 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Heart, ChatCircleText, Sparkle, Lightning, Star, HandWaving, Coffee, Microphone, Play, Pause } from '@phosphor-icons/react';
+import { Heart, ChatCircleText, Sparkle, Lightning, Star, HandWaving, Coffee, Microphone, Play, Pause, NotePencil, PencilSimple } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { Button } from '../../components/UI/Button';
+import { Modal } from '../../components/UI/Modal';
 import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
 import { computeVibeMatch } from '../../utils/vibe';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 
 export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
-  const { connections, interestsSent, interestStatuses, profiles, receivedInvites, sentInvitesList, setActiveTab, sendInterest, unsendInterest, onlineUserIds, sendMessage, nudgeSpark, userProfile, conversations = [], chats = {}, addToast } = useApp();
+  const { connections, interestsSent, interestStatuses, profiles, receivedInvites, sentInvitesList, setActiveTab, sendInterest, unsendInterest, onlineUserIds, sendMessage, nudgeSpark, userProfile, updateUserProfile, conversations = [], chats = {}, addToast } = useApp();
   const activeConnections = connections;
+
+  // Spark Note Modal state
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [noteInput, setNoteInput] = useState(userProfile?.sparkNote || '');
+
+  const handleCloseNoteModal = React.useCallback(() => {
+    setShowNoteModal(false);
+  }, []);
+
+  const handleSaveSparkNote = async (e) => {
+    if (e) e.preventDefault();
+    const trimmed = noteInput.trim();
+    if (updateUserProfile) {
+      await updateUserProfile({
+        ...userProfile,
+        sparkNote: trimmed || null
+      });
+    }
+    setShowNoteModal(false);
+  };
 
   // Sent interests that are still pending matching
   const pendingInterests = (sentInvitesList || []).filter(p => {
@@ -182,15 +203,38 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
         subtitle="People you've shared mutual interest with."
       />
 
-      {/* Interactive Recent Sparks Story Ring Carousel */}
+      {/* Story Ring Carousel with Instagram-style Spark Notes */}
       {activeConnections.length > 0 && (
         <div className="recent-matches-carousel-wrap">
-          <h3 className="carousel-section-title font-ui">Recent Sparks</h3>
-
           <div className="recent-matches-row">
+            {/* User's Own Spark Note Tile */}
+            <div className="spark-card-item-wrap own-spark-note-card">
+              <button
+                type="button"
+                className="story-highlight-circle own-note-circle"
+                onClick={() => {
+                  setNoteInput(userProfile?.sparkNote || '');
+                  setShowNoteModal(true);
+                }}
+                title="Share a 24h Note with your matches"
+              >
+                {userProfile?.sparkNote && (
+                  <div className="spark-note-bubble own font-ui page-enter">
+                    <span className="note-text">&ldquo;{userProfile.sparkNote}&rdquo;</span>
+                    <PencilSimple size={10} className="edit-icon" />
+                  </div>
+                )}
+                <div className="highlight-avatar-ring is-own-ring">
+                  <img src={getProfilePhoto(userProfile)} alt="Your Note" />
+                  <span className="add-note-plus-badge">+</span>
+                </div>
+                <span className="highlight-name font-ui">Your Note</span>
+              </button>
+            </div>
+
+            {/* Matches' Avatar Items with Spark Notes */}
             {activeConnections.map(conn => {
               const isOnline = onlineUserIds?.has(conn.id) || onlineUserIds?.has(conn.userId);
-              const vibeScore = computeVibeMatch(userProfile, conn);
               const hasVoiceIntro = Boolean(conn.voiceIntroUrl);
               const isPlayingVoice = activeVoiceId === conn.id;
 
@@ -210,10 +254,10 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
               const ringClassName = isPlayingVoice
                 ? 'highlight-avatar-ring is-playing-audio'
-                : isTimerActive 
-                  ? 'highlight-avatar-ring is-timer-ring' 
-                  : isOnline 
-                    ? 'highlight-avatar-ring is-online-ring' 
+                : isTimerActive
+                  ? 'highlight-avatar-ring is-timer-ring'
+                  : isOnline
+                    ? 'highlight-avatar-ring is-online-ring'
                     : 'highlight-avatar-ring';
 
               return (
@@ -235,6 +279,20 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                       handleSparkClick(e, conn);
                     }}
                   >
+                    {/* Floating Instagram-style Spark Note Bubble */}
+                    {conn.sparkNote && (
+                      <div
+                        className="spark-note-bubble match font-ui page-enter"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectConnection(conn);
+                        }}
+                        title={`Click to chat about ${conn.name}'s note`}
+                      >
+                        <span className="note-text">&ldquo;{conn.sparkNote}&rdquo;</span>
+                      </div>
+                    )}
+
                     <div className={ringClassName}>
                       {/* Live Animated Equalizer Overlay while Voice Intro plays */}
                       {isPlayingVoice && (
@@ -309,8 +367,8 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
             {activeConnections.map(conn => {
               const isOnline = onlineUserIds?.has(conn.id) || onlineUserIds?.has(conn.userId);
               return (
-                <div 
-                  key={conn.id} 
+                <div
+                  key={conn.id}
                   className="connection-item-card"
                   onClick={() => onSelectConnection(conn)}
                   role="button"
@@ -331,7 +389,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                     />
                     {isOnline && <span className="online-presence-dot" title="Online now" />}
                   </div>
-                  
+
                   <div className="connection-card-info">
                     <div className="connection-name-row">
                       <span className="connection-name font-display">{conn.name}</span>
@@ -341,7 +399,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                     <p className="connection-preview-text font-body italic">Click to open conversation...</p>
                   </div>
 
-                  <Button 
+                  <Button
                     onClick={(e) => {
                       e.stopPropagation();
                       if (onSelectProfile) onSelectProfile(conn);
@@ -501,6 +559,50 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
         )}
       </section>
 
+      {/* Spark Note Editor Modal */}
+      <Modal
+        isOpen={showNoteModal}
+        onClose={handleCloseNoteModal}
+        title="Your Spark Note 📝"
+      >
+        <p className="spark-note-modal-desc font-body">
+          Share a quick status note (e.g. <em>&ldquo;Craving sushi 🍣&rdquo;</em>, <em>&ldquo;Coffee time ☕&rdquo;</em>) visible to your matches.
+        </p>
+        <form onSubmit={handleSaveSparkNote}>
+          <div className="spark-note-input-wrap">
+            <input
+              type="text"
+              maxLength={20}
+              placeholder="What's on your mind? (max 20 chars)"
+              value={noteInput}
+              onChange={(e) => setNoteInput(e.target.value)}
+              className="spark-note-input font-ui"
+              autoFocus
+            />
+            <span className="spark-note-char-count font-ui">{noteInput.length}/20</span>
+          </div>
+
+          <div className="spark-note-modal-actions font-ui">
+            {userProfile?.sparkNote && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={async () => {
+                  setNoteInput('');
+                  if (updateUserProfile) await updateUserProfile({ ...userProfile, sparkNote: null });
+                  setShowNoteModal(false);
+                }}
+              >
+                Clear Note
+              </Button>
+            )}
+            <Button type="submit" variant="primary">
+              Save Note
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
       <style>{`
         .matches-page {
           max-width: var(--content-max-width);
@@ -530,9 +632,153 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .carousel-section-header {
           display: flex;
-          align-items: center;
-          justify-content: space-between;
+          flex-direction: column;
+          gap: 2px;
           margin-bottom: var(--space-3);
+        }
+
+        .carousel-section-subtitle {
+          font-size: var(--text-xs);
+          color: var(--text-muted);
+        }
+
+        .recent-matches-carousel-wrap {
+          margin-top: 20px;
+          margin-bottom: var(--space-5);
+        }
+
+        .spark-card-item-wrap {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .spark-note-bubble {
+          position: absolute;
+          top: -30px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(30, 20, 24, 0.96);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(212, 173, 106, 0.45);
+          color: #fce7f3;
+          padding: 4px 10px;
+          border-radius: 14px;
+          font-size: 10px;
+          font-weight: 500;
+          line-height: 1.25;
+          max-width: 96px;
+          width: max-content;
+          box-sizing: border-box;
+          z-index: 12;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+          cursor: pointer;
+          animation: floatSparkNote 3.2s ease-in-out infinite alternate;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          text-align: center;
+        }
+
+        .spark-note-bubble .note-text {
+          white-space: normal;
+          word-break: break-word;
+          max-width: 80px;
+          text-align: center;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        @keyframes floatSparkNote {
+          0% { transform: translate(-50%, 0px); }
+          100% { transform: translate(-50%, -3px); }
+        }
+
+        .spark-note-bubble.own {
+          background: var(--burgundy-600);
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.35);
+        }
+
+        .spark-note-bubble.empty {
+          background: rgba(184, 67, 106, 0.85);
+          color: #ffffff;
+          border: 1px dashed rgba(255, 255, 255, 0.5);
+        }
+
+        .edit-icon {
+          opacity: 0.8;
+        }
+
+        .is-own-ring {
+          border: 2px dashed var(--gold-400, #d4ad6a);
+          position: relative;
+        }
+
+        .add-note-plus-badge {
+          position: absolute;
+          bottom: 2px;
+          right: 2px;
+          background: var(--gold-500, #d4ad6a);
+          color: #000000;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 13px;
+          font-weight: bold;
+          border: 2px solid var(--bg-surface);
+        }
+
+        .spark-note-modal-desc {
+          font-size: var(--text-sm);
+          color: var(--text-secondary);
+          margin-bottom: var(--space-4);
+          line-height: var(--leading-relaxed);
+        }
+
+        .spark-note-input-wrap {
+          position: relative;
+          margin-bottom: var(--space-5);
+        }
+
+        .spark-note-input {
+          width: 100%;
+          padding: var(--space-3) var(--space-10) var(--space-3) var(--space-4);
+          border-radius: var(--radius-md);
+          border: 1px solid var(--border-subtle);
+          background: var(--bg-base);
+          color: var(--text-primary);
+          font-size: var(--text-sm);
+          outline: none;
+          box-sizing: border-box;
+          transition: border-color var(--duration-fast);
+        }
+
+        .spark-note-input:focus {
+          border-color: var(--burgundy-500);
+          box-shadow: 0 0 0 3px var(--burgundy-100, rgba(184, 67, 106, 0.15));
+        }
+
+        .spark-note-char-count {
+          position: absolute;
+          right: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: var(--text-caption);
+          color: var(--text-muted);
+        }
+
+        .spark-note-modal-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: var(--space-3);
         }
 
         .spark-count-badge {
@@ -563,8 +809,8 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           display: flex;
           gap: var(--space-5);
           overflow-x: auto;
-          padding: 12px 14px;
-          margin: -12px -14px 0 -14px;
+          padding: 38px 16px 12px 16px;
+          margin: 0 -16px;
           scrollbar-width: none;
         }
 

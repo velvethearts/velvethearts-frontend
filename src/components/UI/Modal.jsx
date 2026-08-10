@@ -13,6 +13,11 @@ export const Modal = ({
   const modalRef = useRef(null);
   const triggerRef = useRef(null);
 
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   // Focus trap & Escape logic
   useEffect(() => {
     if (!isOpen) return;
@@ -20,12 +25,12 @@ export const Modal = ({
     // Save current active element
     triggerRef.current = document.activeElement;
     
-    // Set focus to modal container
+    // Set focus to modal container only when modal opens
     modalRef.current?.focus();
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current?.();
         return;
       }
 
@@ -55,9 +60,11 @@ export const Modal = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       // Restore focus
-      triggerRef.current?.focus();
+      if (triggerRef.current && typeof triggerRef.current.focus === 'function') {
+        try { triggerRef.current.focus(); } catch (_) {}
+      }
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

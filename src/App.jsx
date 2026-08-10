@@ -90,9 +90,17 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 40, color: 'red', background: '#1a1517', minHeight: '100vh' }}>
-          <h1>Something went wrong</h1>
-          <pre style={{ whiteSpace: 'pre-wrap', color: '#ff6b6b' }}>{this.state.error?.toString()}</pre>
+        <div style={{ padding: 40, color: '#fce7f3', background: '#1a1517', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+          <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '2.5rem', marginBottom: 16, color: '#ffffff' }}>Something went wrong</h1>
+          <p style={{ color: '#e2b3b8', maxWidth: 480, marginBottom: 24, fontSize: '1rem', lineHeight: 1.5 }}>
+            {this.state.error?.message || 'An unexpected render error occurred.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ padding: '12px 28px', background: '#b8436a', color: '#ffffff', border: 'none', borderRadius: '24px', fontWeight: 'bold', fontSize: '0.95rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(184,67,106,0.3)' }}
+          >
+            Reload Page ✨
+          </button>
         </div>
       );
     }
