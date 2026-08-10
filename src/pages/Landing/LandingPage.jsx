@@ -55,10 +55,10 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
               <h1 className="hero-title font-display">
                 Where every<br />heart belongs.
               </h1>
-              <img 
-                src={logo} 
-                alt="Velvet Hearts Logo" 
-                className="hero-inline-logo" 
+              <img
+                src={logo}
+                alt="Velvet Hearts Logo"
+                className="hero-inline-logo"
                 fetchpriority="high"
                 decoding="async"
                 width="90"

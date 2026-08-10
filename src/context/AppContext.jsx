@@ -1005,7 +1005,7 @@ export const AppProvider = ({ children }) => {
 
                 socket.on('online_users', (userIds) => {
                     if (Array.isArray(userIds)) {
-                        setOnlineUserIds(new Set(userIds));
+                        setOnlineUserIds(new Set(userIds.filter(id => typeof id === 'string' && id.trim().length > 0)));
                     }
                 });
 
@@ -1017,7 +1017,7 @@ export const AppProvider = ({ children }) => {
                 });
 
                 socket.on('user_presence', ({ userId, isOnline }) => {
-                    if (!userId) return;
+                    if (!userId || typeof userId !== 'string') return;
                     setOnlineUserIds(prev => {
                         const next = new Set(prev);
                         if (isOnline) {

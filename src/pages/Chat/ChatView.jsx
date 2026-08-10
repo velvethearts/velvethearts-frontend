@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { 
-  PaperPlaneRight, 
-  ArrowLeft, 
-  DotsThreeVertical, 
-  ShieldWarning, 
-  Prohibit, 
-  ChatCircleText, 
+import {
+  PaperPlaneRight,
+  ArrowLeft,
+  DotsThreeVertical,
+  ShieldWarning,
+  Prohibit,
+  ChatCircleText,
   Trash,
   PencilSimple,
   Check,
@@ -21,10 +21,33 @@ import {
   Play,
   Pause,
   Quotes,
-  ArrowBendUpLeft
+  ArrowBendUpLeft,
+  Sparkle
 } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { getSocket, joinConversation, leaveConversation, emitStartTyping, emitStopTyping } from '../../lib/socket';
+
+const parseNoteReply = (text) => {
+  if (!text || typeof text !== 'string') return null;
+  const str = text.trim();
+  
+  const tagMatch = str.match(/^\[NOTE_REPLY:"([^"]+)"\]\s*([\s\S]*)$/i);
+  if (tagMatch) {
+    return { quotedNote: tagMatch[1], replyText: tagMatch[2] };
+  }
+
+  const tagMatchAlt = str.match(/^\[NOTE_REPLY:([^\]]+)\]\s*([\s\S]*)$/i);
+  if (tagMatchAlt) {
+    return { quotedNote: tagMatchAlt[1].replace(/^"|"$/g, ''), replyText: tagMatchAlt[2] };
+  }
+
+  const legacyMatch = str.match(/^Replying to note "([^"]+)":\s*([\s\S]*)$/i);
+  if (legacyMatch) {
+    return { quotedNote: legacyMatch[1], replyText: legacyMatch[2] };
+  }
+
+  return null;
+};
 
 const formatFileSize = (bytes) => {
   if (!bytes) return 'File';
@@ -103,7 +126,7 @@ const VoiceNotePlayer = ({ url, isUser }) => {
 
   const seekFromPointer = (e) => {
     if (!waveformRef.current || !audioRef.current) return;
-    
+
     let validDuration = duration;
     if (!validDuration || !isFinite(validDuration) || validDuration <= 0) {
       if (audioRef.current.duration && isFinite(audioRef.current.duration) && audioRef.current.duration > 0) {
@@ -114,7 +137,7 @@ const VoiceNotePlayer = ({ url, isUser }) => {
     const rect = waveformRef.current.getBoundingClientRect();
     const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
     const pct = clickX / rect.width;
-    
+
     if (validDuration && isFinite(validDuration) && validDuration > 0) {
       const newTime = pct * validDuration;
       setCurrentTime(newTime);
@@ -219,7 +242,7 @@ const VoiceNotePlayer = ({ url, isUser }) => {
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   const { userProfile, connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages } = useApp();
-  
+
   const isUserOnline = (partner) => {
     if (!partner) return false;
     return Boolean(onlineUserIds && (onlineUserIds.has(partner.userId) || onlineUserIds.has(partner.id)));
@@ -265,7 +288,12 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
       return;
     }
     setEditingMessageId(msg.id);
-    setEditingText(msg.text || '');
+    const parsed = parseNoteReply(msg.text);
+    if (parsed) {
+      setEditingText(parsed.replyText || '');
+    } else {
+      setEditingText(msg.text || '');
+    }
   };
 
   const handleCancelEdit = () => {
@@ -275,7 +303,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
   const handleSaveEdit = async (messageId) => {
     if (!editingText.trim() || !activeChatId) return;
-    const newText = editingText.trim();
+    let newText = editingText.trim();
+
+    // Preserve quoted note prefix if editing a note reply
+    const originalMsg = activeMessages.find(m => m.id === messageId);
+    if (originalMsg && originalMsg.text) {
+      const parsed = parseNoteReply(originalMsg.text);
+      if (parsed) {
+        newText = `[NOTE_REPLY:"${parsed.quotedNote}"] ${newText}`;
+      }
+    }
+
     setEditingMessageId(null);
     setEditingText('');
 
@@ -399,7 +437,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     setIsUploadingVoice(true);
 
     const mediaRecorder = mediaRecorderRef.current;
-    
+
     mediaRecorder.onstop = async () => {
       const mimeType = mediaRecorder.mimeType || 'audio/webm';
       const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
@@ -608,9 +646,9 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   // Find active chat partner details
   const activePartner = connections.find(c => c.id === activeChatId || c.matchId === activeChatId || c.userId === activeChatId);
 
-  const conversation = conversations.find(c => 
-    c.id === activeChatId || 
-    c.partnerId === activeChatId || 
+  const conversation = conversations.find(c =>
+    c.id === activeChatId ||
+    c.partnerId === activeChatId ||
     (activePartner && (c.partnerId === activePartner.userId || c.partnerId === activePartner.id))
   );
   const conversationId = conversation?.id;
@@ -777,10 +815,10 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   };
 
   const activeMessagesRaw = activeChatId ? (
-    chats[activeChatId] || 
-    (activePartner?.userId ? chats[activePartner.userId] : null) || 
-    (conversationId ? chats[conversationId] : null) || 
-    (activePartner?.id ? chats[activePartner.id] : null) || 
+    chats[activeChatId] ||
+    (activePartner?.userId ? chats[activePartner.userId] : null) ||
+    (conversationId ? chats[conversationId] : null) ||
+    (activePartner?.id ? chats[activePartner.id] : null) ||
     []
   ) : [];
   const activeMessages = [];
@@ -823,7 +861,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                       <img src={partner.photo} alt={partner.name} className="partner-item-img" />
                       {isUserOnline(partner) && <span className="online-indicator-dot" />}
                     </div>
-                    
+
                     <div className="partner-item-info">
                       <div className="partner-item-name-row">
                         <span className="partner-item-name font-ui">{partner.name}</span>
@@ -831,7 +869,13 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                       </div>
                       <div className="partner-item-preview-row">
                         <p className="partner-item-preview font-body">
-                          {lastMsg ? (lastMsg.text || 'Sent an attachment') : 'Start a warm conversation...'}
+                          {lastMsg ? (
+                            parseNoteReply(lastMsg.text) ? (
+                              `💬 ${parseNoteReply(lastMsg.text).replyText || 'Replied to note'}`
+                            ) : (
+                              lastMsg.text || 'Sent an attachment'
+                            )
+                          ) : 'Start a warm conversation...'}
                         </p>
                         {unreadCount > 0 && !isActive && (
                           <span className="partner-unread-badge font-ui">{unreadCount > 99 ? '99+' : unreadCount}</span>
@@ -846,7 +890,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                 title="No active chats"
                 desc="Conversations will appear here once mutual connections are made."
                 icon={<ChatCircleText size={32} />}
-                style={{border: "none"}}
+                style={{ border: "none" }}
               />
             )}
           </div>
@@ -873,8 +917,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                 </div>
 
                 <div className="active-header-options">
-                  <button 
-                    onClick={() => setShowDropdown(prev => !prev)} 
+                  <button
+                    onClick={() => setShowDropdown(prev => !prev)}
                     className="options-toggle-btn"
                     aria-label="Chat options"
                   >
@@ -912,8 +956,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                     const hasAttachments = !msg.isDeleted && Array.isArray(msg.attachments) && msg.attachments.length > 0;
 
                     return (
-                      <div 
-                        key={msg.id} 
+                      <div
+                        key={msg.id}
                         id={`msg-bubble-${msg.id}`}
                         className={`chat-message-bubble-row ${isUser ? 'user-sent' : 'partner-sent'} ${highlightedMessageId === msg.id ? 'is-highlighted-reply' : ''}`}
                       >
@@ -924,11 +968,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                           {/* Quoted Message Reply Pill */}
                           {(msg.replyTo || msg.replyToId) && (() => {
                             const quotedMsg = msg.replyTo || activeMessages.find(m => m.id === msg.replyToId);
-                            const isUserQuoted = quotedMsg?.senderId === userProfile?.userId || 
-                                                 quotedMsg?.senderId === userProfile?.id || 
-                                                 quotedMsg?.sender === 'user';
+                            const isUserQuoted = quotedMsg?.senderId === userProfile?.userId ||
+                              quotedMsg?.senderId === userProfile?.id ||
+                              quotedMsg?.sender === 'user';
                             return (
-                              <div 
+                              <div
                                 className="quoted-reply-card font-ui font-body"
                                 onClick={() => scrollToMessage(msg.replyToId || msg.replyTo?.id)}
                                 title="Click to jump to quoted message"
@@ -952,21 +996,21 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                               {msg.attachments.map((att, idx) => {
                                 const url = att.secureUrl || att.localPreview;
                                 const isAud = att.fileType === 'AUDIO' ||
-                                              (att.mimeType && att.mimeType.startsWith('audio/')) ||
-                                              (att.fileName && att.fileName.includes('voice-note')) ||
-                                              (typeof url === 'string' && (Boolean(url.match(/\.(mp3|wav|ogg|m4a|aac)/i)) || url.includes('voice-note') || url.includes('/raw/upload/')));
+                                  (att.mimeType && att.mimeType.startsWith('audio/')) ||
+                                  (att.fileName && att.fileName.includes('voice-note')) ||
+                                  (typeof url === 'string' && (Boolean(url.match(/\.(mp3|wav|ogg|m4a|aac)/i)) || url.includes('voice-note') || url.includes('/raw/upload/')));
 
                                 const isImg = !isAud && (
-                                              att.fileType === 'IMAGE' ||
-                                              (att.mimeType && att.mimeType.startsWith('image/')) ||
-                                              (typeof url === 'string' && (Boolean(url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i)) || url.includes('/image/upload/')))
-                                            );
+                                  att.fileType === 'IMAGE' ||
+                                  (att.mimeType && att.mimeType.startsWith('image/')) ||
+                                  (typeof url === 'string' && (Boolean(url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i)) || url.includes('/image/upload/')))
+                                );
 
                                 const isVid = !isAud && !isImg && (
-                                              att.fileType === 'VIDEO' ||
-                                              (att.mimeType && att.mimeType.startsWith('video/')) ||
-                                              (typeof url === 'string' && (Boolean(url.match(/\.(mp4|mov|m4v)/i)) || url.includes('/video/upload/')))
-                                            );
+                                  att.fileType === 'VIDEO' ||
+                                  (att.mimeType && att.mimeType.startsWith('video/')) ||
+                                  (typeof url === 'string' && (Boolean(url.match(/\.(mp4|mov|m4v)/i)) || url.includes('/video/upload/')))
+                                );
 
                                 if (isAud) {
                                   return (
@@ -992,8 +1036,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
                                 if (isImg) {
                                   return (
-                                    <div 
-                                      key={att.id || idx} 
+                                    <div
+                                      key={att.id || idx}
                                       className="message-image-attachment"
                                       onClick={() => setLightboxImage({ type: 'image', url, name: att.fileName || 'Image', messageId: msg.id, isUser })}
                                     >
@@ -1115,11 +1159,32 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                                   </button>
                                 </div>
                               </div>
-                            ) : (
-                              <div className={`message-bubble-text font-body ${msg.isDeleted ? 'deleted' : ''}`}>
-                                {msg.isDeleted ? 'This message was deleted' : msg.text}
-                              </div>
-                            )
+                            ) : (() => {
+                              const noteReplyData = !msg.isDeleted ? parseNoteReply(msg.text) : null;
+                              if (noteReplyData) {
+                                return (
+                                  <div className="insta-note-reply-card font-ui">
+                                    <div className="insta-note-reply-header font-ui">
+                                      <Sparkle size={11} weight="fill" className="sparkle-icon" />
+                                      <span>Replied to note</span>
+                                    </div>
+                                    <div className="insta-note-quote-box font-ui">
+                                      &ldquo;{noteReplyData.quotedNote}&rdquo;
+                                    </div>
+                                    {noteReplyData.replyText ? (
+                                      <div className="insta-note-reply-text font-body">
+                                        {noteReplyData.replyText}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div className={`message-bubble-text font-body ${msg.isDeleted ? 'deleted' : ''}`}>
+                                  {msg.isDeleted ? 'This message was deleted' : msg.text}
+                                </div>
+                              );
+                            })()
                           )}
 
                           {!msg.isDeleted && editingMessageId !== msg.id && (
@@ -1183,7 +1248,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                       </div>
                     </div>
                   )}
-                  
+
                   <div ref={messagesEndRef} />
                 </div>
               </div>
@@ -1342,11 +1407,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                     onChange={handleInputChange}
                     className="chat-text-input font-body"
                   />
-                  
-                  <button 
-                    type="submit" 
-                    className="chat-send-btn" 
-                    disabled={!messageText.trim() && selectedAttachments.length === 0} 
+
+                  <button
+                    type="submit"
+                    className="chat-send-btn"
+                    disabled={!messageText.trim() && selectedAttachments.length === 0}
                     aria-label="Send message"
                   >
                     <PaperPlaneRight size={20} weight="fill" />
@@ -1769,6 +1834,72 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           border-radius: var(--radius-lg);
           font-size: 15px;
           line-height: 1.45;
+        }
+
+        .insta-note-reply-card {
+          padding: var(--space-3) var(--space-4);
+          border-radius: var(--radius-lg);
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+          min-width: 150px;
+        }
+
+        .user-sent .insta-note-reply-card {
+          background-color: var(--burgundy-500);
+          color: #FFFFFF;
+          border-bottom-right-radius: var(--radius-sm);
+        }
+
+        .partner-sent .insta-note-reply-card {
+          background-color: var(--bg-surface);
+          color: var(--text-primary);
+          border: 1px solid var(--border-subtle);
+          border-bottom-left-radius: var(--radius-sm);
+        }
+
+        .insta-note-reply-header {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          opacity: 0.88;
+        }
+
+        .user-sent .insta-note-reply-header {
+          color: #fce7f3;
+        }
+
+        .partner-sent .insta-note-reply-header {
+          color: var(--burgundy-400);
+        }
+
+        .insta-note-quote-box {
+          background: rgba(0, 0, 0, 0.22);
+          border-left: 3px solid #f3c68f;
+          padding: 6px 10px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 500;
+          font-style: italic;
+          line-height: 1.35;
+          word-break: break-word;
+        }
+
+        .partner-sent .insta-note-quote-box {
+          background: rgba(184, 67, 106, 0.08);
+          border-left: 3px solid var(--burgundy-400);
+          color: var(--text-primary);
+        }
+
+        .insta-note-reply-text {
+          font-size: 15px;
+          line-height: 1.45;
+          word-break: break-word;
+          margin-top: 2px;
         }
 
         .user-sent .message-bubble-text {

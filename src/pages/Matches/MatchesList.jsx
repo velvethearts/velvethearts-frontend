@@ -43,7 +43,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
     const partnerId = selectedNoteReplyMatch.match.id || selectedNoteReplyMatch.match.userId;
     const noteText = selectedNoteReplyMatch.noteText;
-    const replyMsg = `Replying to note "${noteText}":\n${noteReplyInput.trim()}`;
+    const replyMsg = `[NOTE_REPLY:"${noteText}"] ${noteReplyInput.trim()}`;
 
     try {
       if (sendMessage) {
@@ -263,7 +263,12 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
             {/* Matches' Avatar Items with Spark Notes */}
             {activeConnections.map(conn => {
-              const isOnline = onlineUserIds?.has(conn.id) || onlineUserIds?.has(conn.userId);
+              const targetUserId = (typeof conn.userId === 'string' && conn.userId.trim()) || (typeof conn.id === 'string' && conn.id.trim()) || null;
+              const isOnline = Boolean(
+                onlineUserIds &&
+                targetUserId &&
+                onlineUserIds.has(targetUserId)
+              );
               const hasVoiceIntro = Boolean(conn.voiceIntroUrl);
               const isPlayingVoice = activeVoiceId === conn.id;
 
@@ -283,10 +288,10 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
               const ringClassName = isPlayingVoice
                 ? 'highlight-avatar-ring is-playing-audio'
-                : isTimerActive
-                  ? 'highlight-avatar-ring is-timer-ring'
-                  : isOnline
-                    ? 'highlight-avatar-ring is-online-ring'
+                : isOnline
+                  ? 'highlight-avatar-ring is-online-ring'
+                  : isTimerActive
+                    ? 'highlight-avatar-ring is-timer-ring'
                     : 'highlight-avatar-ring';
 
               return (
@@ -334,8 +339,8 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                         </div>
                       )}
 
-                      {/* Rose Gold SVG 24h Countdown Ring — Rendered ONLY during first 24h if no chat */}
-                      {isTimerActive && !isPlayingVoice && (
+                      {/* Rose Gold SVG 24h Countdown Ring — Rendered ONLY during first 24h if no chat and not online */}
+                      {isTimerActive && !isPlayingVoice && !isOnline && (
                         <svg className="countdown-ring-svg" viewBox="0 0 76 76">
                           <defs>
                             <linearGradient id={`timerGrad-${conn.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -395,7 +400,12 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
         {activeConnections.length > 0 ? (
           <div className="connections-grid">
             {activeConnections.map(conn => {
-              const isOnline = onlineUserIds?.has(conn.id) || onlineUserIds?.has(conn.userId);
+              const targetUserId = (typeof conn.userId === 'string' && conn.userId.trim()) || (typeof conn.id === 'string' && conn.id.trim()) || null;
+              const isOnline = Boolean(
+                onlineUserIds &&
+                targetUserId &&
+                onlineUserIds.has(targetUserId)
+              );
               return (
                 <div
                   key={conn.id}
@@ -417,7 +427,10 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                         e.currentTarget.src = getDefaultAvatar(conn?.gender);
                       }}
                     />
-                    {isOnline && <span className="online-presence-dot" title="Online now" />}
+                    <span
+                      className={`online-presence-dot ${isOnline ? 'online' : 'offline'}`}
+                      title={isOnline ? 'Online now' : 'Offline'}
+                    />
                   </div>
 
                   <div className="connection-card-info">
@@ -1028,10 +1041,10 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
         }
 
         .highlight-avatar-ring.is-online-ring {
-          background: linear-gradient(135deg, #34D399, #10B981, #059669);
-          border: none;
-          box-shadow: 0 0 16px rgba(16, 185, 129, 0.75), 0 0 6px rgba(52, 211, 153, 0.9);
-          animation: onlineGlowPulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate;
+          background: linear-gradient(135deg, #34D399, #10B981, #059669) !important;
+          border: none !important;
+          box-shadow: 0 0 16px rgba(16, 185, 129, 0.75), 0 0 6px rgba(52, 211, 153, 0.9) !important;
+          animation: onlineGlowPulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite alternate !important;
         }
 
         @keyframes onlineGlowPulse {
@@ -1171,6 +1184,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           text-overflow: ellipsis;
         }
 
+        .spark-presence-dot,
         .online-presence-dot {
           position: absolute;
           bottom: 2px;
@@ -1178,8 +1192,28 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           width: 14px;
           height: 14px;
           border-radius: 50%;
-          background-color: var(--success);
           border: 2.5px solid var(--bg-surface);
+          z-index: 3;
+          transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .spark-presence-dot {
+          bottom: 1px;
+          right: 1px;
+          width: 15px;
+          height: 15px;
+        }
+
+        .spark-presence-dot.online,
+        .online-presence-dot.online {
+          background-color: #10B981;
+          box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+        }
+
+        .spark-presence-dot.offline,
+        .online-presence-dot.offline {
+          background-color: #9CA3AF;
+          opacity: 0.85;
         }
 
         .connection-avatar-wrap {
