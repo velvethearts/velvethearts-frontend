@@ -1,6 +1,6 @@
 # Velvet Hearts Frontend
 
-Last updated: August 8th, 2026  
+Last updated: August 10th, 2026  
 Source of truth: `/docs/Administrator_Manual.docx` and `/docs/User_Manual.docx`
 
 This folder contains the Velvet Hearts browser application. It is a Vite + React single-page application that serves the public landing page, registration/login flow, onboarding, discover, matching, chat, profile, settings, safety center, and admin UI surfaces.
@@ -11,15 +11,15 @@ Velvet Hearts is a safety-oriented dating and connection platform. The frontend 
 
 | Path | Purpose |
 |---|---|
-| `src/App.jsx` | Top-level application shell, tab routing, approval-gated UI states, route-level `React.lazy()` code splitting with `<Suspense>`, and admin sub-page routing. |
-| `src/context/AppContext.jsx` | Main client state provider: session restoration, profile hydration, discover/match/chat actions, local settings, and Socket.IO lifecycle. |
+| `src/App.jsx` | Top-level application shell, tab routing, approval-gated UI states, route-level `React.lazy()` code splitting with `<Suspense>`, theme-aware `ErrorBoundary` with reload action, and admin sub-page routing. |
+| `src/context/AppContext.jsx` | Main client state provider: session restoration, profile hydration (including Spark Notes), discover/match/chat actions, local settings, Socket.IO lifecycle, and HMR context fallback resilience. |
 | `src/lib/api.js` | REST API client, access/refresh token storage, automatic token refresh retry on `401`, and endpoint wrappers. |
 | `src/lib/firebase.js` | Firebase Web SDK initialization and Google popup sign-in helper. |
 | `src/lib/socket.js` | Socket.IO client setup and helpers for joining/leaving conversations and typing events. |
 | `src/pages/Auth` | Phone number entry, Google account linking, and Google sign-in screens. |
 | `src/pages/Onboarding` | Multi-step profile setup flow including Step 4 2-minute voice snippet recording. |
-| `src/pages/Discover` | Discover feed, profile search/filtering, and discover preferences. |
-| `src/pages/Matches` | Mutual connections, Recent Sparks carousel, 24h spark countdown ring, 3s long press voice playback, sound equalizer, and sent interests. |
+| `src/pages/Discover` | Discover feed, profile search/filtering, deck/grid view modes (with `Invite Sent ✓` retention in grid view), and discover preferences. |
+| `src/pages/Matches` | Mutual connections carousel, Instagram-style floating Spark Notes (20-char limit, vertical multi-line stacking), 24h spark countdown ring, 3s long press voice playback, sound equalizer, and sent interests. |
 | `src/pages/Chat` | Chat list, conversation view, typing events, block/report actions. |
 | `src/pages/Profile`, `src/pages/ProfileDetail` | Own-profile view/editing, 2-minute voice intro management (play, 1-tap delete, re-record), and profile detail views. |
 | `src/pages/Settings` | Theme, accessibility, notification preferences, and account deletion. |
