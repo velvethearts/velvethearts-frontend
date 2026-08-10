@@ -1131,6 +1131,45 @@ useEffect(() => {
         }
     }, [isLoggedIn, isOnboarded, approvalStatus, fetchConnections, fetchConversations, fetchReceivedInvites]);
 
+    // ─── 24h Unsent Spark Timer Auto-Text Dispatcher ────────────────────
+    useEffect(() => {
+        if (!isLoggedIn || !isOnboarded || !connections || connections.length === 0) return;
+
+        connections.forEach(async (conn) => {
+            const targetPartnerId = conn.id || conn.userId;
+            if (!targetPartnerId) return;
+
+            const conv = conversations.find(c => c.partnerId === targetPartnerId || c.id === targetPartnerId);
+            const connChats = chats[targetPartnerId] || chats[conn.id] || chats[conn.userId] || [];
+            const hasChatted = Boolean((conv?.lastMessage && conv.lastMessage.trim()) || connChats.length > 0);
+
+            const rawTime = conn.matchedAt || conn.matchedCreatedAt || conn.createdAt;
+            const parsedTime = rawTime ? new Date(rawTime).getTime() : Date.now();
+            const matchTime = isNaN(parsedTime) ? Date.now() : parsedTime;
+            const hoursElapsed = Math.max(0, (Date.now() - matchTime) / (1000 * 60 * 60));
+
+            const notifKey = `vh-24h-notified-${targetPartnerId}`;
+            if (hoursElapsed >= 24 && hoursElapsed < 48 && !hasChatted && !localStorage.getItem(notifKey)) {
+                localStorage.setItem(notifKey, 'true');
+
+                const autoIcebreaker = `✨ 24h Spark Nudge: Hey ${conn.name || 'there'}! 24 hours passed since matching—say hi! 👋`;
+
+                try {
+                    await sendMessage(targetPartnerId, autoIcebreaker);
+                } catch (err) {
+                    console.error('Failed auto-sending 24h spark text in AppContext:', err);
+                }
+
+                addToast({
+                    title: '24h Spark Notice ⏱️',
+                    message: `24 hours completed! Auto-sent a spark icebreaker text to ${conn.name || 'your match'}.`,
+                    partnerId: targetPartnerId,
+                    photo: conn.photo || conn.photos?.[0]
+                });
+            }
+        });
+    }, [isLoggedIn, isOnboarded, connections, conversations, chats, sendMessage, addToast]);
+
 
 
 

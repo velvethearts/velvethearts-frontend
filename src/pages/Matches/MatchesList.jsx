@@ -108,11 +108,14 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
     }
   };
 
-  // 24h Unsent Spark Notification Check
+  // 24h Unsent Spark Notification Check & Auto-Text Dispatcher
   useEffect(() => {
-    activeConnections.forEach(conn => {
-      const conv = conversations.find(c => c.partnerId === conn.id || c.partnerId === conn.userId || c.id === conn.id);
-      const connChats = chats[conn.id] || chats[conn.userId] || [];
+    activeConnections.forEach(async (conn) => {
+      const targetPartnerId = conn.id || conn.userId;
+      if (!targetPartnerId) return;
+
+      const conv = conversations.find(c => c.partnerId === targetPartnerId || c.id === targetPartnerId);
+      const connChats = chats[targetPartnerId] || chats[conn.id] || chats[conn.userId] || [];
       const hasChatted = Boolean((conv?.lastMessage && conv.lastMessage.trim()) || connChats.length > 0);
 
       const rawTime = conn.matchedAt || conn.matchedCreatedAt || conn.createdAt;
@@ -120,19 +123,33 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
       const matchTime = isNaN(parsedTime) ? Date.now() : parsedTime;
       const hoursElapsed = Math.max(0, (Date.now() - matchTime) / (1000 * 60 * 60));
 
-      const notifKey = `vh-24h-notified-${conn.id || conn.userId}`;
-      if (hoursElapsed >= 24 && hoursElapsed < 48 && !hasChatted && !sessionStorage.getItem(notifKey)) {
-        sessionStorage.setItem(notifKey, 'true');
+      const notifKey = `vh-24h-notified-${targetPartnerId}`;
+      if (hoursElapsed >= 24 && hoursElapsed < 48 && !hasChatted && !localStorage.getItem(notifKey)) {
+        localStorage.setItem(notifKey, 'true');
+
+        const autoIcebreaker = `✨ 24h Spark Nudge: Hey ${conn.name || 'there'}! 24 hours passed since matching—say hi! 👋`;
+
+        // 1. Auto-send text message into chat
+        if (sendMessage) {
+          try {
+            await sendMessage(targetPartnerId, autoIcebreaker);
+          } catch (err) {
+            console.error('Failed auto-sending 24h spark text:', err);
+          }
+        }
+
+        // 2. Pop up toast notification with partnerId attached
         if (addToast) {
           addToast({
             title: '24h Spark Notice ⏱️',
-            message: `24 hours completed without texting ${conn.name}.`,
+            message: `24 hours completed! Auto-sent a spark icebreaker text to ${conn.name || 'your match'}.`,
+            partnerId: targetPartnerId,
             photo: getProfilePhoto(conn)
           });
         }
       }
     });
-  }, [activeConnections, conversations, chats, addToast]);
+  }, [activeConnections, conversations, chats, addToast, sendMessage]);
 
   const handleGoDiscover = () => {
     setActiveTab('discover');
