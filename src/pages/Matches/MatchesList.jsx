@@ -17,6 +17,10 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteInput, setNoteInput] = useState(userProfile?.sparkNote || '');
 
+  // Reply to Match's Spark Note state
+  const [selectedNoteReplyMatch, setSelectedNoteReplyMatch] = useState(null);
+  const [noteReplyInput, setNoteReplyInput] = useState('');
+
   const handleCloseNoteModal = React.useCallback(() => {
     setShowNoteModal(false);
   }, []);
@@ -31,6 +35,31 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
       });
     }
     setShowNoteModal(false);
+  };
+
+  const handleSendNoteReply = async (e) => {
+    if (e) e.preventDefault();
+    if (!selectedNoteReplyMatch || !noteReplyInput.trim()) return;
+
+    const partnerId = selectedNoteReplyMatch.match.id || selectedNoteReplyMatch.match.userId;
+    const noteText = selectedNoteReplyMatch.noteText;
+    const replyMsg = `Replying to note "${noteText}":\n${noteReplyInput.trim()}`;
+
+    try {
+      if (sendMessage) {
+        await sendMessage(partnerId, replyMsg);
+      }
+      if (addToast) {
+        addToast(`Reply sent to ${selectedNoteReplyMatch.match.name}! 🚀`, 'success');
+      }
+      const matchToSelect = selectedNoteReplyMatch.match;
+      setSelectedNoteReplyMatch(null);
+      setNoteReplyInput('');
+      onSelectConnection(matchToSelect);
+    } catch (err) {
+      console.error('Error sending note reply:', err);
+      if (addToast) addToast('Failed to send reply. Please try again.', 'error');
+    }
   };
 
   // Sent interests that are still pending matching
@@ -285,9 +314,10 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                         className="spark-note-bubble match font-ui page-enter"
                         onClick={(e) => {
                           e.stopPropagation();
-                          onSelectConnection(conn);
+                          setSelectedNoteReplyMatch({ match: conn, noteText: conn.sparkNote });
+                          setNoteReplyInput('');
                         }}
-                        title={`Click to chat about ${conn.name}'s note`}
+                        title={`Click to reply to ${conn.name}'s note`}
                       >
                         <span className="note-text">&ldquo;{conn.sparkNote}&rdquo;</span>
                       </div>
@@ -603,6 +633,63 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
         </form>
       </Modal>
 
+      {/* Reply to Match's Spark Note Modal */}
+      <Modal
+        isOpen={Boolean(selectedNoteReplyMatch)}
+        onClose={() => setSelectedNoteReplyMatch(null)}
+        title={`Reply to ${selectedNoteReplyMatch?.match?.name || 'Note'} 💬`}
+      >
+        {selectedNoteReplyMatch && (
+          <div className="note-reply-modal-content">
+            <div className="note-reply-quote-card font-ui">
+              <img
+                src={getProfilePhoto(selectedNoteReplyMatch.match)}
+                alt={selectedNoteReplyMatch.match.name}
+                className="note-reply-avatar"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = getDefaultAvatar(selectedNoteReplyMatch.match?.gender);
+                }}
+              />
+              <div className="note-reply-quote-body">
+                <span className="note-reply-author font-ui">{selectedNoteReplyMatch.match.name}&rsquo;s Spark Note</span>
+                <p className="note-reply-text font-body">&ldquo;{selectedNoteReplyMatch.noteText}&rdquo;</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSendNoteReply}>
+              <div className="spark-note-input-wrap">
+                <input
+                  type="text"
+                  placeholder={`Send a reply to ${selectedNoteReplyMatch.match.name}...`}
+                  value={noteReplyInput}
+                  onChange={(e) => setNoteReplyInput(e.target.value)}
+                  className="spark-note-input font-ui"
+                  autoFocus
+                />
+              </div>
+
+              <div className="spark-note-modal-actions font-ui">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setSelectedNoteReplyMatch(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={!noteReplyInput.trim()}
+                >
+                  Send Reply
+                </Button>
+              </div>
+            </form>
+          </div>
+        )}
+      </Modal>
+
       <style>{`
         .matches-page {
           max-width: var(--content-max-width);
@@ -779,6 +866,47 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           display: flex;
           justify-content: flex-end;
           gap: var(--space-3);
+        }
+
+        .note-reply-quote-card {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+          background: var(--bg-base);
+          border: 1px solid var(--border-subtle);
+          padding: var(--space-3) var(--space-4);
+          border-radius: var(--radius-xl);
+          margin-bottom: var(--space-4);
+        }
+
+        .note-reply-avatar {
+          width: 42px;
+          height: 42px;
+          border-radius: var(--radius-full);
+          object-fit: cover;
+          border: 2px solid var(--burgundy-400);
+          flex-shrink: 0;
+        }
+
+        .note-reply-quote-body {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .note-reply-author {
+          font-size: var(--text-caption);
+          font-weight: 600;
+          color: var(--burgundy-400);
+          letter-spacing: var(--tracking-wide);
+          text-transform: uppercase;
+        }
+
+        .note-reply-text {
+          font-size: var(--text-sm);
+          font-weight: 500;
+          color: var(--text-primary);
+          font-style: italic;
         }
 
         .spark-count-badge {

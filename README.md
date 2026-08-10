@@ -19,7 +19,7 @@ Velvet Hearts is a safety-oriented dating and connection platform. The frontend 
 | `src/pages/Auth` | Phone number entry, Google account linking, and Google sign-in screens. |
 | `src/pages/Onboarding` | Multi-step profile setup flow including Step 4 2-minute voice snippet recording. |
 | `src/pages/Discover` | Discover feed, profile search/filtering, deck/grid view modes (with `Invite Sent ✓` retention in grid view), and discover preferences. |
-| `src/pages/Matches` | Mutual connections carousel, Instagram-style floating Spark Notes (20-char limit, vertical multi-line stacking), 24h spark countdown ring, 3s long press voice playback, sound equalizer, and sent interests. |
+| `src/pages/Matches` | Mutual connections carousel, Instagram-style floating Spark Notes (20-char limit, vertical multi-line stacking, interactive 1-tap note replies), 24h spark countdown ring, 3s long press voice playback, sound equalizer, and sent interests. |
 | `src/pages/Chat` | Chat list, conversation view, typing events, block/report actions. |
 | `src/pages/Profile`, `src/pages/ProfileDetail` | Own-profile view/editing, 2-minute voice intro management (play, 1-tap delete, re-record), and profile detail views. |
 | `src/pages/Settings` | Theme, accessibility, notification preferences, and account deletion. |
