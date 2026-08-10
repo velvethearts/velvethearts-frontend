@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { ArrowLeft, Camera, Trash, ArrowUp, ArrowDown } from '@phosphor-icons/react';
+import { ArrowLeft, Camera, Trash, ArrowUp, ArrowDown, CheckCircle, FloppyDisk } from '@phosphor-icons/react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
 import { Textarea } from '../../components/UI/Textarea';
@@ -16,6 +16,36 @@ export const EditProfile = ({ onBack }) => {
   const [validationErrors, setValidationErrors] = useState({});
   const [uploadProgress, setUploadProgress] = useState(null); // null or { index, percent }
   const [isSaving, setIsSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
+
+  const autoSaveTimeoutRef = useRef(null);
+  const savedPillTimeoutRef = useRef(null);
+  const isInitialMount = useRef(true);
+  const latestLocalProfile = useRef(localProfile);
+
+  const getNormalizedProfileString = (p) => {
+    if (!p) return '';
+    return JSON.stringify({
+      name: (p.name || '').trim(),
+      city: (p.city || '').trim(),
+      gender: p.gender || 'Woman',
+      showGender: Boolean(p.showGender ?? true),
+      orientation: p.orientation || 'Straight',
+      showOrientation: Boolean(p.showOrientation ?? true),
+      relationshipIntent: p.relationshipIntent || 'Long-term Relationship',
+      relationshipStatus: p.relationshipStatus || 'Single',
+      story: (p.story || '').trim(),
+      interests: [...(p.interests || [])].sort(),
+      photos: (p.photos || []).filter(Boolean),
+      voiceIntroUrl: p.voiceIntroUrl || null,
+      hasDisability: Boolean(p.hasDisability),
+      disabilityInfo: (p.disabilityInfo || '').trim(),
+      showDisability: Boolean(p.showDisability)
+    });
+  };
+
+  const lastSavedProfileRef = useRef(getNormalizedProfileString(userProfile));
+  latestLocalProfile.current = localProfile;
 
   const interestOptions = [
     'Books', 'Music', 'Art', 'Nature', 'Movies', 'Food', 
@@ -23,9 +53,135 @@ export const EditProfile = ({ onBack }) => {
     'Technology', 'Sports', 'Theater', 'Social Causes', 'Podcasts'
   ];
 
+  // Sync loaded userProfile into localProfile if userProfile hydrates after mount
   useEffect(() => {
-    validateFields();
-  }, [localProfile]);
+    if (userProfile && (userProfile.id || userProfile.name)) {
+      const normalizedLoaded = getNormalizedProfileString(userProfile);
+      setLocalProfile(prev => {
+        if (!prev.voiceIntroUrl && userProfile.voiceIntroUrl) {
+          return { ...prev, voiceIntroUrl: userProfile.voiceIntroUrl };
+        }
+        if (!prev.name && userProfile.name) {
+          return { ...prev, ...userProfile };
+        }
+        return prev;
+      });
+      lastSavedProfileRef.current = normalizedLoaded;
+    }
+  }, [userProfile]);
+
+  const getProfileValidationErrors = useCallback((p) => {
+    const errors = {};
+    if (!p.name || p.name.trim().length < 2) {
+      errors.name = 'Name must be at least 2 characters.';
+    } else if (p.name.trim().length > 40) {
+      errors.name = 'Name must be 40 characters or fewer.';
+    }
+
+    if (!p.city || p.city.trim().length < 2) {
+      errors.city = 'City must be at least 2 characters.';
+    }
+
+    if (!p.story || p.story.trim().length < 20) {
+      errors.story = `Story must be at least 20 characters (current: ${(p.story || '').trim().length}).`;
+    }
+
+    if (!p.interests || p.interests.length < 3) {
+      errors.interests = 'Select at least 3 interests.';
+    }
+
+    if (!p.photos || p.photos.filter(Boolean).length < 1) {
+      errors.photos = 'Keep at least 1 photo.';
+    }
+
+    return errors;
+  }, []);
+
+  const checkProfileValid = useCallback((p) => {
+    const errs = getProfileValidationErrors(p);
+    return Object.keys(errs).length === 0;
+  }, [getProfileValidationErrors]);
+
+  const isFormValid = useCallback(() => {
+    return checkProfileValid(localProfile);
+  }, [localProfile, checkProfileValid]);
+
+  const saveProfileData = useCallback(async (profileToSave) => {
+    const cleanedPhotos = (profileToSave.photos || []).filter(Boolean);
+    const payload = {
+      dobDay: profileToSave.dobDay || 1,
+      dobMonth: profileToSave.dobMonth || 1,
+      dobYear: profileToSave.dobYear || 2000,
+      gender: profileToSave.gender || 'Woman',
+      orientation: profileToSave.orientation || 'Straight',
+      relationshipIntent: profileToSave.relationshipIntent || 'Long-term Relationship',
+      relationshipStatus: profileToSave.relationshipStatus || 'Single',
+      ...profileToSave,
+      photos: cleanedPhotos
+    };
+
+    setIsSaving(true);
+    setAutoSaveStatus('saving');
+    try {
+      if (updateUserProfile) {
+        await updateUserProfile(payload);
+      } else {
+        setUserProfile(payload);
+      }
+      lastSavedProfileRef.current = getNormalizedProfileString(payload);
+      setAutoSaveStatus('saved');
+      if (savedPillTimeoutRef.current) clearTimeout(savedPillTimeoutRef.current);
+      savedPillTimeoutRef.current = setTimeout(() => {
+        setAutoSaveStatus('idle');
+      }, 2500);
+    } catch (err) {
+      console.error('Auto-save profile update failed:', err);
+      setAutoSaveStatus('error');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [updateUserProfile, setUserProfile]);
+
+  // Debounced auto-save whenever fields change
+  useEffect(() => {
+    const errs = getProfileValidationErrors(localProfile);
+    setValidationErrors(errs);
+
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    const currentStr = getNormalizedProfileString(localProfile);
+    const hasChanges = currentStr !== lastSavedProfileRef.current;
+    const isValid = Object.keys(errs).length === 0;
+
+    if (hasChanges && isValid) {
+      setAutoSaveStatus('saving');
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        saveProfileData(localProfile);
+      }, 750);
+    }
+  }, [localProfile, getProfileValidationErrors, saveProfileData]);
+
+  const handleBack = async () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    const currentStr = getNormalizedProfileString(latestLocalProfile.current);
+    const hasChanges = currentStr !== lastSavedProfileRef.current;
+    const isValid = checkProfileValid(latestLocalProfile.current);
+
+    if (hasChanges && isValid && !isSaving) {
+      await saveProfileData(latestLocalProfile.current);
+    }
+    onBack();
+  };
 
   const handleFieldChange = (field, value) => {
     setLocalProfile(prev => ({ ...prev, [field]: value }));
@@ -35,7 +191,7 @@ export const EditProfile = ({ onBack }) => {
 
   const handleInterestToggle = (interest) => {
     setLocalProfile(prev => {
-      const current = prev.interests;
+      const current = prev.interests || [];
       if (current.includes(interest)) {
         return { ...prev, interests: current.filter(i => i !== interest) };
       } else {
@@ -49,7 +205,7 @@ export const EditProfile = ({ onBack }) => {
     const trimmed = customInterestInput.trim();
     if (!trimmed) return;
     if (!localProfile.interests.includes(trimmed)) {
-      setLocalProfile(prev => ({ ...prev, interests: [...prev.interests, trimmed] }));
+      setLocalProfile(prev => ({ ...prev, interests: [...(prev.interests || []), trimmed] }));
     }
     setCustomInterestInput('');
   };
@@ -99,17 +255,17 @@ export const EditProfile = ({ onBack }) => {
 
   const handleDeletePhoto = (index) => {
     setLocalProfile(prev => {
-      const nextPhotos = prev.photos.filter((_, i) => i !== index);
+      const nextPhotos = (prev.photos || []).filter((_, i) => i !== index);
       return { ...prev, photos: nextPhotos };
     });
   };
 
   const handleMovePhoto = (index, direction) => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= localProfile.photos.length) return;
+    if (newIndex < 0 || newIndex >= (localProfile.photos || []).length) return;
 
     setLocalProfile(prev => {
-      const nextPhotos = [...prev.photos];
+      const nextPhotos = [...(prev.photos || [])];
       const temp = nextPhotos[index];
       nextPhotos[index] = nextPhotos[newIndex];
       nextPhotos[newIndex] = temp;
@@ -117,63 +273,14 @@ export const EditProfile = ({ onBack }) => {
     });
   };
 
-  const validateFields = () => {
-    const errors = {};
-    if (!localProfile.name || localProfile.name.trim().length < 2) {
-      errors.name = 'Name must be at least 2 characters.';
-    } else if (localProfile.name.trim().length > 40) {
-      errors.name = 'Name must be 40 characters or fewer.';
-    }
-
-    if (!localProfile.city || localProfile.city.trim().length < 2) {
-      errors.city = 'City must be at least 2 characters.';
-    }
-
-    if (!localProfile.story || localProfile.story.trim().length < 20) {
-      errors.story = `Story must be at least 20 characters (current: ${localProfile.story.trim().length}).`;
-    }
-
-    if (localProfile.interests.length < 3) {
-      errors.interests = 'Select at least 3 interests.';
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const isFormValid = () => {
-    return (
-      localProfile.name &&
-      localProfile.city &&
-      localProfile.story.trim().length >= 20 &&
-      localProfile.interests.length >= 3 &&
-      Object.keys(validationErrors).length === 0
-    );
-  };
-
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (!isFormValid() || isSaving) return;
-
-    const cleanedPhotos = (localProfile.photos || []).filter(Boolean);
-    const updatedProfile = { ...localProfile, photos: cleanedPhotos };
-
-    setIsSaving(true);
-    try {
-      if (updateUserProfile) {
-        await updateUserProfile(updatedProfile);
-      } else {
-        setUserProfile(updatedProfile);
-      }
-      onBack();
-    } catch (err) {
-      console.error('Failed to update profile:', err);
-      if (showAlert) {
-        await showAlert({ title: 'Save Failed', message: err.message || 'Could not save profile updates.' });
-      }
-    } finally {
-      setIsSaving(false);
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
     }
+    await saveProfileData(localProfile);
+    onBack();
   };
 
   const getAge = () => {
@@ -181,12 +288,42 @@ export const EditProfile = ({ onBack }) => {
     return new Date().getFullYear() - parseInt(localProfile.dobYear, 10);
   };
 
+  const renderAutoSavePill = () => {
+    if (autoSaveStatus === 'saving' || isSaving) {
+      return (
+        <span className="auto-save-status-pill saving font-ui">
+          <span className="auto-save-spinner" /> Saving changes...
+        </span>
+      );
+    }
+    if (autoSaveStatus === 'saved') {
+      return (
+        <span className="auto-save-status-pill saved font-ui">
+          <CheckCircle size={14} weight="fill" /> Saved automatically
+        </span>
+      );
+    }
+    if (autoSaveStatus === 'error') {
+      return (
+        <span className="auto-save-status-pill error font-ui">
+          ⚠️ Save failed
+        </span>
+      );
+    }
+    return (
+      <span className="auto-save-status-pill idle font-ui">
+        ✨ Auto-save active
+      </span>
+    );
+  };
+
   return (
     <div className="edit-profile-page page-enter">
       <PageHeader
         title="Edit Profile"
-        subtitle="Manage your photos, seeking rules, and biography details."
-        onBack={onBack}
+        subtitle="Changes to your photos and profile details are auto-saved automatically."
+        onBack={handleBack}
+        actions={renderAutoSavePill()}
       />
 
       <div className="edit-split-container">
@@ -412,11 +549,11 @@ export const EditProfile = ({ onBack }) => {
 
           {/* Action Row */}
           <div className="edit-actions-row">
-            <Button onClick={onBack} variant="secondary">
-              Cancel
+            <Button onClick={handleBack} type="button" variant="secondary">
+              Done
             </Button>
             <Button type="submit" variant="primary" disabled={!isFormValid() || isSaving}>
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? 'Saving...' : autoSaveStatus === 'saved' ? 'Saved ✓' : 'Save Changes'}
             </Button>
           </div>
 
@@ -851,6 +988,56 @@ export const EditProfile = ({ onBack }) => {
           border-radius: var(--radius-full);
           font-weight: 500;
           align-self: flex-start;
+        }
+
+        .auto-save-status-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--space-2, 6px);
+          padding: 4px 12px;
+          border-radius: var(--radius-full);
+          font-size: var(--text-body-xs, 12px);
+          font-weight: 500;
+          transition: all var(--transition-normal, 0.2s ease);
+          white-space: nowrap;
+        }
+
+        .auto-save-status-pill.saving {
+          background: rgba(212, 173, 106, 0.15);
+          color: #b58832;
+          border: 1px solid rgba(212, 173, 106, 0.35);
+        }
+
+        .auto-save-status-pill.saved {
+          background: rgba(34, 197, 94, 0.12);
+          color: #16a34a;
+          border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .auto-save-status-pill.error {
+          background: rgba(239, 68, 68, 0.12);
+          color: #dc2626;
+          border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .auto-save-status-pill.idle {
+          background: rgba(184, 67, 106, 0.08);
+          color: var(--burgundy-600);
+          border: 1px solid rgba(184, 67, 106, 0.18);
+        }
+
+        .auto-save-spinner {
+          width: 12px;
+          height: 12px;
+          border: 2px solid currentColor;
+          border-right-color: transparent;
+          border-radius: 50%;
+          display: inline-block;
+          animation: autoSaveSpin 0.6s linear infinite;
+        }
+
+        @keyframes autoSaveSpin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

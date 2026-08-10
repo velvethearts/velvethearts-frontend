@@ -1,17 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Microphone, StopCircle, Play, Pause, Trash, CheckCircle } from '@phosphor-icons/react';
+import { api } from '../../lib/api';
 
 export const VoiceRecorder = ({ initialAudioUrl, onSaveAudio, maxDurationSeconds = 120 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioUrl, setAudioUrl] = useState(initialAudioUrl || null);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
   const audioPlayerRef = useRef(null);
+
+  useEffect(() => {
+    setAudioUrl(initialAudioUrl || null);
+  }, [initialAudioUrl]);
 
   useEffect(() => {
     return () => {
@@ -44,15 +50,34 @@ export const VoiceRecorder = ({ initialAudioUrl, onSaveAudio, maxDurationSeconds
         }
       };
 
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        reader.onloadend = () => {
-          const base64Audio = reader.result;
-          setAudioUrl(base64Audio);
-          if (onSaveAudio) onSaveAudio(base64Audio);
-        };
+        setIsUploading(true);
+
+        let finalAudioUrl = null;
+        if (api.isConfigured) {
+          try {
+            const audioFile = new File([audioBlob], `voice-intro-${Date.now()}.webm`, { type: 'audio/webm' });
+            const res = await api.uploadFile(audioFile);
+            if (res?.secureUrl) {
+              finalAudioUrl = res.secureUrl;
+            }
+          } catch (uploadErr) {
+            console.error('Audio upload to Cloudinary failed:', uploadErr);
+          }
+        }
+
+        if (!finalAudioUrl) {
+          finalAudioUrl = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(audioBlob);
+          });
+        }
+
+        setIsUploading(false);
+        setAudioUrl(finalAudioUrl);
+        if (onSaveAudio) onSaveAudio(finalAudioUrl);
 
         // Stop microphone tracks
         stream.getTracks().forEach(track => track.stop());
@@ -87,7 +112,10 @@ export const VoiceRecorder = ({ initialAudioUrl, onSaveAudio, maxDurationSeconds
   const togglePlayback = () => {
     if (!audioUrl) return;
 
-    if (!audioPlayerRef.current) {
+    if (!audioPlayerRef.current || audioPlayerRef.current.src !== audioUrl) {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
       audioPlayerRef.current = new Audio(audioUrl);
       audioPlayerRef.current.onended = () => setIsPlaying(false);
     }
