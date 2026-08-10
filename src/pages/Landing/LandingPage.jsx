@@ -1,11 +1,30 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Heart, ShieldCheck, Users, Bookmark, Sparkle } from '@phosphor-icons/react';
-import { ThemeToggle } from '../../components/UI/ThemeToggle';
 import logo from "../../assets/velvet-heart-logo.png";
 
 export const LandingPage = ({ onGetStarted, onSignIn }) => {
-  const { showAlert } = useApp();
+  const [openFaqIndex, setOpenFaqIndex] = React.useState(null);
+
+  const faqs = [
+    {
+      q: 'What makes Velvet Hearts different from traditional dating apps?',
+      a: 'Velvet Hearts replaces gamified swiping with intentional story browsing, 2-minute voice intros, real-time vibe match compatibility scoring, and built-in accessibility features.'
+    },
+    {
+      q: 'How do 2-minute voice intros work?',
+      a: 'Users can record up to 2 minutes of authentic voice introductions to share their personality, humor, and communication style beyond static photos.'
+    },
+    {
+      q: 'Is Velvet Hearts accessible for users with disabilities?',
+      a: 'Yes, Velvet Hearts features customizable font scaling, high-contrast themes, screen reader accessibility, and optional disability disclosure tags.'
+    },
+    {
+      q: 'How does Velvet Hearts protect user safety and privacy?',
+      a: 'We combine active identity verification, phone validation, community reporting, 2-tap safety controls, and real-time blocking to ensure a respectful environment.'
+    }
+  ];
+
   return (
     <div className="landing-container">
       {/* Decorative Gradient Background Elements */}
@@ -23,161 +42,192 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <div className="accent-badge font-ui">
-            <Sparkle size={16} weight="fill" />
-            <span>A Different Kind of Dating Space</span>
-          </div>
-
-          <div className="hero-title-logo-row">
-            <h1 className="hero-title font-display">
-              Where every<br />heart belongs.
-            </h1>
-            <img 
-              src={logo} 
-              alt="Velvet Hearts Logo" 
-              className="hero-inline-logo" 
-              fetchpriority="high"
-              decoding="async"
-              width="90"
-              height="90"
-            />
-          </div>
-
-          <p className="hero-description font-body">
-            A dating experience built on warmth, safety, and the belief that everyone deserves to be seen for who they truly are. No gamified swiping. No superficial checklist matching. Just human connection.
-          </p>
-
-          <div className="hero-actions">
-            <button onClick={onGetStarted} className="cta-primary font-ui">
-              Begin Your Journey &rarr;
-            </button>
-            <button onClick={onSignIn} className="cta-ghost font-ui">
-              I already have an account
-            </button>
-          </div>
-        </div>
-
-        {/* Asymmetric Graphical Display representing intimacy */}
-        <div className="hero-visual">
-          <div className="visual-card card-main">
-            <div className="visual-circle circle-1"></div>
-            <div className="visual-circle circle-2"></div>
-            <div className="visual-text font-display">Slow down.<br />Discover.</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Core Values Section */}
-      <section className="values-section">
-        <div className="section-header">
-          <h2 className="section-title font-display">Built different, on purpose.</h2>
-          <p className="section-subtitle font-body">We redesigned connection from the ground up to respect your humanity.</p>
-        </div>
-
-        <div className="values-grid">
-          <div className="value-card">
-            <div className="value-icon-box pink">
-              <Users size={28} />
+      <main>
+        {/* Hero Section */}
+        <section className="hero-section">
+          <div className="hero-content">
+            <div className="accent-badge font-ui">
+              <Sparkle size={16} weight="fill" />
+              <span>A Different Kind of Dating Space</span>
             </div>
-            <h3 className="value-card-title font-display">Inclusive by Design</h3>
-            <p className="value-card-text font-body">
-              Your gender, orientation, and disability identity are celebrated here. We design with and for communities often ignored.
-            </p>
-          </div>
 
-          <div className="value-card">
-            <div className="value-icon-box gold">
-              <ShieldCheck size={28} />
+            <div className="hero-title-logo-row">
+              <h1 className="hero-title font-display">
+                Where every<br />heart belongs.
+              </h1>
+              <img 
+                src={logo} 
+                alt="Velvet Hearts Logo" 
+                className="hero-inline-logo" 
+                fetchpriority="high"
+                decoding="async"
+                width="90"
+                height="90"
+              />
             </div>
-            <h3 className="value-card-title font-display">Safety First</h3>
-            <p className="value-card-text font-body">
-              Complete control over your experience. Block, report, or limit visibility anytime. Your peace of mind is our foundation.
-            </p>
-          </div>
 
-          <div className="value-card">
-            <div className="value-icon-box burgundy">
-              <Heart size={28} />
+            <p className="hero-description font-body">
+              A dating experience built on warmth, safety, and the belief that everyone deserves to be seen for who they truly are. No gamified swiping. No superficial checklist matching. Just human connection.
+            </p>
+
+            <div className="hero-actions">
+              <button onClick={onGetStarted} className="cta-primary font-ui">
+                Begin Your Journey &rarr;
+              </button>
+              <button onClick={onSignIn} className="cta-ghost font-ui">
+                I already have an account
+              </button>
             </div>
-            <h3 className="value-card-title font-display">Meaningful Connection</h3>
-            <p className="value-card-text font-body">
-              Browse detailed stories rather than instant cards. We encourage thoughtful reading and deep emotional resonance.
-            </p>
           </div>
 
-          <div className="value-card">
-            <div className="value-icon-box dark">
-              <Bookmark size={28} />
+          {/* Asymmetric Graphical Display representing intimacy */}
+          <div className="hero-visual">
+            <div className="visual-card card-main">
+              <div className="visual-circle circle-1"></div>
+              <div className="visual-circle circle-2"></div>
+              <div className="visual-text font-display">Slow down.<br />Discover.</div>
             </div>
-            <h3 className="value-card-title font-display">Accessible to All</h3>
-            <p className="value-card-text font-body">
-              Fully compliant layouts featuring customizable font sizing, high-contrast toggles, and reduced motion capabilities.
-            </p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* How it Works Section */}
-      <section className="how-it-works-section">
-        <h2 className="section-title font-display text-center">Your journey to connection</h2>
-
-        <div className="steps-container">
-          <div className="step-item">
-            <div className="step-num font-display">01</div>
-            <h3 className="step-title font-ui">Tell Your Story</h3>
-            <p className="step-text font-body">
-              Share who you are — your identity, interests, and aspirations. Express yourself in details that checklists miss.
-            </p>
+        {/* Core Values Section */}
+        <section className="values-section">
+          <div className="section-header">
+            <h2 className="section-title font-display">Built different, on purpose.</h2>
+            <p className="section-subtitle font-body">We redesigned connection from the ground up to respect your humanity.</p>
           </div>
 
-          <div className="step-divider"></div>
+          <div className="values-grid">
+            <div className="value-card">
+              <div className="value-icon-box pink">
+                <Users size={28} />
+              </div>
+              <h3 className="value-card-title font-display">Inclusive by Design</h3>
+              <p className="value-card-text font-body">
+                Your gender, orientation, and disability identity are celebrated here. We design with and for communities often ignored.
+              </p>
+            </div>
 
-          <div className="step-item">
-            <div className="step-num font-display">02</div>
-            <h3 className="step-title font-ui">Discover Thoughtfully</h3>
-            <p className="step-text font-body">
-              Browse our profiles like reading a magazine. Explore detailed stories and discover people in a calm, beautiful space.
+            <div className="value-card">
+              <div className="value-icon-box gold">
+                <ShieldCheck size={28} />
+              </div>
+              <h3 className="value-card-title font-display">Safety First</h3>
+              <p className="value-card-text font-body">
+                Complete control over your experience. Block, report, or limit visibility anytime. Your peace of mind is our foundation.
+              </p>
+            </div>
+
+            <div className="value-card">
+              <div className="value-icon-box burgundy">
+                <Heart size={28} />
+              </div>
+              <h3 className="value-card-title font-display">Meaningful Connection</h3>
+              <p className="value-card-text font-body">
+                Browse detailed stories rather than instant cards. We encourage thoughtful reading and deep emotional resonance.
+              </p>
+            </div>
+
+            <div className="value-card">
+              <div className="value-icon-box dark">
+                <Bookmark size={28} />
+              </div>
+              <h3 className="value-card-title font-display">Accessible to All</h3>
+              <p className="value-card-text font-body">
+                Fully compliant layouts featuring customizable font sizing, high-contrast toggles, and reduced motion capabilities.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* How it Works Section */}
+        <section className="how-it-works-section">
+          <h2 className="section-title font-display text-center">Your journey to connection</h2>
+
+          <div className="steps-container">
+            <div className="step-item">
+              <div className="step-num font-display">01</div>
+              <h3 className="step-title font-ui">Tell Your Story</h3>
+              <p className="step-text font-body">
+                Share who you are — your identity, interests, and aspirations. Express yourself in details that checklists miss.
+              </p>
+            </div>
+
+            <div className="step-divider"></div>
+
+            <div className="step-item">
+              <div className="step-num font-display">02</div>
+              <h3 className="step-title font-ui">Discover Thoughtfully</h3>
+              <p className="step-text font-body">
+                Browse our profiles like reading a magazine. Explore detailed stories and discover people in a calm, beautiful space.
+              </p>
+            </div>
+
+            <div className="step-divider"></div>
+
+            <div className="step-item">
+              <div className="step-num font-display">03</div>
+              <h3 className="step-title font-ui">Connect Meaningfully</h3>
+              <p className="step-text font-body">
+                Send interest directly to stories. If mutual, connection forms, letting you start a real conversation.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Safety Banner */}
+        <section className="safety-banner">
+          <div className="safety-banner-content">
+            <h2 className="safety-title font-display">Your safety is our foundation.</h2>
+            <p className="safety-subtitle font-body">
+              We require active verification, enforce respectful community guidelines, and offer persistent support resources accessible with just two taps.
             </p>
+            <ul className="safety-points font-ui">
+              <li><span>✓</span> Verified identity systems</li>
+              <li><span>✓</span> Respectful community guidelines</li>
+              <li><span>✓</span> Phone verification required</li>
+              <li><span>✓</span> Accessible Safety Center</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* FAQ Accordion Section */}
+        <section className="faq-section">
+          <div className="section-header">
+            <h2 className="section-title font-display">Frequently Asked Questions</h2>
+            <p className="section-subtitle font-body">Everything you need to know about Velvet Hearts and how we match.</p>
           </div>
 
-          <div className="step-divider"></div>
-
-          <div className="step-item">
-            <div className="step-num font-display">03</div>
-            <h3 className="step-title font-ui">Connect Meaningfully</h3>
-            <p className="step-text font-body">
-              Send interest directly to stories. If mutual, connection forms, letting you start a real conversation.
-            </p>
+          <div className="faq-list">
+            {faqs.map((faq, idx) => (
+              <div key={idx} className={`faq-item ${openFaqIndex === idx ? 'open' : ''}`}>
+                <button
+                  type="button"
+                  className="faq-question font-ui"
+                  onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
+                  aria-expanded={openFaqIndex === idx}
+                >
+                  <span>{faq.q}</span>
+                  <span className="faq-icon">{openFaqIndex === idx ? '−' : '+'}</span>
+                </button>
+                {openFaqIndex === idx && (
+                  <div className="faq-answer font-body">
+                    <p>{faq.a}</p>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Safety Banner */}
-      <section className="safety-banner">
-        <div className="safety-banner-content">
-          <h2 className="safety-title font-display">Your safety is our foundation.</h2>
-          <p className="safety-subtitle font-body">
-            We require active verification, enforce respectful community guidelines, and offer persistent support resources accessible with just two taps.
-          </p>
-          <ul className="safety-points font-ui">
-            <li><span>✓</span> Verified identity systems</li>
-            <li><span>✓</span> Respectful community guidelines</li>
-            <li><span>✓</span> Phone verification required</li>
-            <li><span>✓</span> Accessible Safety Center</li>
-          </ul>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="final-cta-section">
-        <h2 className="cta-title font-display">Ready to be seen?</h2>
-        <button onClick={onGetStarted} className="cta-primary large-cta font-ui">
-          Begin Your Journey
-        </button>
-      </section>
+        {/* Final CTA */}
+        <section className="final-cta-section">
+          <h2 className="cta-title font-display">Ready to be seen?</h2>
+          <button onClick={onGetStarted} className="cta-primary large-cta font-ui">
+            Begin Your Journey
+          </button>
+        </section>
+      </main>
 
       {/* Footer */}
       <footer className="landing-footer font-ui">
@@ -670,6 +720,64 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
         .safety-points span {
           color: var(--gold-400);
           font-weight: bold;
+        }
+
+        /* FAQ Section */
+        .faq-section {
+          padding: var(--space-16) var(--space-8);
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .faq-list {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-4);
+        }
+
+        .faq-item {
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-lg);
+          background-color: var(--bg-surface);
+          overflow: hidden;
+          transition: border-color var(--duration-fast);
+        }
+
+        .faq-item.open {
+          border-color: var(--burgundy-400);
+        }
+
+        .faq-question {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: var(--space-4) var(--space-6);
+          background: transparent;
+          border: none;
+          color: var(--text-primary);
+          font-size: var(--text-body-lg);
+          font-weight: var(--weight-semibold);
+          text-align: left;
+          cursor: pointer;
+          transition: background-color var(--duration-fast);
+        }
+
+        .faq-question:hover {
+          background-color: var(--bg-surface-warm);
+        }
+
+        .faq-icon {
+          font-size: 20px;
+          font-weight: 300;
+          color: var(--burgundy-500);
+        }
+
+        .faq-answer {
+          padding: 0 var(--space-6) var(--space-5);
+          color: var(--text-secondary);
+          font-size: var(--text-body);
+          line-height: 1.6;
         }
 
         /* Final CTA */

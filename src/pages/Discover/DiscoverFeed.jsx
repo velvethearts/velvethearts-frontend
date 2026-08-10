@@ -43,9 +43,14 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     // 0. Exclude own profile
     if (userProfile && (profile.id === userProfile.id || profile.userId === userProfile.userId || profile.id === userProfile.userId || profile.userId === userProfile.id)) return false;
     
-    // Disappear from Discover ONLY if a mutual match/connection is formed
-    const isMatched = interestStatuses[profile.id] === 'mutual' || (profile.userId && interestStatuses[profile.userId] === 'mutual') || connections.some(c => c.id === profile.id || c.userId === profile.id || c.partnerId === profile.id);
-    if (isMatched) return false;
+    // Disappear from Discover if interest/super spark sent, mutual match formed, or passed
+    const isSentOrMatched = 
+      interestsSent.includes(profile.id) ||
+      (profile.userId && interestsSent.includes(profile.userId)) ||
+      Boolean(interestStatuses[profile.id]) ||
+      (profile.userId && Boolean(interestStatuses[profile.userId])) ||
+      connections.some(c => c.id === profile.id || c.userId === profile.id || c.partnerId === profile.id);
+    if (isSentOrMatched) return false;
 
     if (passedProfileIds.includes(profile.id)) return false;
 
@@ -104,6 +109,18 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
     return true;
   });
+
+  // Preload top candidate photos in background for instant card renders
+  React.useEffect(() => {
+    if (filteredProfiles.length > 0) {
+      filteredProfiles.slice(0, 5).forEach(p => {
+        if (Array.isArray(p.photos) && p.photos[0]) {
+          const img = new Image();
+          img.src = p.photos[0];
+        }
+      });
+    }
+  }, [filteredProfiles]);
 
   // Apply sorting to filtered profiles
   const sortedProfiles = [...filteredProfiles].sort((a, b) => {

@@ -19,7 +19,9 @@ import {
   Spinner,
   Microphone,
   Play,
-  Pause
+  Pause,
+  Quotes,
+  ArrowBendUpLeft
 } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { getSocket, joinConversation, leaveConversation, emitStartTyping, emitStopTyping } from '../../lib/socket';
@@ -216,7 +218,7 @@ const VoiceNotePlayer = ({ url, isUser }) => {
 };
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
-  const { connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages } = useApp();
+  const { userProfile, connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages } = useApp();
   
   const isUserOnline = (partner) => {
     if (!partner) return false;
@@ -226,8 +228,24 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     return preselectedConnectionId || null;
   });
 
+  useEffect(() => {
+    if (activeChatId) {
+      sessionStorage.setItem('vh-active-chat-id', activeChatId);
+    } else {
+      sessionStorage.removeItem('vh-active-chat-id');
+    }
+    return () => {
+      sessionStorage.removeItem('vh-active-chat-id');
+    };
+  }, [activeChatId]);
+
   const setActiveChatId = (id) => {
     setActiveChatIdState(id || null);
+    if (id) {
+      sessionStorage.setItem('vh-active-chat-id', id);
+    } else {
+      sessionStorage.removeItem('vh-active-chat-id');
+    }
   };
   const [messageText, setMessageText] = useState('');
   const [editingMessageId, setEditingMessageId] = useState(null);
@@ -273,6 +291,34 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   const [selectedAttachments, setSelectedAttachments] = useState([]);
   const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
+
+  // Message Reply State & Helpers
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState(null);
+
+  const getQuotedSnippet = (msg) => {
+    if (!msg) return 'Quoted message';
+    if (msg.isDeleted) return 'This message was deleted';
+    if (msg.text && msg.text.trim()) return msg.text;
+    if (Array.isArray(msg.attachments) && msg.attachments.length > 0) {
+      const type = msg.attachments[0].fileType || 'IMAGE';
+      if (type === 'AUDIO') return '🎤 Voice note';
+      if (type === 'IMAGE') return '📷 Photo';
+      if (type === 'VIDEO') return '🎥 Video';
+      return '📄 Attachment';
+    }
+    return 'Quoted message';
+  };
+
+  const scrollToMessage = (targetId) => {
+    if (!targetId) return;
+    const el = document.getElementById(`msg-bubble-${targetId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedMessageId(targetId);
+      setTimeout(() => setHighlightedMessageId(null), 2200);
+    }
+  };
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -395,7 +441,23 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           fileSize: attachmentObj.fileSize,
         }];
 
-        await sendMessage(activeChatId, textToSend, attachmentsToSend, [attachmentObj]);
+        const currentReply = replyingTo;
+        setReplyingTo(null);
+
+        await sendMessage(
+          activeChatId,
+          textToSend,
+          attachmentsToSend,
+          [attachmentObj],
+          currentReply?.id || null,
+          currentReply ? {
+            id: currentReply.id,
+            senderId: currentReply.sender === 'user' ? userProfile?.userId || userProfile?.id : activePartner?.userId || activePartner?.id,
+            text: currentReply.text || '',
+            isDeleted: Boolean(currentReply.isDeleted),
+            attachments: currentReply.attachments || []
+          } : null
+        );
       } catch (err) {
         console.error('Voice note send failure:', err);
         await showAlert({ title: 'Recording Failed', message: 'Could not upload voice note. Please try again.' });
@@ -437,42 +499,34 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
         const isImg = file.type.startsWith('image/');
         const isVid = file.type.startsWith('video/');
         const fileType = isImg ? 'IMAGE' : isVid ? 'VIDEO' : 'DOCUMENT';
-        // localPreview is only used for the pending-attachments thumbnail
-        // before the message is sent. It is NEVER stored in the DB or sent
-        // to the other user — only the Cloudinary secureUrl is.
         const localPreview = URL.createObjectURL(file);
 
         let uploadRes = null;
         if (api.isConfigured) {
           try {
             const res = await api.uploadFile(file);
-            // api.js already unwraps payload.data, so res IS the data object
             uploadRes = res;
           } catch (uploadErr) {
             console.error('File upload error:', uploadErr);
             failedFiles.push(file.name);
             URL.revokeObjectURL(localPreview);
-            continue; // skip this file — do NOT fall back to blob URL
+            continue;
           }
         }
 
         if (!uploadRes?.secureUrl) {
-          // Backend not configured or upload returned no URL — skip
           failedFiles.push(file.name);
           URL.revokeObjectURL(localPreview);
           continue;
         }
 
         const attachmentObj = {
-          // Internal client-side id (used for React key and removal)
           id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-          // Fields persisted to DB and sent to other user:
           cloudinaryPublicId: uploadRes.publicId,
-          secureUrl: uploadRes.secureUrl,  // real Cloudinary HTTPS URL
+          secureUrl: uploadRes.secureUrl,
           fileType,
           fileName: file.name,
           fileSize: file.size,
-          // Client-only fields (used for local preview thumbnail, NOT sent to API):
           mimeType: file.type,
           localPreview,
         };
@@ -503,9 +557,6 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     if ((!messageText.trim() && selectedAttachments.length === 0) || !activeChatId) return;
 
     const textToSend = messageText.trim();
-    // Strip client-only fields before sending to the API so only
-    // backend-compatible fields (cloudinaryPublicId, secureUrl, fileType,
-    // fileName, fileSize) reach the server and are stored in the DB.
     const attachmentsToSend = selectedAttachments.map(({ cloudinaryPublicId, secureUrl, fileType, fileName, fileSize }) => ({
       cloudinaryPublicId,
       secureUrl,
@@ -513,13 +564,27 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
       fileName,
       fileSize,
     }));
-    // Keep the full objects (with localPreview) for the optimistic UI update
     const attachmentsForOptimistic = [...selectedAttachments];
+    const currentReply = replyingTo;
 
     setMessageText('');
     setSelectedAttachments([]);
+    setReplyingTo(null);
 
-    await sendMessage(activeChatId, textToSend, attachmentsToSend, attachmentsForOptimistic);
+    await sendMessage(
+      activeChatId,
+      textToSend,
+      attachmentsToSend,
+      attachmentsForOptimistic,
+      currentReply?.id || null,
+      currentReply ? {
+        id: currentReply.id,
+        senderId: currentReply.sender === 'user' ? userProfile?.userId || userProfile?.id : activePartner?.userId || activePartner?.id,
+        text: currentReply.text || '',
+        isDeleted: Boolean(currentReply.isDeleted),
+        attachments: currentReply.attachments || []
+      } : null
+    );
 
     if (conversationId) {
       setLocalIsTyping(false);
@@ -847,11 +912,40 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                     const hasAttachments = !msg.isDeleted && Array.isArray(msg.attachments) && msg.attachments.length > 0;
 
                     return (
-                      <div key={msg.id} className={`chat-message-bubble-row ${isUser ? 'user-sent' : 'partner-sent'}`}>
+                      <div 
+                        key={msg.id} 
+                        id={`msg-bubble-${msg.id}`}
+                        className={`chat-message-bubble-row ${isUser ? 'user-sent' : 'partner-sent'} ${highlightedMessageId === msg.id ? 'is-highlighted-reply' : ''}`}
+                      >
                         {!isUser && (
                           <img src={activePartner.photo} alt={activePartner.name} className="message-bubble-img" />
                         )}
                         <div className="message-bubble-content">
+                          {/* Quoted Message Reply Pill */}
+                          {(msg.replyTo || msg.replyToId) && (() => {
+                            const quotedMsg = msg.replyTo || activeMessages.find(m => m.id === msg.replyToId);
+                            const isUserQuoted = quotedMsg?.senderId === userProfile?.userId || 
+                                                 quotedMsg?.senderId === userProfile?.id || 
+                                                 quotedMsg?.sender === 'user';
+                            return (
+                              <div 
+                                className="quoted-reply-card font-ui font-body"
+                                onClick={() => scrollToMessage(msg.replyToId || msg.replyTo?.id)}
+                                title="Click to jump to quoted message"
+                              >
+                                <div className="quoted-reply-accent" />
+                                <div className="quoted-reply-details">
+                                  <span className="quoted-reply-author">
+                                    {isUserQuoted ? 'You' : activePartner?.name}
+                                  </span>
+                                  <span className="quoted-reply-text font-body">
+                                    {getQuotedSnippet(quotedMsg)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })()}
+
                           {/* Attachments rendering */}
                           {hasAttachments && (
                             <div className="message-attachments-container">
@@ -1028,9 +1122,19 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                             )
                           )}
 
-                          {isUser && !msg.isDeleted && editingMessageId !== msg.id && (
+                          {!msg.isDeleted && editingMessageId !== msg.id && (
                             <div className="message-bubble-actions">
-                              {canEditMessage(msg) && (
+                              <button
+                                type="button"
+                                className="message-action-btn reply"
+                                onClick={() => setReplyingTo(msg)}
+                                aria-label="Reply to message"
+                                title="Reply to message"
+                              >
+                                <Quotes size={14} weight="fill" />
+                              </button>
+
+                              {isUser && canEditMessage(msg) && (
                                 <button
                                   type="button"
                                   className="message-action-btn edit"
@@ -1041,15 +1145,18 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                                   <PencilSimple size={14} />
                                 </button>
                               )}
-                              <button
-                                type="button"
-                                className="message-action-btn delete"
-                                onClick={() => handleDeleteMessage(msg.id)}
-                                aria-label="Delete message"
-                                title="Delete message"
-                              >
-                                <Trash size={14} />
-                              </button>
+
+                              {isUser && (
+                                <button
+                                  type="button"
+                                  className="message-action-btn delete"
+                                  onClick={() => handleDeleteMessage(msg.id)}
+                                  aria-label="Delete message"
+                                  title="Delete message"
+                                >
+                                  <Trash size={14} />
+                                </button>
+                              )}
                             </div>
                           )}
                           <div className="message-bubble-footer font-ui">
@@ -1080,6 +1187,30 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                   <div ref={messagesEndRef} />
                 </div>
               </div>
+
+              {/* Active Reply Preview Banner */}
+              {replyingTo && (
+                <div className="chat-replying-banner font-ui page-enter">
+                  <div className="replying-accent-bar" />
+                  <div className="replying-details">
+                    <span className="replying-author">
+                      Replying to {replyingTo.sender === 'user' ? 'yourself' : activePartner.name}
+                    </span>
+                    <span className="replying-text-snippet">
+                      {getQuotedSnippet(replyingTo)}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="replying-cancel-btn"
+                    onClick={() => setReplyingTo(null)}
+                    title="Cancel reply"
+                    aria-label="Cancel reply"
+                  >
+                    <X size={14} weight="bold" />
+                  </button>
+                </div>
+              )}
 
               {/* Pending Attachments Preview Bar */}
               {(selectedAttachments.length > 0 || isUploadingAttachment) && (
@@ -1671,7 +1802,12 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           transition: opacity var(--duration-fast);
         }
 
-        .chat-message-bubble-row.user-sent:hover .message-bubble-actions,
+        .partner-sent .message-bubble-actions {
+          left: calc(100% + var(--space-2));
+          right: auto;
+        }
+
+        .chat-message-bubble-row:hover .message-bubble-actions,
         .message-bubble-actions:focus-within {
           opacity: 1;
           pointer-events: auto;
@@ -1684,12 +1820,177 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--text-muted);
+          color: var(--text-secondary);
           background-color: var(--bg-surface);
           border: 1px solid var(--border-subtle);
           cursor: pointer;
           transition: all var(--duration-fast);
           box-shadow: var(--shadow-sm);
+        }
+
+        .message-action-btn.reply:hover {
+          color: var(--burgundy-500);
+          border-color: var(--burgundy-400);
+          background-color: var(--bg-surface-warm);
+        }
+
+        /* Quoted Reply Card inside Message Bubble */
+        .quoted-reply-card {
+          display: flex;
+          align-items: stretch;
+          gap: var(--space-2);
+          padding: 6px 10px;
+          background: rgba(0, 0, 0, 0.06);
+          border-radius: var(--radius-md);
+          margin-bottom: 4px;
+          cursor: pointer;
+          transition: background-color var(--duration-fast);
+          max-width: 100%;
+          overflow: hidden;
+        }
+
+        .user-sent .quoted-reply-card {
+          background: rgba(255, 255, 255, 0.16);
+        }
+
+        .quoted-reply-card:hover {
+          background: rgba(0, 0, 0, 0.12);
+        }
+
+        .user-sent .quoted-reply-card:hover {
+          background: rgba(255, 255, 255, 0.26);
+        }
+
+        .quoted-reply-accent {
+          width: 3.5px;
+          border-radius: 2px;
+          background: linear-gradient(135deg, #d97706, #9f1239);
+          flex-shrink: 0;
+        }
+
+        .user-sent .quoted-reply-accent {
+          background: #fde68a;
+        }
+
+        .quoted-reply-details {
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+          min-width: 0;
+          flex: 1;
+        }
+
+        .quoted-reply-author {
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--burgundy-600);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .user-sent .quoted-reply-author {
+          color: #fef08a;
+        }
+
+        .quoted-reply-text {
+          font-size: 12px;
+          color: var(--text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .user-sent .quoted-reply-text {
+          color: rgba(255, 255, 255, 0.92);
+        }
+
+        /* Glassmorphism Active Reply Banner */
+        .chat-replying-banner {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+          padding: var(--space-3) var(--space-4);
+          background: var(--bg-surface-warm);
+          border-top: 1px solid var(--border-subtle);
+          border-bottom: 1px solid var(--border-subtle);
+          backdrop-filter: blur(12px);
+        }
+
+        .replying-accent-bar {
+          width: 4px;
+          height: 32px;
+          border-radius: 2px;
+          background: linear-gradient(135deg, #d97706, #9f1239);
+          flex-shrink: 0;
+        }
+
+        .replying-details {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .replying-author {
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--burgundy-600);
+        }
+
+        [data-theme="dark"] .replying-author {
+          color: #fde68a;
+        }
+
+        .replying-text-snippet {
+          font-size: 13px;
+          color: var(--text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .replying-cancel-btn {
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          cursor: pointer;
+          padding: 6px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all var(--duration-fast);
+        }
+
+        .replying-cancel-btn:hover {
+          color: var(--text-primary);
+          background-color: var(--bg-surface);
+        }
+
+        .chat-message-bubble-row.is-highlighted-reply .message-bubble-text,
+        .chat-message-bubble-row.is-highlighted-reply .voice-note-player,
+        .chat-message-bubble-row.is-highlighted-reply .message-image-attachment,
+        .chat-message-bubble-row.is-highlighted-reply .message-video-attachment-wrapper,
+        .chat-message-bubble-row.is-highlighted-reply .message-file-attachment,
+        .chat-message-bubble-row.is-highlighted-reply .quoted-reply-card {
+          animation: highlightPulse 2.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes highlightPulse {
+          0% {
+            transform: scale(1.03);
+            box-shadow: 0 0 0 3.5px rgba(225, 29, 72, 0.65), 0 0 22px rgba(225, 29, 72, 0.45);
+          }
+          50% {
+            transform: scale(1.015);
+            box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.4), 0 0 14px rgba(225, 29, 72, 0.25);
+          }
+          100% {
+            transform: scale(1);
+            box-shadow: none;
+          }
         }
 
         .message-action-btn.edit:hover {

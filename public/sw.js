@@ -35,7 +35,7 @@ self.addEventListener('push', (event) => {
     badge: notificationData.badge || '/velvet-heart-logo.png',
     data: notificationData.data || { url: '/notifications' },
     vibrate: [200, 100, 200],
-    tag: `vh-notif-${Date.now()}`,
+    tag: notificationData.data?.conversationId ? `vh-msg-${notificationData.data.conversationId}` : `vh-notif-${notificationData.data?.senderId || 'default'}`,
     renotify: true,
     requireInteraction: true,
     actions: [

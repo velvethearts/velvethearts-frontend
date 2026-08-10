@@ -7,14 +7,23 @@ import { Modal } from '../../components/UI/Modal';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 
 export const ProfileDetail = ({ profile, onBack }) => {
-  const { connections, interestsSent, sendInterest, unsendInterest, reportUser, blockUser, showConfirm, unmatchConnection } = useApp();
+  const { connections, interestsSent, sendInterest, unsendInterest, reportUser, blockUser, showConfirm, unmatchConnection, showAlert } = useApp();
   const [showReportSheet, setShowReportSheet] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportComment, setReportComment] = useState('');
   const [reportSubmitted, setReportSubmitted] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-  if (!profile) return null;
+  if (!profile || !profile.id) {
+    if (showAlert && onBack) {
+      showAlert({
+        title: 'Account Unavailable',
+        message: 'This user no longer exists or has deleted their account.'
+      });
+      onBack();
+    }
+    return null;
+  }
 
   const photosList = extractPhotoUrls(profile);
   const displayPhotos = photosList.length > 0 ? photosList : [getProfilePhoto(profile)];

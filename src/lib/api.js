@@ -260,15 +260,14 @@ export const api = {
         );
     },
 
-    sendMessage(conversationId, text, attachments) {
+    sendMessage(conversationId, text, attachments, replyToId) {
+        const body = { text, attachments };
+        if (replyToId) body.replyToId = replyToId;
         return request(
             `/api/v1/chat/conversations/${conversationId}/messages`,
             {
                 method: 'POST',
-                body: {
-                    text,
-                    attachments
-                }
+                body
             }
         );
     },

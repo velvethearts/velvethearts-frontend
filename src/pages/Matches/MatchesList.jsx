@@ -24,8 +24,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
   const longPressTimerRef = useRef(null);
   const isLongPressHandledRef = useRef(false);
 
-  // Quick Icebreaker Popover state
-  const [activeIcebreakerId, setActiveIcebreakerId] = useState(null);
+
 
   // Confetti particles state
   const [confettiBurst, setConfettiBurst] = useState([]);
@@ -89,14 +88,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
     onSelectConnection(conn);
   };
 
-  // Handle Quick Icebreaker Send
-  const handleSendIcebreaker = (conn, text) => {
-    triggerHaptic('heavy');
-    playHapticSound('pop');
-    sendMessage(conn.id, text);
-    setActiveIcebreakerId(null);
-    onSelectConnection(conn);
-  };
+
 
   // Handle Voice Intro Toggle (up to 2 mins)
   const handleToggleVoiceIntro = (e, conn) => {
@@ -123,11 +115,13 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
       const connChats = chats[conn.id] || chats[conn.userId] || [];
       const hasChatted = Boolean((conv?.lastMessage && conv.lastMessage.trim()) || connChats.length > 0);
 
-      const matchTime = new Date(conn.createdAt || Date.now()).getTime();
-      const hoursElapsed = (Date.now() - matchTime) / (1000 * 60 * 60);
+      const rawTime = conn.matchedAt || conn.matchedCreatedAt || conn.createdAt;
+      const parsedTime = rawTime ? new Date(rawTime).getTime() : Date.now();
+      const matchTime = isNaN(parsedTime) ? Date.now() : parsedTime;
+      const hoursElapsed = Math.max(0, (Date.now() - matchTime) / (1000 * 60 * 60));
 
-      const notifKey = `vh-24h-notified-${conn.id}`;
-      if (hoursElapsed >= 24 && !hasChatted && !sessionStorage.getItem(notifKey)) {
+      const notifKey = `vh-24h-notified-${conn.id || conn.userId}`;
+      if (hoursElapsed >= 24 && hoursElapsed < 48 && !hasChatted && !sessionStorage.getItem(notifKey)) {
         sessionStorage.setItem(notifKey, 'true');
         if (addToast) {
           addToast({
@@ -182,7 +176,6 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
               const vibeScore = computeVibeMatch(userProfile, conn);
               const hasVoiceIntro = Boolean(conn.voiceIntroUrl);
               const isPlayingVoice = activeVoiceId === conn.id;
-              const showIcebreaker = activeIcebreakerId === conn.id;
 
               // Check if users have exchanged messages
               const conv = conversations.find(c => c.partnerId === conn.id || c.partnerId === conn.userId || c.id === conn.id);
@@ -190,8 +183,10 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
               const hasChatted = Boolean((conv?.lastMessage && conv.lastMessage.trim()) || connChats.length > 0);
 
               // 24-hour match warmth timer
-              const matchDate = new Date(conn.createdAt || Date.now()).getTime();
-              const hoursElapsed = (Date.now() - matchDate) / (1000 * 60 * 60);
+              const rawDate = conn.matchedAt || conn.matchedCreatedAt || conn.createdAt;
+              const parsedDate = rawDate ? new Date(rawDate).getTime() : Date.now();
+              const matchDate = isNaN(parsedDate) ? Date.now() : parsedDate;
+              const hoursElapsed = Math.max(0, (Date.now() - matchDate) / (1000 * 60 * 60));
               const isTimerActive = hoursElapsed < 24 && !hasChatted;
               const hoursRemaining = Math.max(24 - hoursElapsed, 0.5);
               const timerPercent = Math.min(Math.max((hoursRemaining / 24) * 100, 5), 100);
@@ -211,10 +206,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                     className="story-highlight-circle"
                     onMouseDown={() => handlePressStart(conn)}
                     onMouseUp={handlePressEnd}
-                    onMouseLeave={() => {
-                      handlePressEnd();
-                      setActiveIcebreakerId(null);
-                    }}
+                    onMouseLeave={handlePressEnd}
                     onTouchStart={() => handlePressStart(conn)}
                     onTouchEnd={handlePressEnd}
                     onClick={(e) => {
@@ -225,8 +217,6 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                       }
                       handleSparkClick(e, conn);
                     }}
-                    onMouseEnter={() => setActiveIcebreakerId(conn.id)}
-                    title={isTimerActive ? `Hold 3s for voice intro | ~${Math.round(hoursRemaining)}h remaining` : `Hold 3s for voice intro | Chat with ${conn.name}`}
                   >
                     <div className={ringClassName}>
                       {/* Live Animated Equalizer Overlay while Voice Intro plays */}
@@ -287,41 +277,6 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
                     <span className="highlight-name font-ui">{conn.name}</span>
                   </button>
-
-                  {/* Quick Icebreaker & Nudge Floating Popover */}
-                  {showIcebreaker && (
-                    <div className="icebreaker-popover font-ui">
-                      <button
-                        type="button"
-                        className="icebreaker-chip"
-                        onClick={() => handleSendIcebreaker(conn, "👋 Hey! Loved your story.")}
-                      >
-                        <HandWaving size={14} color="#F3C68F" weight="fill" />
-                        <span>Say Hello</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        className="icebreaker-chip"
-                        onClick={() => handleSendIcebreaker(conn, "☕ Up for coffee sometime soon?")}
-                      >
-                        <Coffee size={14} color="#FF6B81" weight="fill" />
-                        <span>Coffee?</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        className="icebreaker-chip nudge-chip"
-                        onClick={() => {
-                          nudgeSpark(conn.id, conn.name);
-                          setActiveIcebreakerId(null);
-                        }}
-                      >
-                        <Lightning size={14} color="#F3C68F" weight="fill" />
-                        <span>Nudge Spark</span>
-                      </button>
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -589,10 +544,10 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .recent-matches-row {
           display: flex;
-          gap: var(--space-4);
+          gap: var(--space-5);
           overflow-x: auto;
-          padding-top: var(--space-2);
-          padding-bottom: var(--space-3);
+          padding: 12px 14px;
+          margin: -12px -14px 0 -14px;
           scrollbar-width: none;
         }
 
@@ -757,27 +712,28 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .icebreaker-popover {
           position: absolute;
-          top: 100%;
+          bottom: 100%;
           left: 50%;
           transform: translateX(-50%);
-          margin-top: 4px;
+          margin-bottom: 8px;
+          top: auto;
           background: rgba(18, 14, 16, 0.95);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(255, 255, 255, 0.18);
           border-radius: var(--radius-md);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
           padding: 6px;
           display: flex;
           flex-direction: column;
           gap: 4px;
           z-index: 100;
           white-space: nowrap;
-          animation: popFade 0.2s ease-out;
+          animation: popFadeUp 0.2s ease-out;
         }
 
-        @keyframes popFade {
-          0% { opacity: 0; transform: translate(-50%, -6px); }
+        @keyframes popFadeUp {
+          0% { opacity: 0; transform: translate(-50%, 6px); }
           100% { opacity: 1; transform: translate(-50%, 0); }
         }
 

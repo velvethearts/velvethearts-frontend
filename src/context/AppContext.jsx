@@ -227,8 +227,17 @@ export const AppProvider = ({ children }) => {
     });
 
     // --- Discover ---
-    const [profiles, setProfiles] = useState([]);
-    const [loadingProfiles, setLoadingProfiles] = useState(true);
+    const [profiles, setProfiles] = useState(() => {
+        try {
+            const cached = localStorage.getItem('vh-discover-profiles');
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch (_) {}
+        return [];
+    });
+    const [loadingProfiles, setLoadingProfiles] = useState(() => profiles.length === 0);
     const [errorProfiles, setErrorProfiles] = useState(null);
 
     // --- Interaction States ---
@@ -406,7 +415,8 @@ export const AppProvider = ({ children }) => {
                 hasDisability: profile.hasDisability || false,
                 disabilityInfo: profile.disabilityInfo || '',
                 showDisability: profile.showDisability || false,
-                photos: profile.photos || []
+                photos: profile.photos || [],
+                voiceIntroUrl: profile.voiceIntroUrl || null
             }));
         } else {
             setIsOnboarded(false);
@@ -428,20 +438,25 @@ export const AppProvider = ({ children }) => {
             return;
         }
 
-        setLoadingProfiles(true);
+        if (profiles.length === 0) {
+            setLoadingProfiles(true);
+        }
         setErrorProfiles(null);
 
         try {
             const data = await api.getDiscover(filters);
             const list = Array.isArray(data) ? data : (Array.isArray(data?.profiles) ? data.profiles : []);
             setProfiles(list);
+            try {
+                localStorage.setItem('vh-discover-profiles', JSON.stringify(list));
+            } catch (_) {}
         } catch (err) {
             setErrorProfiles(err.message || 'Failed to load profiles');
-            setProfiles([]);
+            if (profiles.length === 0) setProfiles([]);
         } finally {
             setLoadingProfiles(false);
         }
-    }, [filters]);
+    }, [filters, profiles.length]);
 
     useEffect(() => {
         if (api.isConfigured && api.tokenStore.getToken()) {
@@ -793,6 +808,8 @@ export const AppProvider = ({ children }) => {
                             id: message.id,
                             sender: isFromPartner ? 'partner' : 'user',
                             text: message.text || '',
+                            replyToId: message.replyToId || null,
+                            replyTo: message.replyTo || null,
                             attachments: message.attachments || [],
                             isEdited: Boolean(message.isEdited),
                             isDeleted: Boolean(message.isDeleted),
@@ -821,7 +838,12 @@ export const AppProvider = ({ children }) => {
                             let updated;
                             if (optIndex !== -1) {
                                 updated = [...current];
-                                updated[optIndex] = formatted;
+                                const existing = current[optIndex];
+                                updated[optIndex] = {
+                                    ...formatted,
+                                    replyToId: formatted.replyToId || existing.replyToId || null,
+                                    replyTo: formatted.replyTo || existing.replyTo || null,
+                                };
                             } else if (!current.some(m => m.id === message.id)) {
                                 updated = [...current, formatted];
                             } else {
@@ -862,7 +884,11 @@ export const AppProvider = ({ children }) => {
                         if (isFromPartner) {
                             const activeTabCur = sessionStorage.getItem('vh-active-tab');
                             const activeChatCur = sessionStorage.getItem('vh-active-chat-id');
-                            const isCurrentlyChatting = activeTabCur === 'chat' && activeChatCur === partnerId;
+                            const isCurrentlyChatting = activeTabCur === 'chat' && (
+                                activeChatCur === partnerId ||
+                                activeChatCur === conversationId ||
+                                (partnerConn && (activeChatCur === partnerConn.id || activeChatCur === partnerConn.userId))
+                            );
 
                             if (!isCurrentlyChatting && notificationsRef.current?.chatNotifs !== false) {
                                 addToast({
@@ -1273,6 +1299,38 @@ useEffect(() => {
         }
     };
 
+    const handleUserNotFound = useCallback((profileId) => {
+        if (!profileId) return;
+
+        // Remove from all local state & caches
+        setProfiles(prev => prev.filter(p => p.id !== profileId && p.userId !== profileId));
+        setSavedProfiles(prev => prev.filter(id => id !== profileId));
+        setSentInvitesList(prev => prev.filter(p => p.id !== profileId && p.userId !== profileId));
+        setConnections(prev => prev.filter(c => c.id !== profileId && c.userId !== profileId && c.partnerId !== profileId));
+        setConversations(prev => prev.filter(c => c.id !== profileId && c.partnerId !== profileId));
+        setReceivedInvites(prev => prev.filter(i => i.id !== profileId && i.userId !== profileId));
+        setInterestStatuses(prev => {
+            const next = { ...prev };
+            delete next[profileId];
+            return next;
+        });
+
+        // Clean local storage cache
+        try {
+            const cachedProfiles = localStorage.getItem('vh-discover-profiles');
+            if (cachedProfiles) {
+                const parsed = JSON.parse(cachedProfiles);
+                const updated = parsed.filter(p => p.id !== profileId && p.userId !== profileId);
+                localStorage.setItem('vh-discover-profiles', JSON.stringify(updated));
+            }
+        } catch (_) {}
+
+        showAlert({
+            title: 'Account Unavailable',
+            message: 'This user no longer exists or has deleted their account.',
+        });
+    }, [showAlert]);
+
     const sendInterest = async (profileId, comment = null, reactionData = null) => {
         if (interestsSent.includes(profileId)) return;
 
@@ -1320,17 +1378,24 @@ useEffect(() => {
                 setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId));
                 setSentInvitesList(prev => prev.filter(item => item.id !== profileId));
 
-                // Add to connections
+                // Add to connections with fresh match timestamp
                 const matchedProfile = targetProfile || profiles.find(p => p.id === profileId);
                 if (matchedProfile) {
+                    const nowIso = new Date().toISOString();
+                    const newConn = {
+                        ...matchedProfile,
+                        matchId: data.matchId || data.conversationId,
+                        matchedAt: nowIso,
+                        createdAt: nowIso,
+                    };
                     setConnections(prev => {
-                        const ids = prev.map(c => c.id || c);
+                        const ids = prev.map(c => c.id || c.userId);
                         if (!ids.includes(profileId)) {
-                            return [...prev, matchedProfile];
+                            return [...prev, newConn];
                         }
-                        return prev;
+                        return prev.map(c => (c.id === profileId || c.userId === profileId ? { ...c, ...newConn } : c));
                     });
-                    setShowCelebration({ ...matchedProfile, conversationId: data.conversationId });
+                    setShowCelebration({ ...newConn, conversationId: data.conversationId });
                 }
 
                 // Refresh connections from server
@@ -1349,7 +1414,15 @@ useEffect(() => {
                 delete next[profileId];
                 return next;
             });
-            console.error('Failed to send interest:', err);
+            const errMsg = err?.message?.toLowerCase() || '';
+            if (errMsg.includes('not found') || errMsg.includes('deleted') || errMsg.includes('no longer active') || errMsg.includes('does not exist')) {
+                handleUserNotFound(profileId);
+            } else {
+                showAlert({
+                    title: 'Error',
+                    message: err.message || 'Failed to send interest. Please try again.'
+                });
+            }
         }
     };
 
@@ -1380,6 +1453,11 @@ useEffect(() => {
             }
             return true;
         } catch (err) {
+            const errMsg = err?.message?.toLowerCase() || '';
+            if (errMsg.includes('not found') || errMsg.includes('deleted') || errMsg.includes('no longer active') || errMsg.includes('does not exist')) {
+                handleUserNotFound(profileId);
+                return true;
+            }
             // Rollback on failure
             setInterestsSent(prev => [...prev, profileId]);
             setInterestStatuses(prev => ({ ...prev, [profileId]: 'sent' }));
@@ -1389,7 +1467,7 @@ useEffect(() => {
             });
             return false;
         }
-    }, [showConfirm, showAlert, fetchDiscoverProfiles]);
+    }, [showConfirm, showAlert, fetchDiscoverProfiles, handleUserNotFound]);
 
     const toggleSaveProfile = (profileId, profileObj = null) => {
         setSavedProfiles(prev => {
@@ -1590,7 +1668,7 @@ useEffect(() => {
         }
     };
 
-    const sendMessage = async (profileId, text, attachments = [], attachmentsForOptimistic = null) => {
+    const sendMessage = async (profileId, text, attachments = [], attachmentsForOptimistic = null, replyToId = null, replyToObj = null) => {
         const messageId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         // For the optimistic message shown immediately to the sender, prefer
         // attachmentsForOptimistic (which may contain localPreview for the
@@ -1602,6 +1680,8 @@ useEffect(() => {
             id: messageId,
             sender: 'user',
             text: text || '',
+            replyToId: replyToId || null,
+            replyTo: replyToObj || null,
             attachments: optimisticAttachments,
             isDeleted: false,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -1623,8 +1703,24 @@ useEffect(() => {
                 let conversation = conversations.find(c => 
                     c.partnerId === profileId || 
                     c.id === profileId || 
-                    c.matchId === profileId
+                    c.matchId === profileId ||
+                    c.userId === profileId ||
+                    c.partner?.id === profileId ||
+                    c.partner?.userId === profileId
                 );
+
+                if (!conversation) {
+                    const conn = connections.find(cn => cn.id === profileId || cn.matchId === profileId || cn.userId === profileId);
+                    if (conn) {
+                        conversation = conversations.find(c => 
+                            c.partnerId === conn.userId || 
+                            c.partnerId === conn.id || 
+                            c.id === conn.id || 
+                            c.matchId === conn.id ||
+                            c.matchId === conn.matchId
+                        );
+                    }
+                }
 
                 if (!conversation) {
                     const freshConvs = await api.getConversations();
@@ -1633,7 +1729,10 @@ useEffect(() => {
                     conversation = list.find(c => 
                         c.partnerId === profileId || 
                         c.id === profileId || 
-                        c.matchId === profileId
+                        c.matchId === profileId ||
+                        c.userId === profileId ||
+                        c.partner?.id === profileId ||
+                        c.partner?.userId === profileId
                     );
                 }
 
@@ -1652,7 +1751,7 @@ useEffect(() => {
                     };
                 });
 
-                const res = await api.sendMessage(targetId, text, attachments);
+                const res = await api.sendMessage(targetId, text, attachments, replyToId);
                 // api.js already unwraps payload.data, so res IS the message object
                 const sentMsg = res;
 
@@ -1678,6 +1777,8 @@ useEffect(() => {
                                     id: sentMsg.id,
                                     sender: 'user',
                                     text: sentMsg.text || '',
+                                    replyToId: sentMsg.replyToId || replyToId || null,
+                                    replyTo: sentMsg.replyTo || replyToObj || null,
                                     attachments: sentMsg.attachments || [],
                                     isDeleted: Boolean(sentMsg.isDeleted),
                                     timestamp: new Date(sentMsg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -1984,6 +2085,7 @@ useEffect(() => {
             deleteMessage,
             deleteConversationMessages,
             markConversationSeen,
+            handleUserNotFound,
             logout,
             onlineUserIds,
             fetchDiscoverProfiles,
