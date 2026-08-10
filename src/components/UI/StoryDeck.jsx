@@ -28,6 +28,8 @@ export const StoryDeck = ({
   onUnsendInterest,
   onPassProfile,
   onUnpassProfile,
+  onSaveProfile,
+  onSelectProfile,
 }) => {
   const currentIndex = 0;
   const [swipeHistory, setSwipeHistory] = useState([]); // Undo stack
@@ -510,7 +512,15 @@ export const StoryDeck = ({
         {/* Story Body Details */}
         <div className="story-card-body font-ui">
           <div className="story-header-row">
-            <div className="story-name-wrap">
+            <div 
+              className="story-name-wrap"
+              style={{ cursor: 'pointer' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
+              }}
+              title="Click to view full profile"
+            >
               <h2 className="story-name font-display">{activeProfile.name}</h2>
               <span className="story-age font-ui">, {activeProfile.age}</span>
             </div>
@@ -518,7 +528,7 @@ export const StoryDeck = ({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onSaveProfile(activeProfile.id);
+                if (onSaveProfile) onSaveProfile(activeProfile.id);
               }}
               className={`story-bookmark-btn ${isSaved ? 'saved' : ''}`}
               title={isSaved ? "Saved" : "Save Profile"}
@@ -590,7 +600,9 @@ export const StoryDeck = ({
             className="story-view-full-btn font-ui"
             onClick={(e) => {
               e.stopPropagation();
-              onSelectProfile(activeProfile);
+              if (onSelectProfile && activeProfile) {
+                onSelectProfile(activeProfile);
+              }
             }}
           >
             <Info size={16} />
