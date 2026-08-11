@@ -341,22 +341,22 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
                       {/* Rose Gold SVG 24h Countdown Ring — Rendered ONLY during first 24h if no chat and not online */}
                       {isTimerActive && !isPlayingVoice && !isOnline && (
-                        <svg className="countdown-ring-svg" viewBox="0 0 76 76">
+                        <svg className="countdown-ring-svg" viewBox="0 0 86 86">
                           <defs>
                             <linearGradient id={`timerGrad-${conn.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
                               <stop offset="0%" stopColor="#F3C68F" />
                               <stop offset="100%" stopColor="#FF6B81" />
                             </linearGradient>
                           </defs>
-                          <circle cx="38" cy="38" r="35" className="ring-bg" />
+                          <circle cx="43" cy="43" r="40" className="ring-bg" />
                           <circle
-                            cx="38"
-                            cy="38"
-                            r="35"
+                            cx="43"
+                            cy="43"
+                            r="40"
                             className="ring-progress"
                             style={{
-                              strokeDasharray: 220,
-                              strokeDashoffset: 220 - (220 * timerPercent) / 100,
+                              strokeDasharray: 251,
+                              strokeDashoffset: 251 - (251 * timerPercent) / 100,
                               stroke: `url(#timerGrad-${conn.id})`
                             }}
                           />
@@ -756,36 +756,36 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .spark-note-bubble {
           position: absolute;
-          top: -30px;
+          top: -34px;
           left: 50%;
           transform: translateX(-50%);
           background: rgba(30, 20, 24, 0.96);
           backdrop-filter: blur(12px);
           border: 1px solid rgba(212, 173, 106, 0.45);
           color: #fce7f3;
-          padding: 4px 10px;
+          padding: 5px 12px;
           border-radius: 14px;
-          font-size: 10px;
-          font-weight: 500;
+          font-size: 12px;
+          font-weight: 600;
           line-height: 1.25;
-          max-width: 96px;
+          max-width: 110px;
           width: max-content;
           box-sizing: border-box;
           z-index: 12;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
           cursor: pointer;
           animation: floatSparkNote 3.2s ease-in-out infinite alternate;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 3px;
+          gap: 4px;
           text-align: center;
         }
 
         .spark-note-bubble .note-text {
           white-space: normal;
           word-break: break-word;
-          max-width: 80px;
+          max-width: 94px;
           text-align: center;
           display: -webkit-box;
           -webkit-line-clamp: 2;
@@ -982,8 +982,8 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .highlight-avatar-ring {
           position: relative;
-          width: 68px;
-          height: 68px;
+          width: 78px;
+          height: 78px;
           border-radius: 50%;
           padding: 3px;
           background: linear-gradient(135deg, #800020, #4A0E17);
@@ -1054,10 +1054,10 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .countdown-ring-svg {
           position: absolute;
-          top: -4px;
-          left: -4px;
-          width: 76px;
-          height: 76px;
+          top: -5px;
+          left: -5px;
+          width: 88px;
+          height: 88px;
           transform: rotate(-90deg);
           pointer-events: none;
         }
@@ -1175,10 +1175,11 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
         }
 
         .highlight-name {
-          font-size: 11px;
+          font-size: 13px;
           font-weight: 600;
           color: var(--text-primary);
-          max-width: 68px;
+          max-width: 82px;
+          margin-top: 3px;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

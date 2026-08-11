@@ -22,7 +22,7 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
     },
     {
       q: 'How does Velvet Hearts protect user safety and privacy?',
-      a: 'We combine active identity verification, phone validation, community reporting, 2-tap safety controls, and real-time blocking to ensure a respectful environment.'
+      a: 'We combine active identity verification, community reporting, 2-tap safety controls, and real-time blocking to ensure a respectful environment.'
     }
   ];
 

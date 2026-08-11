@@ -1000,8 +1000,14 @@ html {
 }
 
 .vh-page-subtitle {
-  font-size: var(--text-body-sm);
+  font-size: var(--text-body);
   color: var(--text-secondary);
+  line-height: var(--leading-normal);
+  margin-top: 2px;
+}
+
+[data-theme="dark"] .vh-page-subtitle {
+  color: rgba(255, 255, 255, 0.78);
 }
 
 /* Empty States */
