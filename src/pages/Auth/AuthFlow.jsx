@@ -12,113 +12,113 @@ export const AuthFlow = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
 
   // Development bypass helpers
-  
+
   const handleGoogleAuth = async () => {
-  setError("");
-  setLoading(true);
+    setError("");
+    setLoading(true);
 
-  try {
-    const authRes = await signInWithGoogle();
-    await login(authRes?.user?.phoneNumber || '', authRes?.idToken);
-  } catch (err) {
-    console.error("Google Auth error:", err);
-    setError(
-      err?.message ||
-      "Google Authentication failed. Please try again."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const authRes = await signInWithGoogle();
+      await login(authRes?.user?.phoneNumber || '', authRes?.idToken);
+    } catch (err) {
+      console.error("Google Auth error:", err);
+      setError(
+        err?.message ||
+        "Google Authentication failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-return (
-  <div className="auth-page page-enter">
-    <div className="auth-card">
-      <button
-        onClick={onBack}
-        className="back-arrow-btn"
-        aria-label="Go back"
-      >
-        <ArrowLeft size={20} />
-        <span>Back</span>
-      </button>
-
-     <div className="auth-logo">
-        <img
-          src={logo}
-          alt="Velvet Hearts"
-          className="auth-logo-image"
-        />
-      </div>
-
-      <div className="auth-step-container page-enter text-center-waiting">
-        <h2 className="auth-title font-display">
-          Welcome to Velvet Hearts
-        </h2>
-
-        <p
-          className="auth-subtitle font-body"
-          style={{ marginBottom: "2rem" }}
+  return (
+    <div className="auth-page page-enter">
+      <div className="auth-card">
+        <button
+          onClick={onBack}
+          className="back-arrow-btn"
+          aria-label="Go back"
         >
-          Find meaningful relationships in a safe and verified community.
-          Continue with your Google account to get started.
-        </p>
+          <ArrowLeft size={20} />
+          <span>Back</span>
+        </button>
 
-        {error && (
-          <div
-            className="error-message font-ui"
-            role="alert"
-            style={{ marginBottom: "1.5rem" }}
-          >
-            {error}
-          </div>
-        )}
-
-        <Button
-          onClick={handleGoogleAuth}
-          variant="primary"
-          loading={loading}
-          className="google-auth-btn font-ui"
-        >
-          <GoogleLogo size={20} weight="bold" />
-          <span>Continue with Google</span>
-        </Button>
-
-        <div
-          style={{
-            marginTop: "2rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1rem",
-            color: "rgba(255,255,255,.7)",
-            fontSize: ".95rem",
-          }}
-        >
-          <div>✓ Verified Profiles</div>
-          <div>✓ Safe Community</div>
-          <div>✓ Secure Conversations</div>
+        <div className="auth-logo">
+          <img
+            src={logo}
+            alt="Velvet Hearts"
+            className="auth-logo-image"
+          />
         </div>
-      </div>
+
+        <div className="auth-step-container page-enter text-center-waiting">
+          <h2 className="auth-title font-display">
+            Welcome to Velvet Hearts
+          </h2>
+
+          <p
+            className="auth-subtitle font-body"
+            style={{ marginBottom: "2rem" }}
+          >
+            Find meaningful relationships in a safe and verified community.
+            Continue with your Google account to get started.
+          </p>
+
+          {error && (
+            <div
+              className="error-message font-ui"
+              role="alert"
+              style={{ marginBottom: "1.5rem" }}
+            >
+              {error}
+            </div>
+          )}
+
+          <Button
+            onClick={handleGoogleAuth}
+            variant="primary"
+            loading={loading}
+            className="google-auth-btn font-ui"
+          >
+            <GoogleLogo size={20} weight="bold" />
+            <span>Continue with Google</span>
+          </Button>
+
+          <div
+            style={{
+              marginTop: "2rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+              color: "rgba(255,255,255,.7)",
+              fontSize: ".95rem",
+            }}
+          >
+            <div>✓ Verified Profiles</div>
+            <div>✓ Safe Community</div>
+            <div>✓ Secure Conversations</div>
+          </div>
+        </div>
 
 
-      <div className="auth-legal font-ui">
-        By continuing, you agree to our{" "}
-        <a
-          href="#terms"
-          onClick={(e) => e.preventDefault()}
-        >
-          Terms of Service
-        </a>{" "}
-        and{" "}
-        <a
-          href="#privacy"
-          onClick={(e) => e.preventDefault()}
-        >
-          Privacy Policy
-        </a>.
-      </div>
+        <div className="auth-legal font-ui">
+          By continuing, you agree to our{" "}
+          <a
+            href="#terms"
+            onClick={(e) => e.preventDefault()}
+          >
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a
+            href="#privacy"
+            onClick={(e) => e.preventDefault()}
+          >
+            Privacy Policy
+          </a>.
+        </div>
 
-      <style>{`
+        <style>{`
         .auth-page {
           min-height: 100dvh;
           display: flex;
