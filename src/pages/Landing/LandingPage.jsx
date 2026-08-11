@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Heart, ShieldCheck, Users, Bookmark, Sparkle } from '@phosphor-icons/react';
 import logo from "../../assets/velvet-heart-logo.png";
+import { ThemeToggle } from '../../components/UI/ThemeToggle';
 
 export const LandingPage = ({ onGetStarted, onSignIn }) => {
   const [openFaqIndex, setOpenFaqIndex] = React.useState(null);
