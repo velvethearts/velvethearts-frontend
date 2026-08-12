@@ -1,6 +1,6 @@
 # Velvet Hearts Frontend
 
-Last updated: August 10th, 2026  
+Last updated: August 12th, 2026 (v1.0.0 Release)  
 Source of truth: `/docs/Administrator_Manual.docx` and `/docs/User_Manual.docx`
 
 This folder contains the Velvet Hearts browser application. It is a Vite + React single-page application that serves the public landing page, registration/login flow, onboarding, discover, matching, chat, profile, settings, safety center, and admin UI surfaces.
