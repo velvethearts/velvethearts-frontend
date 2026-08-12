@@ -185,7 +185,11 @@ export const OnboardingFlow = () => {
                 });
             } catch (err) {
                 console.error('Photo upload failed:', err);
-                setPhotoUploadError(err.message || 'Failed to upload photo. Please try again.');
+                const isModerationErr = err?.message?.toLowerCase().includes('inappropriate') || err?.message?.toLowerCase().includes('explicit') || err?.message?.toLowerCase().includes('moderation');
+                const errMsg = isModerationErr 
+                    ? '⚠️ Image Discarded: This photo was removed because it contains inappropriate or explicit content. Please select another image.'
+                    : (err.message || 'Failed to upload photo. Please try again.');
+                setPhotoUploadError(errMsg);
             } finally {
                 setUploadingCount(prev => Math.max(0, prev - 1));
             }

@@ -232,12 +232,7 @@ export const EditProfile = ({ onBack }) => {
       }
 
       if (!finalUrl) {
-        // Fallback to data URL
-        finalUrl = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(file);
-        });
+        throw new Error('Image upload failed. Please try a different photo.');
       }
 
       setUploadProgress({ index, percent: 100 });
@@ -246,10 +241,25 @@ export const EditProfile = ({ onBack }) => {
         nextPhotos[index] = finalUrl;
         return { ...prev, photos: nextPhotos };
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Photo upload failed:', err);
+      const isModerationErr = err?.message?.toLowerCase().includes('inappropriate') || err?.message?.toLowerCase().includes('explicit') || err?.message?.toLowerCase().includes('moderation');
+      
+      const alertMsg = isModerationErr
+        ? '⚠️ Image Discarded: This photo was removed because it contains inappropriate or explicit content. Please choose a different photo.'
+        : (err?.message || 'Photo upload failed. Please try again.');
+
+      if (showAlert) {
+        showAlert({
+          title: 'Image Discarded',
+          message: alertMsg,
+        });
+      } else {
+        alert(alertMsg);
+      }
     } finally {
       setTimeout(() => setUploadProgress(null), 300);
+      if (e.target) e.target.value = '';
     }
   };
 
