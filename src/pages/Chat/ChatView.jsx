@@ -532,6 +532,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
     setIsUploadingAttachment(true);
     const failedFiles = [];
+    const moderatedFiles = [];
     try {
       for (const file of files) {
         const isImg = file.type.startsWith('image/');
@@ -546,7 +547,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
             uploadRes = res;
           } catch (uploadErr) {
             console.error('File upload error:', uploadErr);
-            failedFiles.push(file.name);
+            const isModerationErr = uploadErr?.message?.toLowerCase().includes('inappropriate') || 
+                                   uploadErr?.message?.toLowerCase().includes('explicit') || 
+                                   uploadErr?.message?.toLowerCase().includes('moderation');
+            if (isModerationErr) {
+              moderatedFiles.push(file.name);
+            } else {
+              failedFiles.push(file.name);
+            }
             URL.revokeObjectURL(localPreview);
             continue;
           }
@@ -578,7 +586,12 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
       if (e.target) e.target.value = '';
     }
 
-    if (failedFiles.length > 0) {
+    if (moderatedFiles.length > 0) {
+      await showAlert({
+        title: 'Attachment Discarded',
+        message: `⚠️ Attachment '${moderatedFiles.join(', ')}' was discarded because it contains inappropriate or explicit content. Please select a different image or cancel.`
+      });
+    } else if (failedFiles.length > 0) {
       await showAlert({
         title: 'Upload Failed',
         message: `Could not upload: ${failedFiles.join(', ')}. Please check your connection and try again.`
