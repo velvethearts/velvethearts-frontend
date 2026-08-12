@@ -241,7 +241,7 @@ export const EditProfile = ({ onBack }) => {
         nextPhotos[index] = finalUrl;
         return { ...prev, photos: nextPhotos };
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error('Photo upload failed:', err);
       const isModerationErr = err?.message?.toLowerCase().includes('inappropriate') || err?.message?.toLowerCase().includes('explicit') || err?.message?.toLowerCase().includes('moderation');
       
