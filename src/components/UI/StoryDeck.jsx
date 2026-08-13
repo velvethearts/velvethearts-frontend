@@ -613,7 +613,7 @@ export const StoryDeck = ({
 
       {/* Floating Action Control Bar */}
       <div className="story-actions-bar">
-        {/* Undo button */}
+        {/* Undo */}
         <button
           type="button"
           onClick={handleUndo}
@@ -622,7 +622,40 @@ export const StoryDeck = ({
           aria-label="Undo last swipe"
           title="Undo (Backspace)"
         >
-          <ArrowLeft size={24} weight="bold" />
+          <ArrowLeft size={22} weight="bold" />
+        </button>
+
+        {/* Pass */}
+        <button
+          type="button"
+          onClick={() => handleSwipe('left')}
+          className="action-btn btn-pass"
+          aria-label="Pass (← or Arrow Left)"
+          title="Pass Softly (← Arrow Left)"
+        >
+          <X size={28} weight="bold" />
+        </button>
+
+        {/* Super Spark */}
+        <button
+          type="button"
+          onClick={() => handleSwipe('super')}
+          className="action-btn btn-super"
+          aria-label="Super Spark (↑ or Arrow Up)"
+          title="Super Spark (↑ Arrow Up)"
+        >
+          <Star size={22} weight="fill" />
+        </button>
+
+        {/* Spark */}
+        <button
+          type="button"
+          onClick={() => handleSwipe('right')}
+          className="action-btn btn-spark"
+          aria-label="Spark (→ or Arrow Right)"
+          title="Spark (→ Arrow Right)"
+        >
+          <Heart size={28} weight="fill" />
         </button>
       </div>
 
