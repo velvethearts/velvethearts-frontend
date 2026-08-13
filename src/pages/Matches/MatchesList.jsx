@@ -396,7 +396,9 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
       {/* Active Connections Section */}
       <section className="connections-section">
-        <h2 className="section-group-title font-ui">Active Connections ({activeConnections.length})</h2>
+        <div className="section-group-header">
+          <h2 className="section-group-title font-ui">Active Connections ({activeConnections.length})</h2>
+        </div>
         {activeConnections.length > 0 ? (
           <div className="connections-grid">
             {activeConnections.map(conn => {
@@ -406,10 +408,16 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                 targetUserId &&
                 onlineUserIds.has(targetUserId)
               );
+              const hasVoiceIntro = Boolean(conn.voiceIntroUrl);
+              const isPlayingVoice = activeVoiceId === conn.id;
+
+              const vibeScore = computeVibeMatch(userProfile, conn);
+              const photoUrl = getProfilePhoto(conn);
+
               return (
                 <div
                   key={conn.id}
-                  className="connection-item-card"
+                  className="match-profile-card"
                   onClick={() => onSelectConnection(conn)}
                   role="button"
                   tabIndex={0}
@@ -417,41 +425,121 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                     if (e.key === 'Enter') onSelectConnection(conn);
                   }}
                 >
-                  <div className="connection-avatar-wrap">
+                  {/* Card Hero Image Area */}
+                  <div className="match-card-photo-wrap">
                     <img
-                      src={getProfilePhoto(conn)}
+                      src={photoUrl}
                       alt={conn.name}
-                      className="connection-avatar-img"
+                      className="match-card-photo"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = getDefaultAvatar(conn?.gender);
                       }}
                     />
-                    <span
-                      className={`online-presence-dot ${isOnline ? 'online' : 'offline'}`}
-                      title={isOnline ? 'Online now' : 'Offline'}
-                    />
-                  </div>
+                    
+                    {/* Gradient Overlay for Text Readability */}
+                    <div className="match-card-gradient-overlay" />
 
-                  <div className="connection-card-info">
-                    <div className="connection-name-row">
-                      <span className="connection-name font-display">{conn.name}</span>
-                      <span className="connection-age font-ui">, {conn.age}</span>
+                    {/* Top Badges */}
+                    <div className="match-card-top-badges font-ui">
+                      <span className="match-vibe-pill font-ui" title={`${vibeScore}% Vibe Match`}>
+                        <Sparkle size={12} color="#F3C68F" weight="fill" />
+                        <span>{vibeScore}% Vibe</span>
+                      </span>
+                      {conn.verified && (
+                        <span className="match-verified-badge font-ui">
+                          Verified
+                        </span>
+                      )}
                     </div>
-                    <p className="connection-meta font-ui">{conn.city} &bull; {conn.relationshipIntent}</p>
-                    <p className="connection-preview-text font-body italic">Click to open conversation...</p>
+
+                    {/* Voice Intro Player button */}
+                    {hasVoiceIntro && (
+                      <button
+                        type="button"
+                        className={`match-voice-btn ${isPlayingVoice ? 'playing' : ''}`}
+                        onClick={(e) => handleToggleVoiceIntro(e, conn)}
+                        title="Listen to Voice Intro"
+                      >
+                        {isPlayingVoice ? <Pause size={13} weight="fill" /> : <Microphone size={13} weight="fill" />}
+                        <span>{isPlayingVoice ? 'Playing' : 'Voice'}</span>
+                      </button>
+                    )}
+
+                    {/* Online Presence Indicator */}
+                    <div className="match-card-presence-wrap">
+                      <span
+                        className={`match-online-dot ${isOnline ? 'online' : 'offline'}`}
+                        title={isOnline ? 'Online now' : 'Offline'}
+                      />
+                    </div>
+
+                    {/* Spark Note Overlay Bubble */}
+                    {conn.sparkNote && (
+                      <div
+                        className="match-card-spark-note font-ui"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedNoteReplyMatch({ match: conn, noteText: conn.sparkNote });
+                          setNoteReplyInput('');
+                        }}
+                        title={`Reply to ${conn.name}'s note`}
+                      >
+                        <span className="note-text">&ldquo;{conn.sparkNote}&rdquo;</span>
+                      </div>
+                    )}
                   </div>
 
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onSelectProfile) onSelectProfile(conn);
-                    }}
-                    variant="secondary"
-                    className="chat-cta-btn-refactored font-ui"
-                  >
-                    View Story
-                  </Button>
+                  {/* Card Content Details */}
+                  <div className="match-card-content font-ui">
+                    <div className="match-card-info-header">
+                      <div className="match-name-age-row">
+                        <h3 className="match-card-name font-display">{conn.name}</h3>
+                        <span className="match-card-age font-ui">, {conn.age}</span>
+                      </div>
+                      <p className="match-card-location-intent font-ui">
+                        {conn.city} {conn.relationshipIntent ? `• ${conn.relationshipIntent}` : ''}
+                      </p>
+                    </div>
+
+                    {/* Story or Interests Context Line */}
+                    {conn.story ? (
+                      <p className="match-card-story font-body italic">&ldquo;{conn.story}&rdquo;</p>
+                    ) : conn.interests?.length > 0 ? (
+                      <div className="match-card-interests font-ui">
+                        {conn.interests.slice(0, 3).map(interest => (
+                          <span key={interest} className="match-interest-tag">{interest}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="match-card-preview-text font-body italic">Tap to chat or view story...</p>
+                    )}
+
+                    {/* Preserved Match Action Buttons */}
+                    <div className="match-card-actions">
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onSelectProfile) onSelectProfile(conn);
+                        }}
+                        variant="secondary"
+                        className="match-action-btn story-btn font-ui"
+                      >
+                        View Story
+                      </Button>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectConnection(conn);
+                        }}
+                        variant="primary"
+                        className="match-action-btn chat-btn font-ui"
+                      >
+                        <ChatCircleText size={16} weight="fill" />
+                        Chat
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -466,7 +554,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
               <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.85 }}>
                 <circle cx="50" cy="40" r="16" fill="var(--warning-light)" opacity="0.6" />
                 <path d="M50 24C50 24 45 35 45 42C45 46.5 47 48 50 48C53 48 55 46.5 55 42C55 35 50 24 50 24Z" fill="var(--warning)" />
-                <path d="M50 32C50 32 47 38 47 42C47 44.5 48 45 50 45C52 45 53 44.5 53 42C53 38 50 32 50 32Z" fill="#FFFFFF" />
+                <path d="M50 32C50 32 47 38 47 42C47 44.5 48 45 50 45C53 45 53 44.5 53 42C53 38 50 32 50 32Z" fill="#FFFFFF" />
                 <path d="M50 46V52" stroke="var(--charcoal-600)" strokeWidth="2" strokeLinecap="round" />
                 <rect x="42" y="52" width="16" height="28" rx="2" fill="var(--burgundy-500)" />
                 <path d="M30 80H70" stroke="var(--border-default)" strokeWidth="3" strokeLinecap="round" />
@@ -476,7 +564,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
         )}
       </section>
 
-      {/* Received Invites / Secret Admirers Section */}
+      {/* Received Invites Section */}
       <section className="received-section border-top">
         <div className="section-group-header">
           <h2 className="section-group-title font-ui">Received Invites ({receivedInvites.length})</h2>
@@ -491,53 +579,55 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
             {receivedInvites.map(profile => {
               const isSuper = profile.isSuper || profile.isSuperSpark || profile.isSuperLike;
               return (
-                <button
+                <div
                   key={profile.id}
-                  type="button"
-                  className={`received-item-card ${isSuper ? 'is-super-spark' : ''}`}
+                  className={`received-profile-card ${isSuper ? 'is-super-spark' : ''}`}
                   onClick={() => onSelectProfile(profile)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') onSelectProfile(profile);
+                  }}
                 >
-                  <div className="received-avatar-wrap">
+                  <div className="received-card-media">
                     <img
                       src={getProfilePhoto(profile)}
                       alt={profile.name}
-                      className={`received-avatar-img ${isSuper ? 'super-avatar' : ''}`}
+                      className="received-card-image"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src = getDefaultAvatar(profile?.gender);
                       }}
                     />
+                    <div className="received-card-gradient" />
                     {isSuper && (
-                      <div className="super-star-avatar-badge" title="Super Spark Sent">
-                        <Star size={11} weight="fill" color="#FFFFFF" />
+                      <div className="received-super-badge font-ui">
+                        <Star size={12} weight="fill" color="#1A1517" /> SUPER SPARK
                       </div>
                     )}
                   </div>
-                  <div className="received-card-info">
+                  <div className="received-card-body font-ui">
                     <div className="received-name-row">
-                      {isSuper && (
-                        <span className="received-super-badge font-ui">
-                          <Star size={12} weight="fill" color="var(--gold-400)" /> SUPER SPARK
-                        </span>
-                      )}
-                      <span className="received-name font-ui">{profile.name}</span>
-                      <span className="received-age">, {profile.age}</span>
+                      <h3 className="received-name font-display">{profile.name}</h3>
+                      <span className="received-age font-ui">, {profile.age}</span>
                     </div>
-                    <p className="received-meta font-ui">{profile.city} &bull; {profile.relationshipIntent}</p>
-                    <p className="received-story font-body">&ldquo;{profile.story}&rdquo;</p>
+                    <p className="received-meta font-ui">{profile.city} {profile.relationshipIntent ? `• ${profile.relationshipIntent}` : ''}</p>
+                    {profile.story && (
+                      <p className="received-story font-body italic">&ldquo;{profile.story}&rdquo;</p>
+                    )}
+                    <Button
+                      variant="primary"
+                      className={`accept-invite-btn ${isSuper ? 'super-accept-btn' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        sendInterest(profile.id);
+                      }}
+                    >
+                      {isSuper ? <Star size={16} weight="fill" /> : <Heart size={16} weight="fill" />}
+                      Accept & Connect
+                    </Button>
                   </div>
-                  <Button
-                    variant="primary"
-                    className={`accept-invite-btn ${isSuper ? 'super-accept-btn' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      sendInterest(profile.id);
-                    }}
-                  >
-                    {isSuper ? <Star size={16} weight="fill" /> : <Heart size={16} weight="fill" />}
-                    Accept & Connect
-                  </Button>
-                </button>
+                </div>
               );
             })}
           </div>
@@ -559,7 +649,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
               const status = interestStatuses[profile.id];
               const isSuper = profile.isSuper || profile.isSuperSpark || status === 'super';
               return (
-                <div key={profile.id} className={`pending-item-card ${isSuper ? 'is-super-sent' : ''}`}>
+                <div key={profile.id} className={`pending-profile-card ${isSuper ? 'is-super-sent' : ''}`}>
                   <img
                     src={getProfilePhoto(profile)}
                     alt={profile.name}
@@ -569,11 +659,12 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                       e.currentTarget.src = getDefaultAvatar(profile?.gender);
                     }}
                   />
-                  <div className="pending-card-info">
+                  <div className="pending-card-info font-ui">
                     <div className="pending-name-row">
-                      <span className="pending-name font-ui">{profile.name}</span>
-                      <span className="pending-age">, {profile.age}</span>
+                      <span className="pending-name font-display">{profile.name}</span>
+                      <span className="pending-age font-ui">, {profile.age}</span>
                     </div>
+                    <p className="pending-meta">{profile.city}</p>
                     <span className={`pending-status-badge font-ui ${isSuper ? 'status-super' : status === 'pending' ? 'status-review' : ''}`}>
                       {isSuper ? 'SUPER SPARK SENT ⭐️' : status === 'pending' ? 'Pending Review...' : 'Interest Sent'}
                     </span>
@@ -1255,121 +1346,420 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           margin-bottom: var(--space-8);
         }
 
-        /* Connections */
+        /* Connections Responsive Grid */
         .connections-grid {
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-3);
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: var(--space-6);
         }
 
-        .connection-item-card {
-          display: flex;
-          align-items: center;
+        @media (max-width: 900px) {
+          .connections-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+          }
+        }
+
+        @media (max-width: 600px) {
+          .connections-grid {
+            grid-template-columns: 1fr;
+            gap: var(--space-5);
+          }
+        }
+
+        .match-profile-card {
           background-color: var(--bg-surface);
           border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          padding: var(--space-4);
-          box-shadow: var(--shadow-sm);
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
           cursor: pointer;
-          transition: all var(--duration-fast);
-          gap: var(--space-4);
-        }
-
-        .connection-item-card:hover {
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-md);
-          border-color: var(--burgundy-300);
-        }
-
-        .connection-avatar-img {
-          width: 64px;
-          height: 64px;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 2px solid #FFFFFF;
-          box-shadow: var(--shadow-sm);
-          flex-shrink: 0;
-        }
-
-        .connection-card-info {
-          flex: 1;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          position: relative;
+        }
+
+        .match-profile-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 16px 36px rgba(184, 67, 106, 0.2);
+          border-color: rgba(184, 67, 106, 0.4);
+        }
+
+        .match-card-photo-wrap {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 4/5;
+          min-height: 260px;
+          max-height: 360px;
+          background-color: var(--charcoal-900);
           overflow: hidden;
         }
 
-        .connection-name-row {
+        .match-card-photo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 0.4s ease;
+        }
+
+        .match-profile-card:hover .match-card-photo {
+          transform: scale(1.04);
+        }
+
+        .match-card-gradient-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(18, 14, 16, 0.95) 0%, rgba(18, 14, 16, 0.4) 45%, transparent 100%);
+          pointer-events: none;
+        }
+
+        .match-card-top-badges {
+          position: absolute;
+          top: var(--space-3);
+          left: var(--space-3);
+          right: var(--space-3);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          z-index: 5;
+          pointer-events: none;
+        }
+
+        .match-vibe-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(18, 14, 16, 0.85);
+          border: 1px solid rgba(243, 198, 143, 0.4);
+          color: #F3C68F;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 3px 9px;
+          border-radius: var(--radius-full);
+          backdrop-filter: blur(8px);
+        }
+
+        .match-verified-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          background: rgba(46, 125, 50, 0.85);
+          color: #FFFFFF;
+          font-size: 10px;
+          font-weight: 600;
+          padding: 3px 8px;
+          border-radius: var(--radius-full);
+          backdrop-filter: blur(4px);
+        }
+
+        .match-voice-btn {
+          position: absolute;
+          top: var(--space-3);
+          right: var(--space-3);
+          background: rgba(184, 67, 106, 0.9);
+          color: #FFFFFF;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          padding: 4px 10px;
+          border-radius: var(--radius-full);
+          font-size: 11px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          z-index: 6;
+          backdrop-filter: blur(6px);
+          transition: all 0.2s ease;
+        }
+
+        .match-voice-btn.playing {
+          background: linear-gradient(135deg, #F3C68F, #FF6B81);
+          color: #1A1517;
+          border-color: #F3C68F;
+          box-shadow: 0 0 12px rgba(243, 198, 143, 0.8);
+        }
+
+        .match-card-presence-wrap {
+          position: absolute;
+          bottom: var(--space-3);
+          right: var(--space-3);
+          z-index: 5;
+        }
+
+        .match-online-dot {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          border: 2px solid var(--bg-surface);
+          display: block;
+        }
+
+        .match-online-dot.online {
+          background-color: #10B981;
+          box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+        }
+
+        .match-online-dot.offline {
+          background-color: #6B7280;
+          opacity: 0.7;
+        }
+
+        .match-card-spark-note {
+          position: absolute;
+          bottom: var(--space-3);
+          left: var(--space-3);
+          max-width: calc(100% - 48px);
+          background: rgba(30, 20, 24, 0.95);
+          border: 1px solid rgba(212, 173, 106, 0.5);
+          color: #FCE7F3;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-size: 11px;
+          font-weight: 600;
+          z-index: 6;
+          backdrop-filter: blur(8px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+          cursor: pointer;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .match-card-content {
+          padding: var(--space-4);
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+          flex: 1;
+          background: var(--bg-surface);
+        }
+
+        .match-card-info-header {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .match-name-age-row {
+          display: flex;
+          align-items: baseline;
+          gap: 2px;
+        }
+
+        .match-card-name {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: var(--text-primary);
+          margin: 0;
+        }
+
+        .match-card-age {
+          font-size: 1rem;
+          color: var(--text-secondary);
+          font-weight: 400;
+        }
+
+        .match-card-location-intent {
+          font-size: var(--text-caption);
+          color: var(--text-tertiary);
+          font-weight: 500;
+        }
+
+        .match-intent-text {
+          color: var(--burgundy-400, #D0607F);
+          font-weight: 600;
+        }
+
+        .match-card-story {
+          font-size: var(--text-body-sm);
+          color: var(--text-secondary);
+          line-height: var(--leading-relaxed);
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          margin: 2px 0;
+        }
+
+        .match-card-interests {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+          margin: 2px 0;
+        }
+
+        .match-interest-tag {
+          font-size: 11px;
+          background: var(--bg-surface-raised, rgba(255, 255, 255, 0.06));
+          color: var(--text-secondary);
+          padding: 2px 8px;
+          border-radius: var(--radius-full);
+          border: 1px solid var(--border-subtle);
+        }
+
+        .match-card-preview-text {
+          font-size: var(--text-caption);
+          color: var(--text-muted);
+        }
+
+        .match-card-actions {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+          margin-top: auto;
+          padding-top: var(--space-2);
+        }
+
+        .match-action-btn {
+          flex: 1;
+          padding: 8px 12px !important;
+          font-size: var(--text-body-sm) !important;
+          font-weight: 600 !important;
+          border-radius: var(--radius-full) !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+        }
+
+        /* Received Section */
+        .received-section {
+          margin-top: var(--space-6);
+        }
+
+        .received-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: var(--space-5);
+        }
+
+        @media (max-width: 600px) {
+          .received-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .received-profile-card {
+          display: flex;
+          flex-direction: column;
+          background-color: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+          cursor: pointer;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+          position: relative;
+        }
+
+        .received-profile-card.is-super-spark {
+          border: 1.5px solid var(--gold-400);
+          background: linear-gradient(135deg, rgba(212, 173, 106, 0.12), rgba(30, 24, 27, 0.95));
+          box-shadow: 0 6px 24px rgba(212, 173, 106, 0.25);
+        }
+
+        .received-profile-card:hover {
+          transform: translateY(-3px);
+          border-color: var(--burgundy-400);
+          box-shadow: 0 12px 28px rgba(184, 67, 106, 0.25);
+        }
+
+        .received-card-media {
+          position: relative;
+          width: 100%;
+          height: 220px;
+          overflow: hidden;
+          background-color: var(--charcoal-900);
+        }
+
+        .received-card-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.3s ease;
+        }
+
+        .received-profile-card:hover .received-card-image {
+          transform: scale(1.04);
+        }
+
+        .received-card-gradient {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(18, 14, 16, 0.95) 0%, transparent 80%);
+          pointer-events: none;
+        }
+
+        .received-super-badge {
+          position: absolute;
+          top: var(--space-3);
+          left: var(--space-3);
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(212, 173, 106, 0.95);
+          color: #1A1517;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.5px;
+          padding: 3px 9px;
+          border-radius: var(--radius-full);
+          z-index: 5;
+        }
+
+        .received-card-body {
+          padding: var(--space-4);
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+        }
+
+        .received-name-row {
           display: flex;
           align-items: baseline;
         }
 
-        .connection-name {
-          font-size: var(--text-body-lg);
-          font-weight: bold;
+        .received-name {
+          font-size: 1.2rem;
+          font-weight: 700;
           color: var(--text-primary);
+          margin: 0;
         }
 
-        .connection-age {
-          font-size: var(--text-body-sm);
+        .received-age {
+          font-size: 1rem;
           color: var(--text-secondary);
+          font-weight: 400;
         }
 
-        .connection-meta {
+        .received-meta {
           font-size: var(--text-caption);
           color: var(--text-tertiary);
           font-weight: 500;
         }
 
-        .connection-preview-text {
-          font-size: var(--text-body-sm);
-          color: var(--text-muted);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .chat-cta-btn-refactored {
-          padding: var(--space-2) var(--space-4);
-          font-size: var(--text-body-sm);
-        }
-        }
-
-        .connection-name {
-          font-size: var(--text-body-lg);
-          font-weight: bold;
-          color: var(--text-primary);
-        }
-
-        .connection-age {
+        .received-story {
           font-size: var(--text-body-sm);
           color: var(--text-secondary);
-        }
-
-        .connection-meta {
-          font-size: var(--text-caption);
-          color: var(--text-tertiary);
-          font-weight: 500;
-        }
-
-        .connection-preview-text {
-          font-size: var(--text-body-sm);
-          color: var(--text-muted);
-          white-space: nowrap;
+          line-height: var(--leading-relaxed);
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
           overflow: hidden;
-          text-overflow: ellipsis;
         }
 
-        .chat-cta-btn-refactored {
-          padding: var(--space-2) var(--space-4);
-          font-size: var(--text-body-sm);
+        .accept-invite-btn {
+          width: 100%;
+          justify-content: center;
+          gap: 6px;
+          margin-top: var(--space-2);
+          padding: 10px 16px !important;
+          font-size: var(--text-body-sm) !important;
+          font-weight: 700 !important;
         }
 
-        .empty-heart-pulse {
-          animation: heartbeat 1.5s infinite;
-        }
-
-        /* Pending */
+        /* Pending Sent Section */
         .border-top {
           border-top: 1px solid var(--border-subtle);
           padding-top: var(--space-6);
@@ -1377,26 +1767,44 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .pending-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-          gap: var(--space-3);
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: var(--space-4);
         }
 
-        .pending-item-card {
+        @media (max-width: 600px) {
+          .pending-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .pending-profile-card {
           display: flex;
           align-items: center;
           background-color: var(--bg-surface);
           border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-md);
-          padding: var(--space-3);
+          border-radius: 16px;
+          padding: var(--space-3) var(--space-4);
           gap: var(--space-3);
+          transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .pending-profile-card:hover {
+          border-color: var(--border-default);
+          transform: translateY(-2px);
+        }
+
+        .pending-profile-card.is-super-sent {
+          border: 1px solid var(--gold-400);
+          background: linear-gradient(135deg, rgba(212, 173, 106, 0.08), var(--bg-surface));
         }
 
         .pending-avatar-img {
-          width: 48px;
-          height: 48px;
+          width: 56px;
+          height: 56px;
           border-radius: 50%;
           object-fit: cover;
           flex-shrink: 0;
+          border: 2px solid var(--border-subtle);
         }
 
         .pending-card-info {
@@ -1404,22 +1812,31 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           display: flex;
           flex-direction: column;
           gap: 2px;
+          overflow: hidden;
         }
 
         .pending-name-row {
-          font-size: var(--text-body-sm);
-          font-weight: 600;
+          display: flex;
+          align-items: baseline;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .pending-name {
+          font-size: var(--text-body);
+          font-weight: 700;
           color: var(--text-primary);
         }
 
         .pending-age {
-          font-weight: normal;
+          font-size: var(--text-body-sm);
           color: var(--text-secondary);
         }
 
-        .pending-item-card.is-super-sent {
-          border: 1px solid var(--gold-400);
-          background: linear-gradient(135deg, rgba(212, 173, 106, 0.08), var(--bg-surface));
+        .pending-meta {
+          font-size: var(--text-caption);
+          color: var(--text-tertiary);
         }
 
         .pending-status-badge {
@@ -1462,166 +1879,6 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           color: var(--text-secondary);
           font-style: italic;
           text-align: center;
-        }
-
-        .received-section {
-          margin-top: var(--space-6);
-        }
-
-        .received-grid {
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-3);
-        }
-
-        .received-item-card {
-          display: flex;
-          align-items: center;
-          width: 100%;
-          text-align: left;
-          background-color: var(--bg-surface);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-lg);
-          padding: var(--space-4);
-          box-shadow: var(--shadow-sm);
-          cursor: pointer;
-          transition: all var(--duration-fast);
-          gap: var(--space-4);
-          position: relative;
-        }
-
-        .received-item-card.is-super-spark {
-          border: 1.5px solid var(--gold-400);
-          background: linear-gradient(135deg, rgba(212, 173, 106, 0.12), rgba(30, 24, 27, 0.95));
-          box-shadow: 0 4px 20px rgba(212, 173, 106, 0.2);
-        }
-
-        .received-item-card:hover {
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-md);
-          border-color: var(--burgundy-300);
-        }
-
-        .received-item-card.is-super-spark:hover {
-          border-color: var(--gold-300);
-          box-shadow: 0 6px 24px rgba(212, 173, 106, 0.35);
-        }
-
-        .received-avatar-wrap {
-          position: relative;
-          display: inline-block;
-          flex-shrink: 0;
-        }
-
-        .received-avatar-img {
-          width: 64px;
-          height: 64px;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 2px solid #FFFFFF;
-          box-shadow: var(--shadow-sm);
-          flex-shrink: 0;
-        }
-
-        .received-avatar-img.super-avatar {
-          border: 2px solid var(--gold-400);
-          box-shadow: 0 0 12px rgba(212, 173, 106, 0.5);
-        }
-
-        .super-star-avatar-badge {
-          position: absolute;
-          bottom: 0;
-          right: 0;
-          background: linear-gradient(135deg, var(--gold-400), var(--gold-500));
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border: 1.5px solid #1A1517;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        .received-card-info {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .received-name-row {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          font-size: var(--text-body);
-          font-weight: 700;
-          color: var(--text-primary);
-        }
-
-        .received-super-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          background: rgba(212, 173, 106, 0.18);
-          border: 1px solid var(--gold-400);
-          color: var(--gold-400);
-          font-size: 10px;
-          font-weight: 800;
-          letter-spacing: 0.5px;
-          padding: 2px 8px;
-          border-radius: var(--radius-full);
-        }
-
-        .super-accept-btn {
-          background: linear-gradient(135deg, var(--gold-400), var(--gold-500)) !important;
-          color: #1A1517 !important;
-          font-weight: 700 !important;
-          border: none !important;
-          box-shadow: 0 4px 14px rgba(212, 173, 106, 0.4) !important;
-        }
-
-        .super-accept-btn:hover {
-          background: linear-gradient(135deg, var(--gold-300), var(--gold-400)) !important;
-          transform: translateY(-1px) scale(1.03) !important;
-        }
-
-        .received-age {
-          font-weight: 400;
-          color: var(--text-secondary);
-        }
-
-        .received-meta {
-          font-size: var(--text-caption);
-          color: var(--text-tertiary);
-          font-weight: 500;
-        }
-
-        .received-story {
-          font-size: var(--text-body-sm);
-          color: var(--text-secondary);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .accept-invite-btn {
-          flex-shrink: 0;
-          padding: var(--space-2) var(--space-4);
-          font-size: var(--text-body-sm);
-        }
-
-        @media (max-width: 560px) {
-          .received-item-card {
-            align-items: flex-start;
-            flex-wrap: wrap;
-          }
-
-          .accept-invite-btn {
-            width: 100%;
-            justify-content: center;
-          }
         }
       `}</style>
     </div>
