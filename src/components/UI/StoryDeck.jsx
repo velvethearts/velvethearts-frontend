@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { computeVibeMatch } from '../../utils/vibe';
-import { 
-  Heart, 
-  X, 
-  ArrowLeft, 
-  ArrowRight,
-  Star, 
-  Sparkle, 
-  ChatCircleText, 
-  CheckCircle, 
-  CaretLeft, 
+import {
+  Heart,
+  X,
+  ArrowLeft,
+  Star,
+  Sparkle,
+  ChatCircleText,
+  CheckCircle,
+  CaretLeft,
   CaretRight,
   CaretUp,
-  Bookmark
+  Info,
+  Bookmark,
+  HandGrabbing
 } from '@phosphor-icons/react';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
@@ -186,8 +187,8 @@ export const StoryDeck = ({
     if (!isDragging) return;
     const touch = e.touches[0];
     const dx = touch.clientX - dragStartRef.current.x;
-    const dy = touch.clientY - dragStartRef.current.y;
-    setDragOffset({ x: dx, y: dy });
+    // Only track X — let Y scroll freely without interfering with the page
+    setDragOffset({ x: dx, y: 0 });
   };
 
   const handleTouchEnd = () => {
@@ -210,8 +211,6 @@ export const StoryDeck = ({
       handleSwipe('right');
     } else if (dragOffset.x < -100) {
       handleSwipe('left');
-    } else if (dragOffset.y < -120) {
-      handleSwipe('super');
     } else {
       // Snap back
       setDragOffset({ x: 0, y: 0 });
@@ -226,8 +225,8 @@ export const StoryDeck = ({
   const handleMouseMove = (e) => {
     if (!isDragging) return;
     const dx = e.clientX - dragStartRef.current.x;
-    const dy = e.clientY - dragStartRef.current.y;
-    setDragOffset({ x: dx, y: dy });
+    // Only track X — Y scroll is for the page
+    setDragOffset({ x: dx, y: 0 });
   };
 
   const handleMouseUp = () => {
@@ -250,8 +249,6 @@ export const StoryDeck = ({
       handleSwipe('right');
     } else if (dragOffset.x < -100) {
       handleSwipe('left');
-    } else if (dragOffset.y < -120) {
-      handleSwipe('super');
     } else {
       setDragOffset({ x: 0, y: 0 });
     }
@@ -344,13 +341,13 @@ export const StoryDeck = ({
 
   const isSaved = savedProfiles.includes(activeProfile.id);
 
-  // Rotation tilt angle based on drag x offset
+  // Rotation tilt angle based on drag x offset only
   const rotateDeg = dragOffset.x * 0.06;
 
-  // Overlay stamp opacity
+  // Overlay stamp opacity — only driven by x drag or button trigger
   const stampSparkOpacity = swipeDirection === 'right' ? 1 : Math.min(Math.max(dragOffset.x / 80, 0), 1);
   const stampPassOpacity = swipeDirection === 'left' ? 1 : Math.min(Math.max(-dragOffset.x / 80, 0), 1);
-  const stampSuperOpacity = swipeDirection === 'super' ? 1 : Math.min(Math.max(-dragOffset.y / 80, 0), 1);
+  const stampSuperOpacity = swipeDirection === 'super' ? 1 : 0;
 
   return (
     <div className="story-deck-wrapper">
@@ -379,10 +376,10 @@ export const StoryDeck = ({
       </div>
 
       {/* Dynamic Main Card */}
-      <div 
+      <div
         className={`story-card-container ${swipeDirection ? `swiping-${swipeDirection}` : ''}`}
         style={{
-          transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${rotateDeg}deg)`,
+          transform: `translate3d(${dragOffset.x}px, 0px, 0) rotate(${rotateDeg}deg)`,
           transition: isDragging ? 'none' : 'transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
         }}
         onTouchStart={handleTouchStart}
@@ -510,26 +507,19 @@ export const StoryDeck = ({
 
         {/* Story Body Details */}
         <div className="story-card-body font-ui">
-
-          {/* City • Intent meta line */}
-          <p className="story-meta-line font-ui">
-            <span className="story-meta-city">{activeProfile.city}</span>
-            <span className="story-meta-sep">•</span>
-            <span className="story-meta-intent">{activeProfile.relationshipIntent}</span>
-          </p>
-
-          {/* Big editorial name + age + bookmark */}
-          <div className="story-title-row">
-            <h2
-              className="story-card-name font-display"
+          <div className="story-header-row">
+            <div
+              className="story-name-wrap"
+              style={{ cursor: 'pointer' }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
               }}
-              title="View full profile"
+              title="Click to view full profile"
             >
-              {activeProfile.name}<span className="story-card-age">, {activeProfile.age}</span>
-            </h2>
+              <h2 className="story-name font-display">{activeProfile.name}</h2>
+              <span className="story-age font-ui">, {activeProfile.age}</span>
+            </div>
             <button
               type="button"
               onClick={(e) => {
@@ -537,19 +527,17 @@ export const StoryDeck = ({
                 if (onSaveProfile) onSaveProfile(activeProfile.id);
               }}
               className={`story-bookmark-btn ${isSaved ? 'saved' : ''}`}
-              title={isSaved ? 'Saved' : 'Save Profile'}
+              title={isSaved ? "Saved" : "Save Profile"}
             >
               <Bookmark size={20} weight={isSaved ? 'fill' : 'regular'} />
             </button>
           </div>
 
-          {/* Identity chips */}
-          <div className="story-identity-row font-ui">
-            <span className="identity-tag">{activeProfile.gender}</span>
-            <span className="identity-tag">{activeProfile.orientation}</span>
-          </div>
+          <p className="story-location-intent font-ui">
+            {activeProfile.city} &bull; <span className="story-intent-highlight">{activeProfile.relationshipIntent}</span>
+          </p>
 
-          {/* Story description (clickable → prompt reaction) */}
+          {/* Editorial Story Quote Block */}
           {activeProfile.story && (
             <div
               className="story-quote-block"
@@ -564,12 +552,19 @@ export const StoryDeck = ({
               }}
               title="Click to comment on this story"
             >
+              <span className="quote-icon-small">&ldquo;</span>
               <p className="story-quote-text font-body">{activeProfile.story}</p>
               <span className="quote-reply-hint font-ui">💬 Reply to story</span>
             </div>
           )}
 
-          {/* Interests chips (clickable → prompt reaction) */}
+          {/* Identity & Pronouns */}
+          <div className="story-identity-row font-ui">
+            <span className="identity-tag">{activeProfile.gender}</span>
+            <span className="identity-tag">{activeProfile.orientation}</span>
+          </div>
+
+          {/* Interests Pills */}
           {activeProfile.interests?.length > 0 && (
             <div className="story-interests-wrap font-ui">
               {activeProfile.interests.map(interest => (
@@ -595,40 +590,26 @@ export const StoryDeck = ({
             </div>
           )}
 
-          {/* Profile identity strip */}
-          <div className="story-profile-strip">
-            <div className="profile-strip-left">
-              <img
-                className="profile-strip-avatar"
-                src={displayPhotos[0] || getDefaultAvatar(activeProfile?.gender)}
-                alt={activeProfile.name}
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = getDefaultAvatar(activeProfile?.gender);
-                }}
-              />
-              <div className="profile-strip-info">
-                <span className="profile-strip-name">{activeProfile.name}, {activeProfile.age}</span>
-                <span className="profile-strip-tagline">{activeProfile.relationshipIntent}</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="profile-strip-link font-ui"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
-              }}
-            >
-              Profile <ArrowRight size={13} weight="bold" />
-            </button>
-          </div>
+          {/* Full detail view link */}
+          <button
+            type="button"
+            className="story-view-full-btn font-ui"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onSelectProfile && activeProfile) {
+                onSelectProfile(activeProfile);
+              }
+            }}
+          >
+            <Info size={16} />
+            <span>View Full Profile</span>
+          </button>
         </div>
       </div>
 
-      {/* Action bar — secondary row + primary pill row */}
+      {/* Action bar */}
       <div className="story-actions-bar">
-        {/* Secondary: Undo + Super Spark */}
+        {/* Secondary row: Undo + Super Spark circle buttons */}
         <div className="story-actions-secondary">
           <button
             type="button"
@@ -643,23 +624,22 @@ export const StoryDeck = ({
           <button
             type="button"
             onClick={() => handleSwipe('super')}
-            className="action-btn btn-super"
+            className="action-btn btn-super-circle"
             aria-label="Super Spark"
-            title="Super Spark (↑ Arrow Up)"
+            title="Super Spark"
           >
-            <Star size={16} weight="fill" />
-            <span className="btn-super-label">Super Spark</span>
+            <Star size={18} weight="fill" />
           </button>
         </div>
 
-        {/* Primary: Skip + Spark pill buttons */}
+        {/* Primary row: Skip + Spark pill buttons */}
         <div className="story-actions-primary">
           <button
             type="button"
             onClick={() => handleSwipe('left')}
             className="action-pill-btn btn-skip-pill"
             aria-label="Pass"
-            title="Pass Softly (← Arrow Left)"
+            title="Pass Softly"
           >
             <X size={18} weight="bold" />
             <span>Skip</span>
@@ -669,7 +649,7 @@ export const StoryDeck = ({
             onClick={() => handleSwipe('right')}
             className="action-pill-btn btn-spark-pill"
             aria-label="Spark"
-            title="Spark (→ Arrow Right)"
+            title="Spark"
           >
             <Heart size={18} weight="fill" />
             <span>Spark</span>
@@ -948,10 +928,31 @@ export const StoryDeck = ({
 
         /* Card Body Details */
         .story-card-body {
-          padding: var(--space-4) var(--space-4) var(--space-3);
+          padding: var(--space-4);
           display: flex;
           flex-direction: column;
           gap: var(--space-2);
+        }
+
+        .story-header-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .story-name-wrap {
+          display: flex;
+          align-items: baseline;
+        }
+
+        .story-name {
+          font-size: var(--text-heading);
+          color: var(--text-primary);
+        }
+
+        .story-age {
+          font-size: var(--text-subheading);
+          color: var(--text-secondary);
         }
 
         .story-bookmark-btn {
@@ -962,163 +963,54 @@ export const StoryDeck = ({
           padding: var(--space-1);
           border-radius: 50%;
           transition: all var(--duration-fast);
-          flex-shrink: 0;
-          margin-top: 2px;
         }
 
         .story-bookmark-btn:hover, .story-bookmark-btn.saved {
           color: var(--gold-500);
         }
 
-        /* Meta line */
-        .story-meta-line {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--text-tertiary);
-          margin-bottom: 4px;
-        }
-
-        .story-meta-sep {
-          opacity: 0.5;
-        }
-
-        .story-meta-intent {
-          color: var(--text-accent);
-        }
-
-        /* Editorial title row */
-        .story-title-row {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: var(--space-2);
-          margin-bottom: var(--space-2);
-        }
-
-        .story-card-name {
-          font-size: clamp(1.4rem, 3vw, 1.85rem);
-          font-weight: 800;
-          color: var(--text-primary);
-          line-height: 1.15;
-          cursor: pointer;
-          flex: 1;
-          letter-spacing: -0.02em;
-        }
-
-        .story-card-name:hover {
-          color: var(--text-accent);
-        }
-
-        .story-card-age {
-          font-weight: 500;
-          color: var(--text-secondary);
-          font-size: 0.8em;
-        }
-
-        /* Profile strip */
-        .story-profile-strip {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-top: 1px solid var(--border-subtle);
-          padding-top: var(--space-3);
-          margin-top: var(--space-3);
-          gap: var(--space-2);
-        }
-
-        .profile-strip-left {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          min-width: 0;
-        }
-
-        .profile-strip-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 2px solid var(--burgundy-400);
-          flex-shrink: 0;
-        }
-
-        .profile-strip-info {
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-        }
-
-        .profile-strip-name {
+        .story-location-intent {
           font-size: var(--text-body-sm);
-          font-weight: 700;
-          color: var(--text-primary);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .profile-strip-tagline {
-          font-size: 11px;
           color: var(--text-tertiary);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
         }
 
-        .profile-strip-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 12px;
-          font-weight: 700;
+        .story-intent-highlight {
           color: var(--text-accent);
-          letter-spacing: 0.02em;
-          white-space: nowrap;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          transition: all var(--duration-fast);
-          flex-shrink: 0;
+          font-weight: 600;
         }
 
-        .profile-strip-link:hover {
-          color: var(--burgundy-400);
-        }
-
-        /* Quote / Description Block */
+        /* Quote Block */
         .story-quote-block {
-          background: var(--bg-surface-warm);
-          border-radius: var(--radius-md);
-          padding: var(--space-3);
+          background-color: var(--bg-surface-warm);
+          border-left: 3px solid var(--burgundy-400);
+          border-radius: 0 var(--radius-md) var(--radius-md) 0;
+          padding: var(--space-3) var(--space-4);
+          position: relative;
           cursor: pointer;
           transition: all var(--duration-fast);
-          border: 1px solid var(--border-subtle);
         }
 
         .story-quote-block:hover {
-          background: var(--bg-accent-subtle);
-          border-color: var(--burgundy-300);
+          background-color: var(--bg-accent-subtle);
+        }
+
+        .quote-icon-small {
+          font-size: 20px;
+          color: var(--burgundy-400);
+          line-height: 1;
         }
 
         .story-quote-text {
           font-size: var(--text-body-sm);
           color: var(--text-secondary);
+          font-style: italic;
           line-height: var(--leading-relaxed);
-          margin: 0 0 4px;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+          margin-bottom: var(--space-1);
         }
 
         .quote-reply-hint {
           font-size: 11px;
-          color: var(--text-accent);
+          color: var(--burgundy-500);
           font-weight: 600;
         }
 
@@ -1126,12 +1018,11 @@ export const StoryDeck = ({
         .story-identity-row {
           display: flex;
           gap: var(--space-2);
-          flex-wrap: wrap;
         }
 
         .identity-tag {
           font-size: 11px;
-          background: var(--bg-surface-warm);
+          background-color: var(--bg-surface-warm);
           border: 1px solid var(--border-subtle);
           color: var(--text-secondary);
           padding: 2px var(--space-3);
@@ -1143,36 +1034,58 @@ export const StoryDeck = ({
         .story-interests-wrap {
           display: flex;
           flex-wrap: wrap;
-          gap: 6px;
+          gap: var(--space-2);
         }
 
         .story-interest-chip {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          background: var(--burgundy-50);
+          background-color: var(--burgundy-50);
           color: var(--burgundy-600);
           border: 1px solid var(--burgundy-200);
-          padding: 3px var(--space-3);
+          padding: var(--space-1) var(--space-3);
           border-radius: var(--radius-full);
-          font-size: 11px;
-          font-weight: 600;
+          font-size: 12px;
+          font-weight: 500;
           cursor: pointer;
           transition: all var(--duration-fast);
         }
 
         .story-interest-chip:hover {
-          background: var(--burgundy-100);
+          background-color: var(--burgundy-100);
           border-color: var(--burgundy-300);
-          transform: translateY(-1px);
         }
 
         .chip-plus {
           font-weight: bold;
-          opacity: 0.6;
+          opacity: 0.7;
         }
 
-        /* Action Bar */
+        .story-view-full-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-2);
+          background: transparent;
+          border: 1px dashed var(--border-default);
+          border-radius: var(--radius-full);
+          padding: var(--space-2);
+          color: var(--text-secondary);
+          font-size: var(--text-body-sm);
+          font-weight: 500;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          margin-top: var(--space-2);
+        }
+
+        .story-view-full-btn:hover {
+          border-color: var(--burgundy-300);
+          color: var(--burgundy-500);
+          background-color: var(--bg-surface-warm);
+        }
+
+        /* Action Bar \u2014 two rows */
         .story-actions-bar {
           display: flex;
           flex-direction: column;
@@ -1182,7 +1095,7 @@ export const StoryDeck = ({
           width: 100%;
         }
 
-        /* Secondary row: Undo + Super Spark */
+        /* Secondary row: small circle buttons */
         .story-actions-secondary {
           display: flex;
           align-items: center;
@@ -1207,52 +1120,37 @@ export const StoryDeck = ({
         }
 
         .action-btn:hover:not(:disabled) {
-          transform: translateY(-2px) scale(1.06);
+          transform: translateY(-2px) scale(1.08);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
 
         .btn-undo {
-          width: 40px;
-          height: 40px;
+          width: 44px;
+          height: 44px;
           background: var(--bg-surface);
           color: var(--text-tertiary);
           border: 1.5px solid var(--border-default);
         }
 
         .btn-undo:hover:not(:disabled) {
-          color: var(--gold-400);
-          border-color: var(--gold-400);
+          color: var(--text-primary);
+          border-color: var(--text-primary);
         }
 
-        .btn-super {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 16px;
-          border-radius: var(--radius-full);
+        .btn-super-circle {
+          width: 44px;
+          height: 44px;
           background: var(--bg-surface);
           color: var(--gold-400);
           border: 1.5px solid var(--gold-400);
-          font-size: 12px;
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          cursor: pointer;
-          transition: all var(--duration-fast);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .btn-super:hover {
-          background: rgba(212, 173, 106, 0.15);
-          box-shadow: 0 0 16px rgba(212, 173, 106, 0.4);
-          transform: translateY(-2px);
+        .btn-super-circle:hover {
+          background: rgba(212, 173, 106, 0.12);
+          box-shadow: 0 0 14px rgba(212, 173, 106, 0.4);
         }
 
-        .btn-super-label {
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.04em;
-        }
-
-        /* Primary pill row */
+        /* Primary row: pill buttons */
         .story-actions-primary {
           display: flex;
           align-items: center;
@@ -1273,7 +1171,11 @@ export const StoryDeck = ({
           letter-spacing: 0.04em;
           cursor: pointer;
           transition: all var(--duration-fast);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+        }
+
+        .action-pill-btn:hover {
+          transform: translateY(-2px);
         }
 
         .btn-skip-pill {
@@ -1283,22 +1185,20 @@ export const StoryDeck = ({
         }
 
         .btn-skip-pill:hover {
-          border-color: var(--charcoal-400);
+          border-color: var(--charcoal-500);
           background: var(--bg-surface-warm);
-          transform: translateY(-2px);
         }
 
         .btn-spark-pill {
           background: linear-gradient(135deg, var(--burgundy-500) 0%, var(--burgundy-600) 100%);
           color: #FFFFFF;
           border: 2px solid transparent;
-          box-shadow: 0 8px 24px rgba(184, 67, 106, 0.45);
+          box-shadow: 0 8px 22px rgba(184, 67, 106, 0.4);
         }
 
         .btn-spark-pill:hover {
           background: linear-gradient(135deg, var(--burgundy-400) 0%, var(--burgundy-500) 100%);
-          box-shadow: 0 10px 28px rgba(184, 67, 106, 0.6);
-          transform: translateY(-2px);
+          box-shadow: 0 10px 28px rgba(184, 67, 106, 0.55);
         }
 
         /* Swipe Tutorial Hint Overlay & Animation */
