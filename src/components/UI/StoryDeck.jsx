@@ -411,11 +411,6 @@ export const StoryDeck = ({
                 <span>Swipe Left to Pass</span>
               </div>
 
-              <div className="guide-item guide-up">
-                <CaretUp size={18} weight="bold" className="anim-pulse-up" />
-                <span>Swipe Up for Super Spark</span>
-              </div>
-
               <div className="guide-item guide-right">
                 <span>Swipe Right to Spark</span>
                 <CaretRight size={18} weight="bold" className="anim-pulse-right" />
@@ -607,54 +602,58 @@ export const StoryDeck = ({
         </div>
       </div>
 
-      {/* Action bar */}
+      {/* Action bar — single primary row */}
       <div className="story-actions-bar">
-        {/* Secondary row: Undo + Super Spark circle buttons */}
-        <div className="story-actions-secondary">
-          <button
-            type="button"
-            onClick={handleUndo}
-            disabled={swipeHistory.length === 0}
-            className="action-btn btn-undo"
-            aria-label="Undo last swipe"
-            title="Undo (Backspace)"
-          >
-            <ArrowLeft size={18} weight="bold" />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSwipe('super')}
-            className="action-btn btn-super-circle"
-            aria-label="Super Spark"
-            title="Super Spark"
-          >
-            <Star size={18} weight="fill" />
-          </button>
-        </div>
-
-        {/* Primary row: Skip + Spark pill buttons */}
         <div className="story-actions-primary">
+          {/* Skip */}
           <button
             type="button"
             onClick={() => handleSwipe('left')}
             className="action-pill-btn btn-skip-pill"
-            aria-label="Pass"
-            title="Pass Softly"
+            aria-label="Pass this profile"
+            title="Pass"
           >
-            <X size={18} weight="bold" />
+            <X size={16} weight="bold" />
             <span>Skip</span>
           </button>
+
+          {/* Super Spark — clearly labeled */}
+          <button
+            type="button"
+            onClick={() => handleSwipe('super')}
+            className="action-pill-btn btn-super-spark-pill"
+            aria-label="Super Spark — show strong interest"
+            title="Super Spark — they'll be notified you're very interested!"
+          >
+            <Star size={16} weight="fill" />
+            <span>Super Spark</span>
+          </button>
+
+          {/* Spark */}
           <button
             type="button"
             onClick={() => handleSwipe('right')}
             className="action-pill-btn btn-spark-pill"
-            aria-label="Spark"
+            aria-label="Spark this profile"
             title="Spark"
           >
-            <Heart size={18} weight="fill" />
+            <Heart size={16} weight="fill" />
             <span>Spark</span>
           </button>
         </div>
+
+        {/* Undo — subtle text button below */}
+        <button
+          type="button"
+          onClick={handleUndo}
+          disabled={swipeHistory.length === 0}
+          className="btn-undo-text font-ui"
+          aria-label="Undo last swipe"
+          title="Undo last swipe (Backspace)"
+        >
+          <ArrowLeft size={13} weight="bold" />
+          <span>Undo</span>
+        </button>
       </div>
 
       {/* Prompt Reaction Modal */}
@@ -1085,76 +1084,48 @@ export const StoryDeck = ({
           background-color: var(--bg-surface-warm);
         }
 
-        /* Action Bar \u2014 two rows */
+        /* Action Bar — single row of 3 pill buttons + undo below */
         .story-actions-bar {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: var(--space-3);
+          gap: var(--space-2);
           margin-top: var(--space-5);
           width: 100%;
         }
 
-        /* Secondary row: small circle buttons */
-        .story-actions-secondary {
-          display: flex;
+        /* Undo — visible outlined pill button */
+        .btn-undo-text {
+          display: inline-flex;
           align-items: center;
-          justify-content: center;
-          gap: var(--space-3);
-        }
-
-        .action-btn {
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          gap: 6px;
+          background: transparent;
+          border: 1.5px solid var(--border-default);
+          color: var(--text-secondary);
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.03em;
           cursor: pointer;
+          padding: 10px 20px;
+          border-radius: var(--radius-full);
           transition: all var(--duration-fast);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .action-btn:disabled {
+        .btn-undo-text:hover:not(:disabled) {
+          color: var(--text-primary);
+          border-color: var(--text-secondary);
+          background: var(--bg-surface-warm);
+        }
+
+        .btn-undo-text:disabled {
           opacity: 0.3;
           cursor: not-allowed;
-          box-shadow: none;
         }
 
-        .action-btn:hover:not(:disabled) {
-          transform: translateY(-2px) scale(1.08);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-undo {
-          width: 44px;
-          height: 44px;
-          background: var(--bg-surface);
-          color: var(--text-tertiary);
-          border: 1.5px solid var(--border-default);
-        }
-
-        .btn-undo:hover:not(:disabled) {
-          color: var(--text-primary);
-          border-color: var(--text-primary);
-        }
-
-        .btn-super-circle {
-          width: 44px;
-          height: 44px;
-          background: var(--bg-surface);
-          color: var(--gold-400);
-          border: 1.5px solid var(--gold-400);
-        }
-
-        .btn-super-circle:hover {
-          background: rgba(212, 173, 106, 0.12);
-          box-shadow: 0 0 14px rgba(212, 173, 106, 0.4);
-        }
-
-        /* Primary row: pill buttons */
         .story-actions-primary {
           display: flex;
           align-items: center;
-          gap: var(--space-3);
+          gap: var(--space-2);
           width: 100%;
         }
 
@@ -1163,21 +1134,22 @@ export const StoryDeck = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: var(--space-2);
-          padding: 14px var(--space-4);
+          gap: 5px;
+          padding: 12px 8px;
           border-radius: var(--radius-full);
-          font-size: var(--text-body-sm);
+          font-size: 13px;
           font-weight: 700;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.03em;
           cursor: pointer;
           transition: all var(--duration-fast);
-          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+          white-space: nowrap;
         }
 
         .action-pill-btn:hover {
           transform: translateY(-2px);
         }
 
+        /* Skip — neutral outlined */
         .btn-skip-pill {
           background: transparent;
           color: var(--text-primary);
@@ -1189,16 +1161,30 @@ export const StoryDeck = ({
           background: var(--bg-surface-warm);
         }
 
+        /* Super Spark — gold, clearly labelled */
+        .btn-super-spark-pill {
+          background: transparent;
+          color: var(--gold-400);
+          border: 2px solid var(--gold-400);
+          box-shadow: 0 4px 14px rgba(212, 173, 106, 0.2);
+        }
+
+        .btn-super-spark-pill:hover {
+          background: rgba(212, 173, 106, 0.12);
+          box-shadow: 0 6px 20px rgba(212, 173, 106, 0.4);
+        }
+
+        /* Spark — rose filled */
         .btn-spark-pill {
           background: linear-gradient(135deg, var(--burgundy-500) 0%, var(--burgundy-600) 100%);
           color: #FFFFFF;
           border: 2px solid transparent;
-          box-shadow: 0 8px 22px rgba(184, 67, 106, 0.4);
+          box-shadow: 0 6px 20px rgba(184, 67, 106, 0.4);
         }
 
         .btn-spark-pill:hover {
           background: linear-gradient(135deg, var(--burgundy-400) 0%, var(--burgundy-500) 100%);
-          box-shadow: 0 10px 28px rgba(184, 67, 106, 0.55);
+          box-shadow: 0 8px 26px rgba(184, 67, 106, 0.55);
         }
 
         /* Swipe Tutorial Hint Overlay & Animation */

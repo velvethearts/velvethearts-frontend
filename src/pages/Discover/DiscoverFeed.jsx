@@ -178,37 +178,46 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         subtitle="Find someone who sees you."
         actions={
           <div className="discover-header-actions">
-            {/* View Mode Switcher */}
-            <div className="view-mode-toggle-group font-ui" role="group" aria-label="Browse view mode">
-              <button
-                type="button"
-                className={`view-mode-btn ${viewMode === 'deck' ? 'active' : ''}`}
-                onClick={() => setViewMode('deck')}
-                aria-label="Story Deck view"
-                title="Story Deck View"
-              >
-                <Cards size={18} weight={viewMode === 'deck' ? 'fill' : 'regular'} />
-                <span>Deck</span>
-              </button>
-              <button
-                type="button"
-                className={`view-mode-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                onClick={() => setViewMode('grid')}
-                aria-label="Gallery Wall view"
-                title="Gallery Wall View"
-              >
-                <SquaresFour size={18} weight={viewMode === 'grid' ? 'fill' : 'regular'} />
-                <span>Grid</span>
-              </button>
-            </div>
-
+            {/* View Mode Toggle Switch */}
             <button
+              type="button"
+              className="view-mode-toggle-switch font-ui"
+              onClick={() => setViewMode(viewMode === 'deck' ? 'grid' : 'deck')}
+              aria-label={`Switch to ${viewMode === 'deck' ? 'Grid' : 'Deck'} view`}
+              title={`Current: ${viewMode === 'deck' ? 'Story Deck' : 'Gallery Grid'} (Click to switch)`}
+            >
+              <Cards
+                size={18}
+                weight={viewMode === 'deck' ? 'fill' : 'regular'}
+                className={`toggle-icon ${viewMode === 'deck' ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setViewMode('deck');
+                }}
+              />
+              <div className="toggle-track">
+                <div className={`toggle-thumb ${viewMode === 'grid' ? 'grid-active' : 'deck-active'}`} />
+              </div>
+              <SquaresFour
+                size={18}
+                weight={viewMode === 'grid' ? 'fill' : 'regular'}
+                className={`toggle-icon ${viewMode === 'grid' ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setViewMode('grid');
+                }}
+              />
+            </button>
+
+            {/* Preferences icon-only button */}
+            <button
+              type="button"
               onClick={() => setShowPreferences(true)}
-              className={`filters-toggle-btn font-ui ${hasActiveFilters ? 'has-active' : ''}`}
+              className={`filters-toggle-btn icon-only font-ui ${hasActiveFilters ? 'has-active' : ''}`}
               aria-label="Filter preferences drawer"
+              title="Preferences & Filters"
             >
               <Sliders size={20} />
-              <span>Preferences</span>
               {hasActiveFilters && <span className="active-filters-indicator" />}
             </button>
           </div>
@@ -332,65 +341,104 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           gap: var(--space-3);
         }
 
-        .view-mode-toggle-group {
+        /* View Mode Toggle Switch (SlayDate style) */
+        .view-mode-toggle-switch {
           display: inline-flex;
           align-items: center;
-          background-color: var(--bg-surface-warm);
-          border: 1px solid var(--border-subtle);
+          gap: 8px;
+          background: var(--bg-surface-warm);
+          border: 1.5px solid var(--border-subtle);
           border-radius: var(--radius-full);
-          padding: 3px;
-        }
-
-        .view-mode-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
           padding: 4px 10px;
-          border-radius: var(--radius-full);
-          border: none;
-          background: transparent;
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--text-secondary);
           cursor: pointer;
           transition: all var(--duration-fast);
+          color: var(--text-tertiary);
         }
 
-        .view-mode-btn.active {
-          background-color: var(--bg-surface);
-          color: var(--text-primary);
-          box-shadow: var(--shadow-sm);
+        .view-mode-toggle-switch:hover {
+          border-color: var(--border-default);
+          background: var(--bg-surface);
         }
 
-        .filters-toggle-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--space-2);
-          border: 1.5px solid var(--border-default);
-          padding: var(--space-2) var(--space-4);
-          border-radius: var(--radius-full);
-          font-size: var(--text-body-sm);
-          font-weight: 500;
+        .view-mode-toggle-switch .toggle-icon {
+          color: var(--text-tertiary);
+          transition: color var(--duration-fast), transform var(--duration-fast);
+        }
+
+        .view-mode-toggle-switch .toggle-icon.active {
+          color: var(--burgundy-400);
+          transform: scale(1.1);
+        }
+
+        .view-mode-toggle-switch .toggle-track {
           position: relative;
-          color: var(--text-primary);
-          background-color: var(--bg-surface);
+          width: 34px;
+          height: 20px;
+          background: var(--bg-surface);
+          border: 1.5px solid var(--border-subtle);
+          border-radius: 10px;
+          padding: 2px;
+          display: flex;
+          align-items: center;
           transition: all var(--duration-fast);
         }
 
-        .filters-toggle-btn:hover {
-          background-color: var(--bg-surface-warm);
-          border-color: var(--text-primary);
+        .view-mode-toggle-switch .toggle-thumb {
+          width: 13px;
+          height: 13px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--burgundy-400), var(--burgundy-500));
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .active-filters-indicator {
+        .view-mode-toggle-switch .toggle-thumb.grid-active {
+          transform: translateX(14px);
+        }
+
+        .view-mode-toggle-switch .toggle-thumb.deck-active {
+          transform: translateX(0px);
+        }
+
+        /* Preferences Icon-only Button */
+        .filters-toggle-btn.icon-only {
+          width: 38px;
+          height: 38px;
+          padding: 0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          border: 1.5px solid var(--border-subtle);
+          background: var(--bg-surface-warm);
+          color: var(--text-secondary);
+          transition: all var(--duration-fast);
+          position: relative;
+        }
+
+        .filters-toggle-btn.icon-only:hover {
+          background: var(--bg-surface);
+          border-color: var(--burgundy-400);
+          color: var(--text-accent);
+          transform: translateY(-1px);
+        }
+
+        .filters-toggle-btn.icon-only.has-active {
+          border-color: var(--burgundy-400);
+          background: var(--bg-accent-subtle);
+          color: var(--text-accent);
+        }
+
+        .filters-toggle-btn.icon-only .active-filters-indicator {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background-color: var(--text-accent);
+          background: var(--burgundy-500);
           position: absolute;
           top: -2px;
           right: -2px;
           border: 2px solid var(--bg-surface);
+          box-shadow: 0 0 6px rgba(184, 67, 106, 0.6);
         }
 
         /* Search input */
