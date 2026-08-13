@@ -4,6 +4,7 @@ import {
   Heart, 
   X, 
   ArrowLeft, 
+  ArrowRight,
   Star, 
   Sparkle, 
   ChatCircleText, 
@@ -11,9 +12,7 @@ import {
   CaretLeft, 
   CaretRight,
   CaretUp,
-  Info,
-  Bookmark,
-  HandGrabbing
+  Bookmark
 } from '@phosphor-icons/react';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
@@ -511,19 +510,26 @@ export const StoryDeck = ({
 
         {/* Story Body Details */}
         <div className="story-card-body font-ui">
-          <div className="story-header-row">
-            <div 
-              className="story-name-wrap"
-              style={{ cursor: 'pointer' }}
+
+          {/* City • Intent meta line */}
+          <p className="story-meta-line font-ui">
+            <span className="story-meta-city">{activeProfile.city}</span>
+            <span className="story-meta-sep">•</span>
+            <span className="story-meta-intent">{activeProfile.relationshipIntent}</span>
+          </p>
+
+          {/* Big editorial name + age + bookmark */}
+          <div className="story-title-row">
+            <h2
+              className="story-card-name font-display"
               onClick={(e) => {
                 e.stopPropagation();
                 if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
               }}
-              title="Click to view full profile"
+              title="View full profile"
             >
-              <h2 className="story-name font-display">{activeProfile.name}</h2>
-              <span className="story-age font-ui">, {activeProfile.age}</span>
-            </div>
+              {activeProfile.name}<span className="story-card-age">, {activeProfile.age}</span>
+            </h2>
             <button
               type="button"
               onClick={(e) => {
@@ -531,19 +537,21 @@ export const StoryDeck = ({
                 if (onSaveProfile) onSaveProfile(activeProfile.id);
               }}
               className={`story-bookmark-btn ${isSaved ? 'saved' : ''}`}
-              title={isSaved ? "Saved" : "Save Profile"}
+              title={isSaved ? 'Saved' : 'Save Profile'}
             >
               <Bookmark size={20} weight={isSaved ? 'fill' : 'regular'} />
             </button>
           </div>
 
-          <p className="story-location-intent font-ui">
-            {activeProfile.city} &bull; <span className="story-intent-highlight">{activeProfile.relationshipIntent}</span>
-          </p>
+          {/* Identity chips */}
+          <div className="story-identity-row font-ui">
+            <span className="identity-tag">{activeProfile.gender}</span>
+            <span className="identity-tag">{activeProfile.orientation}</span>
+          </div>
 
-          {/* Editorial Story Quote Block */}
+          {/* Story description (clickable → prompt reaction) */}
           {activeProfile.story && (
-            <div 
+            <div
               className="story-quote-block"
               onClick={(e) => {
                 e.stopPropagation();
@@ -556,19 +564,12 @@ export const StoryDeck = ({
               }}
               title="Click to comment on this story"
             >
-              <span className="quote-icon-small">&ldquo;</span>
               <p className="story-quote-text font-body">{activeProfile.story}</p>
               <span className="quote-reply-hint font-ui">💬 Reply to story</span>
             </div>
           )}
 
-          {/* Identity & Pronouns */}
-          <div className="story-identity-row font-ui">
-            <span className="identity-tag">{activeProfile.gender}</span>
-            <span className="identity-tag">{activeProfile.orientation}</span>
-          </div>
-
-          {/* Interests Pills */}
+          {/* Interests chips (clickable → prompt reaction) */}
           {activeProfile.interests?.length > 0 && (
             <div className="story-interests-wrap font-ui">
               {activeProfile.interests.map(interest => (
@@ -594,69 +595,86 @@ export const StoryDeck = ({
             </div>
           )}
 
-          {/* Full detail view link */}
-          <button
-            type="button"
-            className="story-view-full-btn font-ui"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onSelectProfile && activeProfile) {
-                onSelectProfile(activeProfile);
-              }
-            }}
-          >
-            <Info size={16} />
-            <span>View Full Profile</span>
-          </button>
+          {/* Profile identity strip */}
+          <div className="story-profile-strip">
+            <div className="profile-strip-left">
+              <img
+                className="profile-strip-avatar"
+                src={displayPhotos[0] || getDefaultAvatar(activeProfile?.gender)}
+                alt={activeProfile.name}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = getDefaultAvatar(activeProfile?.gender);
+                }}
+              />
+              <div className="profile-strip-info">
+                <span className="profile-strip-name">{activeProfile.name}, {activeProfile.age}</span>
+                <span className="profile-strip-tagline">{activeProfile.relationshipIntent}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="profile-strip-link font-ui"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
+              }}
+            >
+              Profile <ArrowRight size={13} weight="bold" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Floating Action Control Bar */}
+      {/* Action bar — secondary row + primary pill row */}
       <div className="story-actions-bar">
-        {/* Undo */}
-        <button
-          type="button"
-          onClick={handleUndo}
-          disabled={swipeHistory.length === 0}
-          className="action-btn btn-undo"
-          aria-label="Undo last swipe"
-          title="Undo (Backspace)"
-        >
-          <ArrowLeft size={22} weight="bold" />
-        </button>
+        {/* Secondary: Undo + Super Spark */}
+        <div className="story-actions-secondary">
+          <button
+            type="button"
+            onClick={handleUndo}
+            disabled={swipeHistory.length === 0}
+            className="action-btn btn-undo"
+            aria-label="Undo last swipe"
+            title="Undo (Backspace)"
+          >
+            <ArrowLeft size={18} weight="bold" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSwipe('super')}
+            className="action-btn btn-super"
+            aria-label="Super Spark"
+            title="Super Spark (↑ Arrow Up)"
+          >
+            <Star size={16} weight="fill" />
+            <span className="btn-super-label">Super Spark</span>
+          </button>
+        </div>
 
-        {/* Pass */}
-        <button
-          type="button"
-          onClick={() => handleSwipe('left')}
-          className="action-btn btn-pass"
-          aria-label="Pass (← or Arrow Left)"
-          title="Pass Softly (← Arrow Left)"
-        >
-          <X size={28} weight="bold" />
-        </button>
-
-        {/* Super Spark */}
-        <button
-          type="button"
-          onClick={() => handleSwipe('super')}
-          className="action-btn btn-super"
-          aria-label="Super Spark (↑ or Arrow Up)"
-          title="Super Spark (↑ Arrow Up)"
-        >
-          <Star size={22} weight="fill" />
-        </button>
-
-        {/* Spark */}
-        <button
-          type="button"
-          onClick={() => handleSwipe('right')}
-          className="action-btn btn-spark"
-          aria-label="Spark (→ or Arrow Right)"
-          title="Spark (→ Arrow Right)"
-        >
-          <Heart size={28} weight="fill" />
-        </button>
+        {/* Primary: Skip + Spark pill buttons */}
+        <div className="story-actions-primary">
+          <button
+            type="button"
+            onClick={() => handleSwipe('left')}
+            className="action-pill-btn btn-skip-pill"
+            aria-label="Pass"
+            title="Pass Softly (← Arrow Left)"
+          >
+            <X size={18} weight="bold" />
+            <span>Skip</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSwipe('right')}
+            className="action-pill-btn btn-spark-pill"
+            aria-label="Spark"
+            title="Spark (→ Arrow Right)"
+          >
+            <Heart size={18} weight="fill" />
+            <span>Spark</span>
+          </button>
+        </div>
       </div>
 
       {/* Prompt Reaction Modal */}
@@ -930,31 +948,10 @@ export const StoryDeck = ({
 
         /* Card Body Details */
         .story-card-body {
-          padding: var(--space-4);
+          padding: var(--space-4) var(--space-4) var(--space-3);
           display: flex;
           flex-direction: column;
           gap: var(--space-2);
-        }
-
-        .story-header-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .story-name-wrap {
-          display: flex;
-          align-items: baseline;
-        }
-
-        .story-name {
-          font-size: var(--text-heading);
-          color: var(--text-primary);
-        }
-
-        .story-age {
-          font-size: var(--text-subheading);
-          color: var(--text-secondary);
         }
 
         .story-bookmark-btn {
@@ -965,54 +962,163 @@ export const StoryDeck = ({
           padding: var(--space-1);
           border-radius: 50%;
           transition: all var(--duration-fast);
+          flex-shrink: 0;
+          margin-top: 2px;
         }
 
         .story-bookmark-btn:hover, .story-bookmark-btn.saved {
           color: var(--gold-500);
         }
 
-        .story-location-intent {
-          font-size: var(--text-body-sm);
-          color: var(--text-tertiary);
-        }
-
-        .story-intent-highlight {
-          color: var(--text-accent);
+        /* Meta line */
+        .story-meta-line {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
           font-weight: 600;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--text-tertiary);
+          margin-bottom: 4px;
         }
 
-        /* Quote Block */
-        .story-quote-block {
-          background-color: var(--bg-surface-warm);
-          border-left: 3px solid var(--burgundy-400);
-          border-radius: 0 var(--radius-md) var(--radius-md) 0;
-          padding: var(--space-3) var(--space-4);
-          position: relative;
+        .story-meta-sep {
+          opacity: 0.5;
+        }
+
+        .story-meta-intent {
+          color: var(--text-accent);
+        }
+
+        /* Editorial title row */
+        .story-title-row {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: var(--space-2);
+          margin-bottom: var(--space-2);
+        }
+
+        .story-card-name {
+          font-size: clamp(1.4rem, 3vw, 1.85rem);
+          font-weight: 800;
+          color: var(--text-primary);
+          line-height: 1.15;
+          cursor: pointer;
+          flex: 1;
+          letter-spacing: -0.02em;
+        }
+
+        .story-card-name:hover {
+          color: var(--text-accent);
+        }
+
+        .story-card-age {
+          font-weight: 500;
+          color: var(--text-secondary);
+          font-size: 0.8em;
+        }
+
+        /* Profile strip */
+        .story-profile-strip {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-top: 1px solid var(--border-subtle);
+          padding-top: var(--space-3);
+          margin-top: var(--space-3);
+          gap: var(--space-2);
+        }
+
+        .profile-strip-left {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+          min-width: 0;
+        }
+
+        .profile-strip-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid var(--burgundy-400);
+          flex-shrink: 0;
+        }
+
+        .profile-strip-info {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+
+        .profile-strip-name {
+          font-size: var(--text-body-sm);
+          font-weight: 700;
+          color: var(--text-primary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .profile-strip-tagline {
+          font-size: 11px;
+          color: var(--text-tertiary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .profile-strip-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--text-accent);
+          letter-spacing: 0.02em;
+          white-space: nowrap;
+          background: transparent;
+          border: none;
           cursor: pointer;
           transition: all var(--duration-fast);
+          flex-shrink: 0;
+        }
+
+        .profile-strip-link:hover {
+          color: var(--burgundy-400);
+        }
+
+        /* Quote / Description Block */
+        .story-quote-block {
+          background: var(--bg-surface-warm);
+          border-radius: var(--radius-md);
+          padding: var(--space-3);
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          border: 1px solid var(--border-subtle);
         }
 
         .story-quote-block:hover {
-          background-color: var(--bg-accent-subtle);
-        }
-
-        .quote-icon-small {
-          font-size: 20px;
-          color: var(--burgundy-400);
-          line-height: 1;
+          background: var(--bg-accent-subtle);
+          border-color: var(--burgundy-300);
         }
 
         .story-quote-text {
           font-size: var(--text-body-sm);
           color: var(--text-secondary);
-          font-style: italic;
           line-height: var(--leading-relaxed);
-          margin-bottom: var(--space-1);
+          margin: 0 0 4px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .quote-reply-hint {
           font-size: 11px;
-          color: var(--burgundy-500);
+          color: var(--text-accent);
           font-weight: 600;
         }
 
@@ -1020,11 +1126,12 @@ export const StoryDeck = ({
         .story-identity-row {
           display: flex;
           gap: var(--space-2);
+          flex-wrap: wrap;
         }
 
         .identity-tag {
           font-size: 11px;
-          background-color: var(--bg-surface-warm);
+          background: var(--bg-surface-warm);
           border: 1px solid var(--border-subtle);
           color: var(--text-secondary);
           padding: 2px var(--space-3);
@@ -1036,64 +1143,51 @@ export const StoryDeck = ({
         .story-interests-wrap {
           display: flex;
           flex-wrap: wrap;
-          gap: var(--space-2);
+          gap: 6px;
         }
 
         .story-interest-chip {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          background-color: var(--burgundy-50);
+          background: var(--burgundy-50);
           color: var(--burgundy-600);
           border: 1px solid var(--burgundy-200);
-          padding: var(--space-1) var(--space-3);
+          padding: 3px var(--space-3);
           border-radius: var(--radius-full);
-          font-size: 12px;
-          font-weight: 500;
+          font-size: 11px;
+          font-weight: 600;
           cursor: pointer;
           transition: all var(--duration-fast);
         }
 
         .story-interest-chip:hover {
-          background-color: var(--burgundy-100);
+          background: var(--burgundy-100);
           border-color: var(--burgundy-300);
+          transform: translateY(-1px);
         }
 
         .chip-plus {
           font-weight: bold;
-          opacity: 0.7;
+          opacity: 0.6;
         }
 
-        .story-view-full-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: var(--space-2);
-          background: transparent;
-          border: 1px dashed var(--border-default);
-          border-radius: var(--radius-full);
-          padding: var(--space-2);
-          color: var(--text-secondary);
-          font-size: var(--text-body-sm);
-          font-weight: 500;
-          cursor: pointer;
-          transition: all var(--duration-fast);
-          margin-top: var(--space-2);
-        }
-
-        .story-view-full-btn:hover {
-          border-color: var(--burgundy-300);
-          color: var(--burgundy-500);
-          background-color: var(--bg-surface-warm);
-        }
-
-        /* Floating Action Deck */
+        /* Action Bar */
         .story-actions-bar {
           display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--space-3);
+          margin-top: var(--space-5);
+          width: 100%;
+        }
+
+        /* Secondary row: Undo + Super Spark */
+        .story-actions-secondary {
+          display: flex;
           align-items: center;
           justify-content: center;
-          gap: var(--space-4);
-          margin-top: var(--space-6);
+          gap: var(--space-3);
         }
 
         .action-btn {
@@ -1103,52 +1197,108 @@ export const StoryDeck = ({
           justify-content: center;
           cursor: pointer;
           transition: all var(--duration-fast);
-          border: none;
-          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .action-btn:disabled {
-          opacity: 0.35;
+          opacity: 0.3;
           cursor: not-allowed;
           box-shadow: none;
         }
 
-        .btn-undo {
-          width: 50px;
-          height: 50px;
-          background-color: var(--bg-surface);
-          color: var(--gold-400);
-          border: 1.5px solid var(--gold-400);
+        .action-btn:hover:not(:disabled) {
+          transform: translateY(-2px) scale(1.06);
         }
 
-        .btn-pass {
-          width: 60px;
-          height: 60px;
-          background-color: var(--bg-surface);
-          color: var(--burgundy-400);
-          border: 2px solid var(--burgundy-400);
+        .btn-undo {
+          width: 40px;
+          height: 40px;
+          background: var(--bg-surface);
+          color: var(--text-tertiary);
+          border: 1.5px solid var(--border-default);
+        }
+
+        .btn-undo:hover:not(:disabled) {
+          color: var(--gold-400);
+          border-color: var(--gold-400);
         }
 
         .btn-super {
-          width: 50px;
-          height: 50px;
-          background-color: var(--bg-surface);
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 16px;
+          border-radius: var(--radius-full);
+          background: var(--bg-surface);
           color: var(--gold-400);
           border: 1.5px solid var(--gold-400);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        .btn-spark {
-          width: 60px;
-          height: 60px;
-          background: linear-gradient(135deg, var(--burgundy-500), var(--burgundy-600));
+        .btn-super:hover {
+          background: rgba(212, 173, 106, 0.15);
+          box-shadow: 0 0 16px rgba(212, 173, 106, 0.4);
+          transform: translateY(-2px);
+        }
+
+        .btn-super-label {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+        }
+
+        /* Primary pill row */
+        .story-actions-primary {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+          width: 100%;
+        }
+
+        .action-pill-btn {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-2);
+          padding: 14px var(--space-4);
+          border-radius: var(--radius-full);
+          font-size: var(--text-body-sm);
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-skip-pill {
+          background: transparent;
+          color: var(--text-primary);
+          border: 2px solid var(--border-default);
+        }
+
+        .btn-skip-pill:hover {
+          border-color: var(--charcoal-400);
+          background: var(--bg-surface-warm);
+          transform: translateY(-2px);
+        }
+
+        .btn-spark-pill {
+          background: linear-gradient(135deg, var(--burgundy-500) 0%, var(--burgundy-600) 100%);
           color: #FFFFFF;
-          border: 2px solid var(--burgundy-400);
-          box-shadow: 0 8px 20px rgba(184, 67, 106, 0.4);
+          border: 2px solid transparent;
+          box-shadow: 0 8px 24px rgba(184, 67, 106, 0.45);
         }
 
-        .action-btn:hover:not(:disabled) {
-          transform: translateY(-3px) scale(1.08);
-          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+        .btn-spark-pill:hover {
+          background: linear-gradient(135deg, var(--burgundy-400) 0%, var(--burgundy-500) 100%);
+          box-shadow: 0 10px 28px rgba(184, 67, 106, 0.6);
+          transform: translateY(-2px);
         }
 
         /* Swipe Tutorial Hint Overlay & Animation */
