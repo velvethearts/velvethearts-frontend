@@ -4,6 +4,7 @@ import {
   Heart,
   X,
   ArrowLeft,
+  ArrowRight,
   Star,
   Sparkle,
   ChatCircleText,
@@ -11,9 +12,7 @@ import {
   CaretLeft,
   CaretRight,
   CaretUp,
-  Info,
-  Bookmark,
-  HandGrabbing
+  Bookmark
 } from '@phosphor-icons/react';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
@@ -502,19 +501,25 @@ export const StoryDeck = ({
 
         {/* Story Body Details */}
         <div className="story-card-body font-ui">
-          <div className="story-header-row">
-            <div
-              className="story-name-wrap"
-              style={{ cursor: 'pointer' }}
+          {/* City • Intent meta line */}
+          <p className="story-meta-line font-ui">
+            <span className="story-meta-city">{activeProfile.city}</span>
+            <span className="story-meta-sep">•</span>
+            <span className="story-meta-intent">{activeProfile.relationshipIntent}</span>
+          </p>
+
+          {/* Big editorial name + age + bookmark */}
+          <div className="story-title-row">
+            <h2
+              className="story-card-name font-display"
               onClick={(e) => {
                 e.stopPropagation();
                 if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
               }}
-              title="Click to view full profile"
+              title="View full profile"
             >
-              <h2 className="story-name font-display">{activeProfile.name}</h2>
-              <span className="story-age font-ui">, {activeProfile.age}</span>
-            </div>
+              {activeProfile.name}<span className="story-card-age">, {activeProfile.age}</span>
+            </h2>
             <button
               type="button"
               onClick={(e) => {
@@ -522,17 +527,19 @@ export const StoryDeck = ({
                 if (onSaveProfile) onSaveProfile(activeProfile.id);
               }}
               className={`story-bookmark-btn ${isSaved ? 'saved' : ''}`}
-              title={isSaved ? "Saved" : "Save Profile"}
+              title={isSaved ? 'Saved' : 'Save Profile'}
             >
               <Bookmark size={20} weight={isSaved ? 'fill' : 'regular'} />
             </button>
           </div>
 
-          <p className="story-location-intent font-ui">
-            {activeProfile.city} &bull; <span className="story-intent-highlight">{activeProfile.relationshipIntent}</span>
-          </p>
+          {/* Identity chips */}
+          <div className="story-identity-row font-ui">
+            <span className="identity-tag">{activeProfile.gender}</span>
+            <span className="identity-tag">{activeProfile.orientation}</span>
+          </div>
 
-          {/* Editorial Story Quote Block */}
+          {/* Story description */}
           {activeProfile.story && (
             <div
               className="story-quote-block"
@@ -547,19 +554,12 @@ export const StoryDeck = ({
               }}
               title="Click to comment on this story"
             >
-              <span className="quote-icon-small">&ldquo;</span>
               <p className="story-quote-text font-body">{activeProfile.story}</p>
               <span className="quote-reply-hint font-ui">💬 Reply to story</span>
             </div>
           )}
 
-          {/* Identity & Pronouns */}
-          <div className="story-identity-row font-ui">
-            <span className="identity-tag">{activeProfile.gender}</span>
-            <span className="identity-tag">{activeProfile.orientation}</span>
-          </div>
-
-          {/* Interests Pills */}
+          {/* Interests chips */}
           {activeProfile.interests?.length > 0 && (
             <div className="story-interests-wrap font-ui">
               {activeProfile.interests.map(interest => (
@@ -585,20 +585,34 @@ export const StoryDeck = ({
             </div>
           )}
 
-          {/* Full detail view link */}
-          <button
-            type="button"
-            className="story-view-full-btn font-ui"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onSelectProfile && activeProfile) {
-                onSelectProfile(activeProfile);
-              }
-            }}
-          >
-            <Info size={16} />
-            <span>View Full Profile</span>
-          </button>
+          {/* Profile identity strip */}
+          <div className="story-profile-strip">
+            <div className="profile-strip-left">
+              <img
+                className="profile-strip-avatar"
+                src={displayPhotos[0] || getDefaultAvatar(activeProfile?.gender)}
+                alt={activeProfile.name}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = getDefaultAvatar(activeProfile?.gender);
+                }}
+              />
+              <div className="profile-strip-info">
+                <span className="profile-strip-name">{activeProfile.name}, {activeProfile.age}</span>
+                <span className="profile-strip-tagline">{activeProfile.relationshipIntent}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="profile-strip-link font-ui"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
+              }}
+            >
+              Profile <ArrowRight size={13} weight="bold" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -927,31 +941,58 @@ export const StoryDeck = ({
 
         /* Card Body Details */
         .story-card-body {
-          padding: var(--space-4);
+          padding: var(--space-3) var(--space-4);
           display: flex;
           flex-direction: column;
           gap: var(--space-2);
         }
 
-        .story-header-row {
+        .story-meta-line {
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          gap: 6px;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--text-tertiary);
+          margin-bottom: 2px;
         }
 
-        .story-name-wrap {
+        .story-meta-sep {
+          opacity: 0.5;
+        }
+
+        .story-meta-intent {
+          color: var(--text-accent);
+        }
+
+        .story-title-row {
           display: flex;
-          align-items: baseline;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: var(--space-2);
+          margin-bottom: 2px;
         }
 
-        .story-name {
-          font-size: var(--text-heading);
+        .story-card-name {
+          font-size: clamp(1.3rem, 2.5vw, 1.7rem);
+          font-weight: 800;
           color: var(--text-primary);
+          line-height: 1.15;
+          cursor: pointer;
+          flex: 1;
+          letter-spacing: -0.02em;
         }
 
-        .story-age {
-          font-size: var(--text-subheading);
+        .story-card-name:hover {
+          color: var(--text-accent);
+        }
+
+        .story-card-age {
+          font-weight: 500;
           color: var(--text-secondary);
+          font-size: 0.8em;
         }
 
         .story-bookmark-btn {
@@ -959,69 +1000,127 @@ export const StoryDeck = ({
           border: none;
           color: var(--text-tertiary);
           cursor: pointer;
-          padding: var(--space-1);
+          padding: 2px;
           border-radius: 50%;
           transition: all var(--duration-fast);
+          flex-shrink: 0;
         }
 
         .story-bookmark-btn:hover, .story-bookmark-btn.saved {
           color: var(--gold-500);
         }
 
-        .story-location-intent {
+        .story-profile-strip {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          border-top: 1px solid var(--border-subtle);
+          padding-top: 10px;
+          margin-top: 6px;
+          gap: var(--space-2);
+        }
+
+        .profile-strip-left {
+          display: flex;
+          align-items: center;
+          gap: var(--space-2);
+          min-width: 0;
+        }
+
+        .profile-strip-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid var(--burgundy-400);
+          flex-shrink: 0;
+        }
+
+        .profile-strip-info {
+          display: flex;
+          flex-direction: column;
+          min-width: 0;
+        }
+
+        .profile-strip-name {
           font-size: var(--text-body-sm);
+          font-weight: 700;
+          color: var(--text-primary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .profile-strip-tagline {
+          font-size: 11px;
           color: var(--text-tertiary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
-        .story-intent-highlight {
+        .profile-strip-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 12px;
+          font-weight: 700;
           color: var(--text-accent);
-          font-weight: 600;
-        }
-
-        /* Quote Block */
-        .story-quote-block {
-          background-color: var(--bg-surface-warm);
-          border-left: 3px solid var(--burgundy-400);
-          border-radius: 0 var(--radius-md) var(--radius-md) 0;
-          padding: var(--space-3) var(--space-4);
-          position: relative;
+          letter-spacing: 0.02em;
+          white-space: nowrap;
+          background: transparent;
+          border: none;
           cursor: pointer;
           transition: all var(--duration-fast);
+          flex-shrink: 0;
+        }
+
+        .profile-strip-link:hover {
+          color: var(--burgundy-400);
+        }
+
+        /* Quote / Description Block */
+        .story-quote-block {
+          background: var(--bg-surface-warm);
+          border-radius: var(--radius-md);
+          padding: 8px 12px;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          border: 1px solid var(--border-subtle);
         }
 
         .story-quote-block:hover {
-          background-color: var(--bg-accent-subtle);
-        }
-
-        .quote-icon-small {
-          font-size: 20px;
-          color: var(--burgundy-400);
-          line-height: 1;
+          background: var(--bg-accent-subtle);
+          border-color: var(--burgundy-300);
         }
 
         .story-quote-text {
           font-size: var(--text-body-sm);
           color: var(--text-secondary);
-          font-style: italic;
           line-height: var(--leading-relaxed);
-          margin-bottom: var(--space-1);
+          margin: 0 0 2px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .quote-reply-hint {
           font-size: 11px;
-          color: var(--burgundy-500);
+          color: var(--text-accent);
           font-weight: 600;
         }
 
         /* Identity */
         .story-identity-row {
           display: flex;
-          gap: var(--space-2);
+          gap: 6px;
+          flex-wrap: wrap;
         }
 
         .identity-tag {
           font-size: 11px;
-          background-color: var(--bg-surface-warm);
+          background: var(--bg-surface-warm);
           border: 1px solid var(--border-subtle);
           color: var(--text-secondary);
           padding: 2px var(--space-3);
@@ -1033,55 +1132,33 @@ export const StoryDeck = ({
         .story-interests-wrap {
           display: flex;
           flex-wrap: wrap;
-          gap: var(--space-2);
+          gap: 6px;
         }
 
         .story-interest-chip {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          background-color: var(--burgundy-50);
+          background: var(--burgundy-50);
           color: var(--burgundy-600);
           border: 1px solid var(--burgundy-200);
-          padding: var(--space-1) var(--space-3);
+          padding: 2px 10px;
           border-radius: var(--radius-full);
-          font-size: 12px;
-          font-weight: 500;
+          font-size: 11px;
+          font-weight: 600;
           cursor: pointer;
           transition: all var(--duration-fast);
         }
 
         .story-interest-chip:hover {
-          background-color: var(--burgundy-100);
+          background: var(--burgundy-100);
           border-color: var(--burgundy-300);
+          transform: translateY(-1px);
         }
 
         .chip-plus {
           font-weight: bold;
-          opacity: 0.7;
-        }
-
-        .story-view-full-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: var(--space-2);
-          background: transparent;
-          border: 1px dashed var(--border-default);
-          border-radius: var(--radius-full);
-          padding: var(--space-2);
-          color: var(--text-secondary);
-          font-size: var(--text-body-sm);
-          font-weight: 500;
-          cursor: pointer;
-          transition: all var(--duration-fast);
-          margin-top: var(--space-2);
-        }
-
-        .story-view-full-btn:hover {
-          border-color: var(--burgundy-300);
-          color: var(--burgundy-500);
-          background-color: var(--bg-surface-warm);
+          opacity: 0.6;
         }
 
         /* Action Bar — single row of 3 pill buttons + undo below */
