@@ -12,6 +12,7 @@ import {
   CaretRight,
   CaretUp,
   Info,
+  User,
   Bookmark,
   HandGrabbing
 } from '@phosphor-icons/react';
@@ -585,7 +586,7 @@ export const StoryDeck = ({
             </div>
           )}
 
-          {/* Full detail view link */}
+          {/* View Profile Button */}
           <button
             type="button"
             className="story-view-full-btn font-ui"
@@ -595,9 +596,10 @@ export const StoryDeck = ({
                 onSelectProfile(activeProfile);
               }
             }}
+            title="View complete profile details"
           >
-            <Info size={16} />
-            <span>View Full Profile</span>
+            <User size={16} weight="regular" />
+            <span>View Profile</span>
           </button>
         </div>
       </div>
@@ -1066,22 +1068,30 @@ export const StoryDeck = ({
           align-items: center;
           justify-content: center;
           gap: var(--space-2);
-          background: transparent;
-          border: 1px dashed var(--border-default);
+          background: var(--bg-surface-warm);
+          border: 1px solid var(--border-subtle);
           border-radius: var(--radius-full);
-          padding: var(--space-2);
+          padding: 10px var(--space-4);
           color: var(--text-secondary);
           font-size: var(--text-body-sm);
-          font-weight: 500;
+          font-weight: 600;
+          letter-spacing: 0.02em;
           cursor: pointer;
           transition: all var(--duration-fast);
-          margin-top: var(--space-2);
+          margin-top: var(--space-3);
+          width: 100%;
         }
 
         .story-view-full-btn:hover {
           border-color: var(--burgundy-300);
           color: var(--burgundy-500);
-          background-color: var(--bg-surface-warm);
+          background: var(--bg-accent-subtle);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(184, 67, 106, 0.12);
+        }
+
+        .story-view-full-btn:active {
+          transform: translateY(0);
         }
 
         /* Action Bar — single row of 3 pill buttons + undo below */
