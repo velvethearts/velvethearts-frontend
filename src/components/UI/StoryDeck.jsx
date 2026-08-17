@@ -12,7 +12,10 @@ import {
   CaretLeft,
   CaretRight,
   CaretUp,
-  Bookmark
+  Info,
+  User,
+  Bookmark,
+  HandGrabbing
 } from '@phosphor-icons/react';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
@@ -585,34 +588,21 @@ export const StoryDeck = ({
             </div>
           )}
 
-          {/* Profile identity strip */}
-          <div className="story-profile-strip">
-            <div className="profile-strip-left">
-              <img
-                className="profile-strip-avatar"
-                src={displayPhotos[0] || getDefaultAvatar(activeProfile?.gender)}
-                alt={activeProfile.name}
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = getDefaultAvatar(activeProfile?.gender);
-                }}
-              />
-              <div className="profile-strip-info">
-                <span className="profile-strip-name">{activeProfile.name}, {activeProfile.age}</span>
-                <span className="profile-strip-tagline">{activeProfile.relationshipIntent}</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="profile-strip-link font-ui"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
-              }}
-            >
-              Profile <ArrowRight size={13} weight="bold" />
-            </button>
-          </div>
+          {/* View Profile Button */}
+          <button
+            type="button"
+            className="story-view-full-btn font-ui"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onSelectProfile && activeProfile) {
+                onSelectProfile(activeProfile);
+              }
+            }}
+            title="View complete profile details"
+          >
+            <User size={16} weight="regular" />
+            <span>View Profile</span>
+          </button>
         </div>
       </div>
 
@@ -1158,7 +1148,39 @@ export const StoryDeck = ({
 
         .chip-plus {
           font-weight: bold;
-          opacity: 0.6;
+          opacity: 0.7;
+        }
+
+        .story-view-full-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-2);
+          background: var(--bg-surface-warm);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-full);
+          padding: 10px var(--space-4);
+          color: var(--text-secondary);
+          font-size: var(--text-body-sm);
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+          margin-top: var(--space-3);
+          width: 100%;
+        }
+
+        .story-view-full-btn:hover {
+          border-color: var(--burgundy-300);
+          color: var(--burgundy-500);
+          background: var(--bg-accent-subtle);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(184, 67, 106, 0.12);
+        }
+
+        .story-view-full-btn:active {
+          transform: translateY(0);
+        }
         }
 
         /* Action Bar — single row of 3 pill buttons + undo below */
