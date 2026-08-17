@@ -1181,7 +1181,6 @@ export const StoryDeck = ({
         .story-view-full-btn:active {
           transform: translateY(0);
         }
-        }
 
         /* Action Bar — single row of 3 pill buttons + undo below */
         .story-actions-bar {
@@ -1189,56 +1188,30 @@ export const StoryDeck = ({
           flex-direction: column;
           align-items: center;
           gap: var(--space-2);
-          margin-top: var(--space-5);
+          margin-top: var(--space-4);
           width: 100%;
-        }
-
-        /* Undo — visible outlined pill button */
-        .btn-undo-text {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: transparent;
-          border: 1.5px solid var(--border-default);
-          color: var(--text-secondary);
-          font-size: 13px;
-          font-weight: 600;
-          letter-spacing: 0.03em;
-          cursor: pointer;
-          padding: 10px 20px;
-          border-radius: var(--radius-full);
-          transition: all var(--duration-fast);
-        }
-
-        .btn-undo-text:hover:not(:disabled) {
-          color: var(--text-primary);
-          border-color: var(--text-secondary);
-          background: var(--bg-surface-warm);
-        }
-
-        .btn-undo-text:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
         }
 
         .story-actions-primary {
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: var(--space-2);
           width: 100%;
         }
 
         .action-pill-btn {
-          flex: 1;
+          flex: 1 1 0px;
+          min-width: 0;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 5px;
+          gap: 6px;
           padding: 12px 8px;
           border-radius: var(--radius-full);
           font-size: 13px;
           font-weight: 700;
-          letter-spacing: 0.03em;
+          letter-spacing: 0.02em;
           cursor: pointer;
           transition: all var(--duration-fast);
           white-space: nowrap;
@@ -1284,6 +1257,58 @@ export const StoryDeck = ({
         .btn-spark-pill:hover {
           background: linear-gradient(135deg, var(--burgundy-400) 0%, var(--burgundy-500) 100%);
           box-shadow: 0 8px 26px rgba(184, 67, 106, 0.55);
+        }
+
+        /* Undo — visible outlined pill button */
+        .btn-undo-text {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          background: transparent;
+          border: 1.5px solid var(--border-default);
+          color: var(--text-secondary);
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.03em;
+          cursor: pointer;
+          padding: 8px 20px;
+          border-radius: var(--radius-full);
+          transition: all var(--duration-fast);
+          margin-top: 4px;
+        }
+
+        .btn-undo-text:hover:not(:disabled) {
+          color: var(--text-primary);
+          border-color: var(--text-secondary);
+          background: var(--bg-surface-warm);
+        }
+
+        .btn-undo-text:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+
+        @media (max-width: 480px) {
+          .story-actions-primary {
+            gap: 6px;
+          }
+
+          .action-pill-btn {
+            padding: 10px 4px;
+            font-size: 11.5px;
+            gap: 4px;
+          }
+
+          .action-pill-btn svg {
+            width: 14px;
+            height: 14px;
+          }
+
+          .btn-undo-text {
+            padding: 7px 16px;
+            font-size: 12px;
+          }
         }
 
         /* Swipe Tutorial Hint Overlay & Animation */
