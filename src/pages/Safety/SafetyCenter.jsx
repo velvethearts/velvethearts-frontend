@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ShieldCheck, Users, Info, HandWaving, EnvelopeSimple } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
@@ -9,7 +9,7 @@ import { Textarea } from '../../components/UI/Textarea';
 import { EmptyState } from '../../components/UI/EmptyState';
 
 export const SafetyCenter = () => {
-  const { blockedUsers, unblockUser, reportedUsers, submitSupportTicket, setActiveTab, profiles, showAlert } = useApp();
+  const { blockedUsers, unblockUser, reportedUsers, submitSupportTicket, setActiveTab, profiles, showAlert, userProfile } = useApp();
   const [unblockingId, setUnblockingId] = useState(null);
   
   // Support Form State
@@ -17,7 +17,16 @@ export const SafetyCenter = () => {
   const [supportEmail, setSupportEmail] = useState('');
   const [supportSubject, setSupportSubject] = useState('');
   const [supportText, setSupportText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [supportSubmitted, setSupportSubmitted] = useState(false);
+
+  // Pre-fill user details if logged in
+  useEffect(() => {
+    if (userProfile) {
+      if (userProfile.name && !supportName) setSupportName(userProfile.name);
+      if (userProfile.email && !supportEmail) setSupportEmail(userProfile.email);
+    }
+  }, [userProfile]);
 
   const handleUnblock = async (id) => {
     try {
@@ -32,20 +41,43 @@ export const SafetyCenter = () => {
 
   const handleSupportSubmit = (e) => {
     if (e) e.preventDefault();
-    if (!supportName || !supportEmail || !supportSubject || !supportText) return;
+    const name = supportName.trim();
+    const email = supportEmail.trim();
+    const subjectText = supportSubject.trim();
+    const message = supportText.trim();
 
-    const subject = encodeURIComponent(`[Velvet Hearts Support] ${supportSubject}`);
+    if (!name || !email || !subjectText || !message) return;
 
-    const body = encodeURIComponent(
-        `Name: ${supportName}\n` +
-        `Email: ${supportEmail}\n\n` +
-        `Message:\n${supportText}`
-    );
+    setIsSubmitting(true);
+    try {
+      // 1. Record support ticket in AppContext / state
+      submitSupportTicket(name, email, subjectText, message);
 
-    window.open(
-        `https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=${subject}&body=${body}`,
-        '_blank'
-    );
+      // 2. Prepare pre-filled email parameters
+      const emailSubject = encodeURIComponent(`[Velvet Hearts Support] ${subjectText}`);
+      const emailBody = encodeURIComponent(
+        `Name: ${name}\n` +
+        `Email: ${email}\n\n` +
+        `Message:\n${message}`
+      );
+
+      // 3. Open email client with mailto
+      const mailtoUrl = `mailto:velvethearts.in@gmail.com?subject=${emailSubject}&body=${emailBody}`;
+      window.location.href = mailtoUrl;
+
+      // 4. Update UI to success state
+      setSupportSubmitted(true);
+    } catch (err) {
+      console.error('Support submission error:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSendAnother = () => {
+    setSupportSubject('');
+    setSupportText('');
+    setSupportSubmitted(false);
   };
 
   return (
@@ -194,7 +226,26 @@ export const SafetyCenter = () => {
               <div className="support-success-state page-enter font-ui">
                 <div className="support-success-check">✓</div>
                 <h3>Message Sent</h3>
-                <p className="font-body">We've received your request and will reach out to you via email shortly.</p>
+                <p className="font-body">
+                  We've recorded your request and opened your email client. Our team will review and get back to you shortly.
+                </p>
+                <div className="support-success-actions">
+                  <Button
+                    variant="secondary"
+                    onClick={handleSendAnother}
+                    className="support-another-btn"
+                  >
+                    Send Another Message
+                  </Button>
+                  <a
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=${encodeURIComponent(`[Velvet Hearts Support] ${supportSubject}`)}&body=${encodeURIComponent(`Name: ${supportName}\nEmail: ${supportEmail}\n\nMessage:\n${supportText}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="support-gmail-link font-ui"
+                  >
+                    Open in Gmail Web ↗
+                  </a>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSupportSubmit} className="support-form">
@@ -235,7 +286,12 @@ export const SafetyCenter = () => {
                   required
                 />
 
-                <Button type="submit" variant="primary" className="support-submit-btn">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  loading={isSubmitting}
+                  className="support-submit-btn"
+                >
                   Submit Request
                 </Button>
               </form>
@@ -487,6 +543,33 @@ export const SafetyCenter = () => {
           display: flex;
           align-items: center;
           justify-content: center;
+          margin-bottom: var(--space-2);
+        }
+
+        .support-success-actions {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: var(--space-3);
+          margin-top: var(--space-4);
+          width: 100%;
+        }
+
+        .support-another-btn {
+          width: 100%;
+          max-width: 240px;
+        }
+
+        .support-gmail-link {
+          color: var(--burgundy-400, #D0607F);
+          font-size: var(--text-body-sm);
+          text-decoration: underline;
+          transition: color 0.2s ease;
+          padding: var(--space-1) var(--space-2);
+        }
+
+        .support-gmail-link:hover {
+          color: var(--rose-400, #F0A0AD);
         }
       `}</style>
     </div>
