@@ -1,0 +1,432 @@
+/* ============================================================
+   VELVET HEARTS — Loading Screen Component Styles
+   Aesthetic: Warm Velvet Radiance, Reassuring & Refined
+   ============================================================ */
+
+/* Root Container */
+.vh-loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--font-ui, -apple-system, sans-serif);
+  color: var(--charcoal-50, #FAF8F9);
+}
+
+/* Fullscreen Mode: complete viewport lock */
+.vh-loading-screen.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 99999;
+  touch-action: none;
+  user-select: none;
+  pointer-events: all;
+}
+
+/* Inline Mode: fits smoothly within a parent card or container */
+.vh-loading-screen.is-inline {
+  position: relative;
+  width: 100%;
+  min-height: 280px;
+  border-radius: var(--radius-lg, 16px);
+  overflow: hidden;
+}
+
+/* Exit State */
+.vh-loading-screen.is-exiting {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Backdrop */
+.vh-loading-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(58, 14, 26, 0.88) 0%,
+    rgba(26, 8, 18, 0.95) 55%,
+    rgba(15, 6, 10, 0.98) 100%
+  );
+  transition: opacity 0.35s ease;
+}
+
+.vh-loading-screen.has-blur .vh-loading-backdrop {
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+.vh-loading-screen.variant-minimal .vh-loading-backdrop {
+  background: rgba(26, 21, 23, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.vh-loading-screen.variant-card .vh-loading-backdrop {
+  background: rgba(18, 8, 12, 0.92);
+}
+
+/* Centered Card Content */
+.vh-loading-card {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: clamp(24px, 5vw, 40px);
+  max-width: min(90vw, 440px);
+  width: 100%;
+  animation: vhFadeScaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Optional Brand Title */
+.vh-loading-brand {
+  font-size: clamp(1.25rem, 2.5vw, 1.625rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--rose-400, #F0A0AD);
+  margin-bottom: 24px;
+  text-shadow: 0 2px 10px rgba(184, 67, 106, 0.4);
+}
+
+/* ------------------------------------------------------------
+   HEART LOADER VISUAL & RHYTHMIC PULSE
+   ------------------------------------------------------------ */
+.vh-heart-loader-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+/* Heart SVG Element */
+.vh-heart-svg {
+  position: relative;
+  z-index: 3;
+  filter: drop-shadow(0 4px 18px rgba(184, 67, 106, 0.45));
+  animation: vhHeartBeat 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.vh-heart-loader-container.is-delayed .vh-heart-svg {
+  animation: vhHeartBeatGentle 2.6s ease-in-out infinite;
+}
+
+/* SVG Shimmer Stroke */
+.vh-heart-layer-shimmer {
+  stroke-dasharray: 220;
+  stroke-dashoffset: 0;
+  animation: vhHeartTrace 3.2s ease-in-out infinite alternate;
+}
+
+/* Glowing Halo Expansion Rings */
+.vh-heart-glow-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.vh-heart-glow-ring.ring-1 {
+  width: 90%;
+  height: 90%;
+  background: radial-gradient(circle, rgba(224, 122, 138, 0.35) 0%, rgba(184, 67, 106, 0) 70%);
+  animation: vhGlowExpand 2.4s ease-out infinite;
+}
+
+.vh-heart-glow-ring.ring-2 {
+  width: 130%;
+  height: 130%;
+  background: radial-gradient(circle, rgba(184, 67, 106, 0.22) 0%, rgba(92, 26, 46, 0) 70%);
+  animation: vhGlowExpand 2.4s ease-out 0.8s infinite;
+}
+
+.vh-heart-glow-ring.ring-3 {
+  width: 170%;
+  height: 170%;
+  background: radial-gradient(circle, rgba(228, 200, 142, 0.14) 0%, rgba(196, 150, 74, 0) 65%);
+  animation: vhGlowExpand 2.4s ease-out 1.6s infinite;
+}
+
+/* Floating Sparkles */
+.vh-heart-sparkle {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold-300, #E4C88E);
+  box-shadow: 0 0 8px var(--gold-300, #E4C88E);
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+}
+
+.vh-heart-sparkle.sparkle-1 {
+  top: 8%;
+  left: 12%;
+  animation: vhSparkleFloat 2.8s ease-in-out infinite;
+}
+
+.vh-heart-sparkle.sparkle-2 {
+  top: 15%;
+  right: 10%;
+  animation: vhSparkleFloat 3.1s ease-in-out 0.9s infinite;
+}
+
+.vh-heart-sparkle.sparkle-3 {
+  bottom: 12%;
+  right: 18%;
+  animation: vhSparkleFloat 2.5s ease-in-out 1.7s infinite;
+}
+
+/* ------------------------------------------------------------
+   STATUS MESSAGE & REASSURANCE TEXT
+   ------------------------------------------------------------ */
+.vh-loading-message-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  width: 100%;
+}
+
+.vh-loading-message {
+  font-size: clamp(1rem, 2vw, 1.1875rem);
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--charcoal-50, #FAF8F9);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.01em;
+  animation: vhMessageGlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.vh-loading-subtext {
+  margin: 10px 0 0 0;
+  font-size: clamp(0.875rem, 1.5vw, 0.9375rem);
+  line-height: 1.5;
+  color: var(--burgundy-200, #F0BDC8);
+  max-width: 360px;
+  opacity: 0.9;
+  animation: vhFadeScaleIn 0.5s ease-out forwards;
+}
+
+/* ------------------------------------------------------------
+   ACTION BUTTONS (FOR LONG WAIT / TIMEOUT)
+   ------------------------------------------------------------ */
+.vh-loading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+  animation: vhFadeScaleIn 0.4s ease forwards;
+}
+
+.vh-loading-btn {
+  padding: 10px 22px;
+  border-radius: 9999px;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.vh-loading-btn-retry {
+  background: linear-gradient(135deg, var(--burgundy-500, #B8436A), var(--burgundy-700, #7A2842));
+  color: #FFFFFF;
+  border: 1px solid rgba(240, 160, 173, 0.3);
+}
+
+.vh-loading-btn-retry:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, var(--burgundy-400, #D0607F), var(--burgundy-600, #9B3456));
+  box-shadow: 0 6px 18px rgba(184, 67, 106, 0.4);
+}
+
+.vh-loading-btn-cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--charcoal-200, #E8E3E4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+}
+
+.vh-loading-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+}
+
+/* ------------------------------------------------------------
+   AMBIENT PROGRESS LIGHT (NON-FAKE, PURE BREATHING GLOW)
+   ------------------------------------------------------------ */
+.vh-loading-ambient-bar {
+  position: relative;
+  width: 140px;
+  height: 3px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+.vh-loading-ambient-pill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 45%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent, var(--burgundy-400, #D0607F), var(--gold-400, #D4AD6A), transparent);
+  animation: vhAmbientBarGlide 2s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------
+   KEYFRAME ANIMATIONS
+   ------------------------------------------------------------ */
+@keyframes vhHeartBeat {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.12);
+  }
+  28% {
+    transform: scale(1.02);
+  }
+  42% {
+    transform: scale(1.18);
+  }
+  70% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes vhHeartBeatGentle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes vhGlowExpand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translate(-50%, -50%) scale(1.25);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes vhSparkleFloat {
+  0%, 100% {
+    transform: translateY(0) scale(0.4);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-8px) scale(1);
+    opacity: 0.85;
+  }
+}
+
+@keyframes vhHeartTrace {
+  0% {
+    stroke-dashoffset: 0;
+    opacity: 0.4;
+  }
+  50% {
+    stroke-dashoffset: 60;
+    opacity: 0.9;
+  }
+  100% {
+    stroke-dashoffset: 120;
+    opacity: 0.5;
+  }
+}
+
+@keyframes vhMessageGlide {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vhFadeScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes vhAmbientBarGlide {
+  0% {
+    left: -45%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* ------------------------------------------------------------
+   ACCESSIBILITY: PREFERS-REDUCED-MOTION
+   ------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .vh-heart-svg,
+  .vh-heart-loader-container.is-delayed .vh-heart-svg,
+  .vh-heart-layer-shimmer,
+  .vh-heart-glow-ring,
+  .vh-heart-sparkle,
+  .vh-loading-ambient-pill {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .vh-heart-glow-ring {
+    opacity: 0.3 !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  .vh-loading-card,
+  .vh-loading-message,
+  .vh-loading-subtext,
+  .vh-loading-actions {
+    animation: none !important;
+    transition: opacity 0.25s ease !important;
+  }
+}
