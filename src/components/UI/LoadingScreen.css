@@ -107,8 +107,9 @@
   margin-bottom: 28px;
 }
 
-/* Heart SVG Element */
-.vh-heart-svg {
+/* Heart SVG & Logo Element */
+.vh-heart-svg,
+.vh-heart-logo-img {
   position: relative;
   z-index: 3;
   filter: drop-shadow(0 4px 18px rgba(184, 67, 106, 0.45));
@@ -117,7 +118,8 @@
   will-change: transform;
 }
 
-.vh-heart-loader-container.is-delayed .vh-heart-svg {
+.vh-heart-loader-container.is-delayed .vh-heart-svg,
+.vh-heart-loader-container.is-delayed .vh-heart-logo-img {
   animation: vhHeartBeatGentle 2.6s ease-in-out infinite;
 }
 

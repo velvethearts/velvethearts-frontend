@@ -2,10 +2,11 @@ import React, { useState, Component, lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navigation } from './components/Navigation';
 import { Celebration } from './components/Celebration';
-import { Clock, SpinnerGap } from '@phosphor-icons/react';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import velvetHeartLogo from './assets/velvet-heart-logo.png';
+
+import { LoadingScreen } from './components/UI/LoadingScreen';
 
 // Critical Route Imports
 import { LandingPage } from './pages/Landing/LandingPage';
@@ -28,51 +29,13 @@ const NotificationsPage = lazy(() => import('./pages/Notifications/Notifications
 
 const AuthLoadingScreen = () => {
   return (
-    <div className="auth-loading-screen">
-      <div className="auth-loading-inner">
-        <SpinnerGap size={48} className="auth-spinner" />
-        <img src={velvetHeartLogo} alt="Velvet Hearts" className="auth-loading-logo" />
-      </div>
-
-      <style>{`
-        .auth-loading-screen {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 100dvh;
-          background: linear-gradient(135deg, var(--burgundy-950) 0%, var(--charcoal-950) 60%, var(--burgundy-900) 100%);
-        }
-
-        .auth-loading-inner {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: var(--space-6);
-        }
-
-        .auth-spinner {
-          color: var(--burgundy-300);
-          animation: spin 1s linear infinite;
-        }
-
-        .auth-loading-logo {
-          width: clamp(68px, 12vw, 100px);
-          height: auto;
-          filter: drop-shadow(0 0 16px rgba(184, 67, 106, 0.35));
-          animation: logoPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes logoPulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.9; }
-        }
-
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
+    <LoadingScreen
+      logoSrc={velvetHeartLogo}
+      heartSize={84}
+      fullscreen={true}
+      messageInterval={2200}
+      longWaitThreshold={10000}
+    />
   );
 };
 

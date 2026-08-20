@@ -77,9 +77,15 @@ export interface LoadingScreenProps {
   heartSize?: number;
 
   /**
+   * Optional custom logo or heart image source to animate within the radiant rings.
+   */
+  logoSrc?: string;
+
+  /**
    * Optional static brand title or step label shown above the heart (e.g. "Velvet Hearts").
    */
   title?: string;
+
 
   /**
    * Whether to apply frosted backdrop blur to the underlying content.
@@ -115,9 +121,10 @@ const DEFAULT_MESSAGES: readonly string[] = [
 /**
  * Animated SVG Heart Loader component with glowing multi-layer gradients and heartbeat rhythm
  */
-const HeartVisual: React.FC<{ size?: number; isLongWait?: boolean }> = ({
+const HeartVisual: React.FC<{ size?: number; isLongWait?: boolean; logoSrc?: string }> = ({
   size = 72,
-  isLongWait = false
+  isLongWait = false,
+  logoSrc
 }) => {
   return (
     <div
@@ -135,14 +142,23 @@ const HeartVisual: React.FC<{ size?: number; isLongWait?: boolean }> = ({
       <span className="vh-heart-sparkle sparkle-2" />
       <span className="vh-heart-sparkle sparkle-3" />
 
-      {/* Bespoke Multi-layer SVG Heart */}
-      <svg
-        className="vh-heart-svg"
-        viewBox="0 0 100 100"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ width: size, height: size }}
-      >
+      {logoSrc ? (
+        <img
+          src={logoSrc}
+          alt="Velvet Hearts"
+          className="vh-heart-logo-img"
+          style={{ width: size, height: size, objectFit: 'contain' }}
+        />
+      ) : (
+        /* Bespoke Multi-layer SVG Heart */
+        <svg
+          className="vh-heart-svg"
+          viewBox="0 0 100 100"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ width: size, height: size }}
+        >
+
         <defs>
           {/* Rich Velvet Hearts Primary Gradient */}
           <linearGradient id="vhHeartGradPrimary" x1="10" y1="10" x2="90" y2="95" gradientUnits="userSpaceOnUse">
@@ -218,6 +234,7 @@ const HeartVisual: React.FC<{ size?: number; isLongWait?: boolean }> = ({
           opacity="0.55"
         />
       </svg>
+      )}
     </div>
   );
 };
@@ -240,6 +257,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   fullscreen = true,
   variant = 'overlay',
   heartSize = 72,
+  logoSrc,
   title,
   blurBackdrop = true,
   className = '',
@@ -346,7 +364,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
         {title && <div className="vh-loading-brand font-display">{title}</div>}
 
         {/* Animated Heart Loader */}
-        <HeartVisual size={heartSize} isLongWait={isLongWait} />
+        <HeartVisual size={heartSize} isLongWait={isLongWait} logoSrc={logoSrc} />
 
         {/* Message Container with ARIA status */}
         <div className="vh-loading-message-box">
