@@ -400,6 +400,7 @@ export const AppProvider = ({ children }) => {
                 id: profile.id || prev.id || '',
                 userId: profile.userId || user.id || prev.userId || '',
                 name: profile.name || '',
+                email: profile.email || user.email || auth?.currentUser?.email || prev.email || '',
                 dobDay: profile.dobDay || profile.birthDay || '',
                 dobMonth: profile.dobMonth || profile.birthMonth || '',
                 dobYear: profile.dobYear || profile.birthYear || '',

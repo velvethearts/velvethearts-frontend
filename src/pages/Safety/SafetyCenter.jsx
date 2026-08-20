@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
+import { auth } from '../../lib/firebase';
 import { ShieldCheck, Users, Info, HandWaving, EnvelopeSimple } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Card } from '../../components/UI/Card';
@@ -22,9 +23,14 @@ export const SafetyCenter = () => {
 
   // Pre-fill user details if logged in
   useEffect(() => {
-    if (userProfile) {
-      if (userProfile.name && !supportName) setSupportName(userProfile.name);
-      if (userProfile.email && !supportEmail) setSupportEmail(userProfile.email);
+    const resolvedName = userProfile?.name || auth?.currentUser?.displayName || '';
+    const resolvedEmail = userProfile?.email || auth?.currentUser?.email || '';
+
+    if (resolvedName && !supportName) {
+      setSupportName(resolvedName);
+    }
+    if (resolvedEmail && !supportEmail) {
+      setSupportEmail(resolvedEmail);
     }
   }, [userProfile]);
 
