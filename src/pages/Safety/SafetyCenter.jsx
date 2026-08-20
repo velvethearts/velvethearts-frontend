@@ -20,6 +20,7 @@ export const SafetyCenter = () => {
   const [supportText, setSupportText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [supportSubmitted, setSupportSubmitted] = useState(false);
+  const [submittedData, setSubmittedData] = useState(null);
 
   // Pre-fill user details if logged in
   useEffect(() => {
@@ -47,12 +48,12 @@ export const SafetyCenter = () => {
 
   const handleSupportSubmit = (e) => {
     if (e) e.preventDefault();
-    const name = supportName.trim();
-    const email = supportEmail.trim();
-    const subjectText = supportSubject.trim();
-    const message = supportText.trim();
+    const name = (supportName || userProfile?.name || auth?.currentUser?.displayName || '').trim();
+    const email = (supportEmail || userProfile?.email || auth?.currentUser?.email || '').trim();
+    const subjectText = (supportSubject || 'General Inquiry').trim();
+    const message = (supportText || '').trim();
 
-    if (!name || !email || !subjectText || !message) return;
+    if (!name || !email || !message) return;
 
     setIsSubmitting(true);
     try {
@@ -67,11 +68,23 @@ export const SafetyCenter = () => {
         `Message:\n${message}`
       );
 
-      // 3. Open email client with mailto
+      // 3. Save submitted details
       const mailtoUrl = `mailto:velvethearts.in@gmail.com?subject=${emailSubject}&body=${emailBody}`;
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=${emailSubject}&body=${emailBody}`;
+
+      setSubmittedData({
+        name,
+        email,
+        subject: subjectText,
+        message,
+        mailtoUrl,
+        gmailUrl
+      });
+
+      // 4. Open email client with mailto
       window.location.href = mailtoUrl;
 
-      // 4. Update UI to success state
+      // 5. Update UI to success state
       setSupportSubmitted(true);
     } catch (err) {
       console.error('Support submission error:', err);
@@ -83,6 +96,7 @@ export const SafetyCenter = () => {
   const handleSendAnother = () => {
     setSupportSubject('');
     setSupportText('');
+    setSubmittedData(null);
     setSupportSubmitted(false);
   };
 
@@ -244,7 +258,7 @@ export const SafetyCenter = () => {
                     Send Another Message
                   </Button>
                   <a
-                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=${encodeURIComponent(`[Velvet Hearts Support] ${supportSubject}`)}&body=${encodeURIComponent(`Name: ${supportName}\nEmail: ${supportEmail}\n\nMessage:\n${supportText}`)}`}
+                    href={submittedData?.gmailUrl || 'https://mail.google.com/'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="support-gmail-link font-ui"
