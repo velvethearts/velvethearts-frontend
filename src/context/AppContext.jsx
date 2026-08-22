@@ -239,16 +239,16 @@ export const AppProvider = ({ children }) => {
         setIsPaused(paused);
         try {
             localStorage.setItem('vh-profile-paused', String(paused));
-        } catch {}
+        } catch { }
         setUserProfile(prev => {
             const updated = { ...prev, isPaused: paused };
             try {
                 localStorage.setItem('vh-user-profile', JSON.stringify(updated));
-            } catch {}
+            } catch { }
             return updated;
         });
         if (api.isConfigured) {
-            api.saveProfile({ isPaused: paused }).catch(() => {});
+            api.saveProfile({ isPaused: paused }).catch(() => { });
         }
     };
 
@@ -260,7 +260,7 @@ export const AppProvider = ({ children }) => {
                 const parsed = JSON.parse(cached);
                 if (Array.isArray(parsed) && parsed.length > 0) return parsed;
             }
-        } catch (_) {}
+        } catch (_) { }
         return [];
     });
     const [loadingProfiles, setLoadingProfiles] = useState(() => profiles.length === 0);
@@ -455,7 +455,7 @@ export const AppProvider = ({ children }) => {
                 };
                 try {
                     localStorage.setItem('vh-user-profile', JSON.stringify(next));
-                } catch (_) {}
+                } catch (_) { }
                 return next;
             });
         } else {
@@ -489,7 +489,7 @@ export const AppProvider = ({ children }) => {
             setProfiles(list);
             try {
                 localStorage.setItem('vh-discover-profiles', JSON.stringify(list));
-            } catch (_) {}
+            } catch (_) { }
         } catch (err) {
             setErrorProfiles(err.message || 'Failed to load profiles');
             if (profiles.length === 0) setProfiles([]);
@@ -815,7 +815,7 @@ export const AppProvider = ({ children }) => {
                 const socket = connectSocket(token);
 
                 // Register Web Push Notifications subscription with backend
-                registerPushNotifications().catch(() => {});
+                registerPushNotifications().catch(() => { });
 
                 socket.on('new_message', ({ conversationId, message }) => {
                     if (!message) return;
@@ -824,9 +824,9 @@ export const AppProvider = ({ children }) => {
                     const myUserId = currentUserIdRef.current;
                     const isMySentMessage = message.senderId === myUserId;
 
-                    const partnerConn = connectionsRef.current.find(c => 
-                        c.id === message.senderId || 
-                        c.userId === message.senderId || 
+                    const partnerConn = connectionsRef.current.find(c =>
+                        c.id === message.senderId ||
+                        c.userId === message.senderId ||
                         (conv && (c.id === conv.partnerId || c.userId === conv.partnerId))
                     );
 
@@ -1105,55 +1105,55 @@ export const AppProvider = ({ children }) => {
         }
     }, [isLoggedIn, isOnboarded, approvalStatus]);
 
- // ─── Session Restoration on Mount ──────────────────────────────────
+    // ─── Session Restoration on Mount ──────────────────────────────────
 
-useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (!firebaseUser) {
-            api.tokenStore.clear();
-            setIsLoggedIn(false);
-            setAuthLoading(false);
-            return;
-        }
-
-        try {
-            const firebaseIdToken = await firebaseUser.getIdToken();
-
-            api.tokenStore.setToken(firebaseIdToken);
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (!firebaseUser) {
+                api.tokenStore.clear();
+                setIsLoggedIn(false);
+                setAuthLoading(false);
+                return;
+            }
 
             try {
-                await api.login(firebaseIdToken);
-            } catch (loginErr) {
-                console.warn('api.login during onAuthStateChanged failed:', loginErr);
+                const firebaseIdToken = await firebaseUser.getIdToken();
+
+                api.tokenStore.setToken(firebaseIdToken);
+
+                try {
+                    await api.login(firebaseIdToken);
+                } catch (loginErr) {
+                    console.warn('api.login during onAuthStateChanged failed:', loginErr);
+                }
+
+                const profileData = await api.getMe();
+
+                hydrateFromProfile(profileData);
+
+                setIsLoggedIn(true);
+
+                const status = normalizeApprovalStatus(
+                    profileData?.user?.approvalStatus ||
+                    profileData?.approvalStatus
+                );
+
+                if (status === 'approved') {
+                    loadSocialData();
+                }
+            } catch (err) {
+                console.error('Session restoration error:', err);
+
+                api.tokenStore.clear();
+
+                setIsLoggedIn(false);
+            } finally {
+                setAuthLoading(false);
             }
+        });
 
-            const profileData = await api.getMe();
-
-            hydrateFromProfile(profileData);
-
-            setIsLoggedIn(true);
-
-            const status = normalizeApprovalStatus(
-                profileData?.user?.approvalStatus ||
-                profileData?.approvalStatus
-            );
-
-            if (status === 'approved') {
-                loadSocialData();
-            }
-        } catch (err) {
-            console.error('Session restoration error:', err);
-
-            api.tokenStore.clear();
-
-            setIsLoggedIn(false);
-        } finally {
-            setAuthLoading(false);
-        }
-    });
-
-    return () => unsubscribe();
-}, []);
+        return () => unsubscribe();
+    }, []);
 
     // Set up periodic polling for connections
     useEffect(() => {
@@ -1311,7 +1311,7 @@ useEffect(() => {
             if (uid) {
                 try {
                     localStorage.removeItem(`vh-tour-completed-${uid}`);
-                } catch (_) {}
+                } catch (_) { }
             }
             setIsFeatureTourActive(true);
             return;
@@ -1328,7 +1328,7 @@ useEffect(() => {
             if (uid) {
                 try {
                     localStorage.removeItem(`vh-tour-completed-${uid}`);
-                } catch (_) {}
+                } catch (_) { }
             }
             setIsFeatureTourActive(true);
 
@@ -1347,7 +1347,7 @@ useEffect(() => {
             const next = { ...prev, ...profileData };
             try {
                 localStorage.setItem('vh-user-profile', JSON.stringify(next));
-            } catch (_) {}
+            } catch (_) { }
             return next;
         });
 
@@ -1388,7 +1388,7 @@ useEffect(() => {
                 const updated = parsed.filter(p => p.id !== profileId && p.userId !== profileId);
                 localStorage.setItem('vh-discover-profiles', JSON.stringify(updated));
             }
-        } catch (_) {}
+        } catch (_) { }
 
         showAlert({
             title: 'Account Unavailable',
@@ -1418,18 +1418,18 @@ useEffect(() => {
 
             if (reactionData && typeof reactionData === 'object') {
                 if (reactionData.targetType === 'interest' && reactionData.targetContent) {
-                    formattedComment = reactionData.comment 
+                    formattedComment = reactionData.comment
                         ? `[Reacted to interest "${reactionData.targetContent}"]: ${reactionData.comment}`
                         : `Liked your interest "${reactionData.targetContent}"`;
                 } else if (reactionData.targetType === 'story' && reactionData.targetContent) {
-                    const preview = reactionData.targetContent.length > 35 
-                        ? reactionData.targetContent.substring(0, 35) + '...' 
+                    const preview = reactionData.targetContent.length > 35
+                        ? reactionData.targetContent.substring(0, 35) + '...'
                         : reactionData.targetContent;
-                    formattedComment = reactionData.comment 
+                    formattedComment = reactionData.comment
                         ? `[Commented on story "${preview}"]: ${reactionData.comment}`
                         : `Liked your story "${preview}"`;
                 } else if (reactionData.targetType === 'photo') {
-                    formattedComment = reactionData.comment 
+                    formattedComment = reactionData.comment
                         ? `[Commented on your photo]: ${reactionData.comment}`
                         : `Liked your photo`;
                 }
@@ -1690,7 +1690,7 @@ useEffect(() => {
             api.tokenStore.clear();
             try {
                 sessionStorage.removeItem('vh-tour-session-shown');
-            } catch (_) {}
+            } catch (_) { }
 
             setIsLoggedIn(false);
             setPhone('');
@@ -1768,9 +1768,9 @@ useEffect(() => {
         // Find the conversation for this profile and send via API
         if (api.isConfigured) {
             try {
-                let conversation = conversations.find(c => 
-                    c.partnerId === profileId || 
-                    c.id === profileId || 
+                let conversation = conversations.find(c =>
+                    c.partnerId === profileId ||
+                    c.id === profileId ||
                     c.matchId === profileId ||
                     c.userId === profileId ||
                     c.partner?.id === profileId ||
@@ -1780,10 +1780,10 @@ useEffect(() => {
                 if (!conversation) {
                     const conn = connections.find(cn => cn.id === profileId || cn.matchId === profileId || cn.userId === profileId);
                     if (conn) {
-                        conversation = conversations.find(c => 
-                            c.partnerId === conn.userId || 
-                            c.partnerId === conn.id || 
-                            c.id === conn.id || 
+                        conversation = conversations.find(c =>
+                            c.partnerId === conn.userId ||
+                            c.partnerId === conn.id ||
+                            c.id === conn.id ||
                             c.matchId === conn.id ||
                             c.matchId === conn.matchId
                         );
@@ -1794,9 +1794,9 @@ useEffect(() => {
                     const freshConvs = await api.getConversations();
                     const list = Array.isArray(freshConvs) ? freshConvs : [];
                     setConversations(list);
-                    conversation = list.find(c => 
-                        c.partnerId === profileId || 
-                        c.id === profileId || 
+                    conversation = list.find(c =>
+                        c.partnerId === profileId ||
+                        c.id === profileId ||
                         c.matchId === profileId ||
                         c.userId === profileId ||
                         c.partner?.id === profileId ||
@@ -1830,7 +1830,7 @@ useEffect(() => {
                     setTimeout(() => {
                         prevOptimistic.forEach(att => {
                             if (att.localPreview && att.localPreview.startsWith('blob:')) {
-                                try { URL.revokeObjectURL(att.localPreview); } catch (_) {}
+                                try { URL.revokeObjectURL(att.localPreview); } catch (_) { }
                             }
                         });
                     }, 5000);
@@ -1850,7 +1850,7 @@ useEffect(() => {
                                     attachments: sentMsg.attachments || [],
                                     isDeleted: Boolean(sentMsg.isDeleted),
                                     timestamp: new Date(sentMsg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                  }
+                                }
                                 : m
                         );
                         return {
@@ -1903,7 +1903,7 @@ useEffect(() => {
             if (hoursElapsed >= 24 && hoursElapsed < 48 && !hasChatted && !localStorage.getItem(notifKey)) {
                 localStorage.setItem(notifKey, 'true');
 
-                const autoIcebreaker = `✨ 24h Spark Nudge: Hey ${conn.name || 'there'}! 24 hours passed since matching—say hi! 👋`;
+                const autoIcebreaker = `🕛 24h Spark Nudge: Hey ${conn.name || 'there'}! 24 hours passed since matching— hello! 🙌`;
 
                 try {
                     await sendMessage(targetPartnerId, autoIcebreaker);
@@ -2041,7 +2041,7 @@ useEffect(() => {
             return next;
         });
 
-        setConversations(prev => prev.map(c => 
+        setConversations(prev => prev.map(c =>
             (c.id === convId || c.partnerId === profileId)
                 ? { ...c, lastMessage: '', unreadCount: 0 }
                 : c
@@ -2061,9 +2061,9 @@ useEffect(() => {
     const markConversationSeen = useCallback(async (targetId) => {
         if (!targetId) return;
 
-        const conversation = conversationsRef.current.find(c => 
-            c.id === targetId || 
-            c.partnerId === targetId || 
+        const conversation = conversationsRef.current.find(c =>
+            c.id === targetId ||
+            c.partnerId === targetId ||
             c.matchId === targetId
         );
 
@@ -2071,7 +2071,7 @@ useEffect(() => {
         const partnerId = conversation?.partnerId || targetId;
 
         // Reset unread count for this conversation in local state
-        setConversations(prev => prev.map(c => 
+        setConversations(prev => prev.map(c =>
             (c.id === convId || c.partnerId === partnerId)
                 ? { ...c, unreadCount: 0 }
                 : c
@@ -2105,9 +2105,9 @@ useEffect(() => {
         });
     };
 
-        const chatUnreadCount = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
+    const chatUnreadCount = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
 
-        return (
+    return (
         <AppContext.Provider value={{
             nudgeSpark,
             authLoading,

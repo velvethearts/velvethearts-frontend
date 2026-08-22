@@ -59,7 +59,7 @@ const DEMO_SENT_INTEREST = {
 
 export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
   const { connections, interestsSent, interestStatuses, profiles, receivedInvites, sentInvitesList, setActiveTab, sendInterest, unsendInterest, onlineUserIds, sendMessage, nudgeSpark, userProfile, updateUserProfile, conversations = [], chats = {}, addToast, isFeatureTourActive } = useApp();
-  
+
   const activeConnections = isFeatureTourActive && (!connections || connections.length === 0)
     ? [DEMO_ACTIVE_CONNECTION]
     : (connections || []);
@@ -235,7 +235,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
       if (hoursElapsed >= 24 && hoursElapsed < 48 && !hasChatted && !localStorage.getItem(notifKey)) {
         localStorage.setItem(notifKey, 'true');
 
-        const autoIcebreaker = `✨ 24h Spark Nudge: Hey ${conn.name || 'there'}! 24 hours passed since matching—say hi! 👋`;
+        const autoIcebreaker = `🕛 24h Spark Nudge: Hey ${conn.name || 'there'}! 24 hours passed since matching— hello! 🙌`;
 
         // 1. Auto-send text message into chat
         if (sendMessage) {
@@ -500,7 +500,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                       style={{ width: '100%', height: '100%' }}
                       fallbackSrc={getDefaultAvatar(conn?.gender)}
                     />
-                    
+
                     {/* Gradient Overlay for Text Readability */}
                     <div className="match-card-gradient-overlay" />
 
