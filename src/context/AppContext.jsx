@@ -1659,6 +1659,9 @@ useEffect(() => {
         } finally {
             // Always clear local state regardless of signOut success
             api.tokenStore.clear();
+            try {
+                sessionStorage.removeItem('vh-tour-session-shown');
+            } catch (_) {}
 
             setIsLoggedIn(false);
             setPhone('');

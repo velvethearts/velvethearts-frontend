@@ -153,15 +153,15 @@ export const FeatureTourGuide = () => {
     }
   ];
 
-  // Auto-launch tour on first-time onboarding
+  // Auto-launch tour on every login session
   useEffect(() => {
     if (isLoggedIn && isOnboarded) {
-      const hasCompletedTour = localStorage.getItem(TOUR_STORAGE_KEY);
-      if (!hasCompletedTour && !isFeatureTourActive) {
+      const sessionShown = sessionStorage.getItem('vh-tour-session-shown');
+      if (!sessionShown && !isFeatureTourActive) {
         // Short delay so page loads and animates in smoothly first
         const timer = setTimeout(() => {
           setIsFeatureTourActive(true);
-        }, 1200);
+        }, 1000);
         return () => clearTimeout(timer);
       }
     }
@@ -242,7 +242,7 @@ export const FeatureTourGuide = () => {
   };
 
   const handleComplete = () => {
-    localStorage.setItem(TOUR_STORAGE_KEY, 'true');
+    sessionStorage.setItem('vh-tour-session-shown', 'true');
     setIsFeatureTourActive(false);
     setIsVisible(false);
     setActiveTab('discover');
