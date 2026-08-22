@@ -1,11 +1,46 @@
-// Velvet Hearts Service Worker for PWA Caching & Web Push Notifications
+// Velvet Hearts Service Worker for PWA Caching, SPA Navigation & Web Push Notifications
+
+const CACHE_NAME = 'vh-static-v1';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(),
+      // Clean old caches
+      caches.keys().then((keys) => {
+        return Promise.all(
+          keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        );
+      }),
+    ])
+  );
+});
+
+// Handle Fetch Requests — gracefully fallback for SPA navigation on iOS/Safari
+self.addEventListener('fetch', (event) => {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+
+  // Do not intercept API or Socket.IO requests
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/socket.io/')) {
+    return;
+  }
+
+  // Handle SPA navigation requests
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match('/index.html') || caches.match('/') || fetch('/');
+      })
+    );
+    return;
+  }
 });
 
 // Handle Web Push Events (triggered when browser tab is backgrounded/closed)

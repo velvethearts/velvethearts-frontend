@@ -124,13 +124,25 @@ function AppContent() {
     }
   }, [setActiveTab]);
 
-  // Handle URL query parameter deep linking (e.g. /?tab=chat) when opening from push notification
+  // Handle URL pathname and query parameter deep linking (e.g. /discover or /?tab=chat)
   React.useEffect(() => {
+    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety'];
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
-    if (tabParam && ['discover', 'chat', 'notifications', 'profile'].includes(tabParam)) {
+    
+    if (tabParam && validTabs.includes(tabParam)) {
       setActiveTab(tabParam);
-      window.history.replaceState({}, '', window.location.pathname);
+      try {
+        window.history.replaceState({}, '', '/');
+      } catch (_) {}
+    } else {
+      const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+      if (cleanPath && validTabs.includes(cleanPath)) {
+        setActiveTab(cleanPath);
+        try {
+          window.history.replaceState({}, '', '/');
+        } catch (_) {}
+      }
     }
   }, [setActiveTab]);
 
