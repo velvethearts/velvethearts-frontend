@@ -370,35 +370,10 @@ export const FeatureTourGuide = () => {
 
   return (
     <div className="vh-tour-overlay animate-fade-in" role="dialog" aria-modal="true">
-      {/* Semi-transparent SVG Backdrop with Cutout */}
-      <svg className="vh-tour-backdrop-svg" aria-hidden="true">
-        <defs>
-          <mask id="vhTourSpotlightMask">
-            <rect width="100%" height="100%" fill="#ffffff" />
-            {targetRect && (
-              <rect
-                x={targetRect.left}
-                y={targetRect.top}
-                width={targetRect.width}
-                height={targetRect.height}
-                rx="14"
-                fill="#000000"
-              />
-            )}
-          </mask>
-        </defs>
-        <rect
-          width="100%"
-          height="100%"
-          fill="rgba(8, 6, 9, 0.55)"
-          mask="url(#vhTourSpotlightMask)"
-        />
-      </svg>
-
-      {/* Radiant Glowing Ring on Highlighted Target */}
-      {targetRect && (
+      {/* 100% Crystal-Clear Spotlight Hole with 9999px Translucent Dim Spread */}
+      {targetRect ? (
         <div
-          className="vh-spotlight-ring"
+          className="vh-spotlight-hole"
           style={{
             top: `${targetRect.top}px`,
             left: `${targetRect.left}px`,
@@ -407,6 +382,8 @@ export const FeatureTourGuide = () => {
           }}
           aria-hidden="true"
         />
+      ) : (
+        <div className="vh-tour-full-dim" aria-hidden="true" />
       )}
 
       {/* Smart Anchored Floating Tooltip Card */}
@@ -510,33 +487,33 @@ export const FeatureTourGuide = () => {
           user-select: none;
         }
 
-        .vh-tour-backdrop-svg {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
+        .vh-spotlight-hole {
+          position: fixed;
+          border-radius: 16px;
+          border: 2px solid #D4AD6A;
+          background: transparent !important;
+          box-shadow: 0 0 0 9999px rgba(8, 6, 9, 0.65), 0 0 25px rgba(212, 173, 106, 0.75);
           pointer-events: none;
-          backdrop-filter: blur(2px);
-          -webkit-backdrop-filter: blur(2px);
-        }
-
-        .vh-spotlight-ring {
-          position: absolute;
-          border-radius: 14px;
-          border: 2px solid rgba(212, 173, 106, 0.9);
-          box-shadow: 0 0 0 3px rgba(184, 67, 106, 0.35), 0 0 25px rgba(212, 173, 106, 0.65);
-          pointer-events: none;
-          animation: ringGlow 1.8s infinite ease-in-out;
+          z-index: 999998;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          animation: spotlightHolePulse 2s infinite ease-in-out;
         }
 
-        @keyframes ringGlow {
+        .vh-tour-full-dim {
+          position: fixed;
+          inset: 0;
+          background: rgba(8, 6, 9, 0.65);
+          pointer-events: none;
+          z-index: 999998;
+        }
+
+        @keyframes spotlightHolePulse {
           0%, 100% {
-            box-shadow: 0 0 0 2px rgba(184, 67, 106, 0.3), 0 0 15px rgba(212, 173, 106, 0.5);
-            border-color: rgba(212, 173, 106, 0.8);
+            box-shadow: 0 0 0 9999px rgba(8, 6, 9, 0.65), 0 0 15px rgba(212, 173, 106, 0.6);
+            border-color: rgba(212, 173, 106, 0.85);
           }
           50% {
-            box-shadow: 0 0 0 4px rgba(184, 67, 106, 0.6), 0 0 30px rgba(243, 198, 143, 0.95);
+            box-shadow: 0 0 0 9999px rgba(8, 6, 9, 0.65), 0 0 30px rgba(243, 198, 143, 0.95);
             border-color: #F3C68F;
           }
         }
