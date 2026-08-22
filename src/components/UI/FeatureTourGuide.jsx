@@ -16,14 +16,9 @@ import {
   Bell,
   User,
   ShieldCheck,
-  CheckCircle,
-  Lightning,
-  Eye,
-  Sliders
+  Lightning
 } from '@phosphor-icons/react';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
-
-const TOUR_STORAGE_KEY = 'vh-feature-tour-completed';
 
 export const FeatureTourGuide = () => {
   const {
@@ -38,10 +33,13 @@ export const FeatureTourGuide = () => {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
-  const [spotlightRect, setSpotlightRect] = useState(null);
-  const previousTabRef = useRef(activeTab);
+  const [targetRect, setTargetRect] = useState(null);
+  const [cardStyle, setCardStyle] = useState({});
+  const [arrowStyle, setArrowStyle] = useState({});
+  const [arrowDirection, setArrowDirection] = useState(null);
+  const cardRef = useRef(null);
 
-  // Define the comprehensive 8-step multi-page tour sequence
+  // 8-step multi-page tour sequence with specific, focused target selectors
   const tourSteps = [
     {
       id: 'welcome',
@@ -49,11 +47,10 @@ export const FeatureTourGuide = () => {
       badge: 'Welcome to Velvet Hearts',
       badgeIcon: Sparkle,
       badgeColor: '#D4AD6A',
-      title: 'A Different Kind of Dating Space',
-      subtitle: `Welcome, ${userProfile?.name || 'there'}! Velvet Hearts replaces mindless swiping with meaningful human connections. Let's take a quick 1-minute tour of your new space.`,
+      title: 'A Different Kind of Dating Space ✨',
+      subtitle: `Welcome, ${userProfile?.name || 'there'}! Velvet Hearts replaces mindless swiping with meaningful human connections. Let's take a quick guided tour to show you how each feature works.`,
       targetSelector: null,
-      arrowDirection: null,
-      cardPosition: 'center'
+      preferredPlacement: 'center'
     },
     {
       id: 'stories',
@@ -62,10 +59,10 @@ export const FeatureTourGuide = () => {
       badgeIcon: Compass,
       badgeColor: '#B8436A',
       title: 'Browse Intentional Stories',
-      subtitle: 'Profiles are presented like magazine stories. Tap on photo sides to flip through pictures, read personal stories, and check the real-time Vibe Match % indicator.',
-      targetSelector: '.story-card-container, .story-deck-wrapper',
-      arrowDirection: 'down',
-      cardPosition: 'bottom'
+      subtitle: 'Profiles are presented like editorial stories. Tap on photo sides to flip through pictures, read life stories, and see your real-time Vibe Match % score.',
+      targetSelector: '.story-card-hero, .story-card-photo-wrap',
+      fallbackSelector: '.story-card-container',
+      preferredPlacement: 'right'
     },
     {
       id: 'actions',
@@ -74,10 +71,10 @@ export const FeatureTourGuide = () => {
       badgeIcon: Heart,
       badgeColor: '#B8436A',
       title: 'Spark ✨, Pass Softly, or Super Spark',
-      subtitle: 'No hasty swipe gestures! Send a thoughtful Spark ✨ to show interest, a Super Spark ⭐️ to stand out instantly, or Pass Softly without negative gamification.',
+      subtitle: 'Send a warm Spark ✨ to show interest, a Super Spark ⭐️ to stand out instantly, or Pass Softly without guilt or awkwardness.',
       targetSelector: '.story-actions-bar, .story-actions-primary',
-      arrowDirection: 'down',
-      cardPosition: 'top'
+      fallbackSelector: '.story-actions-bar',
+      preferredPlacement: 'top'
     },
     {
       id: 'matches',
@@ -86,10 +83,10 @@ export const FeatureTourGuide = () => {
       badgeIcon: Heart,
       badgeColor: '#D4AD6A',
       title: 'Connections & 24h Spark Nudges',
-      subtitle: 'When mutual interest is shared, you match! See spark countdowns, 1-tap icebreakers, and send playful nudges to get conversations started.',
-      targetSelector: '.recent-matches-carousel-wrap, .matches-content-container, .page-header',
-      arrowDirection: 'down',
-      cardPosition: 'center'
+      subtitle: 'When interest is mutual, a match forms! See spark countdowns, 1-tap icebreakers, and send playful nudges to keep momentum going.',
+      targetSelector: '.recent-matches-carousel-wrap, .matches-content-container, [data-tour-nav="matches"]',
+      fallbackSelector: '[data-tour-nav="matches"]',
+      preferredPlacement: 'bottom'
     },
     {
       id: 'chat',
@@ -98,10 +95,10 @@ export const FeatureTourGuide = () => {
       badgeIcon: Chats,
       badgeColor: '#B8436A',
       title: 'Safe Chat & Voice Notes',
-      subtitle: 'Connect deeply with 2-minute voice intros, photo sharing, message replies, and real-time seen receipts in a distraction-free space.',
-      targetSelector: '.chat-main-area, .chat-view-container',
-      arrowDirection: 'down',
-      cardPosition: 'center'
+      subtitle: 'Connect deeply with authentic 2-minute voice intros, photo sharing, replies, and seen receipts in a private conversation space.',
+      targetSelector: '.chat-main-area, .chat-view-container, [data-tour-nav="chat"]',
+      fallbackSelector: '[data-tour-nav="chat"]',
+      preferredPlacement: 'bottom'
     },
     {
       id: 'notifications',
@@ -111,9 +108,9 @@ export const FeatureTourGuide = () => {
       badgeColor: '#D4AD6A',
       title: 'Instant Updates',
       subtitle: 'Never miss a connection! Get real-time alerts whenever someone sparks your story, comments on an interest, or becomes a mutual match.',
-      targetSelector: '.notif-list-container, .notifications-page',
-      arrowDirection: 'down',
-      cardPosition: 'center'
+      targetSelector: '.notif-list-container, .notifications-page, [data-tour-nav="notifications"]',
+      fallbackSelector: '[data-tour-nav="notifications"]',
+      preferredPlacement: 'bottom'
     },
     {
       id: 'profile',
@@ -123,9 +120,9 @@ export const FeatureTourGuide = () => {
       badgeColor: '#B8436A',
       title: 'Your Public Profile & Saved Bookmarks',
       subtitle: 'Preview how others see you, update your photos and bio details anytime, and access profiles you have bookmarked to rediscover later.',
-      targetSelector: '.profile-preview-card, .you-preview-panel',
-      arrowDirection: 'down',
-      cardPosition: 'center'
+      targetSelector: '.preview-photo-wrap, .preview-card-details, [data-tour-nav="profile"]',
+      fallbackSelector: '[data-tour-nav="profile"]',
+      preferredPlacement: 'right'
     },
     {
       id: 'safety',
@@ -135,9 +132,9 @@ export const FeatureTourGuide = () => {
       badgeColor: '#28A745',
       title: 'Your Peace of Mind is First',
       subtitle: 'Anti-screenshot protection, active identity verification, 2-tap report tools, and customizable accessibility settings keep your experience secure.',
-      targetSelector: '.safety-content-grid, .safety-center-page',
-      arrowDirection: 'down',
-      cardPosition: 'center'
+      targetSelector: '.safety-section:first-child, [data-tour-nav="safety"]',
+      fallbackSelector: '[data-tour-nav="safety"]',
+      preferredPlacement: 'bottom'
     },
     {
       id: 'finish',
@@ -146,10 +143,9 @@ export const FeatureTourGuide = () => {
       badgeIcon: Lightning,
       badgeColor: '#D4AD6A',
       title: "You're Ready to Connect! 💖",
-      subtitle: 'You are all set to start discovering authentic people who truly see you. You can revisit this tour anytime from your Settings.',
+      subtitle: 'You are all set to start discovering authentic people who truly see you. You can replay this tour anytime from your Settings.',
       targetSelector: null,
-      arrowDirection: null,
-      cardPosition: 'center'
+      preferredPlacement: 'center'
     }
   ];
 
@@ -158,7 +154,6 @@ export const FeatureTourGuide = () => {
     if (isLoggedIn && isOnboarded) {
       const sessionShown = sessionStorage.getItem('vh-tour-session-shown');
       if (!sessionShown && !isFeatureTourActive) {
-        // Short delay so page loads and animates in smoothly first
         const timer = setTimeout(() => {
           setIsFeatureTourActive(true);
         }, 1000);
@@ -172,13 +167,146 @@ export const FeatureTourGuide = () => {
     if (isFeatureTourActive) {
       setIsVisible(true);
       setCurrentStep(0);
-      previousTabRef.current = activeTab;
     } else {
       setIsVisible(false);
     }
   }, [isFeatureTourActive]);
 
-  // Update active tab and spotlight rectangle when step changes
+  // Handle active tab change and calculate smart positioning relative to target element
+  const calculatePosition = useCallback(() => {
+    const stepData = tourSteps[currentStep];
+    if (!stepData || !stepData.targetSelector) {
+      setTargetRect(null);
+      setArrowDirection(null);
+      setCardStyle({
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        maxWidth: '460px',
+        width: 'calc(100vw - 32px)'
+      });
+      return;
+    }
+
+    let el = document.querySelector(stepData.targetSelector);
+    if (!el && stepData.fallbackSelector) {
+      el = document.querySelector(stepData.fallbackSelector);
+    }
+
+    if (!el) {
+      setTargetRect(null);
+      setArrowDirection(null);
+      setCardStyle({
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        maxWidth: '460px',
+        width: 'calc(100vw - 32px)'
+      });
+      return;
+    }
+
+    // Measure target element
+    const rect = el.getBoundingClientRect();
+    const padding = 6;
+    const boundedRect = {
+      top: Math.max(0, rect.top - padding),
+      left: Math.max(0, rect.left - padding),
+      width: rect.width + padding * 2,
+      height: rect.height + padding * 2,
+      rawTop: rect.top,
+      rawLeft: rect.left,
+      rawRight: rect.right,
+      rawBottom: rect.bottom,
+      centerX: rect.left + rect.width / 2,
+      centerY: rect.top + rect.height / 2
+    };
+
+    setTargetRect(boundedRect);
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cardWidth = Math.min(390, vw - 32);
+    const cardEstHeight = 230;
+
+    const spaceAbove = boundedRect.rawTop;
+    const spaceBelow = vh - boundedRect.rawBottom;
+    const spaceRight = vw - boundedRect.rawRight;
+    const spaceLeft = boundedRect.rawLeft;
+
+    let computedCardStyle = {
+      position: 'fixed',
+      width: `${cardWidth}px`,
+      maxWidth: 'calc(100vw - 32px)',
+      zIndex: 1000001
+    };
+
+    let computedArrowStyle = {};
+    let computedArrowDir = 'down';
+
+    // Desktop Left Sidebar Target Check
+    const isSidebarTarget = boundedRect.rawLeft < 120 && boundedRect.width < 300 && vw > 768;
+
+    if (isSidebarTarget && spaceRight >= cardWidth + 24) {
+      // Position Card to the RIGHT of sidebar element
+      computedCardStyle.left = `${boundedRect.rawRight + 16}px`;
+      computedCardStyle.top = `${Math.max(16, Math.min(vh - cardEstHeight - 16, boundedRect.centerY - cardEstHeight / 2))}px`;
+      computedArrowDir = 'left';
+      computedArrowStyle = {
+        left: '-18px',
+        top: `${Math.min(cardEstHeight - 40, Math.max(20, boundedRect.centerY - (parseInt(computedCardStyle.top, 10) || 0) - 12))}px`
+      };
+    } else if (spaceAbove >= cardEstHeight + 20) {
+      // Position Card ABOVE the target element
+      computedCardStyle.bottom = `${vh - boundedRect.rawTop + 14}px`;
+      const idealLeft = boundedRect.centerX - cardWidth / 2;
+      const clampedLeft = Math.max(16, Math.min(vw - cardWidth - 16, idealLeft));
+      computedCardStyle.left = `${clampedLeft}px`;
+      computedArrowDir = 'down';
+      computedArrowStyle = {
+        bottom: '-18px',
+        left: `${Math.max(24, Math.min(cardWidth - 24, boundedRect.centerX - clampedLeft - 12))}px`
+      };
+    } else if (spaceBelow >= cardEstHeight + 20) {
+      // Position Card BELOW the target element
+      computedCardStyle.top = `${boundedRect.rawBottom + 14}px`;
+      const idealLeft = boundedRect.centerX - cardWidth / 2;
+      const clampedLeft = Math.max(16, Math.min(vw - cardWidth - 16, idealLeft));
+      computedCardStyle.left = `${clampedLeft}px`;
+      computedArrowDir = 'up';
+      computedArrowStyle = {
+        top: '-18px',
+        left: `${Math.max(24, Math.min(cardWidth - 24, boundedRect.centerX - clampedLeft - 12))}px`
+      };
+    } else if (spaceRight >= cardWidth + 20 && vw > 768) {
+      // Position Card to the RIGHT
+      computedCardStyle.left = `${boundedRect.rawRight + 14}px`;
+      computedCardStyle.top = `${Math.max(16, Math.min(vh - cardEstHeight - 16, boundedRect.centerY - cardEstHeight / 2))}px`;
+      computedArrowDir = 'left';
+      computedArrowStyle = {
+        left: '-18px',
+        top: '30px'
+      };
+    } else {
+      // Fallback: Place at bottom with subtle bounce down
+      computedCardStyle.bottom = '24px';
+      computedCardStyle.left = `${Math.max(16, (vw - cardWidth) / 2)}px`;
+      computedArrowDir = 'up';
+      computedArrowStyle = {
+        top: '-18px',
+        left: '50%',
+        transform: 'translateX(-50%)'
+      };
+    }
+
+    setCardStyle(computedCardStyle);
+    setArrowStyle(computedArrowStyle);
+    setArrowDirection(computedArrowDir);
+  }, [currentStep]);
+
+  // Sync step change, active tab, and re-calculate positions
   useEffect(() => {
     if (!isVisible) return;
 
@@ -187,34 +315,16 @@ export const FeatureTourGuide = () => {
       setActiveTab(stepData.tab);
     }
 
-    // Measure target element position for spotlight cutout
-    const updateSpotlight = () => {
-      if (!stepData || !stepData.targetSelector) {
-        setSpotlightRect(null);
-        return;
-      }
+    const timer = setTimeout(calculatePosition, 260);
+    window.addEventListener('resize', calculatePosition);
+    window.addEventListener('scroll', calculatePosition, true);
 
-      const el = document.querySelector(stepData.targetSelector);
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        setSpotlightRect({
-          top: Math.max(0, rect.top - 8),
-          left: Math.max(0, rect.left - 8),
-          width: rect.width + 16,
-          height: rect.height + 16
-        });
-      } else {
-        setSpotlightRect(null);
-      }
-    };
-
-    const timer = setTimeout(updateSpotlight, 280);
-    window.addEventListener('resize', updateSpotlight);
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('resize', updateSpotlight);
+      window.removeEventListener('resize', calculatePosition);
+      window.removeEventListener('scroll', calculatePosition, true);
     };
-  }, [currentStep, isVisible, activeTab, setActiveTab]);
+  }, [currentStep, isVisible, activeTab, setActiveTab, calculatePosition]);
 
   const handleNext = () => {
     triggerHaptic('light');
@@ -260,20 +370,19 @@ export const FeatureTourGuide = () => {
 
   return (
     <div className="vh-tour-overlay animate-fade-in" role="dialog" aria-modal="true">
-      {/* Dynamic SVG Spotlight Cutout Backdrop */}
+      {/* Semi-transparent SVG Backdrop with Cutout */}
       <svg className="vh-tour-backdrop-svg" aria-hidden="true">
         <defs>
           <mask id="vhTourSpotlightMask">
             <rect width="100%" height="100%" fill="#ffffff" />
-            {spotlightRect && (
+            {targetRect && (
               <rect
-                x={spotlightRect.left}
-                y={spotlightRect.top}
-                width={spotlightRect.width}
-                height={spotlightRect.height}
-                rx="16"
+                x={targetRect.left}
+                y={targetRect.top}
+                width={targetRect.width}
+                height={targetRect.height}
+                rx="14"
                 fill="#000000"
-                className="vh-spotlight-cutout"
               />
             )}
           </mask>
@@ -281,39 +390,47 @@ export const FeatureTourGuide = () => {
         <rect
           width="100%"
           height="100%"
-          fill="rgba(10, 8, 11, 0.85)"
+          fill="rgba(8, 6, 9, 0.55)"
           mask="url(#vhTourSpotlightMask)"
         />
       </svg>
 
-      {/* Spotlight Halo Glow Ring if targeted */}
-      {spotlightRect && (
+      {/* Radiant Glowing Ring on Highlighted Target */}
+      {targetRect && (
         <div
-          className="vh-spotlight-halo"
+          className="vh-spotlight-ring"
           style={{
-            top: spotlightRect.top,
-            left: spotlightRect.left,
-            width: spotlightRect.width,
-            height: spotlightRect.height
+            top: `${targetRect.top}px`,
+            left: `${targetRect.left}px`,
+            width: `${targetRect.width}px`,
+            height: `${targetRect.height}px`
           }}
           aria-hidden="true"
         />
       )}
 
-      {/* Tour Step Card Container */}
-      <div className={`vh-tour-card-wrap position-${step.cardPosition}`}>
-        {/* Animated Directional Pointer Arrow */}
-        {step.arrowDirection && (
-          <div className={`vh-tour-arrow-box arrow-${step.arrowDirection}`}>
-            {step.arrowDirection === 'down' && <ArrowDown size={32} weight="bold" className="anim-bounce-down" />}
-            {step.arrowDirection === 'up' && <ArrowUp size={32} weight="bold" className="anim-bounce-up" />}
-            {step.arrowDirection === 'left' && <ArrowLeft size={32} weight="bold" className="anim-bounce-left" />}
-            {step.arrowDirection === 'right' && <ArrowRight size={32} weight="bold" className="anim-bounce-right" />}
+      {/* Smart Anchored Floating Tooltip Card */}
+      <div
+        ref={cardRef}
+        className="vh-tour-floating-card-wrap animate-scale-up"
+        style={cardStyle}
+      >
+        {/* Dynamic Pointing Arrow */}
+        {arrowDirection && (
+          <div
+            className={`vh-tour-pointer-arrow arrow-${arrowDirection}`}
+            style={arrowStyle}
+            aria-hidden="true"
+          >
+            {arrowDirection === 'down' && <ArrowDown size={28} weight="bold" className="anim-pulse-down" />}
+            {arrowDirection === 'up' && <ArrowUp size={28} weight="bold" className="anim-pulse-up" />}
+            {arrowDirection === 'left' && <ArrowLeft size={28} weight="bold" className="anim-pulse-left" />}
+            {arrowDirection === 'right' && <ArrowRight size={28} weight="bold" className="anim-pulse-right" />}
           </div>
         )}
 
-        <div className="vh-tour-card animate-scale-up font-ui">
-          {/* Top Bar with Step Dots & Skip button */}
+        <div className="vh-tour-card font-ui">
+          {/* Card Header */}
           <div className="vh-tour-card-header">
             <div className="vh-tour-badge" style={{ backgroundColor: `${step.badgeColor}22`, borderColor: step.badgeColor }}>
               <BadgeIcon size={14} weight="fill" color={step.badgeColor} />
@@ -326,18 +443,18 @@ export const FeatureTourGuide = () => {
               onClick={handleSkip}
               aria-label="Skip app tour"
             >
-              <X size={16} />
+              <X size={15} />
               <span>Skip</span>
             </button>
           </div>
 
-          {/* Headline & Story Subtitle */}
+          {/* Headline & Explanatory Body */}
           <div className="vh-tour-body">
             <h3 className="vh-tour-title font-display">{step.title}</h3>
             <p className="vh-tour-subtitle font-body">{step.subtitle}</p>
           </div>
 
-          {/* Progress Indicators & Navigation Controls */}
+          {/* Card Footer with Dots & Navigation */}
           <div className="vh-tour-footer">
             <div className="vh-tour-progress">
               <span className="vh-tour-step-counter">
@@ -363,7 +480,7 @@ export const FeatureTourGuide = () => {
                   type="button"
                   onClick={handlePrev}
                   className="vh-tour-btn vh-tour-btn-back font-ui"
-                  aria-label="Previous tour step"
+                  aria-label="Previous step"
                 >
                   <CaretLeft size={16} weight="bold" />
                   <span>Back</span>
@@ -374,7 +491,7 @@ export const FeatureTourGuide = () => {
                 type="button"
                 onClick={handleNext}
                 className="vh-tour-btn vh-tour-btn-next font-ui"
-                aria-label={isLastStep ? 'Complete tour and start exploring' : 'Next tour step'}
+                aria-label={isLastStep ? 'Complete tour and begin' : 'Next step'}
               >
                 <span>{isLastStep ? 'Start Discovering ✨' : isFirstStep ? "Let's Go!" : 'Next Step'}</span>
                 {!isLastStep && <CaretRight size={16} weight="bold" />}
@@ -388,10 +505,7 @@ export const FeatureTourGuide = () => {
         .vh-tour-overlay {
           position: fixed;
           inset: 0;
-          z-index: 999999;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          z-index: 1000000;
           pointer-events: auto;
           user-select: none;
         }
@@ -402,107 +516,94 @@ export const FeatureTourGuide = () => {
           width: 100%;
           height: 100%;
           pointer-events: none;
-          backdrop-filter: blur(4px);
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
         }
 
-        .vh-spotlight-halo {
+        .vh-spotlight-ring {
           position: absolute;
-          border-radius: 16px;
-          border: 2px solid rgba(212, 173, 106, 0.8);
-          box-shadow: 0 0 30px rgba(184, 67, 106, 0.4), 0 0 15px rgba(212, 173, 106, 0.6);
+          border-radius: 14px;
+          border: 2px solid rgba(212, 173, 106, 0.9);
+          box-shadow: 0 0 0 3px rgba(184, 67, 106, 0.35), 0 0 25px rgba(212, 173, 106, 0.65);
           pointer-events: none;
-          animation: spotlightPulse 2s infinite ease-in-out;
-          transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+          animation: ringGlow 1.8s infinite ease-in-out;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes spotlightPulse {
+        @keyframes ringGlow {
           0%, 100% {
-            box-shadow: 0 0 25px rgba(184, 67, 106, 0.4), 0 0 10px rgba(212, 173, 106, 0.5);
-            border-color: rgba(212, 173, 106, 0.7);
+            box-shadow: 0 0 0 2px rgba(184, 67, 106, 0.3), 0 0 15px rgba(212, 173, 106, 0.5);
+            border-color: rgba(212, 173, 106, 0.8);
           }
           50% {
-            box-shadow: 0 0 45px rgba(184, 67, 106, 0.7), 0 0 20px rgba(212, 173, 106, 0.9);
-            border-color: rgba(240, 212, 160, 1);
+            box-shadow: 0 0 0 4px rgba(184, 67, 106, 0.6), 0 0 30px rgba(243, 198, 143, 0.95);
+            border-color: #F3C68F;
           }
         }
 
-        .vh-tour-card-wrap {
-          position: relative;
-          z-index: 10;
-          max-width: 480px;
-          width: calc(100vw - 32px);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          transition: transform 0.3s ease;
-        }
-
-        .vh-tour-card-wrap.position-top {
-          margin-bottom: auto;
-          margin-top: 40px;
-        }
-
-        .vh-tour-card-wrap.position-bottom {
-          margin-top: auto;
-          margin-bottom: 40px;
+        .vh-tour-floating-card-wrap {
+          transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                      left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                      bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .vh-tour-card {
-          width: 100%;
-          background: rgba(26, 20, 24, 0.95);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          border: 1.5px solid rgba(212, 173, 106, 0.35);
-          border-radius: 24px;
-          padding: 24px 24px 20px;
-          box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(184, 67, 106, 0.3);
+          background: rgba(24, 18, 22, 0.96);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1.5px solid rgba(212, 173, 106, 0.4);
+          border-radius: 20px;
+          padding: 20px 20px 16px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(184, 67, 106, 0.35);
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 14px;
           color: #ffffff;
         }
 
-        /* Directional Pointing Arrows */
-        .vh-tour-arrow-box {
+        /* Directional Pointer Arrows */
+        .vh-tour-pointer-arrow {
+          position: absolute;
           color: #F3C68F;
-          filter: drop-shadow(0 4px 12px rgba(184, 67, 106, 0.6));
-          margin-bottom: 8px;
+          filter: drop-shadow(0 2px 10px rgba(184, 67, 106, 0.7));
+          pointer-events: none;
+          z-index: 10;
         }
 
-        .anim-bounce-down {
-          animation: bounceDown 1.4s infinite ease-in-out;
+        .anim-pulse-down {
+          animation: pulseDown 1.3s infinite ease-in-out;
         }
 
-        .anim-bounce-up {
-          animation: bounceUp 1.4s infinite ease-in-out;
+        .anim-pulse-up {
+          animation: pulseUp 1.3s infinite ease-in-out;
         }
 
-        .anim-bounce-left {
-          animation: bounceLeft 1.4s infinite ease-in-out;
+        .anim-pulse-left {
+          animation: pulseLeft 1.3s infinite ease-in-out;
         }
 
-        .anim-bounce-right {
-          animation: bounceRight 1.4s infinite ease-in-out;
+        .anim-pulse-right {
+          animation: pulseRight 1.3s infinite ease-in-out;
         }
 
-        @keyframes bounceDown {
+        @keyframes pulseDown {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(10px); }
+          50% { transform: translateY(8px); }
         }
 
-        @keyframes bounceUp {
+        @keyframes pulseUp {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+          50% { transform: translateY(-8px); }
         }
 
-        @keyframes bounceLeft {
+        @keyframes pulseLeft {
           0%, 100% { transform: translateX(0); }
-          50% { transform: translateX(-10px); }
+          50% { transform: translateX(-8px); }
         }
 
-        @keyframes bounceRight {
+        @keyframes pulseRight {
           0%, 100% { transform: translateX(0); }
-          50% { transform: translateX(10px); }
+          50% { transform: translateX(8px); }
         }
 
         /* Header */
@@ -516,10 +617,10 @@ export const FeatureTourGuide = () => {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 4px 12px;
+          padding: 4px 10px;
           border-radius: 9999px;
           border: 1px solid;
-          font-size: 12px;
+          font-size: 11px;
           font-weight: 600;
           letter-spacing: 0.04em;
           text-transform: uppercase;
@@ -532,39 +633,38 @@ export const FeatureTourGuide = () => {
           background: transparent;
           border: none;
           color: rgba(255, 255, 255, 0.6);
-          font-size: 13px;
+          font-size: 12.5px;
           font-weight: 500;
           cursor: pointer;
-          padding: 4px 8px;
-          border-radius: 8px;
+          padding: 3px 6px;
+          border-radius: 6px;
           transition: color 0.15s ease, background-color 0.15s ease;
         }
 
         .vh-tour-skip-btn:hover {
           color: #ffffff;
-          background: rgba(255, 255, 255, 0.08);
+          background: rgba(255, 255, 255, 0.1);
         }
 
         /* Body */
         .vh-tour-body {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 6px;
         }
 
         .vh-tour-title {
-          font-size: 22px;
+          font-size: 18.5px;
           font-weight: 700;
           color: #ffffff;
           margin: 0;
           line-height: 1.25;
-          letter-spacing: -0.01em;
         }
 
         .vh-tour-subtitle {
-          font-size: 14.5px;
-          color: rgba(255, 255, 255, 0.8);
-          line-height: 1.55;
+          font-size: 13.5px;
+          color: rgba(255, 255, 255, 0.82);
+          line-height: 1.5;
           margin: 0;
         }
 
@@ -573,19 +673,19 @@ export const FeatureTourGuide = () => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding-top: 12px;
+          padding-top: 10px;
           border-top: 1px solid rgba(255, 255, 255, 0.1);
-          margin-top: 4px;
+          margin-top: 2px;
         }
 
         .vh-tour-progress {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 5px;
         }
 
         .vh-tour-step-counter {
-          font-size: 11.5px;
+          font-size: 11px;
           font-weight: 600;
           color: rgba(255, 255, 255, 0.5);
           letter-spacing: 0.04em;
@@ -594,45 +694,45 @@ export const FeatureTourGuide = () => {
 
         .vh-tour-dots {
           display: flex;
-          gap: 6px;
+          gap: 5px;
           align-items: center;
         }
 
         .vh-tour-dot {
-          width: 8px;
-          height: 8px;
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.22);
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .vh-tour-dot.active {
-          width: 22px;
+          width: 18px;
           border-radius: 9999px;
           background: linear-gradient(135deg, #B8436A 0%, #D4AD6A 100%);
-          box-shadow: 0 0 8px rgba(184, 67, 106, 0.6);
+          box-shadow: 0 0 6px rgba(184, 67, 106, 0.6);
         }
 
         .vh-tour-dot.passed {
-          background: rgba(212, 173, 106, 0.6);
+          background: rgba(212, 173, 106, 0.65);
         }
 
         .vh-tour-actions {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
         }
 
         .vh-tour-btn {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 6px;
-          height: 40px;
-          padding: 0 16px;
+          gap: 5px;
+          height: 36px;
+          padding: 0 14px;
           border-radius: 9999px;
-          font-size: 13.5px;
+          font-size: 13px;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -652,12 +752,12 @@ export const FeatureTourGuide = () => {
           background: linear-gradient(135deg, #B8436A 0%, #E86B93 100%);
           border: none;
           color: #ffffff;
-          box-shadow: 0 4px 16px rgba(184, 67, 106, 0.45);
+          box-shadow: 0 3px 12px rgba(184, 67, 106, 0.45);
         }
 
         .vh-tour-btn-next:hover {
           transform: translateY(-1px);
-          box-shadow: 0 6px 20px rgba(184, 67, 106, 0.65);
+          box-shadow: 0 5px 16px rgba(184, 67, 106, 0.65);
           filter: brightness(1.08);
         }
 
@@ -667,18 +767,18 @@ export const FeatureTourGuide = () => {
 
         @media (max-width: 480px) {
           .vh-tour-card {
-            padding: 20px 18px 16px;
+            padding: 16px 16px 14px;
           }
           .vh-tour-title {
-            font-size: 19px;
+            font-size: 17px;
           }
           .vh-tour-subtitle {
-            font-size: 13.5px;
+            font-size: 13px;
           }
           .vh-tour-btn {
-            height: 38px;
-            padding: 0 14px;
-            font-size: 13px;
+            height: 34px;
+            padding: 0 12px;
+            font-size: 12.5px;
           }
         }
       `}</style>

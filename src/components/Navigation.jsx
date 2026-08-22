@@ -37,6 +37,7 @@ export const Navigation = ({ children }) => {
                   <button 
                     onClick={() => setActiveTab(item.id)}
                     className={`sidebar-link ${isActive ? 'active' : ''}`}
+                    data-tour-nav={item.id}
                     aria-label={`Go to ${item.label}`}
                   >
                     <Icon size={24} weight={isActive ? 'fill' : 'regular'} />
@@ -56,6 +57,7 @@ export const Navigation = ({ children }) => {
           <button 
             onClick={() => setActiveTab('settings')}
             className={`sidebar-link-footer ${activeTab === 'settings' ? 'active' : ''}`}
+            data-tour-nav="settings"
           >
             <Sliders size={20} />
             <span>Settings</span>
@@ -64,6 +66,7 @@ export const Navigation = ({ children }) => {
           <button 
             onClick={() => setActiveTab('safety')}
             className={`sidebar-link-footer ${activeTab === 'safety' ? 'active' : ''}`}
+            data-tour-nav="safety"
           >
             <ShieldCheck size={20} />
             <span>Safety Center</span>
@@ -97,6 +100,7 @@ export const Navigation = ({ children }) => {
                 <button 
                   onClick={() => setActiveTab(item.id)}
                   className={`mobile-nav-link ${isActive ? 'active' : ''}`}
+                  data-tour-nav={item.id}
                   aria-label={item.label}
                 >
                   <div className="mobile-icon-wrap">
