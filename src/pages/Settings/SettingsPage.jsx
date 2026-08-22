@@ -24,7 +24,8 @@ export const SettingsPage = () => {
     showAlert,
     isPaused,
     pauseProfile,
-    startFeatureTour
+    startFeatureTour,
+    userProfile
   } = useApp();
 
   const [showNotifModal, setShowNotifModal] = useState(false);
@@ -89,9 +90,12 @@ export const SettingsPage = () => {
       if (api.isConfigured) {
         await api.deleteAccount(feedbackData);
       }
-      try {
-        localStorage.removeItem('vh-tour-completed');
-      } catch (_) {}
+      const uid = userProfile?.id || userProfile?.uid;
+      if (uid) {
+        try {
+          localStorage.removeItem(`vh-tour-completed-${uid}`);
+        } catch (_) {}
+      }
       setShowDeleteModal(false);
       await logout();
       window.location.reload();

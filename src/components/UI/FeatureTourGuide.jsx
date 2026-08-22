@@ -38,6 +38,8 @@ export const FeatureTourGuide = () => {
   const [arrowStyle, setArrowStyle] = useState({});
   const [arrowDirection, setArrowDirection] = useState(null);
   const cardRef = useRef(null);
+  const dialogRef = useRef(null);
+  const previouslyFocusedElementRef = useRef(null);
 
   // 9-step multi-page tour sequence with specific, focused target selectors
   const tourSteps = [
@@ -152,7 +154,8 @@ export const FeatureTourGuide = () => {
   ];
 
   const getTourStorageKey = useCallback(() => {
-    const uid = userProfile?.id || userProfile?.uid || 'user';
+    const uid = userProfile?.id || userProfile?.uid || userProfile?.userId;
+    if (!uid) return null;
     return `vh-tour-completed-${uid}`;
   }, [userProfile]);
 
@@ -160,27 +163,93 @@ export const FeatureTourGuide = () => {
   useEffect(() => {
     if (isLoggedIn && isOnboarded) {
       const tourKey = getTourStorageKey();
-      const hasCompletedTour = localStorage.getItem(tourKey) || localStorage.getItem('vh-tour-completed');
-      if (!hasCompletedTour && !isFeatureTourActive) {
-        const timer = setTimeout(() => {
-          setIsFeatureTourActive(true);
-        }, 1200);
-        return () => clearTimeout(timer);
+      if (tourKey) {
+        const hasCompletedTour = localStorage.getItem(tourKey);
+        if (!hasCompletedTour && !isFeatureTourActive) {
+          const timer = setTimeout(() => {
+            setIsFeatureTourActive(true);
+          }, 1200);
+          return () => clearTimeout(timer);
+        }
       }
     }
   }, [isLoggedIn, isOnboarded, isFeatureTourActive, setIsFeatureTourActive, getTourStorageKey]);
 
-  // Sync visibility with isFeatureTourActive
+  // Sync visibility with isFeatureTourActive and manage focus capture/restore
   useEffect(() => {
     if (isFeatureTourActive) {
+      previouslyFocusedElementRef.current = document.activeElement;
       setIsVisible(true);
       setCurrentStep(0);
     } else {
       setIsVisible(false);
+      if (previouslyFocusedElementRef.current && typeof previouslyFocusedElementRef.current.focus === 'function') {
+        previouslyFocusedElementRef.current.focus();
+      }
     }
   }, [isFeatureTourActive]);
 
-  // Handle active tab change and calculate smart positioning relative to target element
+  // Keyboard trap and Escape handler for dialog isolation
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleSkip();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const container = dialogRef.current;
+        if (!container) return;
+
+        const focusableElements = container.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        const focusable = Array.from(focusableElements).filter(
+          node => node.offsetParent !== null && !node.disabled
+        );
+
+        if (focusable.length === 0) {
+          e.preventDefault();
+          return;
+        }
+
+        const firstElement = focusable[0];
+        const lastElement = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement || !container.contains(document.activeElement)) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement || !container.contains(document.activeElement)) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isVisible]);
+
+  // Focus Next button or dialog on step change
+  useEffect(() => {
+    if (isVisible && dialogRef.current) {
+      const nextBtn = dialogRef.current.querySelector('.vh-tour-btn-next');
+      if (nextBtn) {
+        nextBtn.focus();
+      } else {
+        dialogRef.current.focus();
+      }
+    }
+  }, [currentStep, isVisible]);
+
+  // Handle active tab change and calculate smart positioning relative to visible target element
   const calculatePosition = useCallback(() => {
     const stepData = tourSteps[currentStep];
     if (!stepData || !stepData.targetSelector) {
@@ -197,9 +266,31 @@ export const FeatureTourGuide = () => {
       return;
     }
 
-    let el = document.querySelector(stepData.targetSelector);
+    const isElementVisible = (node) => {
+      if (!node || !node.getBoundingClientRect) return false;
+      const r = node.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return false;
+      const style = window.getComputedStyle(node);
+      if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) {
+        return false;
+      }
+      return true;
+    };
+
+    const findVisibleElement = (selector) => {
+      if (!selector) return null;
+      const candidates = document.querySelectorAll(selector);
+      for (const node of candidates) {
+        if (isElementVisible(node)) {
+          return node;
+        }
+      }
+      return null;
+    };
+
+    let el = findVisibleElement(stepData.targetSelector);
     if (!el && stepData.fallbackSelector) {
-      el = document.querySelector(stepData.fallbackSelector);
+      el = findVisibleElement(stepData.fallbackSelector);
     }
 
     if (!el) {
@@ -362,8 +453,9 @@ export const FeatureTourGuide = () => {
   const handleComplete = () => {
     try {
       const tourKey = getTourStorageKey();
-      localStorage.setItem(tourKey, 'true');
-      localStorage.setItem('vh-tour-completed', 'true');
+      if (tourKey) {
+        localStorage.setItem(tourKey, 'true');
+      }
     } catch (_) {}
     setIsFeatureTourActive(false);
     setIsVisible(false);
@@ -381,7 +473,15 @@ export const FeatureTourGuide = () => {
   const totalSteps = tourSteps.length;
 
   return (
-    <div className="vh-tour-overlay animate-fade-in" role="dialog" aria-modal="true">
+    <div
+      ref={dialogRef}
+      tabIndex={-1}
+      className="vh-tour-overlay animate-fade-in"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="vh-tour-title-heading"
+      aria-describedby="vh-tour-subtitle-desc"
+    >
       {/* 100% Crystal-Clear Spotlight Hole with 9999px Translucent Dim Spread */}
       {targetRect ? (
         <div
@@ -439,8 +539,8 @@ export const FeatureTourGuide = () => {
 
           {/* Headline & Explanatory Body */}
           <div className="vh-tour-body">
-            <h3 className="vh-tour-title font-display">{step.title}</h3>
-            <p className="vh-tour-subtitle font-body">{step.subtitle}</p>
+            <h3 id="vh-tour-title-heading" className="vh-tour-title font-display">{step.title}</h3>
+            <p id="vh-tour-subtitle-desc" className="vh-tour-subtitle font-body">{step.subtitle}</p>
           </div>
 
           {/* Card Footer with Dots & Navigation */}

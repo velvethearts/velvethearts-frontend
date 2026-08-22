@@ -5,7 +5,7 @@ import logo from "../../assets/velvet-heart-logo.png";
 import { ThemeToggle } from '../../components/UI/ThemeToggle';
 
 export const LandingPage = ({ onGetStarted, onSignIn }) => {
-  const { showAlert } = useApp?.() || {};
+  const { showAlert = () => {} } = useApp?.() || {};
   const [openFaqIndex, setOpenFaqIndex] = React.useState(null);
 
   const faqs = [
