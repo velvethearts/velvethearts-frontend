@@ -39,7 +39,7 @@ export const FeatureTourGuide = () => {
   const [arrowDirection, setArrowDirection] = useState(null);
   const cardRef = useRef(null);
 
-  // 8-step multi-page tour sequence with specific, focused target selectors
+  // 9-step multi-page tour sequence with specific, focused target selectors
   const tourSteps = [
     {
       id: 'welcome',
@@ -47,10 +47,11 @@ export const FeatureTourGuide = () => {
       badge: 'Welcome to Velvet Hearts',
       badgeIcon: Sparkle,
       badgeColor: '#D4AD6A',
-      title: 'A Different Kind of Dating Space ✨',
-      subtitle: `Welcome, ${userProfile?.name || 'there'}! Velvet Hearts replaces mindless swiping with meaningful human connections. Let's take a quick guided tour to show you how each feature works.`,
-      targetSelector: null,
-      preferredPlacement: 'center'
+      title: 'A Different Kind of Dating Space',
+      subtitle: `Welcome, ${userProfile?.name || 'there'}. Velvet Hearts focuses on intentional connections rather than superficial swiping. Here is a quick guide to each core feature.`,
+      targetSelector: '.story-card-hero, .story-card-container',
+      fallbackSelector: '.story-card-container',
+      preferredPlacement: 'right'
     },
     {
       id: 'stories',
@@ -59,7 +60,7 @@ export const FeatureTourGuide = () => {
       badgeIcon: Compass,
       badgeColor: '#B8436A',
       title: 'Browse Intentional Stories',
-      subtitle: 'Profiles are presented like editorial stories. Tap on photo sides to flip through pictures, read life stories, and see your real-time Vibe Match % score.',
+      subtitle: 'Profiles are presented as editorial stories. Tap photo sides to flip through pictures, read life stories, and check your real-time Vibe Match percentage.',
       targetSelector: '.story-card-hero, .story-card-photo-wrap',
       fallbackSelector: '.story-card-container',
       preferredPlacement: 'right'
@@ -70,8 +71,8 @@ export const FeatureTourGuide = () => {
       badge: 'Meaningful Actions',
       badgeIcon: Heart,
       badgeColor: '#B8436A',
-      title: 'Spark ✨, Pass Softly, or Super Spark',
-      subtitle: 'Send a warm Spark ✨ to show interest, a Super Spark ⭐️ to stand out instantly, or Pass Softly without guilt or awkwardness.',
+      title: 'Spark, Pass, or Super Spark',
+      subtitle: 'Send a Spark to express interest, a Super Spark to stand out, or Pass Softly without negative pressure.',
       targetSelector: '.story-actions-bar, .story-actions-primary',
       fallbackSelector: '.story-actions-bar',
       preferredPlacement: 'top'
@@ -83,7 +84,7 @@ export const FeatureTourGuide = () => {
       badgeIcon: Heart,
       badgeColor: '#D4AD6A',
       title: 'Connections & 24h Spark Nudges',
-      subtitle: 'When interest is mutual, a match forms! See spark countdowns, 1-tap icebreakers, and send playful nudges to keep momentum going.',
+      subtitle: 'When interest is mutual, a connection forms. View match details, send icebreakers, and nudge conversations to get started.',
       targetSelector: '.recent-matches-carousel-wrap, .matches-content-container, [data-tour-nav="matches"]',
       fallbackSelector: '[data-tour-nav="matches"]',
       preferredPlacement: 'bottom'
@@ -95,7 +96,7 @@ export const FeatureTourGuide = () => {
       badgeIcon: Chats,
       badgeColor: '#B8436A',
       title: 'Safe Chat & Voice Notes',
-      subtitle: 'Connect deeply with authentic 2-minute voice intros, photo sharing, replies, and seen receipts in a private conversation space.',
+      subtitle: 'Connect with authentic voice intros, photo sharing, replies, and read receipts in a private conversation space.',
       targetSelector: '.chat-main-area, .chat-view-container, [data-tour-nav="chat"]',
       fallbackSelector: '[data-tour-nav="chat"]',
       preferredPlacement: 'bottom'
@@ -106,8 +107,8 @@ export const FeatureTourGuide = () => {
       badge: 'Real-Time Alerts',
       badgeIcon: Bell,
       badgeColor: '#D4AD6A',
-      title: 'Instant Updates',
-      subtitle: 'Never miss a connection! Get real-time alerts whenever someone sparks your story, comments on an interest, or becomes a mutual match.',
+      title: 'Instant Notifications',
+      subtitle: 'Receive alerts when someone sparks your story, comments on an interest, or when a new connection is made.',
       targetSelector: '.notif-list-container, .notifications-page, [data-tour-nav="notifications"]',
       fallbackSelector: '[data-tour-nav="notifications"]',
       preferredPlacement: 'bottom'
@@ -115,11 +116,11 @@ export const FeatureTourGuide = () => {
     {
       id: 'profile',
       tab: 'profile',
-      badge: 'Your Persona',
+      badge: 'Your Profile',
       badgeIcon: User,
       badgeColor: '#B8436A',
-      title: 'Your Public Profile & Saved Bookmarks',
-      subtitle: 'Preview how others see you, update your photos and bio details anytime, and access profiles you have bookmarked to rediscover later.',
+      title: 'Public Profile & Saved Bookmarks',
+      subtitle: 'Preview how others see you, update your details anytime, and access profiles you have bookmarked to rediscover later.',
       targetSelector: '.preview-photo-wrap, .preview-card-details, [data-tour-nav="profile"]',
       fallbackSelector: '[data-tour-nav="profile"]',
       preferredPlacement: 'right'
@@ -130,8 +131,8 @@ export const FeatureTourGuide = () => {
       badge: 'Safety & Privacy',
       badgeIcon: ShieldCheck,
       badgeColor: '#28A745',
-      title: 'Your Peace of Mind is First',
-      subtitle: 'Anti-screenshot protection, active identity verification, 2-tap report tools, and customizable accessibility settings keep your experience secure.',
+      title: 'Your Peace of Mind',
+      subtitle: 'Screenshot protection, identity verification, 2-tap report tools, and accessibility settings keep your experience secure.',
       targetSelector: '.safety-section:first-child, [data-tour-nav="safety"]',
       fallbackSelector: '[data-tour-nav="safety"]',
       preferredPlacement: 'bottom'
@@ -142,10 +143,11 @@ export const FeatureTourGuide = () => {
       badge: 'Tour Complete',
       badgeIcon: Lightning,
       badgeColor: '#D4AD6A',
-      title: "You're Ready to Connect! 💖",
-      subtitle: 'You are all set to start discovering authentic people who truly see you. You can replay this tour anytime from your Settings.',
-      targetSelector: null,
-      preferredPlacement: 'center'
+      title: "You're Ready to Connect",
+      subtitle: 'You are ready to begin discovering authentic people. You can replay this tour anytime from your Settings.',
+      targetSelector: '.story-actions-bar, .story-card-hero',
+      fallbackSelector: '.story-card-container',
+      preferredPlacement: 'top'
     }
   ];
 
@@ -470,7 +472,7 @@ export const FeatureTourGuide = () => {
                 className="vh-tour-btn vh-tour-btn-next font-ui"
                 aria-label={isLastStep ? 'Complete tour and begin' : 'Next step'}
               >
-                <span>{isLastStep ? 'Start Discovering ✨' : isFirstStep ? "Let's Go!" : 'Next Step'}</span>
+                <span>{isLastStep ? 'Start Discovering' : isFirstStep ? 'Begin Tour' : 'Next Step'}</span>
                 {!isLastStep && <CaretRight size={16} weight="bold" />}
               </button>
             </div>
