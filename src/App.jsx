@@ -134,6 +134,29 @@ function AppContent() {
     }
   }, [setActiveTab]);
 
+  // SEO: Dynamic page title based on current state
+  React.useEffect(() => {
+    const BASE_TITLE = 'Velvet Hearts';
+    const TAB_TITLES = {
+      discover: 'Discover',
+      matches: 'Matches',
+      chat: 'Chat',
+      notifications: 'Notifications',
+      profile: 'Profile',
+      settings: 'Settings',
+      safety: 'Safety Center',
+    };
+
+    if (!isLoggedIn) {
+      document.title = `${BASE_TITLE} | Intentional Dating & Inclusive Relationship Platform`;
+    } else if (!isOnboarded) {
+      document.title = `Get Started | ${BASE_TITLE}`;
+    } else {
+      const tabLabel = TAB_TITLES[activeTab] || 'Discover';
+      document.title = `${tabLabel} | ${BASE_TITLE}`;
+    }
+  }, [activeTab, isLoggedIn, isOnboarded]);
+
   const renderActivePage = () => {
     switch (activeTab) {
       case 'discover':

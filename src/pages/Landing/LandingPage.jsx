@@ -38,7 +38,7 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
         </div>
         <div className="landing-header-actions">
           <ThemeToggle />
-          <button onClick={onSignIn} className="sign-in-btn font-ui">
+          <button onClick={onSignIn} className="sign-in-btn font-ui" aria-label="Sign in to your Velvet Hearts account">
             Sign In
           </button>
         </div>
@@ -46,7 +46,7 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
 
       <main>
         {/* Hero Section */}
-        <section className="hero-section">
+        <section className="hero-section" aria-labelledby="hero-heading">
           <div className="hero-content">
             <div className="accent-badge font-ui">
               <Sparkle size={16} weight="fill" />
@@ -54,7 +54,7 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
             </div>
 
             <div className="hero-title-logo-row">
-              <h1 className="hero-title font-display">
+              <h1 id="hero-heading" className="hero-title font-display">
                 Where every<br />heart belongs.
               </h1>
               <img
@@ -73,7 +73,7 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
             </p>
 
             <div className="hero-actions">
-              <button onClick={onGetStarted} className="cta-primary font-ui">
+              <button onClick={onGetStarted} className="cta-primary font-ui" aria-label="Create your Velvet Hearts account">
                 Begin Your Journey &rarr;
               </button>
               <button onClick={onSignIn} className="cta-ghost font-ui">
@@ -93,9 +93,9 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
         </section>
 
         {/* Core Values Section */}
-        <section className="values-section">
+        <section className="values-section" aria-labelledby="values-heading">
           <div className="section-header">
-            <h2 className="section-title font-display">Built different, on purpose.</h2>
+            <h2 id="values-heading" className="section-title font-display">Built different, on purpose.</h2>
             <p className="section-subtitle font-body">We redesigned connection from the ground up to respect your humanity.</p>
           </div>
 
@@ -143,8 +143,8 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
         </section>
 
         {/* How it Works Section */}
-        <section className="how-it-works-section">
-          <h2 className="section-title font-display text-center">Your journey to connection</h2>
+        <section className="how-it-works-section" aria-labelledby="how-it-works-heading">
+          <h2 id="how-it-works-heading" className="section-title font-display text-center">Your journey to connection</h2>
 
           <div className="steps-container">
             <div className="step-item">
@@ -178,9 +178,9 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
         </section>
 
         {/* Safety Banner */}
-        <section className="safety-banner">
+        <section className="safety-banner" aria-labelledby="safety-heading">
           <div className="safety-banner-content">
-            <h2 className="safety-title font-display">Your safety is our foundation.</h2>
+            <h2 id="safety-heading" className="safety-title font-display">Your safety is our foundation.</h2>
             <p className="safety-subtitle font-body">
               We require active verification, enforce respectful community guidelines, and offer persistent support resources accessible with just two taps.
             </p>
@@ -194,9 +194,9 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
         </section>
 
         {/* FAQ Accordion Section */}
-        <section className="faq-section">
+        <section className="faq-section" aria-labelledby="faq-heading">
           <div className="section-header">
-            <h2 className="section-title font-display">Frequently Asked Questions</h2>
+            <h2 id="faq-heading" className="section-title font-display">Frequently Asked Questions</h2>
             <p className="section-subtitle font-body">Everything you need to know about Velvet Hearts and how we match.</p>
           </div>
 
@@ -208,12 +208,14 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
                   className="faq-question font-ui"
                   onClick={() => setOpenFaqIndex(openFaqIndex === idx ? null : idx)}
                   aria-expanded={openFaqIndex === idx}
+                  aria-controls={`faq-answer-${idx}`}
+                  id={`faq-question-${idx}`}
                 >
                   <span>{faq.q}</span>
                   <span className="faq-icon">{openFaqIndex === idx ? '−' : '+'}</span>
                 </button>
                 {openFaqIndex === idx && (
-                  <div className="faq-answer font-body">
+                  <div id={`faq-answer-${idx}`} className="faq-answer font-body" role="region" aria-labelledby={`faq-question-${idx}`}>
                     <p>{faq.a}</p>
                   </div>
                 )}
@@ -223,9 +225,9 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
         </section>
 
         {/* Final CTA */}
-        <section className="final-cta-section">
-          <h2 className="cta-title font-display">Ready to be seen?</h2>
-          <button onClick={onGetStarted} className="cta-primary large-cta font-ui">
+        <section className="final-cta-section" aria-labelledby="cta-heading">
+          <h2 id="cta-heading" className="cta-title font-display">Ready to be seen?</h2>
+          <button onClick={onGetStarted} className="cta-primary large-cta font-ui" aria-label="Sign up for Velvet Hearts">
             Begin Your Journey
           </button>
         </section>
@@ -237,12 +239,12 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
           <img src={logo} alt="Velvet Hearts Logo" className="footer-logo-image" />
           <span>Velvet Hearts</span>
         </div>
-        <div className="footer-links">
+        <nav className="footer-links" aria-label="Footer navigation">
           <a href="#guidelines" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Community Guidelines', message: 'Be respectful, genuine, and kind.' }); }}>Community Guidelines</a>
           <a href="#safety" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Safety Center', message: 'Report tools are available directly inside chat and profiles.' }); }}>Safety Center</a>
           <a href="#privacy" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Privacy Policy', message: 'Your data is secure and never sold.' }); }}>Privacy Policy</a>
           <a href="#terms" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Terms of Service', message: 'Agree to engage with care.' }); }}>Terms of Service</a>
-        </div>
+        </nav>
         <div className="footer-copy">
           Made with care. &copy; 2026 Velvet Hearts. All rights reserved.
         </div>
