@@ -286,7 +286,10 @@ export const StoryDeck = ({
         </p>
         <button
           type="button"
-          onClick={() => setCurrentIndex(0)}
+          onClick={() => {
+            setSwipeHistory([]);
+            if (onUnpassProfile) onUnpassProfile(null);
+          }}
           className="restart-deck-btn font-ui"
         >
           Review Profiles Again

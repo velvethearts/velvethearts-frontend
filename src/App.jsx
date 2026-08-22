@@ -18,6 +18,7 @@ import { YouProfile } from './pages/Profile/YouProfile';
 import { ProfileDetail } from './pages/ProfileDetail/ProfileDetail';
 import { ToastContainer } from './components/UI/ToastContainer';
 import { PWAInstallModal } from './components/UI/PWAInstallModal';
+import { FeatureTourGuide } from './components/UI/FeatureTourGuide';
 
 // Lazy-loaded Secondary Routes for Performance Optimization
 const OnboardingFlow = lazy(() => import('./pages/Onboarding/OnboardingFlow').then(m => ({ default: m.OnboardingFlow })));
@@ -239,6 +240,7 @@ function AppContent() {
         {renderActivePage()}
       </Suspense>
       <PWAInstallModal isLoggedIn={isLoggedIn} isOnboarded={isOnboarded} />
+      <FeatureTourGuide />
     </Navigation>
   );
 }

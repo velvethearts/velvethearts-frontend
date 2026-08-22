@@ -11,7 +11,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 import { auth } from '../lib/firebase';
 import { api } from '../lib/api';
-import { connectSocket, disconnectSocket, emitMarkSeen } from '../lib/socket';
+import { connectSocket, disconnectSocket, emitMarkSeen, getSocket } from '../lib/socket';
 import { registerPushNotifications } from '../lib/pushManager';
 import { ConfirmModal } from '../components/UI/ConfirmModal';
 const AppContext = createContext();
@@ -359,6 +359,12 @@ export const AppProvider = ({ children }) => {
     }, []);
 
     const [toastNotifications, setToastNotifications] = useState([]);
+    const [isFeatureTourActive, setIsFeatureTourActive] = useState(false);
+
+    const startFeatureTour = useCallback(() => {
+        setIsFeatureTourActive(true);
+        setActiveTab('discover');
+    }, [setActiveTab]);
 
     const addToast = useCallback((toast) => {
         const id = Date.now() + '-' + Math.random().toString(36).substr(2, 5);
@@ -2115,6 +2121,9 @@ useEffect(() => {
             setChats,
             activeTab,
             setActiveTab,
+            isFeatureTourActive,
+            setIsFeatureTourActive,
+            startFeatureTour,
             filters,
             setFilters,
             theme,

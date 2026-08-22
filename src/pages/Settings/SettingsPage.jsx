@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle } from '@phosphor-icons/react';
+import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle, Sparkle } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
@@ -23,7 +23,8 @@ export const SettingsPage = () => {
     showConfirm,
     showAlert,
     isPaused,
-    pauseProfile
+    pauseProfile,
+    startFeatureTour
   } = useApp();
 
   const [showNotifModal, setShowNotifModal] = useState(false);
@@ -275,6 +276,29 @@ export const SettingsPage = () => {
               </label>
             </div>
 
+          </div>
+        </section>
+
+        {/* Interactive App Tour / Guide */}
+        <section className="settings-section border-top" aria-labelledby="tour-heading">
+          <h2 id="tour-heading" className="section-title">
+            <Sparkle size={20} className="section-title-icon" style={{ color: 'var(--gold-400)' }} />
+            <span>Interactive App Tour</span>
+          </h2>
+          <div className="settings-options-list">
+            <div className="option-item" style={{ cursor: 'pointer' }} onClick={startFeatureTour}>
+              <div className="option-text">
+                <span className="option-label">Replay App Walkthrough</span>
+                <span className="option-desc font-body">Take the interactive multi-page tour explaining how Velvet Hearts works.</span>
+              </div>
+              <button 
+                type="button" 
+                className="btn-tour-start font-ui"
+                onClick={(e) => { e.stopPropagation(); startFeatureTour(); }}
+              >
+                Start Tour ✨
+              </button>
+            </div>
           </div>
         </section>
 
@@ -727,6 +751,26 @@ export const SettingsPage = () => {
           gap: var(--space-2);
           border-top: 1px solid var(--border-subtle);
           padding-top: var(--space-4);
+        }
+
+        .btn-tour-start {
+          background: linear-gradient(135deg, rgba(212, 173, 106, 0.25) 0%, rgba(184, 67, 106, 0.25) 100%);
+          border: 1.5px solid var(--gold-400);
+          color: var(--gold-300);
+          font-weight: 600;
+          padding: 8px 18px;
+          border-radius: var(--radius-full);
+          font-size: 13px;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.2s ease;
+        }
+
+        .btn-tour-start:hover {
+          background: linear-gradient(135deg, #D4AD6A 0%, #B8436A 100%);
+          color: #ffffff;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 15px rgba(212, 173, 106, 0.4);
         }
       `}</style>
     </div>
