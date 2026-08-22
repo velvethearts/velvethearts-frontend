@@ -17,7 +17,6 @@ import { ChatView } from './pages/Chat/ChatView';
 import { YouProfile } from './pages/Profile/YouProfile';
 import { ProfileDetail } from './pages/ProfileDetail/ProfileDetail';
 import { ToastContainer } from './components/UI/ToastContainer';
-import { PWAInstallModal } from './components/UI/PWAInstallModal';
 import { FeatureTourGuide } from './components/UI/FeatureTourGuide';
 
 // Lazy-loaded Secondary Routes for Performance Optimization
@@ -274,7 +273,6 @@ function AppContent() {
       <Suspense fallback={<AuthLoadingScreen />}>
         {renderActivePage()}
       </Suspense>
-      <PWAInstallModal isLoggedIn={isLoggedIn} isOnboarded={isOnboarded} />
       <FeatureTourGuide />
     </Navigation>
   );
