@@ -82,7 +82,8 @@ export const AppProvider = ({ children }) => {
             matchNotifs: true,
             chatNotifs: true,
             interestNotifs: true,
-            emailNotifs: false
+            emailNotifs: false,
+            rewindLettersEnabled: true,
         };
     });
 
@@ -1093,6 +1094,14 @@ export const AppProvider = ({ children }) => {
 
                 // When a match is created, refresh notifications to pick up server-side created rows
                 socket.on('matchCreated', ({ conversationId }) => {
+                    try { fetchNotifications(); } catch (e) { }
+                });
+
+                socket.on('rewind_letter_delivered', ({ matchId, authorName }) => {
+                    addToast({
+                        title: 'A letter arrives ✉️',
+                        message: `${authorName || 'Your match'} wrote you a Rewind Letter when you first connected.`,
+                    });
                     try { fetchNotifications(); } catch (e) { }
                 });
 

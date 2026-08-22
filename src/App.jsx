@@ -193,10 +193,19 @@ function AppContent() {
         return <MatchesList onSelectConnection={handleSelectConnection} onSelectProfile={setSelectedProfile} />;
 
       case 'chat':
+        if (selectedProfile) {
+          return (
+            <ProfileDetail
+              profile={selectedProfile}
+              onBack={handleBackToDiscover}
+            />
+          );
+        }
         return (
           <ChatView
             preselectedConnectionId={preselectedChatPartnerId}
             onClearPreselected={() => setPreselectedChatPartnerId(null)}
+            onSelectProfile={setSelectedProfile}
           />
         );
 

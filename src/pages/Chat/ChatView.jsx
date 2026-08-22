@@ -22,11 +22,17 @@ import {
   Pause,
   Quotes,
   ArrowBendUpLeft,
-  Sparkle
+  Sparkle,
+  EnvelopeSimple,
+  EnvelopeOpen,
+  LockKey
 } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getSocket, joinConversation, leaveConversation, emitStartTyping, emitStopTyping } from '../../lib/socket';
+import { RewindLetterPrompt } from '../../components/RewindLetter/RewindLetterPrompt';
+import { RewindLetterCompose } from '../../components/RewindLetter/RewindLetterCompose';
+import { RewindLetterCard } from '../../components/RewindLetter/RewindLetterCard';
 
 const parseNoteReply = (text) => {
   if (!text || typeof text !== 'string') return null;
@@ -241,8 +247,8 @@ const VoiceNotePlayer = ({ url, isUser }) => {
   );
 };
 
-export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
-  const { userProfile, connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages } = useApp();
+export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelectProfile }) => {
+  const { userProfile, connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages, notifications } = useApp();
 
   const isUserOnline = (partner) => {
     if (!partner) return false;
@@ -327,9 +333,41 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [localIsTyping, setLocalIsTyping] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown on outside click or Escape key
+  useEffect(() => {
+    if (!showDropdown) return;
+
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showDropdown]);
+
   const [selectedAttachments, setSelectedAttachments] = useState([]);
   const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
+
+  // Rewind Letter state
+  const [letterStatus, setLetterStatus] = useState(null);
+  const [deliveredLetter, setDeliveredLetter] = useState(null);
+  const [showRewindCompose, setShowRewindCompose] = useState(false);
+  const [isRewindDismissed, setIsRewindDismissed] = useState(false);
 
   // Message Reply State & Helpers
   const [replyingTo, setReplyingTo] = useState(null);
@@ -693,6 +731,78 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
     }
   }, [conversationId, activePartner?.id]);
 
+  const activeMatchId = activePartner?.matchId;
+
+  // Sync dismissal status when active chat changes
+  useEffect(() => {
+    if (activeMatchId) {
+      const dismissed = localStorage.getItem(`vh-rewind-dismissed-${activeMatchId}`) === 'true';
+      setIsRewindDismissed(dismissed);
+    }
+  }, [activeMatchId]);
+
+  const fetchLetterData = async () => {
+    if (!activeMatchId || !api.isConfigured) return;
+    try {
+      const statusRes = await api.getRewindLetterStatus(activeMatchId);
+      const statusData = statusRes?.data || statusRes;
+      if (statusData) {
+        setLetterStatus(statusData);
+        if (statusData.receivedLetter?.status === 'DELIVERED') {
+          const deliveredRes = await api.getDeliveredRewindLetter(activeMatchId);
+          const deliveredData = deliveredRes?.data || deliveredRes;
+          if (deliveredData) {
+            setDeliveredLetter(deliveredData);
+          }
+        }
+      }
+    } catch (err) {
+      console.debug('Rewind letter status fetch error:', err);
+    }
+  };
+
+  useEffect(() => {
+    setLetterStatus(null);
+    setDeliveredLetter(null);
+    if (activeMatchId) {
+      fetchLetterData();
+    }
+  }, [activeMatchId]);
+
+  // Socket listener for real-time delivery in active chat
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket || !activeMatchId) return;
+
+    const handleLetterDelivered = (data) => {
+      if (data?.matchId === activeMatchId) {
+        fetchLetterData();
+      }
+    };
+
+    const handleLetterSealed = (data) => {
+      if (data?.matchId === activeMatchId) {
+        fetchLetterData();
+      }
+    };
+
+    socket.on('rewind_letter_delivered', handleLetterDelivered);
+    socket.on('rewind_letter_sealed', handleLetterSealed);
+    return () => {
+      socket.off('rewind_letter_delivered', handleLetterDelivered);
+      socket.off('rewind_letter_sealed', handleLetterSealed);
+    };
+  }, [activeMatchId]);
+
+  const handleDismissPrompt = () => {
+    if (activeMatchId) {
+      try {
+        localStorage.setItem(`vh-rewind-dismissed-${activeMatchId}`, 'true');
+      } catch (e) { }
+    }
+    setIsRewindDismissed(true);
+  };
+
   // Listen for real-time typing events via socket
   useEffect(() => {
     const socket = getSocket();
@@ -920,17 +1030,54 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                   <ArrowLeft size={20} />
                 </button>
 
-                <div className="active-chat-meta">
+                <div
+                  className="active-chat-meta"
+                  onClick={() => onSelectProfile && onSelectProfile(activePartner)}
+                  style={{ cursor: onSelectProfile ? 'pointer' : 'default' }}
+                  title={onSelectProfile ? `View ${activePartner.name}'s profile` : undefined}
+                  role={onSelectProfile ? 'button' : undefined}
+                  tabIndex={onSelectProfile ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (onSelectProfile && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      onSelectProfile(activePartner);
+                    }
+                  }}
+                >
                   <img src={activePartner.photo} alt={activePartner.name} className="active-header-img" />
                   <div>
-                    <h2 className="active-header-name font-display">{activePartner.name}</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <h2 className="active-header-name font-display">{activePartner.name}</h2>
+                      {/* Header Badge */}
+                      {letterStatus?.myLetter?.status === 'DELIVERED' ? (
+                        <span className="rewind-header-badge delivered" title={`Your Rewind Letter has been delivered to ${activePartner.name}`}>
+                          <EnvelopeOpen size={12} weight="fill" />
+                          <span>Your Letter Delivered</span>
+                        </span>
+                      ) : letterStatus?.myLetter?.status === 'SEALED' && letterStatus?.receivedLetter?.status === 'SEALED' ? (
+                        <span className="rewind-header-badge" title="Both of you have sealed Rewind Letters for each other!">
+                          <LockKey size={12} weight="fill" />
+                          <span>Both Letters Sealed</span>
+                        </span>
+                      ) : letterStatus?.myLetter?.status === 'SEALED' ? (
+                        <span className="rewind-header-badge" title={`Your Rewind Letter for ${activePartner.name} is sealed in your time capsule`}>
+                          <LockKey size={12} weight="fill" />
+                          <span>Your Letter Sealed</span>
+                        </span>
+                      ) : letterStatus?.receivedLetter?.status === 'SEALED' ? (
+                        <span className="rewind-header-badge" title={`${activePartner.name} sealed a Rewind Letter for you!`}>
+                          <LockKey size={12} weight="fill" />
+                          <span>{activePartner.name} Sealed a Letter</span>
+                        </span>
+                      ) : null}
+                    </div>
                     <span className={`active-header-status font-ui ${isUserOnline(activePartner) ? 'online' : 'offline'}`}>
                       {isUserOnline(activePartner) ? 'Online' : 'Offline'}
                     </span>
                   </div>
                 </div>
 
-                <div className="active-header-options">
+                <div className="active-header-options" ref={dropdownRef}>
                   <button
                     onClick={() => setShowDropdown(prev => !prev)}
                     className="options-toggle-btn"
@@ -941,6 +1088,19 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
 
                   {showDropdown && (
                     <div className="options-dropdown font-ui" role="menu">
+                      {notifications?.rewindLettersEnabled !== false && !letterStatus?.myLetter && (
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            setShowRewindCompose(true);
+                          }}
+                          role="menuitem"
+                          className="dropdown-item"
+                        >
+                          <EnvelopeSimple size={16} />
+                          <span>Write Rewind Letter</span>
+                        </button>
+                      )}
                       <button onClick={handleDeleteChat} role="menuitem" className="dropdown-item danger">
                         <Trash size={16} />
                         <span>Delete my chat</span>
@@ -958,9 +1118,36 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                 </div>
               </header>
 
+              {/* In-chat Rewind Letter Prompt banner */}
+              {notifications?.rewindLettersEnabled !== false &&
+                !letterStatus?.myLetter &&
+                !isRewindDismissed && (
+                  <RewindLetterPrompt
+                    partnerName={activePartner.name}
+                    onCompose={() => setShowRewindCompose(true)}
+                    onDismiss={handleDismissPrompt}
+                  />
+              )}
+
               {/* Chat Log */}
               <div className="chat-log-container">
                 <div className="chat-log-scroll">
+                  {/* Card for letter received from partner (Delivered) */}
+                  {deliveredLetter && (
+                    <RewindLetterCard
+                      letter={deliveredLetter}
+                      partnerName={activePartner.name}
+                    />
+                  )}
+
+                  {/* Card when partner has sealed a letter for user (Locked in vault) */}
+                  {!deliveredLetter && letterStatus?.receivedLetter?.status === 'SEALED' && (
+                    <RewindLetterCard
+                      letter={{ ...letterStatus.receivedLetter, partnerName: activePartner.name }}
+                      partnerName={activePartner.name}
+                    />
+                  )}
+
                   <div className="chat-welcome-indicator font-body">
                     🛡️ Conversations are confidential. Always feel free to block or report from the menu.
                   </div>
@@ -1436,6 +1623,31 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                     <PaperPlaneRight size={20} weight="fill" />
                   </button>
                 </form>
+              )}
+
+              {/* Rewind Letter Compose Modal */}
+              {showRewindCompose && activeMatchId && (
+                <RewindLetterCompose
+                  matchId={activeMatchId}
+                  partnerName={activePartner.name}
+                  isOpen={showRewindCompose}
+                  onClose={() => setShowRewindCompose(false)}
+                  onSuccess={(sealedLetter) => {
+                    setLetterStatus(prev => ({
+                      ...(prev || {}),
+                      myLetter: {
+                        id: sealedLetter?.id || 'temp',
+                        status: sealedLetter?.status || 'SEALED',
+                        createdAt: new Date().toISOString()
+                      }
+                    }));
+                    fetchLetterData();
+                    showAlert({
+                      title: 'Letter Sealed ✉️',
+                      message: `Your letter for ${activePartner.name} is now safely sealed. It will be delivered privately after 7 days or 50 messages.`,
+                    });
+                  }}
+                />
               )}
             </div>
           ) : (

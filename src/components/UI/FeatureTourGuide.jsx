@@ -29,7 +29,8 @@ export const FeatureTourGuide = () => {
     setActiveTab,
     isFeatureTourActive,
     setIsFeatureTourActive,
-    userProfile
+    userProfile,
+    showCelebration
   } = useApp();
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -196,21 +197,13 @@ export const FeatureTourGuide = () => {
     return `vh-tour-completed-${uid}`;
   }, [userProfile]);
 
-  // Auto-launch tour ONLY ONCE when onboarding is complete for the user
+  // Dismiss tour if a match celebration occurs to prevent visual overlap
   useEffect(() => {
-    if (isLoggedIn && isOnboarded) {
-      const tourKey = getTourStorageKey();
-      if (tourKey) {
-        const hasCompletedTour = localStorage.getItem(tourKey);
-        if (!hasCompletedTour && !isFeatureTourActive) {
-          const timer = setTimeout(() => {
-            setIsFeatureTourActive(true);
-          }, 1200);
-          return () => clearTimeout(timer);
-        }
-      }
+    if (showCelebration && isFeatureTourActive) {
+      setIsFeatureTourActive(false);
+      setIsVisible(false);
     }
-  }, [isLoggedIn, isOnboarded, isFeatureTourActive, setIsFeatureTourActive, getTourStorageKey]);
+  }, [showCelebration, isFeatureTourActive, setIsFeatureTourActive]);
 
   // Sync visibility with isFeatureTourActive and manage focus capture/restore
   useEffect(() => {
@@ -492,17 +485,22 @@ export const FeatureTourGuide = () => {
 
   const handleComplete = () => {
     try {
+      localStorage.setItem('vh-tour-completed', 'true');
       const tourKey = getTourStorageKey();
       if (tourKey) {
         localStorage.setItem(tourKey, 'true');
       }
+      const allUids = [userProfile?.id, userProfile?.uid, userProfile?.userId].filter(Boolean);
+      allUids.forEach(u => {
+        try { localStorage.setItem(`vh-tour-completed-${u}`, 'true'); } catch (_) {}
+      });
     } catch (_) {}
     setIsFeatureTourActive(false);
     setIsVisible(false);
     setActiveTab('discover');
   };
 
-  if (!isVisible || !isLoggedIn || !isOnboarded) {
+  if (!isVisible || !isLoggedIn || !isOnboarded || showCelebration) {
     return null;
   }
 

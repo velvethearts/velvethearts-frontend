@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
-import { Bell, ChatCircleText, Heart, Info } from '@phosphor-icons/react';
+import { Bell, ChatCircleText, Heart, Info, EnvelopeSimple } from '@phosphor-icons/react';
 
 export const NotificationsPage = () => {
   const { notificationItems, notificationUnreadCount, markNotificationRead, markAllNotificationsRead, deleteNotificationItem, setActiveTab, setDeepLinkConversationId } = useApp();
@@ -26,6 +26,8 @@ export const NotificationsPage = () => {
       case 'MATCH':
       case 'LIKE':
         return <Heart size={20} />;
+      case 'REWIND_LETTER':
+        return <EnvelopeSimple size={20} />;
       case 'SYSTEM':
         return <Info size={20} />;
       default:
@@ -60,6 +62,18 @@ export const NotificationsPage = () => {
       n.type === 'MESSAGE' ||
       titleLower.includes('message') ||
       contentLower.includes('sent you a message')
+    ) {
+      if (n.relatedId) {
+        setDeepLinkConversationId(n.relatedId);
+      }
+      setActiveTab('chat');
+      return;
+    }
+
+    if (
+      n.type === 'REWIND_LETTER' ||
+      titleLower.includes('letter') ||
+      contentLower.includes('rewind letter')
     ) {
       if (n.relatedId) {
         setDeepLinkConversationId(n.relatedId);

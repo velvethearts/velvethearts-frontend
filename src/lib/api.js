@@ -214,6 +214,25 @@ export const api = {
     },
 
     // ==========================================================
+    // REWIND LETTER
+    // ==========================================================
+
+    writeRewindLetter(matchId, content) {
+        return request('/api/v1/rewind-letter', {
+            method: 'POST',
+            body: { matchId, content }
+        });
+    },
+
+    getRewindLetterStatus(matchId) {
+        return request(`/api/v1/rewind-letter/${matchId}/status`);
+    },
+
+    getDeliveredRewindLetter(matchId) {
+        return request(`/api/v1/rewind-letter/${matchId}/content`);
+    },
+
+    // ==========================================================
     // SAFETY
     // ==========================================================
 

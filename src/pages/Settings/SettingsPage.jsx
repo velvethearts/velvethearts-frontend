@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle, Compass } from '@phosphor-icons/react';
+import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle, Compass, EnvelopeSimple } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
@@ -278,6 +278,33 @@ export const SettingsPage = () => {
                   type="checkbox"
                   checked={Boolean(notifications?.emailNotifs)}
                   onChange={() => handleDirectNotifToggle('emailNotifs')}
+                />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+
+          </div>
+        </section>
+
+        {/* Feature Preferences / Rewind Letters */}
+        <section className="settings-section border-top" aria-labelledby="features-heading">
+          <h2 id="features-heading" className="section-title">
+            <EnvelopeSimple size={20} className="section-title-icon" />
+            <span>Feature Preferences</span>
+          </h2>
+          <div className="settings-options-list">
+            
+            {/* Rewind Letters */}
+            <div className="option-item">
+              <div className="option-text">
+                <span className="option-label">Rewind Letters</span>
+                <span className="option-desc">Write private time-capsule letters to matches delivered after 7 days or 50 messages</span>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={notifications?.rewindLettersEnabled !== false}
+                  onChange={() => handleDirectNotifToggle('rewindLettersEnabled')}
                 />
                 <span className="toggle-slider" />
               </label>
