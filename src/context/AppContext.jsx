@@ -1337,7 +1337,14 @@ useEffect(() => {
     };
 
     const updateUserProfile = async (profileData) => {
-        setUserProfile(profileData);
+        setUserProfile(prev => {
+            const next = { ...prev, ...profileData };
+            try {
+                localStorage.setItem('vh-user-profile', JSON.stringify(next));
+            } catch (_) {}
+            return next;
+        });
+
         if (api.isConfigured && api.tokenStore.getToken()) {
             try {
                 const saved = await api.saveProfile(profileData);
@@ -1345,7 +1352,7 @@ useEffect(() => {
                     hydrateFromProfile(saved);
                 }
             } catch (err) {
-                console.error('Failed to save profile updates:', err);
+                console.error('Failed to save profile updates to backend:', err);
                 throw err;
             }
         }

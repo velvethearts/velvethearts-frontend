@@ -63,7 +63,7 @@ export const OnboardingFlow = () => {
             cancelText: 'Cancel'
         });
         if (confirmed) {
-            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+            try { localStorage.removeItem(DRAFT_KEY); } catch (e) { }
             setFormData({
                 name: '', dobDay: '', dobMonth: '', dobYear: '', city: '',
                 gender: 'Woman', showGender: true, orientation: 'Straight', showOrientation: true,
@@ -187,7 +187,7 @@ export const OnboardingFlow = () => {
             } catch (err) {
                 console.error('Photo upload failed:', err);
                 const isModerationErr = err?.message?.toLowerCase().includes('inappropriate') || err?.message?.toLowerCase().includes('explicit') || err?.message?.toLowerCase().includes('moderation');
-                const errMsg = isModerationErr 
+                const errMsg = isModerationErr
                     ? '⚠️ Image Discarded: This photo was removed because it contains inappropriate or explicit content. Please select another image.'
                     : (err.message || 'Failed to upload photo. Please try again.');
                 setPhotoUploadError(errMsg);
@@ -463,721 +463,721 @@ export const OnboardingFlow = () => {
             }
         }
 
-            if (step === 2) {
-                if (formData.gender === 'Prefer to self-describe' && !customGenderText.trim()) {
-                    errors.gender = 'Please describe your gender identity.';
-                }
-                if (formData.orientation === 'Prefer to self-describe' && !customOrientationText.trim()) {
-                    errors.orientation = 'Please describe your sexual orientation.';
-                }
+        if (step === 2) {
+            if (formData.gender === 'Prefer to self-describe' && !customGenderText.trim()) {
+                errors.gender = 'Please describe your gender identity.';
             }
+            if (formData.orientation === 'Prefer to self-describe' && !customOrientationText.trim()) {
+                errors.orientation = 'Please describe your sexual orientation.';
+            }
+        }
 
-            if (step === 4) {
-                if (force || formData.interests.length > 0) {
-                    if (formData.interests.length < 3) {
-                        errors.interests = 'Select at least 3 things you love.';
-                    }
-                }
-                if (force || formData.story) {
-                    if (!formData.story || !formData.story.trim()) {
-                        errors.story = 'Your story is required.';
-                    } else if (formData.story.trim().length < 20) {
-                        errors.story = `Story must be at least 20 characters (current: ${formData.story.trim().length}).`;
-                    }
+        if (step === 4) {
+            if (force || formData.interests.length > 0) {
+                if (formData.interests.length < 3) {
+                    errors.interests = 'Select at least 3 things you love.';
                 }
             }
-
-            if (step === 5) {
-                if (force) {
-                    if (photoPreviews.length < 1) {
-                        errors.photos = 'Add at least 1 photo to publish your profile.';
-                    }
+            if (force || formData.story) {
+                if (!formData.story || !formData.story.trim()) {
+                    errors.story = 'Your story is required.';
+                } else if (formData.story.trim().length < 20) {
+                    errors.story = `Story must be at least 20 characters (current: ${formData.story.trim().length}).`;
                 }
             }
+        }
 
-            setValidationErrors(errors);
-            return Object.keys(errors).length === 0;
-        };
-
-        const isStepValid = () => {
-            // Structural checks to enable "Continue" button
-            switch (step) {
-                case 1: {
-                    if (!formData.name || !formData.dobDay || !formData.dobMonth || !formData.dobYear || !formData.city) return false;
-                    if (formData.name.trim().length < 2 || formData.name.trim().length > 40) return false;
-                    const d = parseInt(formData.dobDay, 10);
-                    const m = parseInt(formData.dobMonth, 10);
-                    const y = parseInt(formData.dobYear, 10);
-                    if (isNaN(d) || d < 1 || d > 31 || isNaN(m) || m < 1 || m > 12 || isNaN(y) || y < 1900 || y > new Date().getFullYear()) return false;
-                    const isLeapYearVal = (yr) => (yr % 4 === 0 && yr % 100 !== 0) || (yr % 400 === 0);
-                    const maxDaysVal = (m === 2)
-                        ? (isLeapYearVal(y) ? 29 : 28)
-                        : ([4, 6, 9, 11].includes(m) ? 30 : 31);
-                    if (d > maxDaysVal) return false;
-                    const bDate = new Date(y, m - 1, d);
-                    const today = new Date();
-                    if (bDate > today) return false;
-                    let age = today.getFullYear() - bDate.getFullYear();
-                    const monthDiff = today.getMonth() - bDate.getMonth();
-                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < bDate.getDate())) {
-                        age--;
-                    }
-                    if (age < 18) return false;
-                    if (formData.city.trim().length < 2) return false;
-                    return true;
-                }
-                case 2:
-                    if (formData.gender === 'Prefer to self-describe' && !customGenderText.trim()) return false;
-                    if (formData.orientation === 'Prefer to self-describe' && !customOrientationText.trim()) return false;
-                    return true;
-                case 3:
-                    return !!(formData.relationshipIntent && formData.relationshipStatus);
-                case 4:
-                    return formData.interests.length >= 3 && formData.story.trim().length >= 20 && !validationErrors.story;
-                case 5:
-                    return photoPreviews.length >= 1 && uploadingCount === 0;
-                case 6:
-                    return true;
-                default:
-                    return false;
-            }
-        };
-
-        const [submitting, setSubmitting] = useState(false);
-        const [submitError, setSubmitError] = useState('');
-
-        const handleFormSubmit = async (e) => {
-            if (e) e.preventDefault();
-
-            // Trigger submission errors if invalid
-            if (!isStepValid()) {
-                setShowAllErrors(true);
-                validateStepFields(true);
-                return;
-            }
-
-            setShowAllErrors(false);
-            if (step < 6) {
-                setStep(prev => prev + 1);
-                window.scrollTo(0, 0);
-            } else {
-                const finalGender = formData.gender === 'Prefer to self-describe' ? customGenderText : formData.gender;
-                const finalOrientation = formData.orientation === 'Prefer to self-describe' ? customOrientationText : formData.orientation;
-
-                setSubmitting(true);
-                setSubmitError('');
-
-                try {
-                    await completeOnboarding({
-                        ...formData,
-                        gender: finalGender,
-                        orientation: finalOrientation,
-                        photos: photoPreviews.length > 0 ? photoPreviews : [getDefaultAvatar(finalGender)]
-                    });
-                    try {
-                        localStorage.removeItem(DRAFT_KEY);
-                    } catch (e) {
-                        // Non-fatal — draft cleanup is best-effort
-                    }
-                } catch (err) {
-                    setSubmitError(err.message || 'Failed to save profile. Please try again.');
-                } finally {
-                    setSubmitting(false);
+        if (step === 5) {
+            if (force) {
+                if (photoPreviews.length < 1) {
+                    errors.photos = 'Add at least 1 photo to publish your profile.';
                 }
             }
-        };
+        }
 
-        const handleBack = () => {
-            if (step > 1) {
-                setShowAllErrors(false);
-                setStep(prev => prev - 1);
-                window.scrollTo(0, 0);
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const isStepValid = () => {
+        // Structural checks to enable "Continue" button
+        switch (step) {
+            case 1: {
+                if (!formData.name || !formData.dobDay || !formData.dobMonth || !formData.dobYear || !formData.city) return false;
+                if (formData.name.trim().length < 2 || formData.name.trim().length > 40) return false;
+                const d = parseInt(formData.dobDay, 10);
+                const m = parseInt(formData.dobMonth, 10);
+                const y = parseInt(formData.dobYear, 10);
+                if (isNaN(d) || d < 1 || d > 31 || isNaN(m) || m < 1 || m > 12 || isNaN(y) || y < 1900 || y > new Date().getFullYear()) return false;
+                const isLeapYearVal = (yr) => (yr % 4 === 0 && yr % 100 !== 0) || (yr % 400 === 0);
+                const maxDaysVal = (m === 2)
+                    ? (isLeapYearVal(y) ? 29 : 28)
+                    : ([4, 6, 9, 11].includes(m) ? 30 : 31);
+                if (d > maxDaysVal) return false;
+                const bDate = new Date(y, m - 1, d);
+                const today = new Date();
+                if (bDate > today) return false;
+                let age = today.getFullYear() - bDate.getFullYear();
+                const monthDiff = today.getMonth() - bDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < bDate.getDate())) {
+                    age--;
+                }
+                if (age < 18) return false;
+                if (formData.city.trim().length < 2) return false;
+                return true;
             }
-        };
+            case 2:
+                if (formData.gender === 'Prefer to self-describe' && !customGenderText.trim()) return false;
+                if (formData.orientation === 'Prefer to self-describe' && !customOrientationText.trim()) return false;
+                return true;
+            case 3:
+                return !!(formData.relationshipIntent && formData.relationshipStatus);
+            case 4:
+                return formData.interests.length >= 3 && formData.story.trim().length >= 20 && !validationErrors.story;
+            case 5:
+                return photoPreviews.length >= 1 && uploadingCount === 0;
+            case 6:
+                return true;
+            default:
+                return false;
+        }
+    };
 
-        const handleBackToWelcome = async () => {
-            setShowAllErrors(false);
-            await logout();
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
+
+    const handleFormSubmit = async (e) => {
+        if (e) e.preventDefault();
+
+        // Trigger submission errors if invalid
+        if (!isStepValid()) {
+            setShowAllErrors(true);
+            validateStepFields(true);
+            return;
+        }
+
+        setShowAllErrors(false);
+        if (step < 6) {
+            setStep(prev => prev + 1);
             window.scrollTo(0, 0);
-        };
+        } else {
+            const finalGender = formData.gender === 'Prefer to self-describe' ? customGenderText : formData.gender;
+            const finalOrientation = formData.orientation === 'Prefer to self-describe' ? customOrientationText : formData.orientation;
 
-        const progressPercentage = (step / 6) * 100;
+            setSubmitting(true);
+            setSubmitError('');
 
-        return (
-            <div className="onboarding-page page-enter">
-                {/* Reusable PageHeader for Alignment */}
-                <PageHeader
-                    title={`Step ${step} of 6`}
-                    subtitle="Conversational Profile Onboarding"
-                    onBack={step > 1 ? handleBack : handleBackToWelcome}
-                    actions={
-                        isDev && step > 1 && step < 6 ? (
-                            <button onClick={() => setStep(6)} className="onboarding-skip-btn font-ui">
-                                Skip to Review
-                            </button>
-                        ) : null
-                    }
-                />
+            try {
+                await completeOnboarding({
+                    ...formData,
+                    gender: finalGender,
+                    orientation: finalOrientation,
+                    photos: photoPreviews.length > 0 ? photoPreviews : [getDefaultAvatar(finalGender)]
+                });
+                try {
+                    localStorage.removeItem(DRAFT_KEY);
+                } catch (e) {
+                    // Non-fatal — draft cleanup is best-effort
+                }
+            } catch (err) {
+                setSubmitError(err.message || 'Failed to save profile. Please try again.');
+            } finally {
+                setSubmitting(false);
+            }
+        }
+    };
 
-                {showDraftBanner && (
-                    <div className="draft-restored-banner font-ui">
-                        <span>We've restored your progress from where you left off.</span>
-                        <div className="draft-banner-actions">
-                            <button type="button" onClick={handleStartFresh} className="draft-banner-link">Start over</button>
-                            <button type="button" onClick={() => setShowDraftBanner(false)} className="draft-banner-dismiss" aria-label="Dismiss">
-                                <X size={14} />
-                            </button>
-                        </div>
+    const handleBack = () => {
+        if (step > 1) {
+            setShowAllErrors(false);
+            setStep(prev => prev - 1);
+            window.scrollTo(0, 0);
+        }
+    };
+
+    const handleBackToWelcome = async () => {
+        setShowAllErrors(false);
+        await logout();
+        window.scrollTo(0, 0);
+    };
+
+    const progressPercentage = (step / 6) * 100;
+
+    return (
+        <div className="onboarding-page page-enter">
+            {/* Reusable PageHeader for Alignment */}
+            <PageHeader
+                title={`Step ${step} of 6`}
+                subtitle="Conversational Profile Onboarding"
+                onBack={step > 1 ? handleBack : handleBackToWelcome}
+                actions={
+                    isDev && step > 1 && step < 6 ? (
+                        <button onClick={() => setStep(6)} className="onboarding-skip-btn font-ui">
+                            Skip to Review
+                        </button>
+                    ) : null
+                }
+            />
+
+            {showDraftBanner && (
+                <div className="draft-restored-banner font-ui">
+                    <span>We've restored your progress from where you left off.</span>
+                    <div className="draft-banner-actions">
+                        <button type="button" onClick={handleStartFresh} className="draft-banner-link">Start over</button>
+                        <button type="button" onClick={() => setShowDraftBanner(false)} className="draft-banner-dismiss" aria-label="Dismiss">
+                            <X size={14} />
+                        </button>
                     </div>
-                )}
-
-                {/* Progress Bar */}
-                <div className="progress-container">
-                    <div className="progress-bar" style={{ width: `${progressPercentage}%` }} />
                 </div>
+            )}
 
-                <div className="onboarding-content-wrap">
-                    <form onSubmit={handleFormSubmit} onKeyDown={handleFormKeyDown} className="onboarding-step-form">
-                        {step === 1 && (
-                            <div className="step-content page-enter">
-                                <h2 className="step-heading font-display">Let's start with<br />the basics.</h2>
+            {/* Progress Bar */}
+            <div className="progress-container">
+                <div className="progress-bar" style={{ width: `${progressPercentage}%` }} />
+            </div>
 
-                                <Input
-                                    id="name"
-                                    label="What should we call you?"
-                                    placeholder="First Name"
-                                    value={formData.name}
-                                    onChange={(e) => handleChange('name', e.target.value)}
-                                    error={validationErrors.name}
-                                    required
-                                    autoFocus
-                                />
+            <div className="onboarding-content-wrap">
+                <form onSubmit={handleFormSubmit} onKeyDown={handleFormKeyDown} className="onboarding-step-form">
+                    {step === 1 && (
+                        <div className="step-content page-enter">
+                            <h2 className="step-heading font-display">Let's start with<br />the basics.</h2>
 
-                                <div className="form-group border-top">
-                                    <label className="form-label font-ui">Date of Birth</label>
-                                    <div className="dob-inputs">
-                                        <input
-                                            type="text"
-                                            pattern="[0-9]*"
-                                            maxLength={2}
-                                            placeholder="DD"
-                                            value={formData.dobDay}
-                                            onChange={(e) => handleChange('dobDay', e.target.value.replace(/\D/g, ''))}
-                                            className="dob-input font-ui"
-                                            aria-label="Birth day"
-                                            required
-                                        />
-                                        <select
-                                            value={formData.dobMonth}
-                                            onChange={(e) => handleChange('dobMonth', e.target.value)}
-                                            className="dob-month-select font-ui"
-                                            aria-label="Birth month"
-                                            required
-                                        >
-                                            <option value="">Month</option>
-                                            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, idx) => (
-                                                <option key={m} value={idx + 1}>{m}</option>
-                                            ))}
-                                        </select>
-                                        <input
-                                            type="text"
-                                            pattern="[0-9]*"
-                                            maxLength={4}
-                                            placeholder="YYYY"
-                                            value={formData.dobYear}
-                                            onChange={(e) => handleChange('dobYear', e.target.value.replace(/\D/g, ''))}
-                                            className="dob-input year font-ui"
-                                            aria-label="Birth year"
-                                            required
-                                        />
-                                    </div>
-                                    {validationErrors.dob ? (
-                                        <span className="vh-input-error font-ui" role="alert">{validationErrors.dob}</span>
-                                    ) : (
-                                        <span className="form-help-text font-ui">You must be 18 or older to join.</span>
-                                    )}
-                                </div>
+                            <Input
+                                id="name"
+                                label="What should we call you?"
+                                placeholder="Name"
+                                value={formData.name}
+                                onChange={(e) => handleChange('name', e.target.value)}
+                                error={validationErrors.name}
+                                required
+                                autoFocus
+                            />
 
-                                <Input
-                                    id="city"
-                                    label="Where are you based?"
-                                    placeholder="City Name (e.g. Mumbai, Bangalore)"
-                                    value={formData.city}
-                                    onChange={(e) => handleChange('city', e.target.value)}
-                                    error={validationErrors.city}
-                                    required
-                                />
-                            </div>
-                        )}
-
-                        {step === 2 && (
-                            <div className="step-content page-enter">
-                                <h2 className="step-heading font-display">How do you<br />identify?</h2>
-                                <p className="step-description font-body">
-                                    This helps us show you to the right people. You choose what's visible on your profile.
-                                </p>
-
-                                <div className="form-group">
-                                    <label className="form-label font-ui">Gender</label>
-                                    <div
-                                        className="selection-chips"
-                                        role="radiogroup"
-                                        aria-label="Gender Identity"
-                                        onKeyDown={handleGroupKeyDown}
+                            <div className="form-group border-top">
+                                <label className="form-label font-ui">Date of Birth</label>
+                                <div className="dob-inputs">
+                                    <input
+                                        type="text"
+                                        pattern="[0-9]*"
+                                        maxLength={2}
+                                        placeholder="DD"
+                                        value={formData.dobDay}
+                                        onChange={(e) => handleChange('dobDay', e.target.value.replace(/\D/g, ''))}
+                                        className="dob-input font-ui"
+                                        aria-label="Birth day"
+                                        required
+                                    />
+                                    <select
+                                        value={formData.dobMonth}
+                                        onChange={(e) => handleChange('dobMonth', e.target.value)}
+                                        className="dob-month-select font-ui"
+                                        aria-label="Birth month"
+                                        required
                                     >
-                                        {genderOptions.map((g, idx) => {
-                                            const isSelected = formData.gender === g;
-                                            return (
-                                                <button
-                                                    key={g}
-                                                    type="button"
-                                                    role="radio"
-                                                    aria-checked={isSelected}
-                                                    tabIndex={isSelected ? 0 : (formData.gender === '' && idx === 0 ? 0 : -1)}
-                                                    onClick={() => handleChange('gender', g)}
-                                                    className={`selection-chip font-ui ${isSelected ? 'active' : ''}`}
-                                                >
-                                                    {g}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {formData.gender === 'Prefer to self-describe' && (
-                                        <Input
-                                            id="custom-gender"
-                                            placeholder="Describe your gender"
-                                            value={customGenderText}
-                                            onChange={(e) => setCustomGenderText(e.target.value)}
-                                            error={validationErrors.gender}
-                                            required
-                                            autoFocus
-                                        />
-                                    )}
-
-                                    <label className="checkbox-label font-ui">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.showGender}
-                                            onChange={(e) => handleChange('showGender', e.target.checked)}
-                                        />
-                                        <span>Show gender on my profile</span>
-                                    </label>
-                                </div>
-
-                                <div className="form-group border-top">
-                                    <label className="form-label font-ui">Sexual Orientation</label>
-                                    <div
-                                        className="selection-chips"
-                                        role="radiogroup"
-                                        aria-label="Sexual Orientation"
-                                        onKeyDown={handleGroupKeyDown}
-                                    >
-                                        {orientationOptions.map((o, idx) => {
-                                            const isSelected = formData.orientation === o;
-                                            return (
-                                                <button
-                                                    key={o}
-                                                    type="button"
-                                                    role="radio"
-                                                    aria-checked={isSelected}
-                                                    tabIndex={isSelected ? 0 : (formData.orientation === '' && idx === 0 ? 0 : -1)}
-                                                    onClick={() => handleChange('orientation', o)}
-                                                    className={`selection-chip font-ui ${isSelected ? 'active' : ''}`}
-                                                >
-                                                    {o}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {formData.orientation === 'Prefer to self-describe' && (
-                                        <Input
-                                            id="custom-orientation"
-                                            placeholder="Describe your orientation"
-                                            value={customOrientationText}
-                                            onChange={(e) => setCustomOrientationText(e.target.value)}
-                                            error={validationErrors.orientation}
-                                            required
-                                            autoFocus
-                                        />
-                                    )}
-
-                                    <label className="checkbox-label font-ui">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.showOrientation}
-                                            onChange={(e) => handleChange('showOrientation', e.target.checked)}
-                                        />
-                                        <span>Show orientation on my profile</span>
-                                    </label>
-                                </div>
-                            </div>
-                        )}
-
-                        {step === 3 && (
-                            <div className="step-content page-enter">
-                                <h2 className="step-heading font-display">What are you<br />looking for?</h2>
-                                <p className="step-description font-body">
-                                    This helps us connect you with people seeking the same intentions.
-                                </p>
-
-                                <div className="form-group">
-                                    <label className="form-label font-ui">Relationship Intent</label>
-                                    <div
-                                        className="radio-selections"
-                                        role="radiogroup"
-                                        aria-label="Relationship Intent"
-                                        onKeyDown={handleGroupKeyDown}
-                                    >
-                                        {intentionOptions.map((opt, idx) => {
-                                            const isSelected = formData.relationshipIntent === opt.value;
-                                            return (
-                                                <button
-                                                    key={opt.value}
-                                                    type="button"
-                                                    role="radio"
-                                                    aria-checked={isSelected}
-                                                    tabIndex={isSelected ? 0 : (formData.relationshipIntent === '' && idx === 0 ? 0 : -1)}
-                                                    onClick={() => handleChange('relationshipIntent', opt.value)}
-                                                    className={`radio-selection-card ${isSelected ? 'active' : ''}`}
-                                                >
-                                                    <div className="radio-card-header font-ui">
-                                                        <span className="radio-bullet" />
-                                                        <strong>{opt.label}</strong>
-                                                    </div>
-                                                    <p className="radio-card-desc font-body">{opt.desc}</p>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                <div className="form-group border-top">
-                                    <label className="form-label font-ui">Current Relationship Status</label>
-                                    <div
-                                        className="selection-chips"
-                                        role="radiogroup"
-                                        aria-label="Current Relationship Status"
-                                        onKeyDown={handleGroupKeyDown}
-                                    >
-                                        {statusOptions.map((s, idx) => {
-                                            const isSelected = formData.relationshipStatus === s;
-                                            return (
-                                                <button
-                                                    key={s}
-                                                    type="button"
-                                                    role="radio"
-                                                    aria-checked={isSelected}
-                                                    tabIndex={isSelected ? 0 : (formData.relationshipStatus === '' && idx === 0 ? 0 : -1)}
-                                                    onClick={() => handleChange('relationshipStatus', s)}
-                                                    className={`selection-chip font-ui ${isSelected ? 'active' : ''}`}
-                                                >
-                                                    {s}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {step === 4 && (
-                            <div className="step-content page-enter">
-                                <h2 className="step-heading font-display">Tell your story.</h2>
-                                <p className="step-description font-body">
-                                    This is your chance to share what makes you, you. Be yourself.
-                                </p>
-
-                                <div className="form-group">
-                                    <label className="form-label font-ui">Your Interests (Select at least 3)</label>
-                                    <div
-                                        className="selection-chips"
-                                        role="group"
-                                        aria-label="Your Interests"
-                                        onKeyDown={handleInterestKeyDown}
-                                    >
-                                        {interestOptions.map((i, idx) => {
-                                            const isSelected = formData.interests.includes(i);
-                                            return (
-                                                <button
-                                                    key={i}
-                                                    type="button"
-                                                    tabIndex={idx === 0 ? 0 : -1}
-                                                    onClick={() => handleInterestToggle(i)}
-                                                    className={`selection-chip font-ui ${isSelected ? 'active-burgundy' : ''}`}
-                                                >
-                                                    {isSelected && <span className="selected-dot-chip" />}
-                                                    {i}
-                                                </button>
-                                            );
-                                        })}
-                                        {/* Custom interests added by user */}
-                                        {formData.interests
-                                            .filter(i => !interestOptions.includes(i))
-                                            .map(customI => (
-                                                <button
-                                                    key={customI}
-                                                    type="button"
-                                                    onClick={() => handleInterestToggle(customI)}
-                                                    className="selection-chip font-ui active-burgundy custom-chip"
-                                                    title="Click to remove custom interest"
-                                                >
-                                                    <span className="selected-dot-chip" />
-                                                    <span>{customI}</span>
-                                                    <span className="chip-remove-x">×</span>
-                                                </button>
-                                            ))
-                                        }
-                                    </div>
-
-                                    {/* Custom Interest Input */}
-                                    <div className="custom-interest-row">
-                                        <input
-                                            type="text"
-                                            placeholder="Add a custom interest (e.g. Astro-photography, Skateboarding)..."
-                                            value={customInterestInput}
-                                            onChange={(e) => setCustomInterestInput(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    handleAddCustomInterest();
-                                                }
-                                            }}
-                                            className="custom-interest-input font-ui"
-                                            maxLength={30}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleAddCustomInterest}
-                                            disabled={!customInterestInput.trim()}
-                                            className="custom-interest-add-btn font-ui"
-                                        >
-                                            + Add
-                                        </button>
-                                    </div>
-
-                                    {validationErrors.interests ? (
-                                        <span className="vh-input-error font-ui" role="alert">{validationErrors.interests}</span>
-                                    ) : (
-                                        <span className="form-help-text font-ui">{formData.interests.length} selected</span>
-                                    )}
-                                </div>
-
-                                <div className="form-group border-top">
-                                    <Textarea
-                                        id="story"
-                                        label="Your Story"
-                                        placeholder="Share a bit about your hobbies, values, or what a perfect weekend looks like to you..."
-                                        value={formData.story}
-                                        onChange={(e) => handleChange('story', e.target.value)}
-                                        maxLength={500}
-                                        error={validationErrors.story}
-                                        helperText="Write at least 20 characters."
-                                        onEnterSubmit={handleFormSubmit}
+                                        <option value="">Month</option>
+                                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, idx) => (
+                                            <option key={m} value={idx + 1}>{m}</option>
+                                        ))}
+                                    </select>
+                                    <input
+                                        type="text"
+                                        pattern="[0-9]*"
+                                        maxLength={4}
+                                        placeholder="YYYY"
+                                        value={formData.dobYear}
+                                        onChange={(e) => handleChange('dobYear', e.target.value.replace(/\D/g, ''))}
+                                        className="dob-input year font-ui"
+                                        aria-label="Birth year"
                                         required
                                     />
                                 </div>
-
-                                {/* 2-Min Voice Intro Snippet */}
-                                <div className="form-group border-top">
-                                    <label className="form-label font-ui">Voice Intro Snippet (Optional)</label>
-                                    <p className="step-description font-body" style={{ marginBottom: '12px' }}>
-                                        Record up to a 2-minute voice intro to add authentic warmth and personality to your profile.
-                                    </p>
-                                    <VoiceRecorder
-                                        initialAudioUrl={formData.voiceIntroUrl}
-                                        onSaveAudio={(audioUrl) => handleChange('voiceIntroUrl', audioUrl)}
-                                        maxDurationSeconds={120}
-                                    />
-                                </div>
-
-                                {/* Disability Status */}
-                                <div className="form-group border-top">
-                                    <div className="info-box-disability">
-                                        <Info size={20} className="info-icon" />
-                                        <div>
-                                            <h4 className="info-box-title font-ui">Disability Status (Optional)</h4>
-                                            <p className="info-box-desc font-body">
-                                                We ask this to build a more inclusive space. You control if this is visible on your profile.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <label className="checkbox-label label-bold font-ui">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.hasDisability}
-                                            onChange={(e) => handleChange('hasDisability', e.target.checked)}
-                                        />
-                                        <span>I have a disability I want to share</span>
-                                    </label>
-
-                                    {formData.hasDisability && (
-                                        <div className="disability-details-input page-enter">
-                                            <Input
-                                                id="disability-info"
-                                                placeholder="Share details (e.g. Wheelchair user, Deaf) - optional"
-                                                value={formData.disabilityInfo}
-                                                onChange={(e) => handleChange('disabilityInfo', e.target.value)}
-                                            />
-                                            <label className="checkbox-label font-ui">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.showDisability}
-                                                    onChange={(e) => handleChange('showDisability', e.target.checked)}
-                                                />
-                                                <span>Show disability details on my profile</span>
-                                            </label>
-                                        </div>
-                                    )}
-                                </div>
+                                {validationErrors.dob ? (
+                                    <span className="vh-input-error font-ui" role="alert">{validationErrors.dob}</span>
+                                ) : (
+                                    <span className="form-help-text font-ui">You must be 18 or older to join.</span>
+                                )}
                             </div>
-                        )}
 
-                        {step === 5 && (
-                            <div className="step-content page-enter">
-                                <h2 className="step-heading font-display">Show the world<br />the real you.</h2>
-                                <p className="step-description font-body">
-                                    Add at least 1 photo to publish your profile. You can upload up to 6.
-                                </p>
+                            <Input
+                                id="city"
+                                label="Where are you based?"
+                                placeholder="City Name (e.g. Mumbai, Bangalore)"
+                                value={formData.city}
+                                onChange={(e) => handleChange('city', e.target.value)}
+                                error={validationErrors.city}
+                                required
+                            />
+                        </div>
+                    )}
 
-                                <div className="photo-grid">
-                                    {Array.from({ length: 6 }).map((_, idx) => {
-                                        const preview = photoPreviews[idx];
-                                        const isUploadingSlot = !preview && idx < photoPreviews.length + uploadingCount;
+                    {step === 2 && (
+                        <div className="step-content page-enter">
+                            <h2 className="step-heading font-display">How do you<br />identify?</h2>
+                            <p className="step-description font-body">
+                                This helps us show you to the right people. You choose what's visible on your profile.
+                            </p>
+
+                            <div className="form-group">
+                                <label className="form-label font-ui">Gender</label>
+                                <div
+                                    className="selection-chips"
+                                    role="radiogroup"
+                                    aria-label="Gender Identity"
+                                    onKeyDown={handleGroupKeyDown}
+                                >
+                                    {genderOptions.map((g, idx) => {
+                                        const isSelected = formData.gender === g;
                                         return (
-                                            <div key={idx} className={`photo-slot ${idx === 0 ? 'primary-slot' : ''}`}>
-                                                {preview ? (
-                                                    <div className="photo-preview-wrap">
-                                                        <img src={preview} alt={`Upload preview ${idx + 1}`} />
-                                                        <button type="button" onClick={() => removePhoto(idx)} className="delete-photo-btn" aria-label="Delete photo">
-                                                            <X size={16} />
-                                                        </button>
-                                                        {idx === 0 && <span className="primary-photo-label font-ui">Primary Photo</span>}
-                                                    </div>
-                                                ) : isUploadingSlot ? (
-                                                    <div className="photo-preview-wrap photo-uploading-slot">
-                                                        <span className="upload-btn-text font-ui">Uploading…</span>
-                                                    </div>
-                                                ) : (
-                                                    <label className={`photo-upload-label ${uploadingCount > 0 ? 'is-disabled' : ''}`}>
-                                                        <input
-                                                            type="file"
-                                                            accept="image/*"
-                                                            onChange={handlePhotoUpload}
-                                                            className="sr-only"
-                                                            multiple={idx === 0}
-                                                            disabled={uploadingCount > 0}
-                                                        />
-                                                        <Camera size={24} className="camera-upload-icon" />
-                                                        <span className="upload-btn-text font-ui">Add Photo</span>
-                                                    </label>
-                                                )}
-                                            </div>
+                                            <button
+                                                key={g}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={isSelected}
+                                                tabIndex={isSelected ? 0 : (formData.gender === '' && idx === 0 ? 0 : -1)}
+                                                onClick={() => handleChange('gender', g)}
+                                                className={`selection-chip font-ui ${isSelected ? 'active' : ''}`}
+                                            >
+                                                {g}
+                                            </button>
                                         );
                                     })}
                                 </div>
 
-                                {photoUploadError && (
-                                    <div className="vh-input-error font-ui" role="alert" style={{ marginBottom: '16px' }}>{photoUploadError}</div>
+                                {formData.gender === 'Prefer to self-describe' && (
+                                    <Input
+                                        id="custom-gender"
+                                        placeholder="Describe your gender"
+                                        value={customGenderText}
+                                        onChange={(e) => setCustomGenderText(e.target.value)}
+                                        error={validationErrors.gender}
+                                        required
+                                        autoFocus
+                                    />
                                 )}
 
-                                {validationErrors.photos && (
-                                    <div className="vh-input-error font-ui" role="alert" style={{ marginBottom: '16px' }}>{validationErrors.photos}</div>
+                                <label className="checkbox-label font-ui">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.showGender}
+                                        onChange={(e) => handleChange('showGender', e.target.checked)}
+                                    />
+                                    <span>Show gender on my profile</span>
+                                </label>
+                            </div>
+
+                            <div className="form-group border-top">
+                                <label className="form-label font-ui">Sexual Orientation</label>
+                                <div
+                                    className="selection-chips"
+                                    role="radiogroup"
+                                    aria-label="Sexual Orientation"
+                                    onKeyDown={handleGroupKeyDown}
+                                >
+                                    {orientationOptions.map((o, idx) => {
+                                        const isSelected = formData.orientation === o;
+                                        return (
+                                            <button
+                                                key={o}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={isSelected}
+                                                tabIndex={isSelected ? 0 : (formData.orientation === '' && idx === 0 ? 0 : -1)}
+                                                onClick={() => handleChange('orientation', o)}
+                                                className={`selection-chip font-ui ${isSelected ? 'active' : ''}`}
+                                            >
+                                                {o}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {formData.orientation === 'Prefer to self-describe' && (
+                                    <Input
+                                        id="custom-orientation"
+                                        placeholder="Describe your orientation"
+                                        value={customOrientationText}
+                                        onChange={(e) => setCustomOrientationText(e.target.value)}
+                                        error={validationErrors.orientation}
+                                        required
+                                        autoFocus
+                                    />
                                 )}
 
-                                <div className="photo-tips font-body">
-                                    <h4 className="font-ui">Photo Tips:</h4>
-                                    <ul>
-                                        <li>&bull; Choose natural, warm photos in soft lighting</li>
-                                        <li>&bull; Smile! Expressions of warmth are inviting</li>
-                                        <li>&bull; Include at least one clear portrait showing your face</li>
-                                    </ul>
+                                <label className="checkbox-label font-ui">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.showOrientation}
+                                        onChange={(e) => handleChange('showOrientation', e.target.checked)}
+                                    />
+                                    <span>Show orientation on my profile</span>
+                                </label>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 3 && (
+                        <div className="step-content page-enter">
+                            <h2 className="step-heading font-display">What are you<br />looking for?</h2>
+                            <p className="step-description font-body">
+                                This helps us connect you with people seeking the same intentions.
+                            </p>
+
+                            <div className="form-group">
+                                <label className="form-label font-ui">Relationship Intent</label>
+                                <div
+                                    className="radio-selections"
+                                    role="radiogroup"
+                                    aria-label="Relationship Intent"
+                                    onKeyDown={handleGroupKeyDown}
+                                >
+                                    {intentionOptions.map((opt, idx) => {
+                                        const isSelected = formData.relationshipIntent === opt.value;
+                                        return (
+                                            <button
+                                                key={opt.value}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={isSelected}
+                                                tabIndex={isSelected ? 0 : (formData.relationshipIntent === '' && idx === 0 ? 0 : -1)}
+                                                onClick={() => handleChange('relationshipIntent', opt.value)}
+                                                className={`radio-selection-card ${isSelected ? 'active' : ''}`}
+                                            >
+                                                <div className="radio-card-header font-ui">
+                                                    <span className="radio-bullet" />
+                                                    <strong>{opt.label}</strong>
+                                                </div>
+                                                <p className="radio-card-desc font-body">{opt.desc}</p>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
-                        )}
 
-                        {step === 6 && (
-                            <div className="step-content page-enter">
-                                <h2 className="step-heading font-display">Looking good.</h2>
-                                <p className="step-description font-body">
-                                    Review your editorial profile preview before going live.
+                            <div className="form-group border-top">
+                                <label className="form-label font-ui">Current Relationship Status</label>
+                                <div
+                                    className="selection-chips"
+                                    role="radiogroup"
+                                    aria-label="Current Relationship Status"
+                                    onKeyDown={handleGroupKeyDown}
+                                >
+                                    {statusOptions.map((s, idx) => {
+                                        const isSelected = formData.relationshipStatus === s;
+                                        return (
+                                            <button
+                                                key={s}
+                                                type="button"
+                                                role="radio"
+                                                aria-checked={isSelected}
+                                                tabIndex={isSelected ? 0 : (formData.relationshipStatus === '' && idx === 0 ? 0 : -1)}
+                                                onClick={() => handleChange('relationshipStatus', s)}
+                                                className={`selection-chip font-ui ${isSelected ? 'active' : ''}`}
+                                            >
+                                                {s}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 4 && (
+                        <div className="step-content page-enter">
+                            <h2 className="step-heading font-display">Tell your story.</h2>
+                            <p className="step-description font-body">
+                                This is your chance to share what makes you, you. Be yourself.
+                            </p>
+
+                            <div className="form-group">
+                                <label className="form-label font-ui">Your Interests (Select at least 3)</label>
+                                <div
+                                    className="selection-chips"
+                                    role="group"
+                                    aria-label="Your Interests"
+                                    onKeyDown={handleInterestKeyDown}
+                                >
+                                    {interestOptions.map((i, idx) => {
+                                        const isSelected = formData.interests.includes(i);
+                                        return (
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                tabIndex={idx === 0 ? 0 : -1}
+                                                onClick={() => handleInterestToggle(i)}
+                                                className={`selection-chip font-ui ${isSelected ? 'active-burgundy' : ''}`}
+                                            >
+                                                {isSelected && <span className="selected-dot-chip" />}
+                                                {i}
+                                            </button>
+                                        );
+                                    })}
+                                    {/* Custom interests added by user */}
+                                    {formData.interests
+                                        .filter(i => !interestOptions.includes(i))
+                                        .map(customI => (
+                                            <button
+                                                key={customI}
+                                                type="button"
+                                                onClick={() => handleInterestToggle(customI)}
+                                                className="selection-chip font-ui active-burgundy custom-chip"
+                                                title="Click to remove custom interest"
+                                            >
+                                                <span className="selected-dot-chip" />
+                                                <span>{customI}</span>
+                                                <span className="chip-remove-x">×</span>
+                                            </button>
+                                        ))
+                                    }
+                                </div>
+
+                                {/* Custom Interest Input */}
+                                <div className="custom-interest-row">
+                                    <input
+                                        type="text"
+                                        placeholder="Add a custom interest (e.g. Astro-photography, Skateboarding)..."
+                                        value={customInterestInput}
+                                        onChange={(e) => setCustomInterestInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                handleAddCustomInterest();
+                                            }
+                                        }}
+                                        className="custom-interest-input font-ui"
+                                        maxLength={30}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleAddCustomInterest}
+                                        disabled={!customInterestInput.trim()}
+                                        className="custom-interest-add-btn font-ui"
+                                    >
+                                        + Add
+                                    </button>
+                                </div>
+
+                                {validationErrors.interests ? (
+                                    <span className="vh-input-error font-ui" role="alert">{validationErrors.interests}</span>
+                                ) : (
+                                    <span className="form-help-text font-ui">{formData.interests.length} selected</span>
+                                )}
+                            </div>
+
+                            <div className="form-group border-top">
+                                <Textarea
+                                    id="story"
+                                    label="Your Story"
+                                    placeholder="Share a bit about your hobbies, values, or what a perfect weekend looks like to you..."
+                                    value={formData.story}
+                                    onChange={(e) => handleChange('story', e.target.value)}
+                                    maxLength={500}
+                                    error={validationErrors.story}
+                                    helperText="Write at least 20 characters."
+                                    onEnterSubmit={handleFormSubmit}
+                                    required
+                                />
+                            </div>
+
+                            {/* 2-Min Voice Intro Snippet */}
+                            <div className="form-group border-top">
+                                <label className="form-label font-ui">Voice Intro Snippet (Optional)</label>
+                                <p className="step-description font-body" style={{ marginBottom: '12px' }}>
+                                    Record up to a 2-minute voice intro to add authentic warmth and personality to your profile.
                                 </p>
+                                <VoiceRecorder
+                                    initialAudioUrl={formData.voiceIntroUrl}
+                                    onSaveAudio={(audioUrl) => handleChange('voiceIntroUrl', audioUrl)}
+                                    maxDurationSeconds={120}
+                                />
+                            </div>
 
-                                {/* Profile Card Preview */}
-                                <div className="preview-card-outer">
-                                    <div className="profile-gallery-card">
-                                        <div className="profile-img-container">
-                                            <img
-                                                src={photoPreviews[0] || getDefaultAvatar(formData.gender === 'Prefer to self-describe' ? customGenderText : formData.gender)}
-                                                alt={formData.name || 'Preview'}
+                            {/* Disability Status */}
+                            <div className="form-group border-top">
+                                <div className="info-box-disability">
+                                    <Info size={20} className="info-icon" />
+                                    <div>
+                                        <h4 className="info-box-title font-ui">Disability Status (Optional)</h4>
+                                        <p className="info-box-desc font-body">
+                                            We ask this to build a more inclusive space. You control if this is visible on your profile.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <label className="checkbox-label label-bold font-ui">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.hasDisability}
+                                        onChange={(e) => handleChange('hasDisability', e.target.checked)}
+                                    />
+                                    <span>I have a disability I want to share</span>
+                                </label>
+
+                                {formData.hasDisability && (
+                                    <div className="disability-details-input page-enter">
+                                        <Input
+                                            id="disability-info"
+                                            placeholder="Share details (e.g. Wheelchair user, Deaf) - optional"
+                                            value={formData.disabilityInfo}
+                                            onChange={(e) => handleChange('disabilityInfo', e.target.value)}
+                                        />
+                                        <label className="checkbox-label font-ui">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.showDisability}
+                                                onChange={(e) => handleChange('showDisability', e.target.checked)}
                                             />
-                                            <div className="profile-badge-strip">
-                                                <span className="profile-badge-new font-ui">PREVIEW</span>
-                                            </div>
+                                            <span>Show disability details on my profile</span>
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 5 && (
+                        <div className="step-content page-enter">
+                            <h2 className="step-heading font-display">Show the world<br />the real you.</h2>
+                            <p className="step-description font-body">
+                                Add at least 1 photo to publish your profile. You can upload up to 6.
+                            </p>
+
+                            <div className="photo-grid">
+                                {Array.from({ length: 6 }).map((_, idx) => {
+                                    const preview = photoPreviews[idx];
+                                    const isUploadingSlot = !preview && idx < photoPreviews.length + uploadingCount;
+                                    return (
+                                        <div key={idx} className={`photo-slot ${idx === 0 ? 'primary-slot' : ''}`}>
+                                            {preview ? (
+                                                <div className="photo-preview-wrap">
+                                                    <img src={preview} alt={`Upload preview ${idx + 1}`} />
+                                                    <button type="button" onClick={() => removePhoto(idx)} className="delete-photo-btn" aria-label="Delete photo">
+                                                        <X size={16} />
+                                                    </button>
+                                                    {idx === 0 && <span className="primary-photo-label font-ui">Primary Photo</span>}
+                                                </div>
+                                            ) : isUploadingSlot ? (
+                                                <div className="photo-preview-wrap photo-uploading-slot">
+                                                    <span className="upload-btn-text font-ui">Uploading…</span>
+                                                </div>
+                                            ) : (
+                                                <label className={`photo-upload-label ${uploadingCount > 0 ? 'is-disabled' : ''}`}>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={handlePhotoUpload}
+                                                        className="sr-only"
+                                                        multiple={idx === 0}
+                                                        disabled={uploadingCount > 0}
+                                                    />
+                                                    <Camera size={24} className="camera-upload-icon" />
+                                                    <span className="upload-btn-text font-ui">Add Photo</span>
+                                                </label>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {photoUploadError && (
+                                <div className="vh-input-error font-ui" role="alert" style={{ marginBottom: '16px' }}>{photoUploadError}</div>
+                            )}
+
+                            {validationErrors.photos && (
+                                <div className="vh-input-error font-ui" role="alert" style={{ marginBottom: '16px' }}>{validationErrors.photos}</div>
+                            )}
+
+                            <div className="photo-tips font-body">
+                                <h4 className="font-ui">Photo Tips:</h4>
+                                <ul>
+                                    <li>&bull; Choose natural, warm photos in soft lighting</li>
+                                    <li>&bull; Smile! Expressions of warmth are inviting</li>
+                                    <li>&bull; Include at least one clear portrait showing your face</li>
+                                </ul>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 6 && (
+                        <div className="step-content page-enter">
+                            <h2 className="step-heading font-display">Looking good.</h2>
+                            <p className="step-description font-body">
+                                Review your editorial profile preview before going live.
+                            </p>
+
+                            {/* Profile Card Preview */}
+                            <div className="preview-card-outer">
+                                <div className="profile-gallery-card">
+                                    <div className="profile-img-container">
+                                        <img
+                                            src={photoPreviews[0] || getDefaultAvatar(formData.gender === 'Prefer to self-describe' ? customGenderText : formData.gender)}
+                                            alt={formData.name || 'Preview'}
+                                        />
+                                        <div className="profile-badge-strip">
+                                            <span className="profile-badge-new font-ui">PREVIEW</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="profile-card-details">
+                                        <div className="profile-name-row">
+                                            <h3 className="profile-name font-display">{formData.name || 'Your Name'}</h3>
+                                            <span className="profile-age font-ui">
+                                                , {formData.dobYear ? new Date().getFullYear() - parseInt(formData.dobYear) : 'Age'}
+                                            </span>
                                         </div>
 
-                                        <div className="profile-card-details">
-                                            <div className="profile-name-row">
-                                                <h3 className="profile-name font-display">{formData.name || 'Your Name'}</h3>
-                                                <span className="profile-age font-ui">
-                                                    , {formData.dobYear ? new Date().getFullYear() - parseInt(formData.dobYear) : 'Age'}
-                                                </span>
-                                            </div>
+                                        <p className="profile-location font-ui">{formData.city || 'Your City'}</p>
 
-                                            <p className="profile-location font-ui">{formData.city || 'Your City'}</p>
-
-                                            <div className="profile-intents font-ui">
-                                                <span>{formData.relationshipIntent}</span>
-                                            </div>
-
-                                            {formData.story && (
-                                                <p className="profile-story-clamp font-body italic">
-                                                    "{formData.story}"
-                                                </p>
-                                            )}
-
-                                            {formData.interests.length > 0 && (
-                                                <div className="profile-interests-wrap">
-                                                    {formData.interests.slice(0, 4).map(i => (
-                                                        <span key={i} className="interest-tag font-ui">{i}</span>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            {formData.hasDisability && formData.showDisability && formData.disabilityInfo && (
-                                                <div className="profile-disability-tag font-ui">
-                                                    <span>♿ {formData.disabilityInfo}</span>
-                                                </div>
-                                            )}
+                                        <div className="profile-intents font-ui">
+                                            <span>{formData.relationshipIntent}</span>
                                         </div>
+
+                                        {formData.story && (
+                                            <p className="profile-story-clamp font-body italic">
+                                                "{formData.story}"
+                                            </p>
+                                        )}
+
+                                        {formData.interests.length > 0 && (
+                                            <div className="profile-interests-wrap">
+                                                {formData.interests.slice(0, 4).map(i => (
+                                                    <span key={i} className="interest-tag font-ui">{i}</span>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {formData.hasDisability && formData.showDisability && formData.disabilityInfo && (
+                                            <div className="profile-disability-tag font-ui">
+                                                <span>♿ {formData.disabilityInfo}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
-                        )}
-
-                        {/* Footer Actions */}
-                        {submitError && (
-                            <div className="error-message font-ui" role="alert" style={{ marginBottom: 'var(--space-4)', textAlign: 'center' }}>
-                                {submitError}
-                            </div>
-                        )}
-                        <div className="onboarding-actions-footer">
-                            <Button
-                                type="submit"
-                                variant="primary"
-                                disabled={submitting}
-                                loading={submitting}
-                                className="onboarding-continue-btn"
-                            >
-                                {submitting ? 'Saving...' : step === 6 ? 'Publish My Profile ✓' : 'Continue →'}
-                            </Button>
                         </div>
-                    </form>
-                </div>
+                    )}
 
-                <style>{`
+                    {/* Footer Actions */}
+                    {submitError && (
+                        <div className="error-message font-ui" role="alert" style={{ marginBottom: 'var(--space-4)', textAlign: 'center' }}>
+                            {submitError}
+                        </div>
+                    )}
+                    <div className="onboarding-actions-footer">
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            disabled={submitting}
+                            loading={submitting}
+                            className="onboarding-continue-btn"
+                        >
+                            {submitting ? 'Saving...' : step === 6 ? 'Publish My Profile ✓' : 'Continue →'}
+                        </Button>
+                    </div>
+                </form>
+            </div>
+
+            <style>{`
         /* ── Layout ─────────────────────────────────────── */
         .onboarding-page {
           min-height: 100dvh;
@@ -1916,6 +1916,6 @@ export const OnboardingFlow = () => {
           .dob-input.year { width: 74px; }
         }
       `}</style>
-            </div>
-        );
-    };
+        </div>
+    );
+};

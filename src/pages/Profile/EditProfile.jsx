@@ -115,15 +115,23 @@ export const EditProfile = ({ onBack }) => {
 
   const saveProfileData = useCallback(async (profileToSave) => {
     const cleanedPhotos = (profileToSave.photos || []).filter(Boolean);
+    const day = Number(profileToSave.dobDay) || Number(userProfile?.dobDay) || 1;
+    const month = Number(profileToSave.dobMonth) || Number(userProfile?.dobMonth) || 1;
+    const year = Number(profileToSave.dobYear) || Number(userProfile?.dobYear) || 1998;
+
     const payload = {
-      dobDay: profileToSave.dobDay || 1,
-      dobMonth: profileToSave.dobMonth || 1,
-      dobYear: profileToSave.dobYear || 2000,
+      ...profileToSave,
+      dobDay: day,
+      dobMonth: month,
+      dobYear: year,
       gender: profileToSave.gender || 'Woman',
       orientation: profileToSave.orientation || 'Straight',
       relationshipIntent: profileToSave.relationshipIntent || 'Long-term Relationship',
       relationshipStatus: profileToSave.relationshipStatus || 'Single',
-      ...profileToSave,
+      story: (profileToSave.story || '').trim(),
+      city: (profileToSave.city || '').trim(),
+      name: (profileToSave.name || '').trim(),
+      interests: (profileToSave.interests || []).filter(Boolean),
       photos: cleanedPhotos
     };
 
@@ -144,10 +152,15 @@ export const EditProfile = ({ onBack }) => {
     } catch (err) {
       console.error('Auto-save profile update failed:', err);
       setAutoSaveStatus('error');
+      // Even if network fails, ensure state and localStorage keep the edited values
+      setUserProfile(prev => ({ ...prev, ...payload }));
+      try {
+        localStorage.setItem('vh-user-profile', JSON.stringify({ ...(userProfile || {}), ...payload }));
+      } catch (_) {}
     } finally {
       setIsSaving(false);
     }
-  }, [updateUserProfile, setUserProfile]);
+  }, [updateUserProfile, setUserProfile, userProfile]);
 
   // Debounced auto-save whenever fields change
   useEffect(() => {
@@ -259,7 +272,7 @@ export const EditProfile = ({ onBack }) => {
     } catch (err) {
       console.error('Photo upload failed:', err);
       const isModerationErr = err?.message?.toLowerCase().includes('inappropriate') || err?.message?.toLowerCase().includes('explicit') || err?.message?.toLowerCase().includes('moderation');
-      
+
       const alertMsg = isModerationErr
         ? '⚠️ Image Discarded: This photo was removed because it contains inappropriate or explicit content. Please choose a different photo.'
         : (err?.message || 'Photo upload failed. Please try again.');
@@ -426,7 +439,7 @@ export const EditProfile = ({ onBack }) => {
 
           <Input
             id="edit-name"
-            label="First Name"
+            label="Name"
             value={localProfile.name}
             onChange={(e) => handleFieldChange('name', e.target.value)}
             error={validationErrors.name}

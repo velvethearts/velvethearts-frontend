@@ -12,7 +12,7 @@ import { EmptyState } from '../../components/UI/EmptyState';
 export const SafetyCenter = () => {
   const { blockedUsers, unblockUser, reportedUsers, submitSupportTicket, setActiveTab, profiles, showAlert, userProfile } = useApp();
   const [unblockingId, setUnblockingId] = useState(null);
-  
+
   // Support Form State
   const [supportName, setSupportName] = useState('');
   const [supportEmail, setSupportEmail] = useState('');
@@ -157,7 +157,7 @@ export const SafetyCenter = () => {
             <Users size={20} className="section-title-icon" />
             <span>Blocked &amp; Removed Profiles</span>
           </h2>
-          
+
           <div className="blocked-list-wrapper">
             {blockedUsers && blockedUsers.length > 0 ? (
               <div className="blocked-items-list">
@@ -240,7 +240,7 @@ export const SafetyCenter = () => {
             <EnvelopeSimple size={20} className="section-title-icon" />
             <span>Contact Support</span>
           </h2>
-          
+
           <Card className="support-card">
             {supportSubmitted ? (
               <div className="support-success-state page-enter font-ui">
@@ -272,12 +272,12 @@ export const SafetyCenter = () => {
                 <Input
                   id="support-name"
                   label="Your Name"
-                  placeholder="First Name"
+                  placeholder="Name"
                   value={supportName}
                   onChange={(e) => setSupportName(e.target.value)}
                   required
                 />
-                
+
                 <Input
                   id="support-email"
                   label="Your Email"
