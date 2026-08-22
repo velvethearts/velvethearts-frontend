@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
-  Sparkle,
   Heart,
   Star,
   X,
@@ -17,7 +16,8 @@ import {
   User,
   ShieldCheck,
   Lightning,
-  Microphone
+  Microphone,
+  PaperPlaneTilt
 } from '@phosphor-icons/react';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 
@@ -48,7 +48,7 @@ export const FeatureTourGuide = () => {
       id: 'welcome',
       tab: 'discover',
       badge: 'Welcome to Velvet Hearts',
-      badgeIcon: Sparkle,
+      badgeIcon: Heart,
       badgeColor: '#D4AD6A',
       title: 'A Different Kind of Dating Space',
       subtitle: `Welcome, ${userProfile?.name || 'there'}. Velvet Hearts focuses on intentional connections rather than superficial swiping. Here is a quick guide to each core feature.`,
@@ -120,7 +120,7 @@ export const FeatureTourGuide = () => {
       id: 'matches-sent',
       tab: 'matches',
       badge: 'Sent Interests',
-      badgeIcon: Sparkle,
+      badgeIcon: PaperPlaneTilt,
       badgeColor: '#B8436A',
       title: 'Sent Sparks & Status Tracking',
       subtitle: 'Track invites you have sent to others. You can monitor review status and unsend invites anytime before a match forms.',
