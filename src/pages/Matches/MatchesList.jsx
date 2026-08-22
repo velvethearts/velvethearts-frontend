@@ -10,9 +10,72 @@ import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
 import { computeVibeMatch } from '../../utils/vibe';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 
+const DEMO_ACTIVE_CONNECTION = {
+  id: 'demo-active-match-1',
+  userId: 'demo-active-user-1',
+  name: 'Elena',
+  age: 26,
+  gender: 'female',
+  city: 'San Francisco, CA',
+  verified: true,
+  photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+  photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'],
+  story: 'Sound artist & vinyl collector. Looking for sincere conversations and shared playlists.',
+  interests: ['Analog Synths', 'Coffee Roasting', 'Midnight Walks'],
+  sparkNote: 'Listening to Japanese jazz on vinyl today ☕',
+  voiceIntroUrl: 'https://actions.google.com/sounds/v1/ambiences/coffee_shop.ogg',
+  matchedAt: new Date().toISOString()
+};
+
+const DEMO_RECEIVED_SUPER_SPARK = {
+  id: 'demo-received-super-1',
+  userId: 'demo-received-user-1',
+  name: 'Julian',
+  age: 28,
+  gender: 'male',
+  city: 'Brooklyn, NY',
+  verified: true,
+  photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+  photos: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80'],
+  story: 'Architect designing restorative spaces. Big fan of gallery strolls and rooftop espresso.',
+  interests: ['Architecture', 'Film Photography', 'Espresso'],
+  isSuper: true,
+  isSuperSpark: true,
+  relationshipIntent: 'Long-term'
+};
+
+const DEMO_SENT_INTEREST = {
+  id: 'demo-sent-interest-1',
+  userId: 'demo-sent-user-1',
+  name: 'Clara',
+  age: 25,
+  gender: 'female',
+  city: 'Seattle, WA',
+  verified: true,
+  photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
+  photos: ['https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80'],
+  status: 'pending'
+};
+
 export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
-  const { connections, interestsSent, interestStatuses, profiles, receivedInvites, sentInvitesList, setActiveTab, sendInterest, unsendInterest, onlineUserIds, sendMessage, nudgeSpark, userProfile, updateUserProfile, conversations = [], chats = {}, addToast } = useApp();
-  const activeConnections = connections;
+  const { connections, interestsSent, interestStatuses, profiles, receivedInvites, sentInvitesList, setActiveTab, sendInterest, unsendInterest, onlineUserIds, sendMessage, nudgeSpark, userProfile, updateUserProfile, conversations = [], chats = {}, addToast, isFeatureTourActive } = useApp();
+  
+  const activeConnections = isFeatureTourActive && (!connections || connections.length === 0)
+    ? [DEMO_ACTIVE_CONNECTION]
+    : (connections || []);
+
+  const displayReceivedInvites = isFeatureTourActive && (!receivedInvites || receivedInvites.length === 0)
+    ? [DEMO_RECEIVED_SUPER_SPARK]
+    : (receivedInvites || []);
+
+  const rawPendingInterests = (sentInvitesList || []).filter(p => {
+    const status = interestStatuses[p.id];
+    return status !== 'mutual';
+  });
+
+  const pendingInterests = isFeatureTourActive && rawPendingInterests.length === 0
+    ? [DEMO_SENT_INTEREST]
+    : rawPendingInterests;
 
   // Spark Note Modal state
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -62,12 +125,6 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
       if (addToast) addToast('Failed to send reply. Please try again.', 'error');
     }
   };
-
-  // Sent interests that are still pending matching
-  const pendingInterests = (sentInvitesList || []).filter(p => {
-    const status = interestStatuses[p.id];
-    return status !== 'mutual';
-  });
 
   // Active audio player state for voice intros
   const [activeVoiceId, setActiveVoiceId] = useState(null);
@@ -574,16 +631,16 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
       {/* Received Invites Section */}
       <section className="received-section border-top">
         <div className="section-group-header">
-          <h2 className="section-group-title font-ui">Received Invites ({receivedInvites.length})</h2>
-          {receivedInvites.length > 0 && receivedInvites.some(i => i.isSuper || i.isSuperSpark) && (
+          <h2 className="section-group-title font-ui">Received Invites ({displayReceivedInvites.length})</h2>
+          {displayReceivedInvites.length > 0 && displayReceivedInvites.some(i => i.isSuper || i.isSuperSpark) && (
             <span className="vibe-badge-pill font-ui" style={{ borderColor: 'var(--gold-400)', color: 'var(--gold-400)' }}>
               <Star size={12} weight="fill" color="var(--gold-400)" /> Priority Super Spark
             </span>
           )}
         </div>
-        {receivedInvites.length > 0 ? (
+        {displayReceivedInvites.length > 0 ? (
           <div className="received-grid">
-            {receivedInvites.map(profile => {
+            {displayReceivedInvites.map(profile => {
               const isSuper = profile.isSuper || profile.isSuperSpark || profile.isSuperLike;
               return (
                 <div

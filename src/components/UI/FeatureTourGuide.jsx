@@ -16,7 +16,8 @@ import {
   Bell,
   User,
   ShieldCheck,
-  Lightning
+  Lightning,
+  Microphone
 } from '@phosphor-icons/react';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 
@@ -41,7 +42,7 @@ export const FeatureTourGuide = () => {
   const dialogRef = useRef(null);
   const previouslyFocusedElementRef = useRef(null);
 
-  // 9-step multi-page tour sequence with specific, focused target selectors
+  // 12-step multi-page tour sequence covering Discover, Matches suite, Chat, Notifications, Profile, and Safety
   const tourSteps = [
     {
       id: 'welcome',
@@ -80,16 +81,52 @@ export const FeatureTourGuide = () => {
       preferredPlacement: 'top'
     },
     {
-      id: 'matches',
+      id: 'matches-active',
       tab: 'matches',
       badge: 'Mutual Connections',
       badgeIcon: Heart,
       badgeColor: '#D4AD6A',
       title: 'Connections & 24h Spark Nudges',
-      subtitle: 'When interest is mutual, a connection forms. View match details, send icebreakers, and nudge conversations to get started.',
-      targetSelector: '.recent-matches-carousel-wrap, .matches-content-container, [data-tour-nav="matches"]',
+      subtitle: 'When interest is mutual, a connection forms. View match details, vibe scores, and 24-hour response countdowns.',
+      targetSelector: '.connections-grid, .match-profile-card, .recent-matches-carousel-wrap',
       fallbackSelector: '[data-tour-nav="matches"]',
       preferredPlacement: 'bottom'
+    },
+    {
+      id: 'matches-voice',
+      tab: 'matches',
+      badge: 'Voice Intros',
+      badgeIcon: Microphone,
+      badgeColor: '#B8436A',
+      title: '2-Minute Voice Intros',
+      subtitle: 'Hear authentic voice intros before chatting. Tap the Voice button or long-press any connection avatar to hear their real voice, tone, and laughter.',
+      targetSelector: '.match-voice-btn, .voice-ring-btn, .match-profile-card',
+      fallbackSelector: '.connections-grid',
+      preferredPlacement: 'top'
+    },
+    {
+      id: 'matches-received',
+      tab: 'matches',
+      badge: 'Received Invites',
+      badgeIcon: Star,
+      badgeColor: '#D4AD6A',
+      title: 'Incoming Sparks & Super Sparks',
+      subtitle: 'People who express interest in you appear here. Super Sparks arrive with a golden highlight and priority notice so you can connect in one tap.',
+      targetSelector: '.received-section, .received-profile-card',
+      fallbackSelector: '[data-tour-nav="matches"]',
+      preferredPlacement: 'top'
+    },
+    {
+      id: 'matches-sent',
+      tab: 'matches',
+      badge: 'Sent Interests',
+      badgeIcon: Sparkle,
+      badgeColor: '#B8436A',
+      title: 'Sent Sparks & Status Tracking',
+      subtitle: 'Track invites you have sent to others. You can monitor review status and unsend invites anytime before a match forms.',
+      targetSelector: '.pending-section, .pending-profile-card',
+      fallbackSelector: '[data-tour-nav="matches"]',
+      preferredPlacement: 'top'
     },
     {
       id: 'chat',
@@ -309,6 +346,9 @@ export const FeatureTourGuide = () => {
 
     // Measure target element
     const rect = el.getBoundingClientRect();
+    if (rect.top < 60 || rect.bottom > window.innerHeight - 60) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     const padding = 6;
     const boundedRect = {
       top: Math.max(0, rect.top - padding),
