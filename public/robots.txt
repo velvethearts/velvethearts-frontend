@@ -1,5 +1,5 @@
 # Velvet Hearts — robots.txt
-# https://velvethearts.in/
+# https://www.velvethearts.in/
 
 User-agent: *
 Allow: /
@@ -10,7 +10,7 @@ Disallow: /assets/
 Crawl-delay: 1
 
 # Canonical host
-Host: https://velvethearts.in
+Host: https://www.velvethearts.in
 
 # Sitemap location
-Sitemap: https://velvethearts.in/sitemap.xml
+Sitemap: https://www.velvethearts.in/sitemap.xml
