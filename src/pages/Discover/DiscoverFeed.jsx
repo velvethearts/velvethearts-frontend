@@ -79,7 +79,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     // 3. Panel Filters
     const normalizeGender = (g) => {
       if (!g) return '';
-      const str = g.toLowerCase();
+      const str = g.toLowerCase().trim();
       if (str === 'woman' || str === 'female' || str === 'women') return 'woman';
       if (str === 'man' || str === 'male' || str === 'men') return 'man';
       return str;
@@ -88,7 +88,11 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     if (filters.gender && filters.gender !== 'All') {
       const targetG = normalizeGender(filters.gender);
       const profG = normalizeGender(profile.gender);
-      if (targetG && profG !== targetG) return false;
+      if (targetG === 'woman' || targetG === 'man') {
+        if (profG !== targetG) return false;
+      } else {
+        if (!profG.includes(targetG) && !targetG.includes(profG)) return false;
+      }
     }
 
     if (filters.relationshipIntent && filters.relationshipIntent !== 'All') {

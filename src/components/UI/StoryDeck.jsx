@@ -20,6 +20,7 @@ import {
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 import { PromptReactionModal } from './PromptReactionModal';
+import { ProtectedImage } from './ProtectedImage';
 
 export const StoryDeck = ({
   profiles = [],
@@ -421,14 +422,13 @@ export const StoryDeck = ({
               <span className="guide-tap-dismiss">Tap anywhere to dismiss</span>
             </div>
           )}
-          <img
+          <ProtectedImage
             src={displayPhotos[currentPhotoIndex] || getDefaultAvatar(activeProfile?.gender)}
             alt={`${activeProfile.name}'s photo ${currentPhotoIndex + 1}`}
-            className="story-card-photo"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = getDefaultAvatar(activeProfile?.gender);
-            }}
+            className="story-card-photo-wrap"
+            imgClassName="story-card-photo"
+            style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}
+            fallbackSrc={getDefaultAvatar(activeProfile?.gender)}
           />
 
           {/* Photo Dots */}

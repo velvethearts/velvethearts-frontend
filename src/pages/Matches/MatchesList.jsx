@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
+import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
 import { computeVibeMatch } from '../../utils/vibe';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
@@ -254,7 +255,14 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                   </div>
                 )}
                 <div className="highlight-avatar-ring is-own-ring">
-                  <img src={getProfilePhoto(userProfile)} alt="Your Note" />
+                  <ProtectedImage
+                    src={getProfilePhoto(userProfile)}
+                    alt="Your Note"
+                    className="highlight-avatar-img-wrap"
+                    style={{ width: '100%', height: '100%', borderRadius: '50%' }}
+                    imgStyle={{ borderRadius: '50%' }}
+                    fallbackSrc={getDefaultAvatar(userProfile?.gender)}
+                  />
                   <span className="add-note-plus-badge">+</span>
                 </div>
                 <span className="highlight-name font-ui">Your Note</span>
@@ -363,13 +371,13 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                         </svg>
                       )}
 
-                      <img
+                      <ProtectedImage
                         src={getProfilePhoto(conn)}
                         alt={conn.name}
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = getDefaultAvatar(conn?.gender);
-                        }}
+                        className="highlight-avatar-img-wrap"
+                        style={{ width: '100%', height: '100%', borderRadius: '50%' }}
+                        imgStyle={{ borderRadius: '50%' }}
+                        fallbackSrc={getDefaultAvatar(conn?.gender)}
                       />
 
                       {/* 2-Min Voice Intro Button */}
@@ -427,14 +435,13 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                 >
                   {/* Card Hero Image Area */}
                   <div className="match-card-photo-wrap">
-                    <img
+                    <ProtectedImage
                       src={photoUrl}
                       alt={conn.name}
-                      className="match-card-photo"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = getDefaultAvatar(conn?.gender);
-                      }}
+                      className="match-card-photo-protected"
+                      imgClassName="match-card-photo"
+                      style={{ width: '100%', height: '100%' }}
+                      fallbackSrc={getDefaultAvatar(conn?.gender)}
                     />
                     
                     {/* Gradient Overlay for Text Readability */}
@@ -590,14 +597,13 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                   }}
                 >
                   <div className="received-card-media">
-                    <img
+                    <ProtectedImage
                       src={getProfilePhoto(profile)}
                       alt={profile.name}
-                      className="received-card-image"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = getDefaultAvatar(profile?.gender);
-                      }}
+                      className="received-card-image-wrap"
+                      imgClassName="received-card-image"
+                      style={{ width: '100%', height: '100%' }}
+                      fallbackSrc={getDefaultAvatar(profile?.gender)}
                     />
                     <div className="received-card-gradient" />
                     {isSuper && (
@@ -650,14 +656,14 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
               const isSuper = profile.isSuper || profile.isSuperSpark || status === 'super';
               return (
                 <div key={profile.id} className={`pending-profile-card ${isSuper ? 'is-super-sent' : ''}`}>
-                  <img
+                  <ProtectedImage
                     src={getProfilePhoto(profile)}
                     alt={profile.name}
-                    className="pending-avatar-img"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = getDefaultAvatar(profile?.gender);
-                    }}
+                    className="pending-avatar-img-wrap"
+                    imgClassName="pending-avatar-img"
+                    style={{ width: '60px', height: '60px', borderRadius: '50%' }}
+                    imgStyle={{ borderRadius: '50%' }}
+                    fallbackSrc={getDefaultAvatar(profile?.gender)}
                   />
                   <div className="pending-card-info font-ui">
                     <div className="pending-name-row">
@@ -746,14 +752,14 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
         {selectedNoteReplyMatch && (
           <div className="note-reply-modal-content">
             <div className="note-reply-quote-card font-ui">
-              <img
+              <ProtectedImage
                 src={getProfilePhoto(selectedNoteReplyMatch.match)}
                 alt={selectedNoteReplyMatch.match.name}
-                className="note-reply-avatar"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = getDefaultAvatar(selectedNoteReplyMatch.match?.gender);
-                }}
+                className="note-reply-avatar-wrap"
+                imgClassName="note-reply-avatar"
+                style={{ width: '44px', height: '44px', borderRadius: '50%' }}
+                imgStyle={{ borderRadius: '50%' }}
+                fallbackSrc={getDefaultAvatar(selectedNoteReplyMatch.match?.gender)}
               />
               <div className="note-reply-quote-body">
                 <span className="note-reply-author font-ui">{selectedNoteReplyMatch.match.name}&rsquo;s Spark Note</span>

@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { PencilSimple, Sliders, ShieldCheck, SignOut, Bookmark, Heart, Trash, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Card } from '../../components/UI/Card';
+import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getProfilePhoto, extractPhotoUrls } from '../../utils/avatar';
 
 export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile }) => {
@@ -101,10 +102,13 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
               onMouseUp={handlePhotoTouchEnd}
               onClick={handlePhotoClick}
             >
-              <img 
+              <ProtectedImage 
                 src={displayUserPhotos[currentPhotoIndex] || getProfilePhoto(userProfile)} 
                 alt={userProfile.name} 
-                className="preview-photo"
+                className="preview-photo-wrap"
+                imgClassName="preview-photo"
+                style={{ width: '100%', height: '100%' }}
+                fallbackSrc={getProfilePhoto(userProfile)}
               />
 
               {displayUserPhotos.length > 1 && (

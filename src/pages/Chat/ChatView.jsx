@@ -25,6 +25,7 @@ import {
   Sparkle
 } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
+import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getSocket, joinConversation, leaveConversation, emitStartTyping, emitStopTyping } from '../../lib/socket';
 
 const parseNoteReply = (text) => {
@@ -1054,7 +1055,12 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
                                       className="message-image-attachment"
                                       onClick={() => setLightboxImage({ type: 'image', url, name: att.fileName || 'Image', messageId: msg.id, isUser })}
                                     >
-                                      <img src={url} alt={att.fileName || 'Attachment'} className="chat-attached-img" />
+                                      <ProtectedImage
+                                        src={url}
+                                        alt={att.fileName || 'Attachment'}
+                                        className="chat-attached-img-wrap"
+                                        imgClassName="chat-attached-img"
+                                      />
                                       {isUser && !msg.isDeleted && (
                                         <button
                                           type="button"
@@ -1461,7 +1467,13 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected }) => {
             <button className="chat-lightbox-close" onClick={() => setLightboxImage(null)}>
               <X size={24} />
             </button>
-            <img src={lightboxImage.url} alt={lightboxImage.name} className="chat-lightbox-img" />
+            <ProtectedImage
+              src={lightboxImage.url}
+              alt={lightboxImage.name}
+              className="chat-lightbox-img-wrap"
+              imgClassName="chat-lightbox-img"
+              enableBlurOnFocusLoss={true}
+            />
             <div className="chat-lightbox-footer font-ui">
               <span>{lightboxImage.name}</span>
               <div className="chat-lightbox-actions">

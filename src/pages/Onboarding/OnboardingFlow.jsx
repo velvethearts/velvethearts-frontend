@@ -99,7 +99,8 @@ export const OnboardingFlow = () => {
 
     const genderOptions = [
         'Woman', 'Man', 'Non-binary', 'Genderqueer', 'Genderfluid',
-        'Agender', 'Trans Woman', 'Trans Man', 'Two-Spirit', 'Prefer to self-describe'
+        'Agender', 'Trans Woman', 'Trans Man', 'Bigender', 'Androgynous',
+        'Two-Spirit', 'Questioning', 'Prefer to self-describe'
     ];
 
     const orientationOptions = [

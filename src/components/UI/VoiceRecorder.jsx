@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Microphone, StopCircle, Play, Pause, Trash, CheckCircle } from '@phosphor-icons/react';
+import { Microphone, StopCircle, Play, Pause, Trash, CheckCircle, UploadSimple } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
 
 export const VoiceRecorder = ({ initialAudioUrl, onSaveAudio, maxDurationSeconds = 120 }) => {
@@ -34,36 +34,112 @@ export const VoiceRecorder = ({ initialAudioUrl, onSaveAudio, maxDurationSeconds
     return `${mins}:${remainder < 10 ? '0' : ''}${remainder}`;
   };
 
+  const getSupportedMimeType = () => {
+    const types = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/aac',
+      'audio/ogg'
+    ];
+    for (const t of types) {
+      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) {
+        return t;
+      }
+    }
+    return '';
+  };
+
+  const getAudioStream = async () => {
+    // 1. Try standard getUserMedia
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err1) {
+      console.warn('Default getUserMedia failed, attempting fallback constraints...', err1);
+    }
+
+    // 2. Fallback: Relaxed constraints (disabling DSP filters which cause Windows driver conflicts)
+    try {
+      return await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }
+      });
+    } catch (err2) {
+      console.warn('Relaxed constraints failed, attempting device picker fallback...', err2);
+    }
+
+    // 3. Fallback: Explicit device ID
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const audioInputs = devices.filter(d => d.kind === 'audioinput');
+      for (const dev of audioInputs) {
+        try {
+          if (dev.deviceId) {
+            return await navigator.mediaDevices.getUserMedia({
+              audio: { deviceId: { exact: dev.deviceId } }
+            });
+          }
+        } catch {
+          // continue to next device
+        }
+      }
+    } catch (err3) {
+      console.warn('Direct device enumeration failed:', err3);
+    }
+
+    // 4. Final attempt to surface the underlying browser error
+    return await navigator.mediaDevices.getUserMedia({ audio: true });
+  };
+
   const startRecording = async () => {
     setError('');
     audioChunksRef.current = [];
     setRecordingTime(0);
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        throw new Error('Audio recording is not supported in this browser environment.');
+      }
+
+      // Stop any existing tracks before acquiring new stream
+      if (mediaRecorderRef.current && mediaRecorderRef.current.stream) {
+        try {
+          mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+        } catch {}
+      }
+
+      const stream = await getAudioStream();
+      const selectedMime = getSupportedMimeType();
+      const mediaRecorder = selectedMime
+        ? new MediaRecorder(stream, { mimeType: selectedMime })
+        : new MediaRecorder(stream);
+
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: selectedMime || 'audio/webm' });
         setIsUploading(true);
 
         let finalAudioUrl = null;
         if (api.isConfigured) {
           try {
-            const audioFile = new File([audioBlob], `voice-intro-${Date.now()}.webm`, { type: 'audio/webm' });
+            const ext = selectedMime.includes('mp4') ? 'mp4' : 'webm';
+            const audioFile = new File([audioBlob], `voice-intro-${Date.now()}.${ext}`, { type: selectedMime || 'audio/webm' });
             const res = await api.uploadFile(audioFile);
             if (res?.secureUrl) {
               finalAudioUrl = res.secureUrl;
             }
           } catch (uploadErr) {
-            console.error('Audio upload to Cloudinary failed:', uploadErr);
+            console.error('Audio upload failed, falling back to local storage:', uploadErr);
           }
         }
 
@@ -97,7 +173,15 @@ export const VoiceRecorder = ({ initialAudioUrl, onSaveAudio, maxDurationSeconds
       }, 1000);
     } catch (err) {
       console.error('Microphone access error:', err);
-      setError('Microphone access is required to record a voice intro.');
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setError('Microphone permission was denied. Please click the lock/settings icon in your browser address bar to allow microphone access.');
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setError('No microphone device found on your system. Please connect a microphone.');
+      } else if (err.name === 'NotReadableError') {
+        setError('Microphone hardware error (NotReadableError): Please check Windows Settings > Privacy & security > Microphone, or close other apps/tabs using audio.');
+      } else {
+        setError(err.message || 'Microphone access is required to record a voice intro.');
+      }
     }
   };
 
@@ -139,6 +223,46 @@ export const VoiceRecorder = ({ initialAudioUrl, onSaveAudio, maxDurationSeconds
     if (onSaveAudio) onSaveAudio(null);
   };
 
+  const handleAudioFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setError('');
+    setIsUploading(true);
+
+    try {
+      let finalAudioUrl = null;
+      if (api.isConfigured) {
+        try {
+          const res = await api.uploadFile(file);
+          if (res?.secureUrl) {
+            finalAudioUrl = res.secureUrl;
+          }
+        } catch (uploadErr) {
+          console.error('Audio upload to cloud failed, using local storage:', uploadErr);
+        }
+      }
+
+      if (!finalAudioUrl) {
+        finalAudioUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      setIsUploading(false);
+      setAudioUrl(finalAudioUrl);
+      if (onSaveAudio) onSaveAudio(finalAudioUrl);
+    } catch (err) {
+      console.error('Audio file upload error:', err);
+      setError('Could not process the audio file. Please try another audio file.');
+      setIsUploading(false);
+    } finally {
+      if (e.target) e.target.value = '';
+    }
+  };
+
   return (
     <div className="voice-recorder-box font-ui">
       <div className="voice-recorder-header">
@@ -151,14 +275,34 @@ export const VoiceRecorder = ({ initialAudioUrl, onSaveAudio, maxDurationSeconds
       {error && <p className="vh-input-error">{error}</p>}
 
       {!audioUrl && !isRecording && (
-        <button
-          type="button"
-          onClick={startRecording}
-          className="start-record-btn font-ui"
-        >
-          <Microphone size={20} weight="fill" />
-          <span>Record Voice Intro (2 Mins)</span>
-        </button>
+        <div className="record-actions-container">
+          <button
+            type="button"
+            onClick={startRecording}
+            className="start-record-btn font-ui"
+          >
+            <Microphone size={20} weight="fill" />
+            <span>Record Voice Intro (2 Mins)</span>
+          </button>
+
+          <div className="upload-audio-divider font-ui">
+            <span className="upload-divider-line" />
+            <span className="upload-divider-text">OR</span>
+            <span className="upload-divider-line" />
+          </div>
+
+          <label className="upload-audio-file-btn font-ui">
+            <UploadSimple size={18} weight="bold" />
+            <span>{isUploading ? 'Uploading Audio...' : 'Upload Audio Memo (.mp3, .m4a, .wav)'}</span>
+            <input
+              type="file"
+              accept="audio/*"
+              onChange={handleAudioFileUpload}
+              style={{ display: 'none' }}
+              disabled={isUploading}
+            />
+          </label>
+        </div>
       )}
 
       {isRecording && (
@@ -231,6 +375,12 @@ export const VoiceRecorder = ({ initialAudioUrl, onSaveAudio, maxDurationSeconds
           color: var(--text-secondary);
         }
 
+        .record-actions-container {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+        }
+
         .start-record-btn {
           display: inline-flex;
           align-items: center;
@@ -249,6 +399,49 @@ export const VoiceRecorder = ({ initialAudioUrl, onSaveAudio, maxDurationSeconds
 
         .start-record-btn:hover {
           background-color: var(--burgundy-600);
+        }
+
+        .upload-audio-divider {
+          display: flex;
+          align-items: center;
+          gap: var(--space-3);
+          margin: 2px 0;
+        }
+
+        .upload-divider-line {
+          flex: 1;
+          height: 1px;
+          background-color: var(--border-default);
+          opacity: 0.6;
+        }
+
+        .upload-divider-text {
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          color: var(--text-muted);
+        }
+
+        .upload-audio-file-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: var(--space-2);
+          background-color: transparent;
+          color: var(--text-secondary);
+          border: 1.5px dashed var(--border-default);
+          border-radius: var(--radius-full);
+          padding: var(--space-2) var(--space-4);
+          font-size: var(--text-body-sm);
+          font-weight: 500;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+        }
+
+        .upload-audio-file-btn:hover {
+          border-color: var(--burgundy-400);
+          color: var(--burgundy-500);
+          background-color: var(--bg-surface);
         }
 
         .recording-status-row {

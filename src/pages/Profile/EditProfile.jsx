@@ -8,11 +8,18 @@ import { Textarea } from '../../components/UI/Textarea';
 import { Select } from '../../components/UI/Select';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { VoiceRecorder } from '../../components/UI/VoiceRecorder';
-import { getProfilePhoto } from '../../utils/avatar';
+import { ProtectedImage } from '../../components/UI/ProtectedImage';
+import { getProfilePhoto, extractPhotoUrls } from '../../utils/avatar';
 
 export const EditProfile = ({ onBack }) => {
   const { userProfile, setUserProfile, updateUserProfile, showAlert } = useApp();
-  const [localProfile, setLocalProfile] = useState({ ...userProfile });
+  const [localProfile, setLocalProfile] = useState(() => {
+    const extracted = extractPhotoUrls(userProfile);
+    return {
+      ...userProfile,
+      photos: extracted.length > 0 ? extracted : (Array.isArray(userProfile?.photos) ? userProfile.photos : [])
+    };
+  });
   const [validationErrors, setValidationErrors] = useState({});
   const [uploadProgress, setUploadProgress] = useState(null); // null or { index, percent }
   const [isSaving, setIsSaving] = useState(false);
@@ -227,8 +234,16 @@ export const EditProfile = ({ onBack }) => {
             finalUrl = res.secureUrl;
           }
         } catch (uploadErr) {
-          console.error('File upload error:', uploadErr);
+          console.error('File upload error, falling back to local data URL:', uploadErr);
         }
+      }
+
+      if (!finalUrl) {
+        finalUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
       }
 
       if (!finalUrl) {
@@ -358,7 +373,7 @@ export const EditProfile = ({ onBack }) => {
                       </div>
                     ) : img ? (
                       <div className="photo-active-wrap">
-                        <img src={img} alt={`Profile slot ${idx + 1}`} />
+                        <ProtectedImage src={img} alt={`Profile slot ${idx + 1}`} style={{ width: '100%', height: '100%' }} />
                         <div className="slot-actions">
                           <button
                             type="button"
@@ -426,6 +441,40 @@ export const EditProfile = ({ onBack }) => {
             error={validationErrors.city}
             required
           />
+
+          <Select
+            id="edit-gender"
+            label="Gender Identity"
+            value={localProfile.gender || 'Woman'}
+            onChange={(e) => handleFieldChange('gender', e.target.value)}
+            options={[
+              { value: 'Woman', label: 'Woman' },
+              { value: 'Man', label: 'Man' },
+              { value: 'Non-binary', label: 'Non-binary' },
+              { value: 'Genderqueer', label: 'Genderqueer' },
+              { value: 'Genderfluid', label: 'Genderfluid' },
+              { value: 'Agender', label: 'Agender' },
+              { value: 'Trans Woman', label: 'Trans Woman' },
+              { value: 'Trans Man', label: 'Trans Man' },
+              { value: 'Bigender', label: 'Bigender' },
+              { value: 'Androgynous', label: 'Androgynous' },
+              { value: 'Two-Spirit', label: 'Two-Spirit' },
+              { value: 'Questioning', label: 'Questioning' },
+              { value: 'Prefer to self-describe', label: 'Prefer to self-describe' }
+            ]}
+          />
+
+          <div className="checkbox-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <input
+              type="checkbox"
+              id="edit-show-gender"
+              checked={Boolean(localProfile.showGender ?? true)}
+              onChange={(e) => handleFieldChange('showGender', e.target.checked)}
+            />
+            <label htmlFor="edit-show-gender" className="font-ui" style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              Show gender on my public profile
+            </label>
+          </div>
 
           <Select
             id="edit-intent"
@@ -575,10 +624,12 @@ export const EditProfile = ({ onBack }) => {
           <div className="profile-preview-sticky">
             <div className="profile-preview-card">
               <div className="preview-img-wrap">
-                <img
+                <ProtectedImage
                   src={getProfilePhoto(localProfile)}
                   alt={localProfile.name || 'Preview'}
-                  className="preview-photo"
+                  className="preview-photo-wrap"
+                  imgClassName="preview-photo"
+                  style={{ width: '100%', height: '100%' }}
                 />
               </div>
 
@@ -715,23 +766,38 @@ export const EditProfile = ({ onBack }) => {
           right: var(--space-1);
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 4px;
+          z-index: 10;
+          pointer-events: auto;
         }
 
         .slot-act-btn {
-          background-color: rgba(26, 21, 23, 0.7);
+          background-color: rgba(26, 21, 23, 0.85);
           color: #FFFFFF;
-          width: 22px;
-          height: 22px;
+          width: 26px;
+          height: 26px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           backdrop-filter: blur(4px);
+          cursor: pointer;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          transition: transform 0.15s ease, background-color 0.15s ease;
+          z-index: 11;
+        }
+
+        .slot-act-btn:hover {
+          transform: scale(1.1);
+          background-color: rgba(26, 21, 23, 1);
         }
 
         .slot-act-btn.delete {
-          background-color: rgba(196, 90, 90, 0.9);
+          background-color: rgba(220, 53, 69, 0.9);
+        }
+
+        .slot-act-btn.delete:hover {
+          background-color: rgba(220, 53, 69, 1);
         }
 
         .primary-photo-tag {
@@ -739,13 +805,15 @@ export const EditProfile = ({ onBack }) => {
           bottom: 0;
           left: 0;
           right: 0;
-          background-color: rgba(184, 67, 106, 0.9);
+          background-color: rgba(184, 67, 106, 0.95);
           color: #FFFFFF;
           font-size: 9px;
           text-align: center;
           padding: 2px 0;
           font-weight: bold;
           text-transform: uppercase;
+          z-index: 10;
+          pointer-events: none;
         }
 
         .photo-upload-label {

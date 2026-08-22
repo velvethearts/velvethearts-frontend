@@ -222,9 +222,35 @@ export const AppProvider = ({ children }) => {
             hasDisability: false,
             disabilityInfo: '',
             showDisability: false,
-            photos: []
+            photos: [],
+            isPaused: false
         };
     });
+
+    const [isPaused, setIsPaused] = useState(() => {
+        try {
+            return localStorage.getItem('vh-profile-paused') === 'true';
+        } catch {
+            return false;
+        }
+    });
+
+    const pauseProfile = (paused = true) => {
+        setIsPaused(paused);
+        try {
+            localStorage.setItem('vh-profile-paused', String(paused));
+        } catch {}
+        setUserProfile(prev => {
+            const updated = { ...prev, isPaused: paused };
+            try {
+                localStorage.setItem('vh-user-profile', JSON.stringify(updated));
+            } catch {}
+            return updated;
+        });
+        if (api.isConfigured) {
+            api.saveProfile({ isPaused: paused }).catch(() => {});
+        }
+    };
 
     // --- Discover ---
     const [profiles, setProfiles] = useState(() => {
@@ -2138,7 +2164,9 @@ useEffect(() => {
             fetchConversationMessages,
             loadSocialData,
             showConfirm,
-            showAlert
+            showAlert,
+            isPaused,
+            pauseProfile
         }}>
             {children}
             <ConfirmModal

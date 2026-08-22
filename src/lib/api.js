@@ -134,9 +134,10 @@ export const api = {
         });
     },
 
-    deleteAccount() {
+    deleteAccount(feedbackData = {}) {
         return request('/api/v1/profile', {
-            method: 'DELETE'
+            method: 'DELETE',
+            body: feedbackData
         });
     },
 

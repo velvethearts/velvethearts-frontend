@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { CheckCircle, Heart, DotsThreeVertical, Bookmark, Prohibit, ShieldWarning, CaretLeft, CaretRight, Sparkle } from '@phosphor-icons/react';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 import { computeVibeMatch } from '../../utils/vibe';
+import { ProtectedImage } from './ProtectedImage';
 
 export const ProfileCard = ({
   profile,
@@ -117,16 +118,15 @@ export const ProfileCard = ({
         onMouseUp={handlePhotoTouchEnd}
         onClick={handlePhotoClick}
       >
-        <img
+        <ProtectedImage
             src={photosList[currentPhotoIndex] || getDefaultAvatar(profile?.gender)}
             alt={`Photo ${currentPhotoIndex + 1} of ${profile.name}`}
-            className="profile-card-image"
+            className="profile-card-image-protected"
+            imgClassName="profile-card-image"
+            style={{ width: '100%', height: '100%' }}
             fetchpriority={currentPhotoIndex === 0 ? "high" : "auto"}
             decoding="async"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = getDefaultAvatar(profile?.gender);
-            }}
+            fallbackSrc={getDefaultAvatar(profile?.gender)}
         />
 
         {/* Photo Navigation Indicators */}

@@ -4,6 +4,7 @@ import { CheckCircle, Heart, ShieldWarning, Prohibit, X, CaretLeft, CaretRight }
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
+import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 
 export const ProfileDetail = ({ profile, onBack }) => {
@@ -177,14 +178,13 @@ export const ProfileDetail = ({ profile, onBack }) => {
           onMouseUp={handlePhotoTouchEnd}
           onClick={handlePhotoClick}
         >
-          <img 
+          <ProtectedImage 
             src={displayPhotos[currentPhotoIndex] || getDefaultAvatar(profile?.gender)} 
             alt={profile.name} 
-            className="detail-hero-img" 
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = getDefaultAvatar(profile?.gender);
-            }}
+            className="detail-hero-img-wrap"
+            imgClassName="detail-hero-img"
+            style={{ width: '100%', height: '100%' }}
+            fallbackSrc={getDefaultAvatar(profile?.gender)}
           />
 
           {displayPhotos.length > 1 && (

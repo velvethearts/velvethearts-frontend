@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { Sun, Moon, Eye, TextT, Warning, Bell } from '@phosphor-icons/react';
+import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
 import { ThemeToggle } from '../../components/UI/ThemeToggle';
+import { DeleteAccountModal } from '../../components/UI/DeleteAccountModal';
 
 export const SettingsPage = () => {
   const { 
@@ -20,11 +21,14 @@ export const SettingsPage = () => {
     setActiveTab,
     logout,
     showConfirm,
-    showAlert
+    showAlert,
+    isPaused,
+    pauseProfile
   } = useApp();
 
   const [showNotifModal, setShowNotifModal] = useState(false);
   const [localNotifs, setLocalNotifs] = useState({ ...notifications });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
   const handleThemeChange = (newTheme) => {
@@ -63,21 +67,28 @@ export const SettingsPage = () => {
     await showAlert({ title: 'Settings Saved', message: 'Notification preferences updated successfully!' });
   };
 
-  const handleDeleteAccount = async () => {
-    const confirmed = await showConfirm({
-      title: 'Delete Account',
-      message: 'CRITICAL: Are you sure you want to delete your profile? This deletes all connection histories, chat logs, and photos permanently. This action is irreversible.',
-      okText: 'Delete Account',
-      cancelText: 'Cancel'
+  const handleTogglePause = async () => {
+    const nextState = !isPaused;
+    pauseProfile(nextState);
+    await showAlert({
+      title: nextState ? 'Profile Paused ⏸️' : 'Profile Active 💖',
+      message: nextState
+        ? 'Your profile is now paused and hidden from Discover. Your existing chats and matches remain active.'
+        : 'Welcome back! Your profile is now visible in Discover again.'
     });
+  };
 
-    if (!confirmed) return;
+  const handleDeleteAccount = () => {
+    setShowDeleteModal(true);
+  };
 
+  const handleConfirmDelete = async (feedbackData) => {
     setDeletingAccount(true);
     try {
       if (api.isConfigured) {
-        await api.deleteAccount();
+        await api.deleteAccount(feedbackData);
       }
+      setShowDeleteModal(false);
       await logout();
       window.location.reload();
     } catch (err) {
@@ -269,9 +280,39 @@ export const SettingsPage = () => {
 
         {/* Account Safety Settings */}
         <section className="settings-section border-top" aria-labelledby="account-heading">
-          <h2 id="account-heading" className="section-title text-danger">
+          <h2 id="account-heading" className="section-title">
+            <PauseCircle size={20} className="section-title-icon" />
+            <span>Account Status</span>
+          </h2>
+          <div className="settings-options-list">
+            <div className="option-item">
+              <div className="option-text">
+                <span className="option-label">
+                  {isPaused ? 'Unpause Profile' : 'Pause Profile (Snooze)'}
+                </span>
+                <span className="option-desc font-body">
+                  {isPaused
+                    ? 'Your profile is currently hidden from Discover. Toggle off to unpause and resume matching.'
+                    : 'Temporarily hide from Discover without losing your chats.'}
+                </span>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={Boolean(isPaused)}
+                  onChange={handleTogglePause}
+                />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+          </div>
+        </section>
+
+        {/* Danger Zone */}
+        <section className="settings-section border-top" aria-labelledby="danger-heading">
+          <h2 id="danger-heading" className="section-title text-danger">
             <Warning size={20} className="section-title-icon font-error" />
-            <span>Account Operations</span>
+            <span>Danger Zone</span>
           </h2>
           <div className="danger-actions-list">
             <button 
@@ -355,6 +396,15 @@ export const SettingsPage = () => {
           </div>
         </div>
       </Modal>
+
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirmDelete={handleConfirmDelete}
+        onPauseProfile={handleTogglePause}
+        isPaused={isPaused}
+        isDeleting={deletingAccount}
+      />
 
       <style>{`
         .settings-page {

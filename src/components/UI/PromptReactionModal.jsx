@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PaperPlaneRight, X, Heart, ChatCircleText, Sparkle } from '@phosphor-icons/react';
 import { Button } from './Button';
+import { ProtectedImage } from './ProtectedImage';
 import { playHapticSound, triggerHaptic } from '../../utils/haptics';
 
 export const PromptReactionModal = ({
@@ -74,7 +75,7 @@ export const PromptReactionModal = ({
           )}
           {targetType === 'photo' && targetContent && (
             <div className="context-photo-preview">
-              <img src={targetContent} alt="Target photo" />
+              <ProtectedImage src={targetContent} alt="Target photo" />
             </div>
           )}
         </div>

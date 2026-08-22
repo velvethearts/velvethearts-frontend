@@ -7,7 +7,20 @@ export const DiscoverPreferences = ({ onClose }) => {
   const { filters, setFilters } = useApp();
   const [localFilters, setLocalFilters] = useState({ ...filters });
 
-  const genderOptions = ['All', 'Woman', 'Man', 'Non-binary'];
+  const genderOptions = [
+    'All',
+    'Woman',
+    'Man',
+    'Non-binary',
+    'Genderqueer',
+    'Genderfluid',
+    'Agender',
+    'Trans Woman',
+    'Trans Man',
+    'Bigender',
+    'Androgynous',
+    'Two-Spirit'
+  ];
   const intentOptions = ['All', 'Long-term Relationship', 'Getting to Know People', 'Companionship', 'Open to Anything Meaningful'];
   const sortByOptions = [
     { label: 'Default Vibe', value: 'default' },
