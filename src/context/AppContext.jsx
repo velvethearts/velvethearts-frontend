@@ -1301,6 +1301,11 @@ useEffect(() => {
             setUserProfile(profileData);
             setIsOnboarded(true);
             setActiveTab('discover');
+            try {
+                localStorage.removeItem('vh-tour-completed');
+                localStorage.removeItem(`vh-tour-completed-${profileData?.id || 'user'}`);
+            } catch (_) {}
+            setIsFeatureTourActive(true);
             return;
         }
 
@@ -1309,6 +1314,14 @@ useEffect(() => {
             setUserProfile(profileData);
             setIsOnboarded(true);
             setActiveTab('discover');
+
+            // Reset tour key and launch tour for newly completed onboarding
+            try {
+                localStorage.removeItem('vh-tour-completed');
+                const uid = saved?.id || profileData?.id || 'user';
+                localStorage.removeItem(`vh-tour-completed-${uid}`);
+            } catch (_) {}
+            setIsFeatureTourActive(true);
 
             // After onboarding, if already approved, load social data
             if (approvalStatus === 'approved') {

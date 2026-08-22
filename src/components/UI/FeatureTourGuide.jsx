@@ -151,18 +151,24 @@ export const FeatureTourGuide = () => {
     }
   ];
 
-  // Auto-launch tour on every login session
+  const getTourStorageKey = useCallback(() => {
+    const uid = userProfile?.id || userProfile?.uid || 'user';
+    return `vh-tour-completed-${uid}`;
+  }, [userProfile]);
+
+  // Auto-launch tour ONLY ONCE when onboarding is complete for the user
   useEffect(() => {
     if (isLoggedIn && isOnboarded) {
-      const sessionShown = sessionStorage.getItem('vh-tour-session-shown');
-      if (!sessionShown && !isFeatureTourActive) {
+      const tourKey = getTourStorageKey();
+      const hasCompletedTour = localStorage.getItem(tourKey) || localStorage.getItem('vh-tour-completed');
+      if (!hasCompletedTour && !isFeatureTourActive) {
         const timer = setTimeout(() => {
           setIsFeatureTourActive(true);
-        }, 1000);
+        }, 1200);
         return () => clearTimeout(timer);
       }
     }
-  }, [isLoggedIn, isOnboarded, isFeatureTourActive, setIsFeatureTourActive]);
+  }, [isLoggedIn, isOnboarded, isFeatureTourActive, setIsFeatureTourActive, getTourStorageKey]);
 
   // Sync visibility with isFeatureTourActive
   useEffect(() => {
@@ -354,7 +360,11 @@ export const FeatureTourGuide = () => {
   };
 
   const handleComplete = () => {
-    sessionStorage.setItem('vh-tour-session-shown', 'true');
+    try {
+      const tourKey = getTourStorageKey();
+      localStorage.setItem(tourKey, 'true');
+      localStorage.setItem('vh-tour-completed', 'true');
+    } catch (_) {}
     setIsFeatureTourActive(false);
     setIsVisible(false);
     setActiveTab('discover');
