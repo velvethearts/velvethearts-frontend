@@ -427,31 +427,37 @@ export const AppProvider = ({ children }) => {
 
         if (profile.name) {
             setIsOnboarded(true);
-            setUserProfile(prev => ({
-                ...prev,
-                id: profile.id || prev.id || '',
-                userId: profile.userId || user.id || prev.userId || '',
-                name: profile.name || '',
-                email: profile.email || user.email || auth?.currentUser?.email || prev.email || '',
-                dobDay: profile.dobDay || profile.birthDay || '',
-                dobMonth: profile.dobMonth || profile.birthMonth || '',
-                dobYear: profile.dobYear || profile.birthYear || '',
-                city: profile.city || '',
-                gender: profile.gender || 'Woman',
-                showGender: profile.showGender ?? true,
-                orientation: profile.orientation || 'Straight',
-                showOrientation: profile.showOrientation ?? true,
-                relationshipIntent: profile.relationshipIntent || 'Long-term Relationship',
-                relationshipStatus: profile.relationshipStatus || 'Single',
-                interests: profile.interests || [],
-                story: profile.story || '',
-                hasDisability: profile.hasDisability || false,
-                disabilityInfo: profile.disabilityInfo || '',
-                showDisability: profile.showDisability || false,
-                photos: profile.photos || [],
-                voiceIntroUrl: profile.voiceIntroUrl || null,
-                sparkNote: profile.sparkNote || null
-            }));
+            setUserProfile(prev => {
+                const next = {
+                    ...prev,
+                    id: profile.id || prev.id || '',
+                    userId: profile.userId || user.id || prev.userId || '',
+                    name: profile.name || '',
+                    email: profile.email || user.email || auth?.currentUser?.email || prev.email || '',
+                    dobDay: profile.dobDay || profile.birthDay || '',
+                    dobMonth: profile.dobMonth || profile.birthMonth || '',
+                    dobYear: profile.dobYear || profile.birthYear || '',
+                    city: profile.city || '',
+                    gender: profile.gender || 'Woman',
+                    showGender: profile.showGender ?? true,
+                    orientation: profile.orientation || 'Straight',
+                    showOrientation: profile.showOrientation ?? true,
+                    relationshipIntent: profile.relationshipIntent || 'Long-term Relationship',
+                    relationshipStatus: profile.relationshipStatus || 'Single',
+                    interests: profile.interests || [],
+                    story: profile.story || '',
+                    hasDisability: profile.hasDisability || false,
+                    disabilityInfo: profile.disabilityInfo || '',
+                    showDisability: profile.showDisability || false,
+                    photos: profile.photos || [],
+                    voiceIntroUrl: profile.voiceIntroUrl || null,
+                    sparkNote: profile.sparkNote || null
+                };
+                try {
+                    localStorage.setItem('vh-user-profile', JSON.stringify(next));
+                } catch (_) {}
+                return next;
+            });
         } else {
             setIsOnboarded(false);
         }
