@@ -3,11 +3,12 @@ import { useApp } from '../../context/AppContext';
 import { ArrowLeft, ShieldCheck, GoogleLogo } from '@phosphor-icons/react';
 import { Button } from '../../components/UI/Button';
 import { signInWithGoogle } from '../../lib/firebase';
+import { api } from '../../lib/api';
 import logo from "../../assets/velvet-heart-logo.png";
 
 
 export const AuthFlow = ({ onBack }) => {
-  const { login } = useApp();
+  const { login, loginWithGoogle } = useApp?.() || {};
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +20,20 @@ export const AuthFlow = ({ onBack }) => {
 
     try {
       const authRes = await signInWithGoogle();
-      await login(authRes?.user?.phoneNumber || '', authRes?.idToken);
+      const idToken = authRes?.idToken;
+      const phone = authRes?.user?.phoneNumber || '';
+
+      if (typeof login === 'function') {
+        await login(phone, idToken);
+      } else if (typeof loginWithGoogle === 'function') {
+        await loginWithGoogle(idToken);
+      } else if (api.isConfigured && idToken) {
+        await api.login(idToken);
+        api.tokenStore.setToken(idToken);
+        window.location.reload();
+      } else {
+        throw new Error('Authentication is currently initializing. Please try again in a moment.');
+      }
     } catch (err) {
       console.error("Google Auth error:", err);
       setError(
