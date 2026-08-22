@@ -1,6 +1,6 @@
 # Velvet Hearts Frontend
 
-Last updated: August 12th, 2026 (v1.0.0 Release)  
+Last updated: August 22nd, 2026 (v1.1.0 Release)  
 Source of truth: `/docs/Administrator_Manual.docx` and `/docs/User_Manual.docx`
 
 This folder contains the Velvet Hearts browser application. It is a Vite + React single-page application that serves the public landing page, registration/login flow, onboarding, discover, matching, chat, profile, settings, safety center, and admin UI surfaces.
@@ -11,20 +11,21 @@ Velvet Hearts is a safety-oriented dating and connection platform. The frontend 
 
 | Path | Purpose |
 |---|---|
-| `src/App.jsx` | Top-level application shell, tab routing, approval-gated UI states, route-level `React.lazy()` code splitting with `<Suspense>`, theme-aware `ErrorBoundary` with reload action, and admin sub-page routing. |
-| `src/context/AppContext.jsx` | Main client state provider: session restoration, profile hydration (including Spark Notes), discover/match/chat actions, local settings, Socket.IO lifecycle, and HMR context fallback resilience. |
+| `src/App.jsx` | Top-level application shell, dynamic `document.title` routing, tab navigation, approval-gated UI states, route-level `React.lazy()` code splitting with `<Suspense>`, theme-aware `ErrorBoundary` with reload action, and admin sub-page routing. |
+| `src/context/AppContext.jsx` | Main client state provider: session restoration, profile hydration (including Spark Notes), discover/match/chat actions, feature tour orchestration, local settings, Socket.IO lifecycle, and HMR context fallback resilience. |
 | `src/lib/api.js` | REST API client, access/refresh token storage, automatic token refresh retry on `401`, and endpoint wrappers. |
 | `src/lib/firebase.js` | Firebase Web SDK initialization and Google popup sign-in helper. |
 | `src/lib/socket.js` | Socket.IO client setup and helpers for joining/leaving conversations and typing events. |
 | `src/pages/Auth` | Phone number entry, Google account linking, and Google sign-in screens. |
 | `src/pages/Onboarding` | Multi-step profile setup flow including Step 4 2-minute voice snippet recording. |
 | `src/pages/Discover` | Discover feed, profile search/filtering, deck/grid view modes (with `Invite Sent ✓` retention in grid view), and discover preferences. |
-| `src/pages/Matches` | Mutual connections carousel, Instagram-style floating Spark Notes (20-char limit, vertical multi-line stacking, interactive 1-tap note replies), 24h spark countdown ring, 3s long press voice playback, sound equalizer, and sent interests. |
+| `src/pages/Matches` | Mutual connections carousel, Instagram-style floating Spark Notes (20-char limit, vertical multi-line stacking, interactive 1-tap note replies), 24h spark countdown ring, 3s long press voice playback, sound equalizer, and sent interests. Injects tour demo items during guided walkthrough. |
 | `src/pages/Chat` | Chat list, conversation view, typing events, block/report actions. |
 | `src/pages/Profile`, `src/pages/ProfileDetail` | Own-profile view/editing, 2-minute voice intro management (play, 1-tap delete, re-record), and profile detail views. |
-| `src/pages/Settings` | Theme, accessibility, notification preferences, and account deletion. |
+| `src/pages/Settings` | Theme, accessibility, notification preferences, interactive app tour replay trigger, and account deletion. |
 | `src/pages/Safety` | Safety center, blocked users, report history, and support entry. |
 | `src/pages/Admin` | Admin dashboard, pending verification queue, and phone/audit history UI. |
+| `src/components/UI/FeatureTourGuide.jsx` | Multi-page 12-step interactive onboarding tour guide with transparent spotlight masks, keyboard trapping, smart viewport visibility, and account-scoped persistence. |
 | `src/components/UI/VoiceRecorder.jsx` | HTML5 MediaRecorder 2-minute voice snippet recorder component. |
 | `src/components/UI/PWAInstallModal.jsx` | PWA install prompt modal with custom pill-shaped action buttons. |
 | `src/components` | Shared UI and app components. |
@@ -275,12 +276,27 @@ Users can:
 - Custom PWA install prompt modal (`PWAInstallModal.jsx`) featuring redesigned pill-shaped **Install App** and **Not Now** action buttons.
 - Standalone offline manifest support (`public/manifest.json`).
 
+### Feature Tour Guide & Onboarding Walkthrough
+
+- **12-Step Guided Walkthrough**: Interactive multi-page tour orchestrating transitions across Discover (Story Deck & Actions), Matches (Mutual Connections, 2-Minute Voice Intros with live sound equalizer, Received Super Sparks, Sent Interests tracking), Private Chat, Real-Time Notifications, Public Profile & Bookmarks, and Safety Center.
+- **Crystal-Clear Targeted Spotlights**: Precise coordinate highlight masks with translucent backdrops, keeping targeted UI components 100% visible and uncluttered.
+- **Accessibility & Focus Trapping**: Fully compliant keyboard isolation (`Tab` / `Shift+Tab` cyclic trapping, `Escape` key skip) and auto-restoring focus to the triggering element upon exit.
+- **Smart Target Selection**: `findVisibleElement` ignores collapsed or off-screen viewport duplicates.
+- **Account-Scoped Persistence**: State tracked via `vh-tour-completed-${uid}` so new accounts and reset accounts experience the tour once, with on-demand replay available anytime under **Settings → Interactive App Tour**.
+
 ### Performance & Vercel Optimizations
 
-- **LCP Preloading**: `velvet-heart-logo.png` preloaded in `index.html` head (`<link rel="preload" as="image" href="/velvet-heart-logo.png" type="image/png" fetchpriority="high" />`). Primary profile card images set to `fetchpriority="high"` and `decoding="async"`.
+- **LCP Preloading & DNS Prefetch**: `velvet-heart-logo.png` preloaded in `index.html` head (`fetchpriority="high"`). DNS prefetch links for Firebase Auth and identity endpoints.
 - **Bundle Code Splitting**: Rollup `manualChunks` in `vite.config.js` (`vendor-react`, `vendor-icons`, `vendor-utils`) and route-level `React.lazy()` code splitting with `<Suspense>` fallbacks in `App.jsx`.
 - **Production Console Drop**: `esbuild: { drop: ['console', 'debugger'] }` strips logging statements in production builds to optimize main thread CPU performance.
-- **SEO & Search Indexing**: Canonical link (`https://velvethearts.app/`), OpenGraph 1200x630 sharing cards, Twitter Cards, `WebApplication` + `Organization` + `FAQPage` JSON-LD schemas, `public/robots.txt` (`Disallow: /api/`), and `public/sitemap.xml`.
+- **SEO & Search Indexing**:
+  - Full `<noscript>` fallback content in `index.html` allowing JS-disabled search engines to index platform features and FAQs.
+  - Dynamic `document.title` routing per active tab state.
+  - Multi-schema JSON-LD structured data (`WebApplication`, `Organization`, `FAQPage`, `BreadcrumbList`).
+  - Canonical links (`https://velvethearts.app/`), OpenGraph 1200x630 sharing cards, and Twitter summary cards.
+  - Expanded `public/sitemap.xml` with 8 crawlable routes and priority hierarchy.
+  - Crawler-friendly `public/robots.txt` with `Disallow: /assets/` and `Crawl-delay: 1`.
+  - Semantic HTML5 landmarks, section `id`s, `aria-labelledby`, and `aria-controls` bindings on Landing Page.
 
 ### Safety and settings
 
