@@ -17,7 +17,9 @@ import {
   ShieldCheck,
   Lightning,
   Microphone,
-  PaperPlaneTilt
+  PaperPlaneTilt,
+  EnvelopeSimple,
+  BookBookmark
 } from '@phosphor-icons/react';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 
@@ -43,7 +45,7 @@ export const FeatureTourGuide = () => {
   const dialogRef = useRef(null);
   const previouslyFocusedElementRef = useRef(null);
 
-  // 12-step multi-page tour sequence covering Discover, Matches suite, Chat, Notifications, Profile, and Safety
+  // 14-step multi-page tour sequence covering Discover, Matches suite, Chat, Rewind Letters, Our Diary, Notifications, Profile, and Safety
   const tourSteps = [
     {
       id: 'welcome',
@@ -128,6 +130,30 @@ export const FeatureTourGuide = () => {
       targetSelector: '.pending-section, .pending-profile-card',
       fallbackSelector: '[data-tour-nav="matches"]',
       preferredPlacement: 'top'
+    },
+    {
+      id: 'letters',
+      tab: 'chat',
+      badge: 'Rewind Letters',
+      badgeIcon: EnvelopeSimple,
+      badgeColor: '#D4AD6A',
+      title: 'Time-Capsule Rewind Letters',
+      subtitle: 'Write thoughtful, wax-sealed letters to your match that unlock on a future date you choose (7–90 days). A slow, romantic way to preserve words worth waiting for.',
+      targetSelector: '.chat-main-area, .chat-view-container, [data-tour-nav="chat"]',
+      fallbackSelector: '[data-tour-nav="chat"]',
+      preferredPlacement: 'bottom'
+    },
+    {
+      id: 'diary',
+      tab: 'chat',
+      badge: 'Our Diary & Memories',
+      badgeIcon: BookBookmark,
+      badgeColor: '#B8436A',
+      title: 'Our Shared Diary',
+      subtitle: 'A private physical journal shared with your match. Save favorite messages, voice notes, photos, and video memories with a page for every single day.',
+      targetSelector: '.chat-main-area, .chat-view-container, [data-tour-nav="chat"]',
+      fallbackSelector: '[data-tour-nav="chat"]',
+      preferredPlacement: 'bottom'
     },
     {
       id: 'chat',

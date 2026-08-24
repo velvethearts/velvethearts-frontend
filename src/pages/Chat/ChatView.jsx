@@ -420,7 +420,7 @@ const SwipeableMessageRow = ({ children, onReply, disabled, isUser, id, classNam
 };
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelectProfile }) => {
-  const { userProfile, connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages, notifications } = useApp();
+  const { userProfile, connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages, notifications, isFeatureTourActive } = useApp();
 
   const isUserOnline = (partner) => {
     if (!partner) return false;
@@ -928,8 +928,24 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     }
   }, [preselectedConnectionId]);
 
+  const DEMO_TOUR_PARTNER = {
+    id: 'demo-active-user-1',
+    userId: 'demo-active-user-1',
+    matchId: 'demo-match-1',
+    name: 'Elena',
+    age: 26,
+    gender: 'female',
+    city: 'San Francisco, CA',
+    verified: true,
+    photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+    story: 'Sound artist & vinyl collector. Looking for sincere conversations and shared playlists.',
+    matchedAt: new Date().toISOString()
+  };
+
   // All connections are valid chat partners
-  const chatPartners = connections;
+  const chatPartners = isFeatureTourActive && (!connections || connections.length === 0)
+    ? [DEMO_TOUR_PARTNER]
+    : connections;
 
   const activeMessagesRaw = activeChatId ? (
     chats[activeChatId] ||
