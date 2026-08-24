@@ -4363,6 +4363,13 @@ html {
 /* ==========================================================================
    MINI CALENDAR POPOVER (WITH MOMENT MARKINGS)
    ========================================================================== */
+.diary-calendar-dismiss-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: transparent;
+}
+
 .diary-calendar-popover {
   position: absolute;
   top: 58px;

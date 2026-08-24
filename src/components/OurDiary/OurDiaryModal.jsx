@@ -718,15 +718,21 @@ export const OurDiaryModal = ({
 
         {/* Interactive Mini Calendar Popover */}
         {showDateJump && (
-          <DiaryCalendarPopover
-            pages={pages}
-            currentPageIndex={currentPageIndex}
-            onSelectPage={(idx) => {
-              handleJumpToPage(idx);
-              setShowDateJump(false);
-            }}
-            onClose={() => setShowDateJump(false)}
-          />
+          <>
+            <div
+              className="diary-calendar-dismiss-layer"
+              onClick={() => setShowDateJump(false)}
+            />
+            <DiaryCalendarPopover
+              pages={pages}
+              currentPageIndex={currentPageIndex}
+              onSelectPage={(idx) => {
+                handleJumpToPage(idx);
+                setShowDateJump(false);
+              }}
+              onClose={() => setShowDateJump(false)}
+            />
+          </>
         )}
 
         {/* --- BOOK STAGE --- */}
