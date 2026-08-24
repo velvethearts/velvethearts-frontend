@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Heart, ChatCircleText, Sparkle, Lightning, Star, HandWaving, Coffee, Microphone, Play, Pause, NotePencil, PencilSimple } from '@phosphor-icons/react';
+import { Heart, ChatCircleText, Sparkle, Lightning, Star, HandWaving, Coffee, Microphone, Play, Pause, NotePencil, PencilSimple, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { Button } from '../../components/UI/Button';
@@ -76,6 +76,95 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
   const pendingInterests = isFeatureTourActive && rawPendingInterests.length === 0
     ? [DEMO_SENT_INTEREST]
     : rawPendingInterests;
+
+  // Pagination parameters (3 items per page for active/received, 4 items for sent)
+  const ACTIVE_PER_PAGE = 3;
+  const RECEIVED_PER_PAGE = 3;
+  const SENT_PER_PAGE = 4;
+
+  const [activeConnPage, setActiveConnPage] = useState(1);
+  const [receivedPage, setReceivedPage] = useState(1);
+  const [sentPage, setSentPage] = useState(1);
+
+  const totalActivePages = Math.ceil(activeConnections.length / ACTIVE_PER_PAGE) || 1;
+  const paginatedActiveConnections = activeConnections.slice(
+    (activeConnPage - 1) * ACTIVE_PER_PAGE,
+    activeConnPage * ACTIVE_PER_PAGE
+  );
+
+  const totalReceivedPages = Math.ceil(displayReceivedInvites.length / RECEIVED_PER_PAGE) || 1;
+  const paginatedReceivedInvites = displayReceivedInvites.slice(
+    (receivedPage - 1) * RECEIVED_PER_PAGE,
+    receivedPage * RECEIVED_PER_PAGE
+  );
+
+  const totalSentPages = Math.ceil(pendingInterests.length / SENT_PER_PAGE) || 1;
+  const paginatedSentInterests = pendingInterests.slice(
+    (sentPage - 1) * SENT_PER_PAGE,
+    sentPage * SENT_PER_PAGE
+  );
+
+  useEffect(() => {
+    if (activeConnPage > totalActivePages) setActiveConnPage(Math.max(1, totalActivePages));
+  }, [activeConnPage, totalActivePages]);
+
+  useEffect(() => {
+    if (receivedPage > totalReceivedPages) setReceivedPage(Math.max(1, totalReceivedPages));
+  }, [receivedPage, totalReceivedPages]);
+
+  useEffect(() => {
+    if (sentPage > totalSentPages) setSentPage(Math.max(1, totalSentPages));
+  }, [sentPage, totalSentPages]);
+
+  const renderPagination = (currentPage, totalPages, setPage) => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="section-pagination-bar font-ui">
+        <button
+          type="button"
+          className="section-page-nav-btn"
+          disabled={currentPage === 1}
+          onClick={() => {
+            triggerHaptic('selection');
+            setPage(p => Math.max(1, p - 1));
+          }}
+          aria-label="Previous page"
+        >
+          <CaretLeft size={14} weight="bold" />
+          <span>Previous</span>
+        </button>
+        <div className="section-page-dots">
+          {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(num => (
+            <button
+              key={num}
+              type="button"
+              className={`section-page-dot-btn ${num === currentPage ? 'active' : ''}`}
+              onClick={() => {
+                triggerHaptic('selection');
+                setPage(num);
+              }}
+              aria-label={`Go to page ${num}`}
+            >
+              {num}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="section-page-nav-btn"
+          disabled={currentPage === totalPages}
+          onClick={() => {
+            triggerHaptic('selection');
+            setPage(p => Math.min(totalPages, p + 1));
+          }}
+          aria-label="Next page"
+        >
+          <span>Next</span>
+          <CaretRight size={14} weight="bold" />
+        </button>
+      </div>
+    );
+  };
 
   // Spark Note Modal state
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -420,11 +509,41 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
       {/* Active Connections Section */}
       <section className="connections-section">
         <div className="section-group-header">
-          <h2 className="section-group-title font-ui">Active Connections ({activeConnections.length})</h2>
+          <h2 className="section-group-title font-ui" style={{ margin: 0 }}>Active Connections ({activeConnections.length})</h2>
+          {totalActivePages > 1 && (
+            <div className="section-header-pagination font-ui">
+              <button
+                type="button"
+                className="section-mini-nav-btn"
+                disabled={activeConnPage === 1}
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setActiveConnPage(p => Math.max(1, p - 1));
+                }}
+                title="Previous page"
+              >
+                <CaretLeft size={13} weight="bold" />
+              </button>
+              <span className="section-mini-page-text">{activeConnPage} / {totalActivePages}</span>
+              <button
+                type="button"
+                className="section-mini-nav-btn"
+                disabled={activeConnPage === totalActivePages}
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setActiveConnPage(p => Math.min(totalActivePages, p + 1));
+                }}
+                title="Next page"
+              >
+                <CaretRight size={13} weight="bold" />
+              </button>
+            </div>
+          )}
         </div>
         {activeConnections.length > 0 ? (
-          <div className="connections-grid">
-            {activeConnections.map(conn => {
+          <>
+            <div className="connections-grid">
+              {paginatedActiveConnections.map(conn => {
               const targetUserId = (typeof conn.userId === 'string' && conn.userId.trim()) || (typeof conn.id === 'string' && conn.id.trim()) || null;
               const isOnline = Boolean(
                 onlineUserIds &&
@@ -566,6 +685,8 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
               );
             })}
           </div>
+          {renderPagination(activeConnPage, totalActivePages, setActiveConnPage)}
+        </>
         ) : (
           <EmptyState
             title="A quiet space for mutual connections"
@@ -589,69 +710,103 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
       {/* Received Invites Section */}
       <section className="received-section border-top">
         <div className="section-group-header">
-          <h2 className="section-group-title font-ui">Received Invites ({displayReceivedInvites.length})</h2>
-          {displayReceivedInvites.length > 0 && displayReceivedInvites.some(i => i.isSuper || i.isSuperSpark) && (
-            <span className="vibe-badge-pill font-ui" style={{ borderColor: 'var(--gold-400)', color: 'var(--gold-400)' }}>
-              <Star size={12} weight="fill" color="var(--gold-400)" /> Priority Super Spark
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <h2 className="section-group-title font-ui" style={{ margin: 0 }}>Received Invites ({displayReceivedInvites.length})</h2>
+            {displayReceivedInvites.length > 0 && displayReceivedInvites.some(i => i.isSuper || i.isSuperSpark) && (
+              <span className="vibe-badge-pill font-ui" style={{ borderColor: 'var(--gold-400)', color: 'var(--gold-400)' }}>
+                <Star size={12} weight="fill" color="var(--gold-400)" /> Priority Super Spark
+              </span>
+            )}
+          </div>
+          {totalReceivedPages > 1 && (
+            <div className="section-header-pagination font-ui">
+              <button
+                type="button"
+                className="section-mini-nav-btn"
+                disabled={receivedPage === 1}
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setReceivedPage(p => Math.max(1, p - 1));
+                }}
+                title="Previous page"
+              >
+                <CaretLeft size={13} weight="bold" />
+              </button>
+              <span className="section-mini-page-text">{receivedPage} / {totalReceivedPages}</span>
+              <button
+                type="button"
+                className="section-mini-nav-btn"
+                disabled={receivedPage === totalReceivedPages}
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setReceivedPage(p => Math.min(totalReceivedPages, p + 1));
+                }}
+                title="Next page"
+              >
+                <CaretRight size={13} weight="bold" />
+              </button>
+            </div>
           )}
         </div>
         {displayReceivedInvites.length > 0 ? (
-          <div className="received-grid">
-            {displayReceivedInvites.map(profile => {
-              const isSuper = profile.isSuper || profile.isSuperSpark || profile.isSuperLike;
-              return (
-                <div
-                  key={profile.id}
-                  className={`received-profile-card ${isSuper ? 'is-super-spark' : ''}`}
-                  onClick={() => onSelectProfile(profile)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') onSelectProfile(profile);
-                  }}
-                >
-                  <div className="received-card-media">
-                    <ProtectedImage
-                      src={getProfilePhoto(profile)}
-                      alt={profile.name}
-                      className="received-card-image-wrap"
-                      imgClassName="received-card-image"
-                      style={{ width: '100%', height: '100%' }}
-                      fallbackSrc={getDefaultAvatar(profile?.gender)}
-                    />
-                    <div className="received-card-gradient" />
-                    {isSuper && (
-                      <div className="received-super-badge font-ui">
-                        <Star size={12} weight="fill" color="#1A1517" /> SUPER SPARK
-                      </div>
-                    )}
-                  </div>
-                  <div className="received-card-body font-ui">
-                    <div className="received-name-row">
-                      <h3 className="received-name font-display">{profile.name}</h3>
-                      <span className="received-age font-ui">, {profile.age}</span>
+          <>
+            <div className="received-grid">
+              {paginatedReceivedInvites.map(profile => {
+                const isSuper = profile.isSuper || profile.isSuperSpark || profile.isSuperLike;
+                return (
+                  <div
+                    key={profile.id}
+                    className={`received-profile-card ${isSuper ? 'is-super-spark' : ''}`}
+                    onClick={() => onSelectProfile(profile)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') onSelectProfile(profile);
+                    }}
+                  >
+                    <div className="received-card-media">
+                      <ProtectedImage
+                        src={getProfilePhoto(profile)}
+                        alt={profile.name}
+                        className="received-card-image-wrap"
+                        imgClassName="received-card-image"
+                        style={{ width: '100%', height: '100%' }}
+                        fallbackSrc={getDefaultAvatar(profile?.gender)}
+                      />
+                      <div className="received-card-gradient" />
+                      {isSuper && (
+                        <div className="received-super-badge font-ui">
+                          <Star size={12} weight="fill" color="#1A1517" /> SUPER SPARK
+                        </div>
+                      )}
                     </div>
-                    <p className="received-meta font-ui">{profile.city} {profile.relationshipIntent ? `• ${profile.relationshipIntent}` : ''}</p>
-                    {profile.story && (
-                      <p className="received-story font-body italic">&ldquo;{profile.story}&rdquo;</p>
-                    )}
-                    <Button
-                      variant="primary"
-                      className={`accept-invite-btn ${isSuper ? 'super-accept-btn' : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        sendInterest(profile.id);
-                      }}
-                    >
-                      {isSuper ? <Star size={16} weight="fill" /> : <Heart size={16} weight="fill" />}
-                      Accept & Connect
-                    </Button>
+                    <div className="received-card-body font-ui">
+                      <div className="received-name-row">
+                        <h3 className="received-name font-display">{profile.name}</h3>
+                        <span className="received-age font-ui">, {profile.age}</span>
+                      </div>
+                      <p className="received-meta font-ui">{profile.city} {profile.relationshipIntent ? `• ${profile.relationshipIntent}` : ''}</p>
+                      {profile.story && (
+                        <p className="received-story font-body italic">&ldquo;{profile.story}&rdquo;</p>
+                      )}
+                      <Button
+                        variant="primary"
+                        className={`accept-invite-btn ${isSuper ? 'super-accept-btn' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          sendInterest(profile.id);
+                        }}
+                      >
+                        {isSuper ? <Star size={16} weight="fill" /> : <Heart size={16} weight="fill" />}
+                        Accept & Connect
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+            {renderPagination(receivedPage, totalReceivedPages, setReceivedPage)}
+          </>
         ) : (
           <div className="empty-pending-wrap font-ui">
             <p className="no-pending-text font-body">
@@ -663,48 +818,82 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
       {/* Pending Sent Interests Section */}
       <section className="pending-section border-top">
-        <h2 className="section-group-title font-ui">Sent Interests ({pendingInterests.length})</h2>
+        <div className="section-group-header">
+          <h2 className="section-group-title font-ui" style={{ margin: 0 }}>Sent Interests ({pendingInterests.length})</h2>
+          {totalSentPages > 1 && (
+            <div className="section-header-pagination font-ui">
+              <button
+                type="button"
+                className="section-mini-nav-btn"
+                disabled={sentPage === 1}
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setSentPage(p => Math.max(1, p - 1));
+                }}
+                title="Previous page"
+              >
+                <CaretLeft size={13} weight="bold" />
+              </button>
+              <span className="section-mini-page-text">{sentPage} / {totalSentPages}</span>
+              <button
+                type="button"
+                className="section-mini-nav-btn"
+                disabled={sentPage === totalSentPages}
+                onClick={() => {
+                  triggerHaptic('selection');
+                  setSentPage(p => Math.min(totalSentPages, p + 1));
+                }}
+                title="Next page"
+              >
+                <CaretRight size={13} weight="bold" />
+              </button>
+            </div>
+          )}
+        </div>
         {pendingInterests.length > 0 ? (
-          <div className="pending-grid">
-            {pendingInterests.map(profile => {
-              const status = interestStatuses[profile.id];
-              const isSuper = profile.isSuper || profile.isSuperSpark || status === 'super';
-              return (
-                <div key={profile.id} className={`pending-profile-card ${isSuper ? 'is-super-sent' : ''}`}>
-                  <ProtectedImage
-                    src={getProfilePhoto(profile)}
-                    alt={profile.name}
-                    className="pending-avatar-img-wrap"
-                    imgClassName="pending-avatar-img"
-                    style={{ width: '60px', height: '60px', borderRadius: '50%' }}
-                    imgStyle={{ borderRadius: '50%' }}
-                    fallbackSrc={getDefaultAvatar(profile?.gender)}
-                  />
-                  <div className="pending-card-info font-ui">
-                    <div className="pending-name-row">
-                      <span className="pending-name font-display">{profile.name}</span>
-                      <span className="pending-age font-ui">, {profile.age}</span>
+          <>
+            <div className="pending-grid">
+              {paginatedSentInterests.map(profile => {
+                const status = interestStatuses[profile.id];
+                const isSuper = profile.isSuper || profile.isSuperSpark || status === 'super';
+                return (
+                  <div key={profile.id} className={`pending-profile-card ${isSuper ? 'is-super-sent' : ''}`}>
+                    <ProtectedImage
+                      src={getProfilePhoto(profile)}
+                      alt={profile.name}
+                      className="pending-avatar-img-wrap"
+                      imgClassName="pending-avatar-img"
+                      style={{ width: '60px', height: '60px', borderRadius: '50%' }}
+                      imgStyle={{ borderRadius: '50%' }}
+                      fallbackSrc={getDefaultAvatar(profile?.gender)}
+                    />
+                    <div className="pending-card-info font-ui">
+                      <div className="pending-name-row">
+                        <span className="pending-name font-display">{profile.name}</span>
+                        <span className="pending-age font-ui">, {profile.age}</span>
+                      </div>
+                      <p className="pending-meta">{profile.city}</p>
+                      <span className={`pending-status-badge font-ui ${isSuper ? 'status-super' : status === 'pending' ? 'status-review' : ''}`}>
+                        {isSuper ? 'SUPER SPARK SENT ⭐️' : status === 'pending' ? 'Pending Review...' : 'Interest Sent'}
+                      </span>
                     </div>
-                    <p className="pending-meta">{profile.city}</p>
-                    <span className={`pending-status-badge font-ui ${isSuper ? 'status-super' : status === 'pending' ? 'status-review' : ''}`}>
-                      {isSuper ? 'SUPER SPARK SENT ⭐️' : status === 'pending' ? 'Pending Review...' : 'Interest Sent'}
-                    </span>
+                    <Button
+                      variant="ghost"
+                      className="unsend-invite-btn font-ui"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        unsendInterest(profile.id, profile.name);
+                      }}
+                      title="Unsend invite"
+                    >
+                      Unsend
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    className="unsend-invite-btn font-ui"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      unsendInterest(profile.id, profile.name);
-                    }}
-                    title="Unsend invite"
-                  >
-                    Unsend
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+            {renderPagination(sentPage, totalSentPages, setSentPage)}
+          </>
         ) : (
           <div className="empty-pending-wrap font-ui">
             <p className="no-pending-text font-body">
@@ -1348,13 +1537,134 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           font-weight: 600;
         }
 
+        .section-group-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: var(--space-4);
+          gap: var(--space-3);
+        }
+
         .section-group-title {
           font-size: var(--text-body-sm);
           font-weight: bold;
           text-transform: uppercase;
           color: var(--text-muted);
           letter-spacing: var(--tracking-wide);
-          margin-bottom: var(--space-4);
+          margin-bottom: 0;
+        }
+
+        .section-header-pagination {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: var(--bg-surface);
+          border: 1px solid var(--border-default);
+          padding: 2px 6px;
+          border-radius: var(--radius-full);
+          box-shadow: var(--shadow-sm);
+        }
+
+        .section-mini-nav-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-secondary);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border-radius: var(--radius-full);
+          transition: all var(--duration-fast);
+        }
+
+        .section-mini-nav-btn:hover:not(:disabled) {
+          background: var(--bg-accent-subtle);
+          color: var(--text-primary);
+        }
+
+        .section-mini-nav-btn:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+        }
+
+        .section-mini-page-text {
+          font-size: 11.5px;
+          font-weight: 600;
+          color: var(--text-muted);
+          padding: 0 4px;
+        }
+
+        .section-pagination-bar {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          margin-top: var(--space-6);
+          padding-top: var(--space-2);
+        }
+
+        .section-page-nav-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 6px 14px;
+          background: var(--bg-surface);
+          border: 1px solid var(--border-default);
+          border-radius: var(--radius-full);
+          color: var(--text-secondary);
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+        }
+
+        .section-page-nav-btn:hover:not(:disabled) {
+          background: var(--bg-surface-warm);
+          border-color: var(--border-focus);
+          color: var(--text-primary);
+          transform: translateY(-1px);
+        }
+
+        .section-page-nav-btn:disabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+        }
+
+        .section-page-dots {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .section-page-dot-btn {
+          width: 28px;
+          height: 28px;
+          border-radius: var(--radius-full);
+          background: var(--bg-surface);
+          border: 1px solid var(--border-default);
+          color: var(--text-muted);
+          font-size: 12px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all var(--duration-fast);
+        }
+
+        .section-page-dot-btn:hover:not(.active) {
+          background: var(--bg-surface-warm);
+          color: var(--text-primary);
+          border-color: var(--border-subtle);
+        }
+
+        .section-page-dot-btn.active {
+          background: var(--burgundy-500, #b8334a);
+          border-color: var(--burgundy-400);
+          color: #ffffff;
+          box-shadow: 0 2px 8px rgba(184, 51, 74, 0.4);
         }
 
         .connections-section {
