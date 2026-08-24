@@ -4714,8 +4714,6 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 1800px;
-  transform-style: preserve-3d;
 }
 
 .diary-book-spine-center {
@@ -4750,6 +4748,14 @@ html {
   display: flex;
   flex-direction: column;
   transform-origin: left center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.diary-paper-page.flipping-next,
+.diary-paper-page.flipping-prev {
+  perspective: 1800px;
   transform-style: preserve-3d;
   backface-visibility: hidden;
 }
@@ -5696,6 +5702,56 @@ html {
 .diary-save-confirm-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Mobile Optimization for Our Diary */
+@media (max-width: 640px) {
+  .our-diary-container {
+    height: 96vh;
+    max-height: 96vh;
+    border-radius: 16px;
+  }
+
+  .our-diary-top-bar {
+    padding: 10px 12px;
+  }
+
+  .our-diary-brand span {
+    font-size: 15px;
+  }
+
+  .diary-top-action-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .our-diary-stage {
+    padding: 8px;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .diary-book-cover,
+  .diary-open-book-spread {
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+  }
+
+  .diary-paper-page {
+    border-radius: 6px 12px 12px 6px;
+  }
+
+  .diary-page-content {
+    padding: 14px 14px 10px;
+  }
+
+  .diary-page-date-text {
+    font-size: 17px;
+  }
+
+  .diary-moment-card {
+    padding: 10px 12px;
+  }
 }
 
 
