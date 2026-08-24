@@ -90,17 +90,19 @@ const DiaryAudioPlayer = ({ url }) => {
   );
 };
 
-export const OurDiaryModal = ({
-  isOpen,
-  onClose,
-  matchId,
-  partnerName,
-  partnerPhoto,
+export const OurDiaryModal = ({ 
+  isOpen, 
+  onClose, 
+  matchId, 
+  partnerName, 
+  partnerPhoto, 
   userName,
-  userPhoto
+  userPhoto 
 }) => {
   const { showAlert, showConfirm } = useApp();
   const [isBookOpen, setIsBookOpen] = useState(false);
+  const [isOpeningCover, setIsOpeningCover] = useState(false);
+  const [isClosingToCover, setIsClosingToCover] = useState(false);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
@@ -143,6 +145,8 @@ export const OurDiaryModal = ({
     if (isOpen && matchId) {
       fetchEntries();
       setIsBookOpen(false);
+      setIsOpeningCover(false);
+      setIsClosingToCover(false);
       setCurrentPageIndex(0);
     }
   }, [isOpen, matchId]);
@@ -244,31 +248,47 @@ export const OurDiaryModal = ({
   }, [isOpen, isBookOpen, showComposer, currentPageIndex, totalPages]);
 
   const handleOpenBook = () => {
-    setIsBookOpen(true);
-    // Jump straight to the most recent page (like a bookmark placed at the end)
-    const currentPages = groupEntriesIntoPages();
-    setCurrentPageIndex(Math.max(0, currentPages.length - 1));
+    if (isOpeningCover || isFlipping) return;
+    setIsOpeningCover(true);
+    setTimeout(() => {
+      setIsBookOpen(true);
+      setIsOpeningCover(false);
+      // Jump straight to the most recent page (like a bookmark placed at the end)
+      const currentPages = groupEntriesIntoPages();
+      setCurrentPageIndex(Math.max(0, currentPages.length - 1));
+    }, 350);
   };
 
   const handleNextPage = () => {
-    if (currentPageIndex < totalPages - 1 && !isFlipping) {
+    if (currentPageIndex < totalPages - 1 && !isFlipping && !isClosingToCover) {
       setFlipDirection('next');
       setIsFlipping(true);
       setTimeout(() => {
         setCurrentPageIndex(prev => prev + 1);
         setIsFlipping(false);
-      }, 300);
+      }, 350);
     }
   };
 
   const handlePrevPage = () => {
-    if (currentPageIndex > 0 && !isFlipping) {
+    if (isFlipping || isClosingToCover) return;
+    if (currentPageIndex === 0) {
+      // Flip back to Cover
+      setIsClosingToCover(true);
+      setFlipDirection('prev');
+      setIsFlipping(true);
+      setTimeout(() => {
+        setIsBookOpen(false);
+        setIsClosingToCover(false);
+        setIsFlipping(false);
+      }, 350);
+    } else {
       setFlipDirection('prev');
       setIsFlipping(true);
       setTimeout(() => {
         setCurrentPageIndex(prev => prev - 1);
         setIsFlipping(false);
-      }, 300);
+      }, 350);
     }
   };
 
@@ -350,22 +370,24 @@ export const OurDiaryModal = ({
     }
   };
 
-  const handleDeleteEntry = (entryId) => {
-    showConfirm({
+  const handleDeleteEntry = async (entryId) => {
+    const confirmed = await showConfirm({
       title: 'Delete from Our Diary?',
       message: 'This moment will be removed from your shared diary.',
-      confirmText: 'Delete',
+      okText: 'Delete',
       cancelText: 'Keep',
-      onConfirm: async () => {
-        try {
-          await api.deleteDiaryEntry(matchId, entryId);
-          await fetchEntries(true);
-        } catch (err) {
-          console.error('Failed to delete entry:', err);
-          if (showAlert) showAlert({ title: 'Delete Failed', message: err?.message || 'Failed to delete entry' });
-        }
-      }
+      variant: 'danger'
     });
+
+    if (confirmed) {
+      try {
+        await api.deleteDiaryEntry(matchId, entryId);
+        await fetchEntries(true);
+      } catch (err) {
+        console.error('Failed to delete entry:', err);
+        if (showAlert) showAlert({ title: 'Delete Failed', message: err?.message || 'Failed to delete entry' });
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -451,7 +473,7 @@ export const OurDiaryModal = ({
           {!isBookOpen ? (
             /* CLOSED BOOK COVER */
             <div
-              className="diary-book-cover"
+              className={`diary-book-cover ${isOpeningCover ? 'opening-cover' : ''}`}
               onClick={handleOpenBook}
               role="button"
               tabIndex={0}
@@ -488,7 +510,7 @@ export const OurDiaryModal = ({
               <div className="diary-book-spine-center" />
 
               {/* Physical Journal Page Frame */}
-              <div className={`diary-paper-page ${isFlipping ? `flipping-${flipDirection}` : ''}`}>
+              <div className={`diary-paper-page ${isFlipping ? `flipping-${flipDirection}` : ''} ${isClosingToCover ? 'closing-to-cover' : ''}`}>
                 {loading ? (
                   <div className="diary-page-loading font-ui">
                     <Sparkle size={24} className="spin" />
@@ -597,13 +619,18 @@ export const OurDiaryModal = ({
                                     className="diary-polaroid-img-wrap"
                                     imgClassName="diary-polaroid-img"
                                   />
+                                  {entry.caption && (
+                                    <p className="diary-polaroid-caption font-body">
+                                      {entry.caption}
+                                    </p>
+                                  )}
                                 </div>
                               )}
 
-                              {/* Optional Caption */}
-                              {entry.caption && (
-                                <div className="diary-moment-caption font-display">
-                                  &ldquo;{entry.caption}&rdquo;
+                              {/* Optional user-added caption for text/voice items */}
+                              {entry.sourceType !== 'IMAGE' && entry.caption && (
+                                <div className="diary-entry-caption font-body">
+                                  <span>{entry.caption}</span>
                                 </div>
                               )}
                             </div>
@@ -618,11 +645,11 @@ export const OurDiaryModal = ({
                         type="button"
                         className="diary-nav-arrow-btn"
                         onClick={handlePrevPage}
-                        disabled={currentPageIndex === 0 || isFlipping}
-                        aria-label="Previous page"
+                        disabled={isFlipping || isClosingToCover}
+                        aria-label={currentPageIndex === 0 ? "Back to cover" : "Previous page"}
                       >
                         <CaretLeft size={16} weight="bold" />
-                        <span>Prev</span>
+                        <span>{currentPageIndex === 0 ? 'Cover' : 'Prev'}</span>
                       </button>
 
                       <span className="diary-page-indicator font-display">
@@ -633,7 +660,7 @@ export const OurDiaryModal = ({
                         type="button"
                         className="diary-nav-arrow-btn"
                         onClick={handleNextPage}
-                        disabled={currentPageIndex >= totalPages - 1 || isFlipping}
+                        disabled={currentPageIndex >= totalPages - 1 || isFlipping || isClosingToCover}
                         aria-label="Next page"
                       >
                         <span>Next</span>

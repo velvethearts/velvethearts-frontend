@@ -4402,6 +4402,17 @@ html {
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
 }
 
+.our-diary-stage {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  perspective: 2000px;
+  transform-style: preserve-3d;
+}
+
 /* ==========================================================================
    CLOSED BOOK COVER
    ========================================================================== */
@@ -4412,12 +4423,18 @@ html {
   max-height: 600px;
   position: relative;
   cursor: pointer;
+  transform-origin: left center;
+  transform-style: preserve-3d;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
   user-select: none;
 }
 
 .diary-book-cover:hover {
   transform: translateY(-6px) scale(1.02);
+}
+
+.diary-book-cover.opening-cover {
+  animation: coverOpenFlip 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .diary-cover-spine {
@@ -4542,6 +4559,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
+  perspective: 2000px;
   transform-style: preserve-3d;
 }
 
@@ -4557,28 +4575,44 @@ html {
   position: relative;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
   transform-origin: left center;
+  transform-style: preserve-3d;
 }
 
 .diary-paper-page.flipping-next {
-  animation: pageTurnForward 0.3s ease-in-out;
+  animation: pageTurnForward 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .diary-paper-page.flipping-prev {
-  animation: pageTurnBackward 0.3s ease-in-out;
+  animation: pageTurnBackward 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.diary-paper-page.closing-to-cover {
+  animation: pageCloseToCover 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes coverOpenFlip {
+  0% { transform: rotateY(0deg) scale(1); opacity: 1; }
+  50% { transform: rotateY(-50deg) scale(0.97); opacity: 0.7; }
+  100% { transform: rotateY(-90deg) scale(0.95); opacity: 0; }
+}
+
+@keyframes pageCloseToCover {
+  0% { transform: rotateY(0deg) scale(1); opacity: 1; }
+  50% { transform: rotateY(45deg) scale(0.97); opacity: 0.7; }
+  100% { transform: rotateY(90deg) scale(0.95); opacity: 0; }
 }
 
 @keyframes pageTurnForward {
-  0% { transform: rotateY(0deg); opacity: 1; }
-  50% { transform: rotateY(-18deg) scale(0.98); opacity: 0.6; }
-  100% { transform: rotateY(0deg); opacity: 1; }
+  0% { transform: rotateY(0deg); opacity: 1; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5); }
+  50% { transform: rotateY(-40deg) scale(0.97) skewY(-2deg); opacity: 0.75; box-shadow: -15px 20px 40px rgba(0, 0, 0, 0.35); }
+  100% { transform: rotateY(0deg); opacity: 1; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5); }
 }
 
 @keyframes pageTurnBackward {
-  0% { transform: rotateY(0deg); opacity: 1; }
-  50% { transform: rotateY(18deg) scale(0.98); opacity: 0.6; }
-  100% { transform: rotateY(0deg); opacity: 1; }
+  0% { transform: rotateY(0deg); opacity: 1; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5); }
+  50% { transform: rotateY(40deg) scale(0.97) skewY(2deg); opacity: 0.75; box-shadow: 15px 20px 40px rgba(0, 0, 0, 0.35); }
+  100% { transform: rotateY(0deg); opacity: 1; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5); }
 }
 
 .diary-page-loading {
