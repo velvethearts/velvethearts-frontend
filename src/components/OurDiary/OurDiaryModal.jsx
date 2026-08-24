@@ -23,15 +23,18 @@ import { useApp } from '../../context/AppContext';
 import { ProtectedImage } from '../UI/ProtectedImage';
 import { getSocket } from '../../lib/socket';
 
-// In-Diary Voice Note Player
-const DiaryAudioPlayer = ({ url }) => {
+// Full waveform Voice Note Player (matching ChatView)
+const DiaryVoiceNotePlayer = ({ url, isUser }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const audioRef = useRef(null);
+  const waveformRef = useRef(null);
+  const isDraggingRef = useRef(false);
 
   const togglePlay = (e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     if (!audioRef.current) return;
     if (isPlaying) {
       audioRef.current.pause();
@@ -43,47 +46,161 @@ const DiaryAudioPlayer = ({ url }) => {
     }
   };
 
-  const formatTime = (secs) => {
-    if (!secs || isNaN(secs) || secs < 0) return '0:00';
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  const toggleSpeed = (e) => {
+    e.stopPropagation();
+    const nextRate = playbackRate === 1 ? 1.5 : playbackRate === 1.5 ? 2 : 1;
+    setPlaybackRate(nextRate);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = nextRate;
+    }
   };
 
+  const handleTimeUpdate = () => {
+    if (audioRef.current && !isDraggingRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+      if (audioRef.current.duration && isFinite(audioRef.current.duration) && audioRef.current.duration > 0) {
+        setDuration(audioRef.current.duration);
+      }
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (!audioRef.current) return;
+    audioRef.current.playbackRate = playbackRate;
+    const d = audioRef.current.duration;
+    if (d && isFinite(d) && d > 0) {
+      setDuration(d);
+    } else {
+      try {
+        audioRef.current.currentTime = 1e101;
+        audioRef.current.ontimeupdate = function () {
+          this.ontimeupdate = handleTimeUpdate;
+          const realDur = this.currentTime;
+          this.currentTime = 0;
+          if (realDur && isFinite(realDur) && realDur > 0) {
+            setDuration(realDur);
+          }
+        };
+      } catch (err) {
+        console.warn('WebM duration fallback:', err);
+      }
+    }
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+  };
+
+  const seekFromPointer = (e) => {
+    if (!waveformRef.current || !audioRef.current) return;
+    let validDuration = duration;
+    if (!validDuration || !isFinite(validDuration) || validDuration <= 0) {
+      if (audioRef.current.duration && isFinite(audioRef.current.duration) && audioRef.current.duration > 0) {
+        validDuration = audioRef.current.duration;
+      }
+    }
+
+    const rect = waveformRef.current.getBoundingClientRect();
+    const clickX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const pct = clickX / rect.width;
+
+    if (validDuration && isFinite(validDuration) && validDuration > 0) {
+      const newTime = pct * validDuration;
+      setCurrentTime(newTime);
+      try {
+        audioRef.current.currentTime = newTime;
+      } catch (err) {
+        console.warn('Audio seek error:', err);
+      }
+    }
+  };
+
+  const handlePointerDown = (e) => {
+    e.stopPropagation();
+    isDraggingRef.current = true;
+    seekFromPointer(e);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
+
+  const handlePointerMove = (e) => {
+    if (isDraggingRef.current) {
+      seekFromPointer(e);
+    }
+  };
+
+  const handlePointerUp = () => {
+    isDraggingRef.current = false;
+    window.removeEventListener('pointermove', handlePointerMove);
+    window.removeEventListener('pointerup', handlePointerUp);
+  };
+
+  const formatAudioTime = (sec) => {
+    if (isNaN(sec) || !isFinite(sec)) return '0:00';
+    const mins = Math.floor(sec / 60);
+    const secs = Math.floor(sec % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const waveformHeights = [35, 55, 85, 45, 95, 65, 35, 75, 100, 55, 85, 40, 70, 90, 45, 60, 80, 35, 95, 50, 75, 30, 65, 40, 75, 45];
+
   return (
-    <div className="diary-audio-player" onClick={(e) => e.stopPropagation()}>
+    <div className={`voice-note-player font-ui ${isUser ? 'user-voice' : 'partner-voice'}`} onClick={(e) => e.stopPropagation()}>
       <audio
         ref={audioRef}
         src={url}
-        onPlay={() => setIsPlaying(true)}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        onPlay={() => {
+          setIsPlaying(true);
+          if (audioRef.current) audioRef.current.playbackRate = playbackRate;
+        }}
         onPause={() => setIsPlaying(false)}
-        onTimeUpdate={() => {
-          if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
-        }}
-        onLoadedMetadata={() => {
-          if (audioRef.current && isFinite(audioRef.current.duration)) {
-            setDuration(audioRef.current.duration);
-          }
-        }}
-        onEnded={() => {
-          setIsPlaying(false);
-          setCurrentTime(0);
-        }}
         preload="metadata"
       />
-      <button type="button" className="diary-audio-play-btn" onClick={togglePlay} aria-label={isPlaying ? "Pause" : "Play"}>
-        {isPlaying ? <Pause size={14} weight="fill" /> : <Play size={14} weight="fill" />}
+      <button
+        type="button"
+        onClick={togglePlay}
+        className="voice-play-btn"
+        aria-label={isPlaying ? 'Pause Voice Note' : 'Play Voice Note'}
+      >
+        {isPlaying ? <Pause size={16} weight="fill" /> : <Play size={16} weight="fill" />}
       </button>
-      <div className="diary-audio-waveform">
-        <div className="diary-audio-progress-bar">
-          <div
-            className="diary-audio-progress-fill"
-            style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
-          />
+
+      <div className="voice-player-track">
+        <div
+          ref={waveformRef}
+          onPointerDown={handlePointerDown}
+          className="voice-waveform-visual"
+          title="Click or drag to seek"
+        >
+          {waveformHeights.map((heightPct, idx) => {
+            const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
+            const barPct = (idx / waveformHeights.length) * 100;
+            const isPlayed = barPct <= progressPct;
+
+            return (
+              <span
+                key={idx}
+                className={`waveform-bar ${isPlayed ? 'played' : ''}`}
+                style={{ height: `${heightPct}%` }}
+              />
+            );
+          })}
         </div>
-        <div className="diary-audio-times">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
+
+        <div className="voice-timer-row font-ui">
+          <span>{isPlaying || currentTime > 0 ? formatAudioTime(currentTime) : (duration ? formatAudioTime(duration) : '0:00')}</span>
+          <button
+            type="button"
+            onClick={toggleSpeed}
+            className={`voice-speed-btn ${playbackRate > 1 ? 'active-speed' : ''}`}
+            title="Toggle playback speed (1x, 1.5x, 2x)"
+          >
+            {playbackRate}x
+          </button>
         </div>
       </div>
     </div>
@@ -397,17 +514,19 @@ export const OurDiaryModal = ({
       <div className="our-diary-container">
         {/* Header Controls */}
         <div className="our-diary-top-bar">
-          <div className="our-diary-badge font-display">
-            <Sparkle size={16} weight="fill" className="diary-sparkle-gold" />
-            <span>Sweet Moments</span>
+          <div className="our-diary-top-left">
+            <span className="our-diary-header-badge font-display">
+              <Sparkle size={15} weight="fill" />
+              <span>Sweet Moments</span>
+            </span>
           </div>
 
-          <div className="our-diary-actions">
+          <div className="our-diary-top-right">
             {isBookOpen && (
               <>
                 <button
                   type="button"
-                  className="diary-action-btn diary-btn-secondary font-ui"
+                  className="diary-top-action-btn font-ui"
                   onClick={() => setShowDateJump(prev => !prev)}
                   title="Jump to date"
                   aria-label="Jump to date"
@@ -418,7 +537,7 @@ export const OurDiaryModal = ({
 
                 <button
                   type="button"
-                  className="diary-action-btn diary-btn-primary font-ui"
+                  className="diary-top-action-btn primary font-ui"
                   onClick={() => {
                     setShowComposer(true);
                     setComposerError(null);
@@ -432,11 +551,11 @@ export const OurDiaryModal = ({
 
             <button
               type="button"
-              className="diary-close-btn"
+              className="our-diary-close-btn"
               onClick={onClose}
               aria-label="Close Our Diary"
             >
-              <X size={20} />
+              <X size={18} weight="bold" />
             </button>
           </div>
         </div>
@@ -554,10 +673,7 @@ export const OurDiaryModal = ({
                               {/* 2. VOICE NOTE */}
                               {entry.sourceType === 'VOICE_NOTE' && (
                                 <div className="diary-entry-voice-box">
-                                  <div className="diary-voice-label font-ui">
-                                    <span>Voice Message</span>
-                                  </div>
-                                  <DiaryAudioPlayer url={entry.attachmentUrl} />
+                                  <DiaryVoiceNotePlayer url={entry.attachmentUrl} isUser={isUserSaved} />
                                 </div>
                               )}
 
