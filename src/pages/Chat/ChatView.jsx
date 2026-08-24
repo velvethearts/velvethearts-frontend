@@ -570,7 +570,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     try {
       setIsSavingToDiary(true);
       const firstAtt = savingToDiaryMsg.attachments?.[0];
-      const res = await api.saveMessageToDiary(
+      await api.saveMessageToDiary(
         targetMatchId,
         savingToDiaryMsg.id,
         diarySaveCaption.trim() || undefined,
@@ -580,13 +580,9 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           sourceType: firstAtt?.fileType === 'AUDIO' ? 'VOICE_NOTE' : firstAtt?.fileType === 'IMAGE' ? 'IMAGE' : 'MESSAGE',
         }
       );
-      if (res && res.success) {
-        setSavingToDiaryMsg(null);
-        setDiarySaveCaption('');
-        if (showAlert) showAlert({ title: 'Saved to Our Diary ✨', message: 'This moment has been added to your shared scrapbook.' });
-      } else {
-        if (showAlert) showAlert({ title: 'Save Failed', message: res?.message || 'Failed to save moment to diary.' });
-      }
+      setSavingToDiaryMsg(null);
+      setDiarySaveCaption('');
+      if (showAlert) showAlert({ title: 'Saved to Our Diary ✨', message: 'This moment has been added to your shared scrapbook.' });
     } catch (err) {
       console.error('Error saving message to diary:', err);
       if (showAlert) showAlert({ title: 'Save Failed', message: err?.message || 'Failed to save moment to diary.' });
