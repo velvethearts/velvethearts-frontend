@@ -370,9 +370,13 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const [letterStatus, setLetterStatus] = useState(null);
   const [deliveredLetter, setDeliveredLetter] = useState(null);
   const [showRewindCompose, setShowRewindCompose] = useState(false);
+  const [composeMode, setComposeMode] = useState('create'); // 'create' | 'edit' | 'reschedule'
   const [showRewindVault, setShowRewindVault] = useState(false);
-  const [isReschedulingRewind, setIsReschedulingRewind] = useState(false);
   const [isRewindDismissed, setIsRewindDismissed] = useState(false);
+
+  const isMyLetterEditable = letterStatus?.myLetter?.status === 'SEALED' && letterStatus?.myLetter?.createdAt
+    ? (Date.now() - new Date(letterStatus.myLetter.createdAt).getTime()) <= 48 * 60 * 60 * 1000
+    : false;
 
   // Message Reply State & Helpers
   const [replyingTo, setReplyingTo] = useState(null);
@@ -791,11 +795,19 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
       }
     };
 
+    const handleLetterDeleted = (data) => {
+      if (data?.matchId === activeMatchId) {
+        fetchLetterData();
+      }
+    };
+
     socket.on('rewind_letter_delivered', handleLetterDelivered);
     socket.on('rewind_letter_sealed', handleLetterSealed);
+    socket.on('rewind_letter_deleted', handleLetterDeleted);
     return () => {
       socket.off('rewind_letter_delivered', handleLetterDelivered);
       socket.off('rewind_letter_sealed', handleLetterSealed);
+      socket.off('rewind_letter_deleted', handleLetterDeleted);
     };
   }, [activeMatchId]);
 
@@ -806,6 +818,32 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
       } catch (e) { }
     }
     setIsRewindDismissed(true);
+  };
+
+  const handleDeleteRewindLetter = async () => {
+    if (!activeMatchId) return;
+    const confirmed = await showConfirm({
+      title: 'Delete Rewind Letter',
+      message: `Are you sure you want to delete your sealed letter for ${activePartner.name}? This will permanently remove it from the vault and cannot be undone.`,
+      confirmText: 'Delete Letter',
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    try {
+      await api.deleteRewindLetter(activeMatchId);
+      setLetterStatus(prev => ({ ...prev, myLetter: null }));
+      fetchLetterData();
+      showAlert({
+        title: 'Letter Deleted',
+        message: 'Your Rewind Letter has been successfully removed.',
+      });
+    } catch (err) {
+      showAlert({
+        title: 'Delete Failed',
+        message: err?.message || 'Could not delete letter. Please try again.',
+      });
+    }
   };
 
   // Listen for real-time typing events via socket
@@ -1063,10 +1101,10 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                         <button
                           type="button"
                           className="rewind-header-badge clickable"
-                          title="Both letters sealed! Click to reschedule your unlock date."
+                          title="Both letters sealed! Click to edit or reschedule."
                           onClick={(e) => {
                             e.stopPropagation();
-                            setIsReschedulingRewind(true);
+                            setComposeMode(isMyLetterEditable ? 'edit' : 'reschedule');
                             setShowRewindCompose(true);
                           }}
                         >
@@ -1077,10 +1115,10 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                         <button
                           type="button"
                           className="rewind-header-badge clickable"
-                          title={`Your Rewind Letter for ${activePartner.name} is sealed. Click to edit unlock date.`}
+                          title={`Your Rewind Letter for ${activePartner.name} is sealed. Click to ${isMyLetterEditable ? 'edit' : 'reschedule'}.`}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setIsReschedulingRewind(true);
+                            setComposeMode(isMyLetterEditable ? 'edit' : 'reschedule');
                             setShowRewindCompose(true);
                           }}
                         >
@@ -1115,7 +1153,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                         <button
                           onClick={() => {
                             setShowDropdown(false);
-                            setIsReschedulingRewind(false);
+                            setComposeMode('create');
                             setShowRewindCompose(true);
                           }}
                           role="menuitem"
@@ -1125,11 +1163,25 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                           <span>Write Rewind Letter</span>
                         </button>
                       )}
-                      {notifications?.rewindLettersEnabled !== false && letterStatus?.myLetter?.status === 'SEALED' && (
+                      {notifications?.rewindLettersEnabled !== false && letterStatus?.myLetter?.status === 'SEALED' && isMyLetterEditable && (
                         <button
                           onClick={() => {
                             setShowDropdown(false);
-                            setIsReschedulingRewind(true);
+                            setComposeMode('edit');
+                            setShowRewindCompose(true);
+                          }}
+                          role="menuitem"
+                          className="dropdown-item"
+                        >
+                          <PencilSimple size={16} />
+                          <span>Edit Rewind Letter</span>
+                        </button>
+                      )}
+                      {notifications?.rewindLettersEnabled !== false && letterStatus?.myLetter?.status === 'SEALED' && !isMyLetterEditable && (
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            setComposeMode('reschedule');
                             setShowRewindCompose(true);
                           }}
                           role="menuitem"
@@ -1137,6 +1189,19 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                         >
                           <Clock size={16} />
                           <span>Reschedule Rewind Letter</span>
+                        </button>
+                      )}
+                      {letterStatus?.myLetter?.status === 'SEALED' && (
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            handleDeleteRewindLetter();
+                          }}
+                          role="menuitem"
+                          className="dropdown-item danger"
+                        >
+                          <Trash size={16} />
+                          <span>Delete Rewind Letter</span>
                         </button>
                       )}
                       {(letterStatus?.myLetter || letterStatus?.receivedLetter || deliveredLetter) && (
@@ -1682,7 +1747,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   matchId={activeMatchId}
                   partnerName={activePartner?.name}
                   isOpen={showRewindCompose}
-                  isReschedule={isReschedulingRewind}
+                  mode={composeMode}
+                  initialContent={letterStatus?.myLetter?.content || ''}
                   initialDays={
                     letterStatus?.myLetter?.deliverAfter && activePartner?.createdAt
                       ? Math.max(7, Math.min(90, Math.round((new Date(letterStatus.myLetter.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
@@ -1690,11 +1756,16 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   }
                   onClose={() => {
                     setShowRewindCompose(false);
-                    setIsReschedulingRewind(false);
+                    setComposeMode('create');
                   }}
                   onSuccess={(sealedLetter) => {
                     fetchLetterData();
-                    if (isReschedulingRewind) {
+                    if (composeMode === 'edit') {
+                      showAlert({
+                        title: 'Letter Updated ✉️',
+                        message: `Your changes to the Rewind Letter have been saved.`,
+                      });
+                    } else if (composeMode === 'reschedule') {
                       showAlert({
                         title: 'Schedule Updated ✉️',
                         message: `The delivery timeframe for your Rewind Letter has been successfully updated.`,
@@ -1705,6 +1776,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                         myLetter: {
                           id: sealedLetter?.id,
                           status: sealedLetter?.status || 'SEALED',
+                          content: sealedLetter?.content,
                           deliverAfter: sealedLetter?.deliverAfter,
                           createdAt: new Date().toISOString()
                         }
@@ -1727,13 +1799,18 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   letterStatus={letterStatus}
                   deliveredLetter={deliveredLetter}
                   onOpenCompose={() => {
-                    setIsReschedulingRewind(false);
+                    setComposeMode('create');
+                    setShowRewindCompose(true);
+                  }}
+                  onOpenEdit={(letter) => {
+                    setComposeMode('edit');
                     setShowRewindCompose(true);
                   }}
                   onOpenReschedule={() => {
-                    setIsReschedulingRewind(true);
+                    setComposeMode('reschedule');
                     setShowRewindCompose(true);
                   }}
+                  onDeleteLetter={handleDeleteRewindLetter}
                 />
               )}
             </div>

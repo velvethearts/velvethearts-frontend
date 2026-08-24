@@ -9,8 +9,11 @@ import {
   Clock,
   PencilSimple,
   CalendarBlank,
-  PaperPlaneTilt
+  PaperPlaneTilt,
+  Trash
 } from '@phosphor-icons/react';
+
+const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
 
 export const RewindLetterVaultModal = ({
   isOpen,
@@ -19,7 +22,9 @@ export const RewindLetterVaultModal = ({
   letterStatus,
   deliveredLetter,
   onOpenCompose,
-  onOpenReschedule
+  onOpenEdit,
+  onOpenReschedule,
+  onDeleteLetter,
 }) => {
   const [activeTab, setActiveTab] = useState('received'); // 'received' | 'sent'
 
@@ -58,6 +63,10 @@ export const RewindLetterVaultModal = ({
 
   const myLetter = letterStatus?.myLetter;
   const receivedLetter = deliveredLetter || (letterStatus?.receivedLetter?.status === 'SEALED' ? letterStatus.receivedLetter : null);
+
+  const isEditable = myLetter?.status === 'SEALED' && myLetter?.createdAt
+    ? (Date.now() - new Date(myLetter.createdAt).getTime()) <= FORTY_EIGHT_HOURS_MS
+    : false;
 
   const formatDeliveredDate = (dateStr) => {
     if (!dateStr) return 'Recently';
@@ -201,10 +210,10 @@ export const RewindLetterVaultModal = ({
                     {partnerName} Sealed a Rewind Letter
                   </h4>
                   <p className="rewind-vault-sealed-desc font-body">
-                    This time-capsule letter was written when you first connected. It is safely encrypted in the Velvet Hearts vault and will automatically unlock after the scheduled timeframe or 50 messages.
+                    This time-capsule letter was written when you first connected. It is safely encrypted in the Velvet Hearts vault and will automatically unlock on its scheduled delivery date.
                   </p>
                   <div className="rewind-vault-sealed-hint font-ui">
-                    🔒 Keep chatting to unlock this letter sooner!
+                    🔒 Scheduled to unlock: {formatDeliveredDate(letterStatus.receivedLetter.deliverAfter)}
                   </div>
                 </div>
               ) : (
@@ -249,20 +258,48 @@ export const RewindLetterVaultModal = ({
                       <div className="rewind-vault-reschedule-info">
                         <Clock size={16} weight="duotone" />
                         <span className="font-ui">
-                          Unlocks on {formatDeliveredDate(myLetter.deliverAfter)} (or 50 messages)
+                          Unlocks on {formatDeliveredDate(myLetter.deliverAfter)}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        className="rewind-vault-reschedule-btn font-ui"
-                        onClick={() => {
-                          onClose();
-                          if (onOpenReschedule) onOpenReschedule();
-                        }}
-                      >
-                        <PencilSimple size={14} weight="bold" />
-                        <span>Adjust Days</span>
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {isEditable ? (
+                          <button
+                            type="button"
+                            className="rewind-vault-reschedule-btn font-ui"
+                            onClick={() => {
+                              onClose();
+                              if (onOpenEdit) onOpenEdit(myLetter);
+                            }}
+                          >
+                            <PencilSimple size={14} weight="bold" />
+                            <span>Edit Note</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="rewind-vault-reschedule-btn font-ui"
+                            onClick={() => {
+                              onClose();
+                              if (onOpenReschedule) onOpenReschedule();
+                            }}
+                          >
+                            <Clock size={14} weight="bold" />
+                            <span>Adjust Days</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          className="rewind-vault-delete-btn font-ui"
+                          title="Delete / Unsend Letter"
+                          onClick={() => {
+                            if (onDeleteLetter) onDeleteLetter();
+                          }}
+                        >
+                          <Trash size={14} weight="bold" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -270,7 +307,9 @@ export const RewindLetterVaultModal = ({
                     <span>
                       {myLetter.status === 'DELIVERED'
                         ? `Delivered to ${partnerName}'s chat and vault.`
-                        : `Safely locked until delivery criteria are met.`}
+                        : isEditable
+                        ? `48-hour edit window active. You can edit or delete this letter.`
+                        : `Content locked in vault. Delivery timeframe can still be adjusted.`}
                     </span>
                   </div>
                 </div>

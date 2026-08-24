@@ -158,7 +158,7 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
             {isOpen
               ? 'Tap to collapse'
               : isSealed
-              ? 'Sealed in a time capsule • Unlocks after 7 days or 50 messages'
+              ? 'Sealed in a time capsule • Unlocks on scheduled delivery date'
               : !hasEverOpened
               ? 'A sealed time capsule has arrived for you • Tap to unseal & read'
               : 'Sealed time capsule written when you connected • Tap to re-read'}
@@ -186,11 +186,11 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
               </div>
               <div className="rewind-unfolded-body">
                 <p className="rewind-unfolded-text font-body" style={{ fontStyle: 'normal' }}>
-                  {author} tucked away a private letter when you first matched. It is safely locked in the Velvet Hearts vault and will automatically unlock after <strong>7 days</strong> or <strong>50 messages</strong>.
+                  {author} tucked away a private letter when you first matched. It is safely locked in the Velvet Hearts vault and will automatically unlock on its scheduled delivery date.
                 </p>
               </div>
               <div className="rewind-unfolded-footer font-ui">
-                <span>Keep chatting to unlock this time capsule sooner!</span>
+                <span>A private thought preserved from the beginning of your connection.</span>
               </div>
             </div>
           ) : (

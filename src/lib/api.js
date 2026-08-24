@@ -224,6 +224,19 @@ export const api = {
         });
     },
 
+    editRewindLetter(matchId, content, deliveryDays) {
+        return request(`/api/v1/rewind-letter/${matchId}`, {
+            method: 'PUT',
+            body: { content, deliveryDays }
+        });
+    },
+
+    deleteRewindLetter(matchId) {
+        return request(`/api/v1/rewind-letter/${matchId}`, {
+            method: 'DELETE'
+        });
+    },
+
     updateRewindLetterSchedule(matchId, deliveryDays) {
         return request(`/api/v1/rewind-letter/${matchId}/schedule`, {
             method: 'PATCH',

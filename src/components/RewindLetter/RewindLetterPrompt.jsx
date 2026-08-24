@@ -12,7 +12,7 @@ export const RewindLetterPrompt = ({ onCompose, onDismiss, partnerName }) => {
           Write a Rewind Letter for {partnerName || 'your match'}
         </div>
         <div className="rewind-prompt-desc">
-          Capture your first impressions in a private time capsule. It stays sealed and unlocks after 7 days or 50 messages.
+          Capture your first impressions in a private time capsule. It stays sealed until your chosen unlock date.
         </div>
         <div className="rewind-prompt-actions">
           <button

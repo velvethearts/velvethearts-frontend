@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { EnvelopeSimple, LockKey, Calendar, X, WarningCircle, Clock } from '@phosphor-icons/react';
+import React, { useState, useEffect } from 'react';
+import { EnvelopeSimple, LockKey, Calendar, X, WarningCircle, Clock, PencilSimple } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
 
 const MAX_CHARS = 500;
@@ -13,13 +13,25 @@ export const RewindLetterCompose = ({
   isOpen,
   onClose,
   onSuccess,
-  isReschedule = false,
+  mode = 'create', // 'create' | 'edit' | 'reschedule'
+  initialContent = '',
   initialDays = 7,
 }) => {
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(initialContent);
   const [deliveryDays, setDeliveryDays] = useState(initialDays);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  const isReschedule = mode === 'reschedule';
+  const isEdit = mode === 'edit';
+
+  useEffect(() => {
+    if (isOpen) {
+      setContent(initialContent || '');
+      setDeliveryDays(initialDays || 7);
+      setError('');
+    }
+  }, [isOpen, initialContent, initialDays]);
 
   if (!isOpen) return null;
 
@@ -38,6 +50,10 @@ export const RewindLetterCompose = ({
     try {
       if (isReschedule) {
         const res = await api.updateRewindLetterSchedule(matchId, Number(deliveryDays));
+        if (onSuccess) onSuccess(res?.data || res);
+        onClose();
+      } else if (isEdit) {
+        const res = await api.editRewindLetter(matchId, content.trim(), Number(deliveryDays));
         if (onSuccess) onSuccess(res?.data || res);
         onClose();
       } else {
@@ -59,16 +75,28 @@ export const RewindLetterCompose = ({
       <div className="rewind-modal-card">
         <div className="rewind-modal-header">
           <div className="rewind-modal-header-icon">
-            {isReschedule ? <Clock size={24} weight="duotone" /> : <EnvelopeSimple size={24} weight="duotone" />}
+            {isReschedule ? (
+              <Clock size={24} weight="duotone" />
+            ) : isEdit ? (
+              <PencilSimple size={24} weight="duotone" />
+            ) : (
+              <EnvelopeSimple size={24} weight="duotone" />
+            )}
           </div>
           <div>
             <h3 id="rewind-modal-title" className="rewind-modal-title">
-              {isReschedule ? `Reschedule Letter for ${partnerName || 'your match'}` : `Rewind Letter for ${partnerName || 'your match'}`}
+              {isReschedule
+                ? `Reschedule Letter for ${partnerName || 'your match'}`
+                : isEdit
+                ? `Edit Rewind Letter for ${partnerName || 'your match'}`
+                : `Rewind Letter for ${partnerName || 'your match'}`}
             </h3>
             <p className="rewind-modal-subtitle">
               {isReschedule
                 ? `Choose when your sealed letter will unlock (between ${MIN_DAYS} and ${MAX_DAYS} days).`
-                : `A private message sealed until ${deliveryDays} days or 50 messages pass.`}
+                : isEdit
+                ? `Edit your message or unlock timeframe within the 48-hour window.`
+                : `A private message sealed until ${deliveryDays} days pass.`}
             </p>
           </div>
           <button
@@ -88,11 +116,15 @@ export const RewindLetterCompose = ({
             <span>
               {isReschedule ? (
                 <>
-                  <strong>Adjust unlock timeframe:</strong> Set how long your letter remains sealed. It will unlock after <strong>{deliveryDays} days</strong> of matching or <strong>50 messages</strong>.
+                  <strong>Adjust unlock timeframe:</strong> Set how long your letter remains sealed. It will unlock after <strong>{deliveryDays} days</strong> of matching.
+                </>
+              ) : isEdit ? (
+                <>
+                  <strong>48-hour edit window:</strong> You can refine your message or adjust unlock days. Once the 48-hour window closes, this letter will be permanently locked in the time capsule.
                 </>
               ) : (
                 <>
-                  <strong>Sealed upon sending:</strong> Once sealed, this letter cannot be edited, unsent, or previewed. It will be delivered privately to {partnerName || 'your match'} after {deliveryDays} days or 50 messages.
+                  <strong>48-hour grace edit window:</strong> Once sealed, you can edit or delete this letter within 48 hours. After 48 hours, it is permanently locked until delivery ({deliveryDays} days from matching).
                 </>
               )}
             </span>
@@ -183,7 +215,12 @@ export const RewindLetterCompose = ({
               disabled={!isValid || isSubmitting}
             >
               {isSubmitting ? (
-                <span>{isReschedule ? 'Saving...' : 'Sealing...'}</span>
+                <span>{isEdit ? 'Saving...' : isReschedule ? 'Updating...' : 'Sealing...'}</span>
+              ) : isEdit ? (
+                <>
+                  <PencilSimple size={18} weight="bold" />
+                  <span>Save Changes</span>
+                </>
               ) : isReschedule ? (
                 <>
                   <Clock size={18} weight="bold" />

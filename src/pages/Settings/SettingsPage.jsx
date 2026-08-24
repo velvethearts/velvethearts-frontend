@@ -298,7 +298,7 @@ export const SettingsPage = () => {
             <div className="option-item">
               <div className="option-text">
                 <span className="option-label">Rewind Letters</span>
-                <span className="option-desc">Write private time-capsule letters to matches delivered after 7 days or 50 messages</span>
+                <span className="option-desc">Write private time-capsule letters to matches delivered on your chosen unlock date (7–90 days)</span>
               </div>
               <label className="toggle-switch">
                 <input
