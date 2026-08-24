@@ -11,13 +11,14 @@ import {
   PencilSimple,
   CaretLeft,
   CaretRight,
-  Sparkle
+  Check
 } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
 
 const MAX_CHARS = 500;
 const MIN_DAYS = 7;
 const MAX_DAYS = 90;
+const PRESET_DAYS = [7, 14, 30, 60, 90];
 const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -37,6 +38,8 @@ export const RewindLetterCompose = ({
   letterCreatedAt = null,
 }) => {
   const [content, setContent] = useState('');
+  const [deliveryDays, setDeliveryDays] = useState(7);
+  const [showCalendarOverlay, setShowCalendarOverlay] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -78,18 +81,12 @@ export const RewindLetterCompose = ({
   const [viewYear, setViewYear] = useState(() => selectedDate.getFullYear());
   const [viewMonth, setViewMonth] = useState(() => selectedDate.getMonth());
 
-  // Calculated delivery days from baseDate
-  const deliveryDays = useMemo(() => {
-    if (!selectedDate) return MIN_DAYS;
-    const diffMs = selectedDate.getTime() - baseDate.getTime();
-    const days = Math.round(diffMs / (1000 * 60 * 60 * 24));
-    return Math.max(MIN_DAYS, Math.min(MAX_DAYS, days));
-  }, [selectedDate, baseDate]);
-
   useEffect(() => {
     if (isOpen) {
+      setShowCalendarOverlay(false);
       if (mode === 'create') {
         setContent('');
+        setDeliveryDays(7);
         const defaultDate = new Date(baseDate);
         defaultDate.setDate(defaultDate.getDate() + MIN_DAYS);
         defaultDate.setHours(0, 0, 0, 0);
@@ -98,8 +95,10 @@ export const RewindLetterCompose = ({
         setViewMonth(defaultDate.getMonth());
       } else if (mode === 'edit') {
         setContent(initialContent || '');
+        const days = initialDays || 7;
+        setDeliveryDays(days);
         const existingDate = new Date(baseDate);
-        existingDate.setDate(existingDate.getDate() + (initialDays || MIN_DAYS));
+        existingDate.setDate(existingDate.getDate() + days);
         existingDate.setHours(0, 0, 0, 0);
         const clampedDate = existingDate < minSelectableDate ? minSelectableDate : (existingDate > maxSelectableDate ? maxSelectableDate : existingDate);
         setSelectedDate(clampedDate);
@@ -107,8 +106,10 @@ export const RewindLetterCompose = ({
         setViewMonth(clampedDate.getMonth());
       } else if (mode === 'reschedule') {
         setContent('');
+        const days = initialDays || 7;
+        setDeliveryDays(days);
         const existingDate = new Date(baseDate);
-        existingDate.setDate(existingDate.getDate() + (initialDays || MIN_DAYS));
+        existingDate.setDate(existingDate.getDate() + days);
         existingDate.setHours(0, 0, 0, 0);
         const clampedDate = existingDate < minSelectableDate ? minSelectableDate : (existingDate > maxSelectableDate ? maxSelectableDate : existingDate);
         setSelectedDate(clampedDate);
@@ -118,6 +119,28 @@ export const RewindLetterCompose = ({
       setError('');
     }
   }, [isOpen, mode, initialContent, initialDays, baseDate, minSelectableDate, maxSelectableDate]);
+
+  // Adjust date when slider changes
+  const handleSliderChange = (days) => {
+    const clampedDays = Math.max(MIN_DAYS, Math.min(MAX_DAYS, days));
+    setDeliveryDays(clampedDays);
+    const target = new Date(baseDate);
+    target.setDate(target.getDate() + clampedDays);
+    target.setHours(0, 0, 0, 0);
+    setSelectedDate(target);
+    setViewYear(target.getFullYear());
+    setViewMonth(target.getMonth());
+  };
+
+  // Adjust slider when calendar date is chosen
+  const handleCalendarDateSelect = (cellDate) => {
+    setSelectedDate(cellDate);
+    const diffMs = cellDate.getTime() - baseDate.getTime();
+    const days = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    const clampedDays = Math.max(MIN_DAYS, Math.min(MAX_DAYS, days));
+    setDeliveryDays(clampedDays);
+    setShowCalendarOverlay(false);
+  };
 
   if (!isOpen) return null;
 
@@ -156,12 +179,17 @@ export const RewindLetterCompose = ({
     }
   };
 
-  // Generate calendar days for viewYear & viewMonth
   const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay();
   const daysInCurrentMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const formattedSelectedDate = selectedDate.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -216,9 +244,9 @@ export const RewindLetterCompose = ({
             </h3>
             <p className="rewind-modal-subtitle">
               {isReschedule
-                ? `Pick an unlock date within the next 3 months (minimum 7 days).`
+                ? `Pick an unlock date within 3 months (minimum 7 days).`
                 : isEdit
-                ? `Edit your message or choose a new unlock date within 48 hours.`
+                ? `Edit your message or adjust unlock timeframe within 48 hours.`
                 : `A private message sealed until your chosen future date.`}
             </p>
           </div>
@@ -239,15 +267,15 @@ export const RewindLetterCompose = ({
             <span>
               {isReschedule ? (
                 <>
-                  <strong>Choose unlock date:</strong> Select a date between 7 days and 3 months. Your letter will safely remain sealed until then.
+                  <strong>Adjust unlock timeframe:</strong> Set how long your letter remains sealed. It will unlock after <strong>{deliveryDays} days</strong> of sealing.
                 </>
               ) : isEdit ? (
                 <>
-                  <strong>48-hour edit window:</strong> You can refine your message or change the unlock date. Once the 48-hour window closes, this letter is permanently locked in the time capsule.
+                  <strong>48-hour edit window:</strong> You can refine your message or adjust unlock days. Once the 48-hour window closes, this letter will be permanently locked in the time capsule.
                 </>
               ) : (
                 <>
-                  <strong>48-hour grace edit window:</strong> Once sealed, you can edit or delete this letter within 48 hours. After 48 hours, it is permanently locked until the unlock date.
+                  <strong>48-hour grace edit window:</strong> Once sealed, you can edit or delete this letter within 48 hours. After 48 hours, it is permanently locked until delivery ({deliveryDays} days from sealing).
                 </>
               )}
             </span>
@@ -267,7 +295,7 @@ export const RewindLetterCompose = ({
                 placeholder={`What stood out about ${partnerName || 'them'}? What are you curious to know? Write your thoughts here...`}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                rows={4}
+                rows={5}
                 maxLength={MAX_CHARS + 50}
                 disabled={isSubmitting}
                 autoFocus
@@ -278,105 +306,66 @@ export const RewindLetterCompose = ({
             </div>
           )}
 
-          {/* Interactive 3-Month Calendar Picker */}
-          <div className="rewind-calendar-picker-section">
-            <div className="rewind-calendar-picker-header">
-              <span className="rewind-calendar-label font-ui">
+          {/* Delivery Duration Section with Slider & Calendar Button */}
+          <div className="rewind-duration-picker">
+            <div className="rewind-duration-header">
+              <span className="rewind-duration-label font-ui">
                 <Calendar size={16} weight="duotone" />
-                <span>Choose Unlock Date (Next 3 Months)</span>
+                <span>Unlock Timeframe</span>
               </span>
-              <span className="rewind-calendar-limit-tag font-ui">
-                Min: 7 days · Max: 3 months
-              </span>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="rewind-pick-calendar-btn font-ui"
+                  onClick={() => setShowCalendarOverlay(true)}
+                  title="Choose a specific date on the calendar"
+                  disabled={isSubmitting}
+                >
+                  <CalendarBlank size={15} weight="bold" />
+                  <span>Choose from Calendar</span>
+                </button>
+
+                <span className="rewind-duration-value font-ui">
+                  {deliveryDays} Days
+                </span>
+              </div>
             </div>
 
-            <div className="rewind-calendar-widget">
-              {/* Month Navigation */}
-              <div className="rewind-calendar-month-nav font-ui">
+            <div className="rewind-duration-presets">
+              {PRESET_DAYS.map((days) => (
                 <button
+                  key={days}
                   type="button"
-                  className="rewind-cal-nav-btn"
-                  onClick={handlePrevMonth}
-                  disabled={!canGoPrevMonth || isSubmitting}
-                  aria-label="Previous month"
+                  className={`rewind-preset-btn ${deliveryDays === days ? 'active' : ''}`}
+                  onClick={() => handleSliderChange(days)}
+                  disabled={isSubmitting}
                 >
-                  <CaretLeft size={16} weight="bold" />
+                  {days} Days
                 </button>
-                <span className="rewind-cal-month-title font-display">
-                  {MONTH_NAMES[viewMonth]} {viewYear}
-                </span>
-                <button
-                  type="button"
-                  className="rewind-cal-nav-btn"
-                  onClick={handleNextMonth}
-                  disabled={!canGoNextMonth || isSubmitting}
-                  aria-label="Next month"
-                >
-                  <CaretRight size={16} weight="bold" />
-                </button>
-              </div>
+              ))}
+            </div>
 
-              {/* Day of Week Headers */}
-              <div className="rewind-calendar-weekdays-row font-ui">
-                {DAY_NAMES.map((day) => (
-                  <span key={day} className="rewind-calendar-weekday-cell">
-                    {day}
-                  </span>
-                ))}
-              </div>
+            <div className="rewind-duration-slider-row">
+              <input
+                type="range"
+                min={MIN_DAYS}
+                max={MAX_DAYS}
+                step={1}
+                value={deliveryDays}
+                onChange={(e) => handleSliderChange(Number(e.target.value))}
+                className="rewind-duration-slider"
+                disabled={isSubmitting}
+                aria-label="Unlock timeframe slider"
+              />
+            </div>
 
-              {/* Calendar Days Grid */}
-              <div className="rewind-calendar-grid">
-                {/* Empty cells for leading offset */}
-                {Array.from({ length: firstDayOfWeek }).map((_, index) => (
-                  <div key={`offset-${index}`} className="rewind-cal-day-cell empty" />
-                ))}
-
-                {/* Days of Current Month */}
-                {Array.from({ length: daysInCurrentMonth }).map((_, index) => {
-                  const dayNum = index + 1;
-                  const cellDate = new Date(viewYear, viewMonth, dayNum, 0, 0, 0, 0);
-
-                  const isDisabled = cellDate < minSelectableDate || cellDate > maxSelectableDate;
-                  const isSelected = selectedDate && cellDate.getTime() === selectedDate.getTime();
-                  const isCellToday = cellDate.getTime() === today.getTime();
-
-                  return (
-                    <button
-                      key={`day-${dayNum}`}
-                      type="button"
-                      disabled={isDisabled || isSubmitting}
-                      onClick={() => setSelectedDate(cellDate)}
-                      className={`rewind-cal-day-cell font-ui ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${isCellToday ? 'today' : ''}`}
-                      title={
-                        isDisabled
-                          ? cellDate < minSelectableDate
-                            ? `Cannot select dates within 7 days`
-                            : `Cannot select dates beyond 3 months`
-                          : `Select ${cellDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
-                      }
-                    >
-                      <span className="rewind-cal-day-number">{dayNum}</span>
-                      {isSelected && <span className="rewind-cal-selected-dot" />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Selected Date Summary */}
-              {selectedDate && (
-                <div className="rewind-calendar-summary font-ui">
-                  <div className="rewind-cal-summary-left">
-                    <CalendarCheck size={16} weight="duotone" className="rewind-cal-summary-icon" />
-                    <span>
-                      Unlocks on <strong>{selectedDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</strong>
-                    </span>
-                  </div>
-                  <span className="rewind-cal-summary-pill font-ui">
-                    in {deliveryDays} days
-                  </span>
-                </div>
-              )}
+            <div className="rewind-duration-range-limits font-ui">
+              <span>Min: {MIN_DAYS} days</span>
+              <span className="rewind-duration-live-date font-body">
+                Unlocks on <strong>{formattedSelectedDate}</strong>
+              </span>
+              <span>Max: {MAX_DAYS} days</span>
             </div>
           </div>
 
@@ -415,6 +404,125 @@ export const RewindLetterCompose = ({
             </button>
           </div>
         </form>
+
+        {/* Centered Calendar Modal Overlay with Blurred Backdrop */}
+        {showCalendarOverlay && (
+          <div
+            className="rewind-cal-overlay"
+            onClick={() => setShowCalendarOverlay(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Select unlock date from calendar"
+          >
+            <div
+              className="rewind-cal-popover-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="rewind-cal-popover-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <CalendarCheck size={20} weight="duotone" style={{ color: 'var(--burgundy-300, #f472b6)' }} />
+                  <div>
+                    <h4 className="rewind-cal-popover-title font-display">Choose Unlock Date</h4>
+                    <span className="rewind-cal-popover-subtitle font-ui">Available for the next 3 months</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="rewind-cal-popover-close"
+                  onClick={() => setShowCalendarOverlay(false)}
+                  aria-label="Close calendar"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Month Navigation */}
+              <div className="rewind-calendar-month-nav font-ui">
+                <button
+                  type="button"
+                  className="rewind-cal-nav-btn"
+                  onClick={handlePrevMonth}
+                  disabled={!canGoPrevMonth}
+                  aria-label="Previous month"
+                >
+                  <CaretLeft size={16} weight="bold" />
+                </button>
+                <span className="rewind-cal-month-title font-display">
+                  {MONTH_NAMES[viewMonth]} {viewYear}
+                </span>
+                <button
+                  type="button"
+                  className="rewind-cal-nav-btn"
+                  onClick={handleNextMonth}
+                  disabled={!canGoNextMonth}
+                  aria-label="Next month"
+                >
+                  <CaretRight size={16} weight="bold" />
+                </button>
+              </div>
+
+              {/* Day of Week Headers */}
+              <div className="rewind-calendar-weekdays-row font-ui">
+                {DAY_NAMES.map((day) => (
+                  <span key={day} className="rewind-calendar-weekday-cell">
+                    {day}
+                  </span>
+                ))}
+              </div>
+
+              {/* Calendar Days Grid */}
+              <div className="rewind-calendar-grid">
+                {Array.from({ length: firstDayOfWeek }).map((_, index) => (
+                  <div key={`cal-offset-${index}`} className="rewind-cal-day-cell empty" />
+                ))}
+
+                {Array.from({ length: daysInCurrentMonth }).map((_, index) => {
+                  const dayNum = index + 1;
+                  const cellDate = new Date(viewYear, viewMonth, dayNum, 0, 0, 0, 0);
+
+                  const isDisabled = cellDate < minSelectableDate || cellDate > maxSelectableDate;
+                  const isSelected = selectedDate && cellDate.getTime() === selectedDate.getTime();
+                  const isCellToday = cellDate.getTime() === today.getTime();
+
+                  return (
+                    <button
+                      key={`cal-day-${dayNum}`}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => handleCalendarDateSelect(cellDate)}
+                      className={`rewind-cal-day-cell font-ui ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''} ${isCellToday ? 'today' : ''}`}
+                      title={
+                        isDisabled
+                          ? cellDate < minSelectableDate
+                            ? `Cannot select dates within 7 days`
+                            : `Cannot select dates beyond 3 months`
+                          : `Select ${cellDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
+                      }
+                    >
+                      <span className="rewind-cal-day-number">{dayNum}</span>
+                      {isSelected && <span className="rewind-cal-selected-dot" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="rewind-cal-popover-footer font-ui">
+                <div className="rewind-cal-footer-preview">
+                  <span>Selected: <strong>{formattedSelectedDate}</strong></span>
+                  <span className="rewind-cal-footer-pill">in {deliveryDays} days</span>
+                </div>
+                <button
+                  type="button"
+                  className="rewind-cal-apply-btn font-ui"
+                  onClick={() => setShowCalendarOverlay(false)}
+                >
+                  <Check size={14} weight="bold" />
+                  <span>Apply Date</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
