@@ -889,7 +889,7 @@ html {
   z-index: 50;
 }
 
-.dropdown-item {
+.profile-card-dropdown .dropdown-item {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -903,24 +903,45 @@ html {
   transition: all var(--duration-fast);
 }
 
-.dropdown-item:hover {
+.profile-card-dropdown .dropdown-item:hover {
   background-color: rgba(255, 255, 255, 0.12);
   color: #FFFFFF;
 }
 
-.dropdown-item.item-active {
+.profile-card-dropdown .dropdown-item.item-active {
   color: #F3C68F;
   font-weight: 600;
 }
 
-.dropdown-item.danger {
+.profile-card-dropdown .dropdown-item.danger {
   color: #FF6B81;
   font-weight: 600;
 }
 
-.dropdown-item.danger:hover {
+.profile-card-dropdown .dropdown-item.danger:hover {
   background-color: rgba(255, 107, 129, 0.2);
   color: #FF8EA0;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  width: 100%;
+  text-align: left;
+  font-size: var(--text-body-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.dropdown-item:hover {
+  background-color: var(--bg-surface-warm);
+  color: var(--text-primary);
 }
 
 .dropdown-item.item-active {
