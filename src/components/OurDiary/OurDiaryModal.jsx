@@ -256,7 +256,7 @@ export const OurDiaryModal = ({
       // Jump straight to the most recent page (like a bookmark placed at the end)
       const currentPages = groupEntriesIntoPages();
       setCurrentPageIndex(Math.max(0, currentPages.length - 1));
-    }, 350);
+    }, 420);
   };
 
   const handleNextPage = () => {
@@ -266,7 +266,7 @@ export const OurDiaryModal = ({
       setTimeout(() => {
         setCurrentPageIndex(prev => prev + 1);
         setIsFlipping(false);
-      }, 350);
+      }, 380);
     }
   };
 
@@ -275,20 +275,17 @@ export const OurDiaryModal = ({
     if (currentPageIndex === 0) {
       // Flip back to Cover
       setIsClosingToCover(true);
-      setFlipDirection('prev');
-      setIsFlipping(true);
       setTimeout(() => {
         setIsBookOpen(false);
         setIsClosingToCover(false);
-        setIsFlipping(false);
-      }, 350);
+      }, 420);
     } else {
       setFlipDirection('prev');
       setIsFlipping(true);
       setTimeout(() => {
         setCurrentPageIndex(prev => prev - 1);
         setIsFlipping(false);
-      }, 350);
+      }, 380);
     }
   };
 
@@ -400,35 +397,32 @@ export const OurDiaryModal = ({
       <div className="our-diary-container">
         {/* Header Controls */}
         <div className="our-diary-top-bar">
-          <div className="our-diary-top-left">
-            <span className="our-diary-header-badge">
-              <Sparkle size={14} weight="fill" />
-              <span>Sweet Moments</span>
-            </span>
+          <div className="our-diary-badge font-display">
+            <Sparkle size={16} weight="fill" className="diary-sparkle-gold" />
+            <span>Sweet Moments</span>
           </div>
 
-          <div className="our-diary-top-right">
+          <div className="our-diary-actions">
             {isBookOpen && (
               <>
-                {pages.length > 1 && (
-                  <button
-                    type="button"
-                    className="diary-top-action-btn"
-                    onClick={() => setShowDateJump(!showDateJump)}
-                    title="Jump to date"
-                  >
-                    <CalendarBlank size={18} />
-                    <span className="diary-btn-label">Dates</span>
-                  </button>
-                )}
                 <button
                   type="button"
-                  className="diary-top-action-btn primary"
+                  className="diary-action-btn diary-btn-secondary font-ui"
+                  onClick={() => setShowDateJump(prev => !prev)}
+                  title="Jump to date"
+                  aria-label="Jump to date"
+                >
+                  <CalendarBlank size={16} />
+                  <span className="hide-mobile">Dates</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="diary-action-btn diary-btn-primary font-ui"
                   onClick={() => {
-                    setComposerError(null);
                     setShowComposer(true);
+                    setComposerError(null);
                   }}
-                  title="Add a Moment"
                 >
                   <Plus size={16} weight="bold" />
                   <span>Add Moment</span>
@@ -438,12 +432,11 @@ export const OurDiaryModal = ({
 
             <button
               type="button"
-              className="our-diary-close-btn"
+              className="diary-close-btn"
               onClick={onClose}
-              aria-label="Close Diary"
-              title="Close Diary"
+              aria-label="Close Our Diary"
             >
-              <X size={20} weight="bold" />
+              <X size={20} />
             </button>
           </div>
         </div>
@@ -470,47 +463,13 @@ export const OurDiaryModal = ({
 
         {/* --- BOOK STAGE --- */}
         <div className="our-diary-stage">
-          {!isBookOpen ? (
-            /* CLOSED BOOK COVER */
-            <div
-              className={`diary-book-cover ${isOpeningCover ? 'opening-cover' : ''}`}
-              onClick={handleOpenBook}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenBook(); }}
-            >
-              <div className="diary-cover-spine" />
-              <div className="diary-cover-texture">
-                <div className="diary-cover-gold-border">
-                  <div className="diary-cover-corner tl" />
-                  <div className="diary-cover-corner tr" />
-                  <div className="diary-cover-corner bl" />
-                  <div className="diary-cover-corner br" />
-
-                  <div className="diary-cover-emblem">
-                    <BookBookmark size={36} weight="duotone" />
-                  </div>
-
-                  <h1 className="diary-cover-title font-display">Our Diary</h1>
-                  <div className="diary-cover-divider" />
-                  <p className="diary-cover-subtitle font-display">
-                    {userName || 'You'} &amp; {partnerName || 'Partner'}
-                  </p>
-
-                  <div className="diary-cover-open-prompt">
-                    <span>Tap to Open</span>
-                    <span className="diary-open-sparkle">🥰</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* OPEN BOOK SPREAD */
+          {/* Always render the Open Book Spread when open or during open/close transitions */}
+          {(isBookOpen || isOpeningCover || isClosingToCover) && (
             <div className="diary-open-book-spread">
               <div className="diary-book-spine-center" />
 
               {/* Physical Journal Page Frame */}
-              <div className={`diary-paper-page ${isFlipping ? `flipping-${flipDirection}` : ''} ${isClosingToCover ? 'closing-to-cover' : ''}`}>
+              <div className={`diary-paper-page ${isFlipping && !isClosingToCover ? `flipping-${flipDirection}` : ''}`}>
                 {loading ? (
                   <div className="diary-page-loading font-ui">
                     <Sparkle size={24} className="spin" />
@@ -669,6 +628,42 @@ export const OurDiaryModal = ({
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Render the Book Cover when closed, opening, or closing */}
+          {(!isBookOpen || isOpeningCover || isClosingToCover) && (
+            <div
+              className={`diary-book-cover ${isOpeningCover ? 'opening-cover' : ''} ${isClosingToCover ? 'closing-cover' : ''}`}
+              onClick={handleOpenBook}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenBook(); }}
+            >
+              <div className="diary-cover-spine" />
+              <div className="diary-cover-texture">
+                <div className="diary-cover-gold-border">
+                  <div className="diary-cover-corner tl" />
+                  <div className="diary-cover-corner tr" />
+                  <div className="diary-cover-corner bl" />
+                  <div className="diary-cover-corner br" />
+
+                  <div className="diary-cover-emblem">
+                    <BookBookmark size={36} weight="duotone" />
+                  </div>
+
+                  <h1 className="diary-cover-title font-display">Our Diary</h1>
+                  <div className="diary-cover-divider" />
+                  <p className="diary-cover-subtitle font-display">
+                    {userName || 'You'} &amp; {partnerName || 'Partner'}
+                  </p>
+
+                  <div className="diary-cover-open-prompt">
+                    <span>Tap to Open</span>
+                    <span className="diary-open-sparkle">🥰</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}

@@ -4418,23 +4418,30 @@ html {
    ========================================================================== */
 .diary-book-cover {
   width: 100%;
-  max-width: 440px;
-  height: 90%;
-  max-height: 600px;
-  position: relative;
+  max-width: 460px;
+  height: 92%;
+  max-height: 620px;
+  position: absolute;
   cursor: pointer;
   transform-origin: left center;
   transform-style: preserve-3d;
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease;
   user-select: none;
+  z-index: 10;
 }
 
 .diary-book-cover:hover {
-  transform: translateY(-6px) scale(1.02);
+  transform: translateY(-4px) scale(1.01);
 }
 
 .diary-book-cover.opening-cover {
-  animation: coverOpenFlip 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: coverSwingOpen 0.42s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  pointer-events: none;
+}
+
+.diary-book-cover.closing-cover {
+  animation: coverSwingClose 0.42s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  pointer-events: none;
 }
 
 .diary-cover-spine {
@@ -4559,7 +4566,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 2000px;
+  perspective: 1800px;
   transform-style: preserve-3d;
 }
 
@@ -4577,42 +4584,73 @@ html {
   flex-direction: column;
   transform-origin: left center;
   transform-style: preserve-3d;
+  backface-visibility: hidden;
 }
 
 .diary-paper-page.flipping-next {
-  animation: pageTurnForward 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: pageFlipForward 0.38s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .diary-paper-page.flipping-prev {
-  animation: pageTurnBackward 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: pageFlipBackward 0.38s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.diary-paper-page.closing-to-cover {
-  animation: pageCloseToCover 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+@keyframes coverSwingOpen {
+  0% {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
+  65% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: rotateY(-110deg);
+    opacity: 0;
+  }
 }
 
-@keyframes coverOpenFlip {
-  0% { transform: rotateY(0deg) scale(1); opacity: 1; }
-  50% { transform: rotateY(-50deg) scale(0.97); opacity: 0.7; }
-  100% { transform: rotateY(-90deg) scale(0.95); opacity: 0; }
+@keyframes coverSwingClose {
+  0% {
+    transform: rotateY(-110deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
 }
 
-@keyframes pageCloseToCover {
-  0% { transform: rotateY(0deg) scale(1); opacity: 1; }
-  50% { transform: rotateY(45deg) scale(0.97); opacity: 0.7; }
-  100% { transform: rotateY(90deg) scale(0.95); opacity: 0; }
+@keyframes pageFlipForward {
+  0% {
+    transform: rotateY(0deg);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+  }
+  45% {
+    transform: rotateY(-36deg) scale(0.98);
+    box-shadow: -16px 20px 40px rgba(0, 0, 0, 0.35);
+  }
+  100% {
+    transform: rotateY(0deg);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+  }
 }
 
-@keyframes pageTurnForward {
-  0% { transform: rotateY(0deg); opacity: 1; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5); }
-  50% { transform: rotateY(-40deg) scale(0.97) skewY(-2deg); opacity: 0.75; box-shadow: -15px 20px 40px rgba(0, 0, 0, 0.35); }
-  100% { transform: rotateY(0deg); opacity: 1; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5); }
-}
-
-@keyframes pageTurnBackward {
-  0% { transform: rotateY(0deg); opacity: 1; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5); }
-  50% { transform: rotateY(40deg) scale(0.97) skewY(2deg); opacity: 0.75; box-shadow: 15px 20px 40px rgba(0, 0, 0, 0.35); }
-  100% { transform: rotateY(0deg); opacity: 1; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5); }
+@keyframes pageFlipBackward {
+  0% {
+    transform: rotateY(0deg);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+  }
+  45% {
+    transform: rotateY(36deg) scale(0.98);
+    box-shadow: 16px 20px 40px rgba(0, 0, 0, 0.35);
+  }
+  100% {
+    transform: rotateY(0deg);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+  }
 }
 
 .diary-page-loading {
