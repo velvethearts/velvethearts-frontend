@@ -928,7 +928,6 @@ export const OurDiaryModal = ({
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenBook(); }}
             >
               <div className="diary-cover-spine" />
-              <div className="diary-cover-ribbon" />
               <div className="diary-cover-texture">
                 <div className="diary-cover-gold-border">
                   <div className="diary-cover-corner tl" />
