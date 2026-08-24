@@ -3570,13 +3570,39 @@ html {
   text-decoration: underline;
 }
 
+.rewind-capsule-chat-card-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .rewind-capsule-card-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   font-size: 10px;
   color: var(--text-muted);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   padding-top: 6px;
+}
+
+.rewind-capsule-reply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #a89ba2);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast);
+}
+
+.rewind-capsule-reply-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 

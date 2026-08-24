@@ -553,6 +553,9 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const getQuotedSnippet = (msg) => {
     if (!msg) return 'Quoted message';
     if (msg.isDeleted) return 'This message was deleted';
+    if (typeof msg.text === 'string' && msg.text.startsWith('__REWIND_CAPSULE__')) {
+      return '🔒 Rewind Letter Time Capsule';
+    }
     if (msg.text && msg.text.trim()) return msg.text;
     if (Array.isArray(msg.attachments) && msg.attachments.length > 0) {
       const type = msg.attachments[0].fileType || 'IMAGE';
@@ -1421,61 +1424,79 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                         : null;
 
                       return (
-                        <div
+                        <SwipeableMessageRow
                           key={msg.id}
                           id={`msg-bubble-${msg.id}`}
-                          className="rewind-capsule-chat-card-wrapper page-enter"
+                          className={`rewind-capsule-chat-card-row ${highlightedMessageId === msg.id ? 'is-highlighted-reply' : ''}`}
+                          onReply={() => setReplyingTo(msg)}
+                          disabled={false}
+                          isUser={isUser}
                         >
-                          <div
-                            className="rewind-capsule-chat-card font-ui"
-                            onClick={() => {
-                              fetchLetterData();
-                              setShowRewindVault(true);
-                            }}
-                            role="button"
-                            tabIndex={0}
-                            title="Click to open Rewind Letters Vault"
-                          >
-                            <div className="rewind-capsule-card-glow" />
+                          <div className="rewind-capsule-chat-card-wrapper page-enter">
+                            <div
+                              className="rewind-capsule-chat-card font-ui"
+                              onClick={() => {
+                                fetchLetterData();
+                                setShowRewindVault(true);
+                              }}
+                              role="button"
+                              tabIndex={0}
+                              title="Click to open Rewind Letters Vault"
+                            >
+                              <div className="rewind-capsule-card-glow" />
 
-                            <div className="rewind-capsule-card-header">
-                              <div className="rewind-capsule-wax-seal">
-                                <EnvelopeSimple size={18} weight="fill" />
-                              </div>
-                              <div className="rewind-capsule-header-text">
-                                <span className="rewind-capsule-tag font-display">Time Capsule Sealed</span>
-                                <span className="rewind-capsule-subtag">Velvet Hearts Vault</span>
-                              </div>
-                            </div>
-
-                            <div className="rewind-capsule-card-body">
-                              <p className="rewind-capsule-description font-body">
-                                {isUser
-                                  ? `You sealed a private Rewind Letter for ${activePartner?.name || 'your match'}.`
-                                  : `${activePartner?.name || 'Your match'} sealed a private Rewind Letter for you.`}
-                              </p>
-
-                              {unlockDateStr && (
-                                <div className="rewind-capsule-unlock-tag font-ui">
-                                  <Clock size={13} weight="duotone" />
-                                  <span>Unlocks on {unlockDateStr}</span>
+                              <div className="rewind-capsule-card-header">
+                                <div className="rewind-capsule-wax-seal">
+                                  <EnvelopeSimple size={18} weight="fill" />
                                 </div>
-                              )}
-
-                              <div className="rewind-capsule-action-row">
-                                <span className="rewind-capsule-vault-link font-ui">
-                                  <LockKey size={14} weight="duotone" />
-                                  <span>Open Rewind Vault</span>
-                                  <ArrowRight size={13} weight="bold" />
-                                </span>
+                                <div className="rewind-capsule-header-text">
+                                  <span className="rewind-capsule-tag font-display">Time Capsule Sealed</span>
+                                  <span className="rewind-capsule-subtag">Velvet Hearts Vault</span>
+                                </div>
                               </div>
-                            </div>
 
-                            <div className="rewind-capsule-card-footer font-ui">
-                              <span>{msg.timestamp}</span>
+                              <div className="rewind-capsule-card-body">
+                                <p className="rewind-capsule-description font-body">
+                                  {isUser
+                                    ? `You sealed a private Rewind Letter for ${activePartner?.name || 'your match'}.`
+                                    : `${activePartner?.name || 'Your match'} sealed a private Rewind Letter for you.`}
+                                </p>
+
+                                {unlockDateStr && (
+                                  <div className="rewind-capsule-unlock-tag font-ui">
+                                    <Clock size={13} weight="duotone" />
+                                    <span>Unlocks on {unlockDateStr}</span>
+                                  </div>
+                                )}
+
+                                <div className="rewind-capsule-action-row">
+                                  <span className="rewind-capsule-vault-link font-ui">
+                                    <LockKey size={14} weight="duotone" />
+                                    <span>Open Rewind Vault</span>
+                                    <ArrowRight size={13} weight="bold" />
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="rewind-capsule-card-footer font-ui">
+                                <button
+                                  type="button"
+                                  className="rewind-capsule-reply-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setReplyingTo(msg);
+                                  }}
+                                  title="Reply to time capsule"
+                                  aria-label="Reply to time capsule"
+                                >
+                                  <Quotes size={12} weight="fill" />
+                                  <span>Reply</span>
+                                </button>
+                                <span>{msg.timestamp}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </SwipeableMessageRow>
                       );
                     }
 
