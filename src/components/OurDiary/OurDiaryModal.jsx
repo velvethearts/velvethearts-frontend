@@ -454,6 +454,36 @@ export const OurDiaryModal = ({
   const pages = groupEntriesIntoPages();
   const totalPages = Math.max(pages.length, 1);
 
+  const [isClosingModal, setIsClosingModal] = useState(false);
+
+  const handleCloseDiary = () => {
+    if (isClosingModal || isClosingToCover || isOpeningCover) return;
+
+    if (isBookOpen) {
+      // 1. Swing the front cover shut over the pages first
+      setIsClosingToCover(true);
+      setShowDateJump(false);
+      setShowComposer(false);
+
+      setTimeout(() => {
+        setIsBookOpen(false);
+        setIsClosingToCover(false);
+        setIsClosingModal(true);
+        setTimeout(() => {
+          setIsClosingModal(false);
+          onClose();
+        }, 220);
+      }, 420);
+    } else {
+      // Already on closed cover, smoothly fade out modal
+      setIsClosingModal(true);
+      setTimeout(() => {
+        setIsClosingModal(false);
+        onClose();
+      }, 220);
+    }
+  };
+
   // Keyboard navigation
   useEffect(() => {
     if (!isOpen || !isBookOpen || showComposer) return;
@@ -473,7 +503,7 @@ export const OurDiaryModal = ({
         handleJumpToPage(totalPages - 1);
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        handleCloseDiary();
       }
     };
 
@@ -624,9 +654,9 @@ export const OurDiaryModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="our-diary-overlay" role="dialog" aria-modal="true" aria-label="Our Diary">
+    <div className={`our-diary-overlay ${isClosingModal ? 'closing' : ''}`} role="dialog" aria-modal="true" aria-label="Our Diary">
       {/* Background backdrop blur */}
-      <div className="our-diary-backdrop" onClick={onClose} />
+      <div className="our-diary-backdrop" onClick={handleCloseDiary} />
 
       <div className="our-diary-container">
         {/* Header Controls */}
@@ -669,7 +699,7 @@ export const OurDiaryModal = ({
             <button
               type="button"
               className="our-diary-close-btn"
-              onClick={onClose}
+              onClick={handleCloseDiary}
               aria-label="Close Our Diary"
             >
               <X size={18} weight="bold" />
