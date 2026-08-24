@@ -27,7 +27,8 @@ import {
   EnvelopeOpen,
   LockKey,
   Clock,
-  Archive
+  Archive,
+  ArrowRight
 } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
@@ -1402,6 +1403,59 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   </div>
 
                   {activeMessages.map(msg => {
+                    if (msg.text === '__REWIND_CAPSULE__') {
+                      const isUser = msg.sender === 'user';
+                      return (
+                        <div
+                          key={msg.id}
+                          id={`msg-bubble-${msg.id}`}
+                          className="rewind-capsule-chat-card-wrapper page-enter"
+                        >
+                          <div
+                            className="rewind-capsule-chat-card font-ui"
+                            onClick={() => {
+                              fetchLetterData();
+                              setShowRewindVault(true);
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            title="Click to open Rewind Letters Vault"
+                          >
+                            <div className="rewind-capsule-card-glow" />
+
+                            <div className="rewind-capsule-card-header">
+                              <div className="rewind-capsule-wax-seal">
+                                <EnvelopeSimple size={18} weight="fill" />
+                              </div>
+                              <div className="rewind-capsule-header-text">
+                                <span className="rewind-capsule-tag font-display">Time Capsule Sealed</span>
+                                <span className="rewind-capsule-subtag">Velvet Hearts Vault</span>
+                              </div>
+                            </div>
+
+                            <div className="rewind-capsule-card-body">
+                              <p className="rewind-capsule-description font-body">
+                                {isUser
+                                  ? `You sealed a private Rewind Letter for ${activePartner?.name || 'your match'}.`
+                                  : `${activePartner?.name || 'Your match'} sealed a private Rewind Letter for you.`}
+                              </p>
+                              <div className="rewind-capsule-action-row">
+                                <span className="rewind-capsule-vault-link font-ui">
+                                  <LockKey size={14} weight="duotone" />
+                                  <span>Open Rewind Vault</span>
+                                  <ArrowRight size={13} weight="bold" />
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="rewind-capsule-card-footer font-ui">
+                              <span>{msg.timestamp}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     const isUser = msg.sender === 'user';
                     const hasAttachments = !msg.isDeleted && Array.isArray(msg.attachments) && msg.attachments.length > 0;
 

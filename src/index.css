@@ -3439,5 +3439,133 @@ html {
   background: var(--burgundy-600, #9f1239);
 }
 
+/* --- Rewind Capsule Chat Message Card --- */
+.rewind-capsule-chat-card-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: var(--space-4) 0;
+  width: 100%;
+}
+
+.rewind-capsule-chat-card {
+  width: 100%;
+  max-width: 380px;
+  background: radial-gradient(circle at 50% 0%, #29151e 0%, #150d11 100%);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: var(--radius-xl, 20px);
+  padding: 16px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(184, 51, 74, 0.15);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-spring);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rewind-capsule-chat-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(248, 113, 113, 0.6);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), 0 0 28px rgba(184, 51, 74, 0.25);
+}
+
+.rewind-capsule-card-glow {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.rewind-capsule-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rewind-capsule-wax-seal {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle, #b8334a 0%, #701a2b 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(112, 26, 43, 0.6);
+  flex-shrink: 0;
+}
+
+.rewind-capsule-header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.rewind-capsule-tag {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.rewind-capsule-subtag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--gold-300, #fcd34d);
+}
+
+.rewind-capsule-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rewind-capsule-description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #fce7eb;
+  margin: 0;
+}
+
+.rewind-capsule-action-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rewind-capsule-vault-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--burgundy-500, #b8334a);
+  border: 1px solid var(--burgundy-400, #d6455d);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  transition: all var(--duration-fast);
+  box-shadow: 0 2px 8px rgba(184, 51, 74, 0.35);
+}
+
+.rewind-capsule-chat-card:hover .rewind-capsule-vault-link {
+  background: var(--burgundy-600, #9f1239);
+  transform: translateX(2px);
+}
+
+.rewind-capsule-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 10px;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 6px;
+}
+
 
 

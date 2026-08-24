@@ -906,9 +906,14 @@ export const AppProvider = ({ children }) => {
                                 return prevConvs.map(c => {
                                     if (c.id === conversationId || c.partnerId === partnerId) {
                                         const isPartnerSender = message.senderId === c.partnerId;
+                                        const displayLastMsg = message.isDeleted
+                                            ? 'Message deleted'
+                                            : message.text === '__REWIND_CAPSULE__'
+                                                ? '🔒 Rewind Letter sealed'
+                                                : (message.text || 'Sent an attachment');
                                         return {
                                             ...c,
-                                            lastMessage: message.isDeleted ? 'Message deleted' : (message.text || 'Sent an attachment'),
+                                            lastMessage: displayLastMsg,
                                             lastMessageTime: message.createdAt || new Date().toISOString(),
                                             unreadCount: isPartnerSender ? (c.unreadCount || 0) + 1 : (c.unreadCount || 0)
                                         };

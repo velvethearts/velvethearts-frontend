@@ -57,8 +57,8 @@ export const RewindLetterVaultModal = ({
   const receivedLetters = Array.isArray(letterStatus?.receivedLetters) && letterStatus.receivedLetters.length > 0
     ? letterStatus.receivedLetters
     : (deliveredLetter
-        ? [{ ...deliveredLetter, status: 'DELIVERED' }]
-        : (receivedLetter ? [receivedLetter] : []));
+      ? [{ ...deliveredLetter, status: 'DELIVERED' }]
+      : (receivedLetter ? [receivedLetter] : []));
 
   const hasSealedSentLetter = sentLetters.some(l => l.status === 'SEALED');
 
@@ -118,10 +118,10 @@ export const RewindLetterVaultModal = ({
   const partnerPhoto = partner?.photo || partner?.photos?.[0]?.url;
   const matchDate = partner?.createdAt
     ? new Date(partner.createdAt).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      })
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
     : 'Recently';
 
   const formatDeliveredDate = (dateStr) => {
@@ -370,7 +370,7 @@ export const RewindLetterVaultModal = ({
                         if (onOpenCompose) onOpenCompose();
                       }}
                     >
-                      Write Another Rewind Letter
+                      + Write Another Rewind Letter
                     </button>
                   </div>
                 )}
@@ -481,8 +481,8 @@ export const RewindLetterVaultModal = ({
                                   {letter.status === 'DELIVERED'
                                     ? `Delivered to ${partnerName}'s chat and vault.`
                                     : isLetterEditable
-                                    ? `48-hour edit window active. You can edit or delete this letter.`
-                                    : `Content locked in vault. Delivery timeframe can still be adjusted.`}
+                                      ? `48-hour edit window active. You can edit or delete this letter.`
+                                      : `Content locked in vault. Delivery timeframe can still be adjusted.`}
                                 </span>
                                 {letter.status === 'DELIVERED' && (
                                   <button
