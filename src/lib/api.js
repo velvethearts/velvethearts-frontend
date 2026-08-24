@@ -409,6 +409,47 @@ export const api = {
     },
 
     // ==========================================================
+    // OUR DIARY
+    // ==========================================================
+
+    getDiaryEntries(matchId) {
+        return request(`/api/v1/diary/${matchId}`);
+    },
+
+    saveMessageToDiary(matchId, messageId, caption) {
+        return request(`/api/v1/diary/${matchId}/message`, {
+            method: 'POST',
+            body: { messageId, caption }
+        });
+    },
+
+    addDiaryNote(matchId, text, caption) {
+        return request(`/api/v1/diary/${matchId}/note`, {
+            method: 'POST',
+            body: { text, caption }
+        });
+    },
+
+    uploadDiaryPhoto(matchId, file, caption) {
+        const formData = new FormData();
+        formData.append('photo', file);
+        if (caption) {
+            formData.append('caption', caption);
+        }
+
+        return request(`/api/v1/diary/${matchId}/photo`, {
+            method: 'POST',
+            body: formData
+        });
+    },
+
+    deleteDiaryEntry(matchId, entryId) {
+        return request(`/api/v1/diary/${matchId}/${entryId}`, {
+            method: 'DELETE'
+        });
+    },
+
+    // ==========================================================
     // ADMIN
     // ==========================================================
 

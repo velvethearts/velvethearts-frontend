@@ -28,7 +28,8 @@ import {
   LockKey,
   Clock,
   Archive,
-  ArrowRight
+  ArrowRight,
+  BookBookmark
 } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
@@ -37,6 +38,7 @@ import { RewindLetterPrompt } from '../../components/RewindLetter/RewindLetterPr
 import { RewindLetterCompose } from '../../components/RewindLetter/RewindLetterCompose';
 import { RewindLetterCard } from '../../components/RewindLetter/RewindLetterCard';
 import { RewindLetterVaultModal } from '../../components/RewindLetter/RewindLetterVaultModal';
+import { OurDiaryModal } from '../../components/OurDiary/OurDiaryModal';
 
 const parseNoteReply = (text) => {
   if (!text || typeof text !== 'string') return null;
@@ -545,6 +547,41 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const isMyLetterEditable = letterStatus?.myLetter?.status === 'SEALED' && letterStatus?.myLetter?.createdAt
     ? (Date.now() - new Date(letterStatus.myLetter.createdAt).getTime()) <= 48 * 60 * 60 * 1000
     : false;
+
+  // Our Diary (Sweet Moments) State
+  const [showOurDiary, setShowOurDiary] = useState(false);
+  const [savingToDiaryMsg, setSavingToDiaryMsg] = useState(null);
+  const [diarySaveCaption, setDiarySaveCaption] = useState('');
+  const [isSavingToDiary, setIsSavingToDiary] = useState(false);
+
+  const handleOpenSaveToDiary = (msg) => {
+    setSavingToDiaryMsg(msg);
+    setDiarySaveCaption('');
+  };
+
+  const handleConfirmSaveToDiary = async () => {
+    if (!savingToDiaryMsg || !activeMatchId) return;
+    try {
+      setIsSavingToDiary(true);
+      const res = await api.saveMessageToDiary(
+        activeMatchId,
+        savingToDiaryMsg.id,
+        diarySaveCaption.trim() || undefined
+      );
+      if (res && res.success) {
+        showToast('Saved to Our Diary ✨', 'success');
+        setSavingToDiaryMsg(null);
+        setDiarySaveCaption('');
+      } else {
+        showToast(res?.message || 'Failed to save to diary', 'error');
+      }
+    } catch (err) {
+      console.error('Error saving message to diary:', err);
+      showToast(err?.message || 'Failed to save to diary', 'error');
+    } finally {
+      setIsSavingToDiary(false);
+    }
+  };
 
   // Message Reply State & Helpers
   const [replyingTo, setReplyingTo] = useState(null);
@@ -1364,6 +1401,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
 
                   {showDropdown && (
                     <div className="options-dropdown font-ui" role="menu">
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          setShowOurDiary(true);
+                        }}
+                        role="menuitem"
+                        className="dropdown-item"
+                      >
+                        <BookBookmark size={16} />
+                        <span>Our Diary</span>
+                      </button>
                       {notifications?.rewindLettersEnabled !== false && !letterStatus?.myLetter && (
                         <button
                           onClick={() => {
@@ -1784,6 +1832,16 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                               <div className="message-bubble-actions">
                                 <button
                                   type="button"
+                                  className="message-action-btn diary"
+                                  onClick={() => handleOpenSaveToDiary(msg)}
+                                  aria-label="Save to Our Diary"
+                                  title="Save to Our Diary"
+                                >
+                                  <BookBookmark size={14} weight="bold" />
+                                </button>
+
+                                <button
+                                  type="button"
                                   className="message-action-btn reply"
                                   onClick={() => setReplyingTo(msg)}
                                   aria-label="Reply to message"
@@ -2098,6 +2156,98 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   }}
                   onDeleteLetter={handleDeleteRewindLetter}
                 />
+              )}
+
+              {/* Our Diary Modal */}
+              {showOurDiary && (
+                <OurDiaryModal
+                  isOpen={showOurDiary}
+                  onClose={() => setShowOurDiary(false)}
+                  matchId={activeMatchId}
+                  partnerName={activePartner?.name}
+                  partnerPhoto={activePartner?.photo}
+                  userName={userProfile?.name}
+                  userPhoto={userProfile?.photo}
+                />
+              )}
+
+              {/* Save Message to Our Diary Prompt */}
+              {savingToDiaryMsg && (
+                <div className="diary-save-modal-backdrop" onClick={() => !isSavingToDiary && setSavingToDiaryMsg(null)}>
+                  <div className="diary-save-modal font-ui" onClick={(e) => e.stopPropagation()}>
+                    <div className="diary-save-modal-header">
+                      <div className="diary-save-modal-title font-display">
+                        <BookBookmark size={20} weight="duotone" />
+                        <span>Save to Our Diary</span>
+                      </div>
+                      <button 
+                        type="button" 
+                        className="diary-save-modal-close" 
+                        onClick={() => !isSavingToDiary && setSavingToDiaryMsg(null)}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    <p className="diary-save-modal-desc font-body">
+                      This moment will be added to your shared scrapbook with {activePartner?.name}.
+                    </p>
+
+                    {/* Preview snippet */}
+                    <div className="diary-save-snippet-preview font-body">
+                      &ldquo;{savingToDiaryMsg.text || (savingToDiaryMsg.attachments?.[0]?.fileType === 'AUDIO' ? 'Voice Message' : 'Photo')} &rdquo;
+                    </div>
+
+                    <div className="diary-save-input-group">
+                      <label className="diary-save-input-label">Add a note or caption (optional)</label>
+                      <input
+                        type="text"
+                        className="diary-save-input font-body"
+                        placeholder="e.g. 'This made my day ❤️'"
+                        value={diarySaveCaption}
+                        onChange={(e) => setDiarySaveCaption(e.target.value)}
+                        maxLength={500}
+                        autoFocus
+                        disabled={isSavingToDiary}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleConfirmSaveToDiary();
+                          }
+                        }}
+                      />
+                    </div>
+
+                    <div className="diary-save-modal-actions">
+                      <button 
+                        type="button" 
+                        className="diary-save-cancel-btn" 
+                        onClick={() => setSavingToDiaryMsg(null)}
+                        disabled={isSavingToDiary}
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="button" 
+                        className="diary-save-confirm-btn" 
+                        onClick={handleConfirmSaveToDiary} 
+                        disabled={isSavingToDiary}
+                      >
+                        {isSavingToDiary ? (
+                          <>
+                            <Spinner size={14} className="spin" />
+                            <span>Saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <BookBookmark size={15} weight="bold" />
+                            <span>Save to Diary</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           ) : (
