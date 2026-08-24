@@ -1163,47 +1163,6 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                           <span>Write Rewind Letter</span>
                         </button>
                       )}
-                      {notifications?.rewindLettersEnabled !== false && letterStatus?.myLetter?.status === 'SEALED' && isMyLetterEditable && (
-                        <button
-                          onClick={() => {
-                            setShowDropdown(false);
-                            setComposeMode('edit');
-                            setShowRewindCompose(true);
-                          }}
-                          role="menuitem"
-                          className="dropdown-item"
-                        >
-                          <PencilSimple size={16} />
-                          <span>Edit Rewind Letter</span>
-                        </button>
-                      )}
-                      {notifications?.rewindLettersEnabled !== false && letterStatus?.myLetter?.status === 'SEALED' && !isMyLetterEditable && (
-                        <button
-                          onClick={() => {
-                            setShowDropdown(false);
-                            setComposeMode('reschedule');
-                            setShowRewindCompose(true);
-                          }}
-                          role="menuitem"
-                          className="dropdown-item"
-                        >
-                          <Clock size={16} />
-                          <span>Reschedule Rewind Letter</span>
-                        </button>
-                      )}
-                      {letterStatus?.myLetter?.status === 'SEALED' && (
-                        <button
-                          onClick={() => {
-                            setShowDropdown(false);
-                            handleDeleteRewindLetter();
-                          }}
-                          role="menuitem"
-                          className="dropdown-item danger"
-                        >
-                          <Trash size={16} />
-                          <span>Delete Rewind Letter</span>
-                        </button>
-                      )}
                       {(letterStatus?.myLetter || letterStatus?.receivedLetter || deliveredLetter) && (
                         <button
                           onClick={() => {

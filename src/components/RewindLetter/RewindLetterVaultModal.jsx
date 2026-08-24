@@ -303,7 +303,7 @@ export const RewindLetterVaultModal = ({
                     </div>
                   )}
 
-                  <div className="rewind-vault-letter-footer font-ui">
+                  <div className="rewind-vault-letter-footer font-ui" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>
                       {myLetter.status === 'DELIVERED'
                         ? `Delivered to ${partnerName}'s chat and vault.`
@@ -311,6 +311,19 @@ export const RewindLetterVaultModal = ({
                         ? `48-hour edit window active. You can edit or delete this letter.`
                         : `Content locked in vault. Delivery timeframe can still be adjusted.`}
                     </span>
+                    {myLetter.status === 'DELIVERED' && (
+                      <button
+                        type="button"
+                        className="rewind-vault-delete-btn font-ui"
+                        title="Delete Letter"
+                        onClick={() => {
+                          if (onDeleteLetter) onDeleteLetter();
+                        }}
+                      >
+                        <Trash size={14} weight="bold" />
+                        <span>Delete Letter</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : (
