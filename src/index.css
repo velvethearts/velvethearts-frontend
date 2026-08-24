@@ -3259,6 +3259,59 @@ html {
   }
 }
 
+/* Roll-In Closing State */
+.rewind-reader-overlay.closing {
+  animation: overlayFadeOut 0.4s ease-in forwards;
+}
+
+.rewind-parchment-scroll-wrapper.roll-in-closing {
+  pointer-events: none;
+}
+
+.rewind-reader-parchment.roll-in-animation {
+  animation: parchmentRollIn 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes parchmentRollIn {
+  0% {
+    transform: scaleY(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+  35% {
+    transform: scaleY(0.65);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scaleY(0.03);
+    opacity: 0;
+    filter: brightness(0.4);
+  }
+}
+
+.rewind-parchment-roller.top.roll-in {
+  animation: rollerRollCloseTop 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.rewind-parchment-roller.bottom.roll-in {
+  animation: rollerRollCloseBottom 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes rollerRollCloseTop {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(30px); opacity: 0; }
+}
+
+@keyframes rollerRollCloseBottom {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-30px); opacity: 0; }
+}
+
+@keyframes overlayFadeOut {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 @keyframes rollerSlideDown {
   0% { transform: translateY(40px); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }

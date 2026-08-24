@@ -24,16 +24,30 @@ export const RewindLetterReaderModal = ({
   const [displayedLength, setDisplayedLength] = useState(0);
   const [isWriting, setIsWriting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const timeoutRef = useRef(null);
 
+  const handleCloseWithRollIn = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 400);
+  };
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setIsClosing(false);
+      return;
+    }
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') handleCloseWithRollIn();
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   // Handwriting Animation Loop
   useEffect(() => {
@@ -158,26 +172,26 @@ export const RewindLetterReaderModal = ({
 
   return (
     <div
-      className="rewind-reader-overlay"
+      className={`rewind-reader-overlay ${isClosing ? 'closing' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="reader-letter-title"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) handleCloseWithRollIn();
       }}
     >
       {/* Parchment Scroll Roll Container */}
-      <div className="rewind-parchment-scroll-wrapper">
+      <div className={`rewind-parchment-scroll-wrapper ${isClosing ? 'roll-in-closing' : ''}`}>
         {/* Top Decorative Scroll Cylinder / Header Roller */}
-        <div className="rewind-parchment-roller top">
+        <div className={`rewind-parchment-roller top ${isClosing ? 'roll-in' : ''}`}>
           <div className="rewind-parchment-roller-cap left" />
           <div className="rewind-parchment-roller-rod" />
           <div className="rewind-parchment-roller-cap right" />
         </div>
 
-        {/* Unrolling Letter Parchment */}
+        {/* Unrolling / Rolling-in Letter Parchment */}
         <div
-          className="rewind-reader-parchment unroll-animation"
+          className={`rewind-reader-parchment ${isClosing ? 'roll-in-animation' : 'unroll-animation'}`}
           onClick={isWriting ? handleSkipAnimation : undefined}
           title={isWriting ? 'Click to show entire letter' : undefined}
         >
@@ -191,7 +205,7 @@ export const RewindLetterReaderModal = ({
             <button
               type="button"
               className="rewind-reader-back-btn"
-              onClick={onClose}
+              onClick={handleCloseWithRollIn}
               aria-label="Back"
             >
               <CaretLeft size={18} weight="bold" />
@@ -206,7 +220,7 @@ export const RewindLetterReaderModal = ({
             <button
               type="button"
               className="rewind-reader-close-btn"
-              onClick={onClose}
+              onClick={handleCloseWithRollIn}
               aria-label="Close"
             >
               <X size={18} />
@@ -299,7 +313,7 @@ export const RewindLetterReaderModal = ({
                   aria-label="Delete Letter"
                   onClick={() => {
                     onDeleteLetter(letter.id);
-                    onClose();
+                    handleCloseWithRollIn();
                   }}
                 >
                   <Trash size={17} weight="bold" />
@@ -308,7 +322,7 @@ export const RewindLetterReaderModal = ({
               <button
                 type="button"
                 className="rewind-reader-done-btn font-ui"
-                onClick={onClose}
+                onClick={handleCloseWithRollIn}
               >
                 Done
               </button>
@@ -317,7 +331,7 @@ export const RewindLetterReaderModal = ({
         </div>
 
         {/* Bottom Decorative Scroll Cylinder / Footer Roller */}
-        <div className="rewind-parchment-roller bottom">
+        <div className={`rewind-parchment-roller bottom ${isClosing ? 'roll-in' : ''}`}>
           <div className="rewind-parchment-roller-cap left" />
           <div className="rewind-parchment-roller-rod" />
           <div className="rewind-parchment-roller-cap right" />
