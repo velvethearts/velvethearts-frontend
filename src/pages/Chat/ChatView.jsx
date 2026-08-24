@@ -577,6 +577,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     }
   };
   const messagesEndRef = useRef(null);
+  const isNearBottomRef = useRef(true);
+  const prevMessageCountRef = useRef(0);
+  const prevChatIdRef = useRef(null);
+
+  const handleChatScroll = (e) => {
+    const el = e.currentTarget;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    isNearBottomRef.current = distanceFromBottom < 140;
+  };
+
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const photoInputRef = useRef(null);
@@ -885,10 +896,49 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   );
   const conversationId = conversation?.id;
 
-  // Scroll to bottom on new message
+  const activeMessagesRaw = activeChatId ? (
+    chats[activeChatId] ||
+    (activePartner?.userId ? chats[activePartner.userId] : null) ||
+    (conversationId ? chats[conversationId] : null) ||
+    (activePartner?.id ? chats[activePartner.id] : null) ||
+    []
+  ) : [];
+  const activeMessages = [];
+  const seenIds = new Set();
+  for (const m of activeMessagesRaw) {
+    if (!seenIds.has(m.id) && !m.isDeleted) {
+      seenIds.add(m.id);
+      activeMessages.push(m);
+    }
+  }
+
+  // Smart Auto-scroll:
+  // 1. Instantly scrolls to bottom when switching chats
+  // 2. Smoothly scrolls on new message ONLY if user is already near bottom or sent the message
+  // 3. NEVER forces scroll down when user is scrolling up to read earlier messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chats, activeChatId, isTyping]);
+    const isNewChat = prevChatIdRef.current !== activeChatId;
+    prevChatIdRef.current = activeChatId;
+
+    if (isNewChat) {
+      isNearBottomRef.current = true;
+      prevMessageCountRef.current = activeMessages.length;
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      return;
+    }
+
+    const hasNewMessage = activeMessages.length > prevMessageCountRef.current;
+    prevMessageCountRef.current = activeMessages.length;
+
+    if (hasNewMessage) {
+      const lastMsg = activeMessages[activeMessages.length - 1];
+      const isSentByMe = lastMsg?.sender === 'user';
+
+      if (isNearBottomRef.current || isSentByMe) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [activeChatId, activeMessages.length]);
 
   // Join/Leave conversation rooms & Mark conversation as seen
   useEffect(() => {
@@ -1162,22 +1212,6 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     if (onClearPreselected) onClearPreselected();
   };
 
-  const activeMessagesRaw = activeChatId ? (
-    chats[activeChatId] ||
-    (activePartner?.userId ? chats[activePartner.userId] : null) ||
-    (conversationId ? chats[conversationId] : null) ||
-    (activePartner?.id ? chats[activePartner.id] : null) ||
-    []
-  ) : [];
-  const activeMessages = [];
-  const seenIds = new Set();
-  for (const m of activeMessagesRaw) {
-    if (!seenIds.has(m.id) && !m.isDeleted) {
-      seenIds.add(m.id);
-      activeMessages.push(m);
-    }
-  }
-
   return (
     <div className="chat-page page-enter">
       <div className={`chat-layout ${activeChatId ? 'partner-selected' : ''}`}>
@@ -1387,7 +1421,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
 
               {/* Chat Log */}
               <div className="chat-log-container">
-                <div className="chat-log-scroll">
+                <div className="chat-log-scroll" onScroll={handleChatScroll}>
                   {/* Top Banners for Sealed / Delivered Rewind Letters */}
                   {letterStatus?.receivedLetter?.status === 'SEALED' && (
                     <RewindLetterCard
