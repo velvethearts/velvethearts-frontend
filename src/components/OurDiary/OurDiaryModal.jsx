@@ -671,7 +671,7 @@ export const OurDiaryModal = ({
         <div className="our-diary-top-bar">
           <div className="our-diary-top-left">
             <span className="our-diary-header-badge font-display">
-              <Heart size={18} weight="fill" className="our-diary-heart-icon" />
+              <Heart size={16} weight="fill" className="our-diary-heart-icon" />
               <span>Sweet Moments</span>
             </span>
           </div>
@@ -686,8 +686,8 @@ export const OurDiaryModal = ({
                   title="Open Calendar"
                   aria-label="Open Calendar"
                 >
-                  <CalendarBlank size={16} />
-                  <span className="hide-mobile">Dates</span>
+                  <CalendarBlank size={15} />
+                  <span>Dates</span>
                 </button>
 
                 <button
@@ -697,9 +697,10 @@ export const OurDiaryModal = ({
                     setShowComposer(true);
                     setComposerError(null);
                   }}
+                  title="Add Memory"
                 >
-                  <Plus size={16} weight="bold" />
-                  <span>Add Moment</span>
+                  <Plus size={15} weight="bold" />
+                  <span className="diary-add-btn-text">Add Moment</span>
                 </button>
               </>
             )}
@@ -710,7 +711,7 @@ export const OurDiaryModal = ({
               onClick={handleCloseDiary}
               aria-label="Close Our Diary"
             >
-              <X size={18} weight="bold" />
+              <X size={15} weight="bold" />
             </button>
           </div>
         </div>

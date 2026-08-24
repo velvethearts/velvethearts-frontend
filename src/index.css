@@ -4263,40 +4263,53 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 22px 18px 14px;
-  background: rgba(26, 18, 22, 0.9);
+  padding: 16px 16px 10px;
+  background: rgba(26, 18, 22, 0.92);
   backdrop-filter: blur(12px);
   border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) 0 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: none;
+  gap: 8px;
+}
+
+.our-diary-top-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .our-diary-header-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
+  gap: 6px;
+  font-size: 14px;
   font-weight: 700;
   color: #f4728c; /* Velvet Hearts app rose color */
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .our-diary-heart-icon {
   color: #e11d48;
-  filter: drop-shadow(0 0 6px rgba(225, 29, 72, 0.6));
+  filter: drop-shadow(0 0 5px rgba(225, 29, 72, 0.6));
+  flex-shrink: 0;
 }
 
 .our-diary-top-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .diary-top-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
   border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 600;
@@ -4305,6 +4318,9 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
   transition: all var(--duration-fast);
+  white-space: nowrap;
+  line-height: 1;
+  box-sizing: border-box;
 }
 
 .diary-top-action-btn:hover {
@@ -4316,7 +4332,7 @@ html {
   background: var(--burgundy-500, #b8334a);
   border-color: var(--burgundy-400, #d94e66);
   color: #ffffff;
-  box-shadow: 0 2px 10px rgba(184, 51, 74, 0.35);
+  box-shadow: 0 2px 8px rgba(184, 51, 74, 0.35);
 }
 
 .diary-top-action-btn.primary:hover {
@@ -4325,8 +4341,8 @@ html {
 }
 
 .our-diary-close-btn {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -4335,6 +4351,7 @@ html {
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.12);
   cursor: pointer;
+  flex-shrink: 0;
   transition: all var(--duration-fast);
 }
 
@@ -5698,16 +5715,17 @@ html {
   }
 
   .our-diary-top-bar {
-    padding: 26px 16px 14px;
+    padding: 16px 14px 10px;
   }
 
-  .our-diary-brand span {
-    font-size: 15px;
+  .our-diary-header-badge span {
+    font-size: 13px;
   }
 
   .diary-top-action-btn {
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 0 8px;
+    font-size: 11px;
+    height: 28px;
   }
 
   .our-diary-stage {
