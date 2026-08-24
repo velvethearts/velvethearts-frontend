@@ -2747,7 +2747,7 @@ html {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-5);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-surface-warm, rgba(0, 0, 0, 0.2));
   border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
 }
 
@@ -2782,7 +2782,7 @@ html {
   display: flex;
   gap: 8px;
   padding: var(--space-3) var(--space-5);
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--bg-surface-warm, rgba(0, 0, 0, 0.1));
   border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
 }
 
@@ -2826,6 +2826,12 @@ html {
   color: #86efac;
 }
 
+[data-theme="light"] .rewind-vault-tab-pill.delivered,
+:root:not([data-theme="dark"]) .rewind-vault-tab-pill.delivered {
+  background: #dcfce7;
+  color: #15803d;
+}
+
 .rewind-vault-tab.active .rewind-vault-tab-pill.delivered {
   background: rgba(255, 255, 255, 0.25);
   color: #ffffff;
@@ -2834,6 +2840,12 @@ html {
 .rewind-vault-tab-pill.sealed {
   background: rgba(234, 179, 8, 0.2);
   color: #fde047;
+}
+
+[data-theme="light"] .rewind-vault-tab-pill.sealed,
+:root:not([data-theme="dark"]) .rewind-vault-tab-pill.sealed {
+  background: #fef9c3;
+  color: #854d0e;
 }
 
 .rewind-vault-tab.active .rewind-vault-tab-pill.sealed {
@@ -2867,6 +2879,12 @@ html {
   color: var(--text-secondary);
 }
 
+[data-theme="light"] .rewind-vault-tab-count,
+:root:not([data-theme="dark"]) .rewind-vault-tab-count {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-secondary);
+}
+
 .rewind-vault-tab.active .rewind-vault-tab-count {
   background: var(--burgundy-500, #b8334a);
   color: #ffffff;
@@ -2889,6 +2907,11 @@ html {
   font-weight: 600;
   cursor: pointer;
   transition: all var(--duration-fast);
+}
+
+[data-theme="light"] .rewind-vault-write-action-btn,
+:root:not([data-theme="dark"]) .rewind-vault-write-action-btn {
+  color: var(--burgundy-600, #9b3456);
 }
 
 .rewind-vault-write-action-btn:hover {
@@ -2932,6 +2955,13 @@ html {
   font-weight: 500;
   cursor: pointer;
   transition: all var(--duration-fast);
+}
+
+[data-theme="light"] .rewind-vault-page-btn,
+:root:not([data-theme="dark"]) .rewind-vault-page-btn {
+  background: #ffffff;
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
 }
 
 .rewind-vault-page-btn:hover:not(:disabled) {
@@ -3010,17 +3040,31 @@ html {
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
+[data-theme="light"] .rewind-vault-status-pill.delivered,
+:root:not([data-theme="dark"]) .rewind-vault-status-pill.delivered {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
 .rewind-vault-status-pill.sealed {
   background: rgba(234, 179, 8, 0.15);
   color: #fde047;
   border: 1px solid rgba(234, 179, 8, 0.3);
 }
 
+[data-theme="light"] .rewind-vault-status-pill.sealed,
+:root:not([data-theme="dark"]) .rewind-vault-status-pill.sealed {
+  background: #fef9c3;
+  color: #854d0e;
+  border: 1px solid #facc15;
+}
+
 .rewind-vault-quote-body {
   position: relative;
   padding: var(--space-3) var(--space-4) var(--space-3) var(--space-5);
   border-left: 3px solid var(--burgundy-400, #b8334a);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-accent-subtle, rgba(0, 0, 0, 0.2));
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 
@@ -3969,7 +4013,7 @@ html {
 .rewind-capsule-tag {
   font-size: 14px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #ffffff;
   line-height: 1.2;
 }
 
@@ -4000,7 +4044,7 @@ html {
   gap: 5px;
   font-size: 11px;
   font-weight: 500;
-  color: var(--text-secondary, #e2d9dc);
+  color: #e2d9dc;
   background: transparent;
   padding: 0;
   align-self: flex-start;
@@ -4042,8 +4086,8 @@ html {
   justify-content: space-between;
   align-items: center;
   font-size: 10px;
-  color: var(--text-muted);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: #a89ba2;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 6px;
 }
 
@@ -4053,7 +4097,7 @@ html {
   gap: 4px;
   background: transparent;
   border: none;
-  color: var(--text-secondary, #a89ba2);
+  color: #d1c5cb;
   font-size: 11px;
   cursor: pointer;
   padding: 2px 6px;
@@ -4064,6 +4108,72 @@ html {
 .rewind-capsule-reply-btn:hover {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* Light Mode Overrides for Rewind Capsule Chat Card */
+[data-theme="light"] .rewind-capsule-chat-card,
+:root:not([data-theme="dark"]) .rewind-capsule-chat-card {
+  background: linear-gradient(135deg, #fff2f5 0%, #ffffff 100%);
+  border: 1px solid rgba(184, 67, 106, 0.3);
+  box-shadow: 0 10px 30px rgba(184, 67, 106, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .rewind-capsule-chat-card:hover,
+:root:not([data-theme="dark"]) .rewind-capsule-chat-card:hover {
+  border-color: rgba(184, 67, 106, 0.5);
+  box-shadow: 0 14px 35px rgba(184, 67, 106, 0.14);
+}
+
+[data-theme="light"] .rewind-capsule-card-glow,
+:root:not([data-theme="dark"]) .rewind-capsule-card-glow {
+  background: radial-gradient(circle, rgba(184, 67, 106, 0.15) 0%, transparent 70%);
+}
+
+[data-theme="light"] .rewind-capsule-tag,
+:root:not([data-theme="dark"]) .rewind-capsule-tag {
+  color: #2c0e18 !important;
+}
+
+[data-theme="light"] .rewind-capsule-subtag,
+:root:not([data-theme="dark"]) .rewind-capsule-subtag {
+  color: #9b3456 !important;
+}
+
+[data-theme="light"] .rewind-capsule-description,
+:root:not([data-theme="dark"]) .rewind-capsule-description {
+  color: #3d3335 !important;
+}
+
+[data-theme="light"] .rewind-capsule-unlock-tag,
+:root:not([data-theme="dark"]) .rewind-capsule-unlock-tag {
+  color: #5a4e50 !important;
+}
+
+[data-theme="light"] .rewind-capsule-vault-link,
+:root:not([data-theme="dark"]) .rewind-capsule-vault-link {
+  color: #b8436a !important;
+}
+
+[data-theme="light"] .rewind-capsule-chat-card:hover .rewind-capsule-vault-link,
+:root:not([data-theme="dark"]) .rewind-capsule-chat-card:hover .rewind-capsule-vault-link {
+  color: #7a2842 !important;
+}
+
+[data-theme="light"] .rewind-capsule-card-footer,
+:root:not([data-theme="dark"]) .rewind-capsule-card-footer {
+  color: #7a6e70 !important;
+  border-top: 1px solid rgba(184, 67, 106, 0.12) !important;
+}
+
+[data-theme="light"] .rewind-capsule-reply-btn,
+:root:not([data-theme="dark"]) .rewind-capsule-reply-btn {
+  color: #5a4e50 !important;
+}
+
+[data-theme="light"] .rewind-capsule-reply-btn:hover,
+:root:not([data-theme="dark"]) .rewind-capsule-reply-btn:hover {
+  color: #2c0e18 !important;
+  background: rgba(184, 67, 106, 0.08) !important;
 }
 
 
