@@ -35,7 +35,7 @@ export const RewindLetterReaderModal = ({
     setTimeout(() => {
       onClose();
       setIsClosing(false);
-    }, 400);
+    }, 470);
   };
 
   // Auto-scroll body as text is written
