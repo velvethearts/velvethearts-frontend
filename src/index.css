@@ -3258,7 +3258,7 @@ html {
   flex-shrink: 0;
 }
 
-/* The Parchment Letter Body */
+/* The Parchment Letter Body (Fixed aesthetic size, content scrolls inside) */
 .rewind-reader-parchment {
   background: 
     radial-gradient(ellipse at 50% 0%, rgba(68, 27, 43, 0.4) 0%, rgba(20, 11, 16, 0.95) 75%),
@@ -3273,11 +3273,12 @@ html {
     0 0 45px rgba(184, 51, 74, 0.25),
     inset 0 0 60px rgba(0, 0, 0, 0.5);
   width: 100%;
-  max-height: 84vh;
-  overflow-y: auto;
+  height: 520px;
+  max-height: 82vh;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
 /* Roll-In Closing Overlay State */
@@ -3293,7 +3294,7 @@ html {
 /* Subtle Vintage Watermark */
 .rewind-parchment-watermark {
   position: absolute;
-  top: 48%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   color: rgba(248, 113, 113, 0.04);
@@ -3302,6 +3303,7 @@ html {
 }
 
 .rewind-reader-header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3365,7 +3367,8 @@ html {
 }
 
 .rewind-reader-meta-section {
-  padding: var(--space-5) var(--space-6) var(--space-3);
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-6) var(--space-2);
   position: relative;
   z-index: 2;
 }
@@ -3464,10 +3467,32 @@ html {
 }
 
 .rewind-reader-body {
-  padding: var(--space-4) var(--space-6) var(--space-6);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-2) var(--space-6) var(--space-6);
   position: relative;
   z-index: 2;
   cursor: default;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(248, 113, 113, 0.3) transparent;
+}
+
+.rewind-reader-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.rewind-reader-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rewind-reader-body::-webkit-scrollbar-thumb {
+  background: rgba(248, 113, 113, 0.25);
+  border-radius: 4px;
+}
+
+.rewind-reader-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(248, 113, 113, 0.5);
 }
 
 .rewind-reader-quotes-accent {
@@ -3489,7 +3514,7 @@ html {
   position: relative;
   z-index: 2;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-  min-height: 120px;
+  min-height: 80px;
   padding: 4px 2px;
 }
 
@@ -3555,13 +3580,13 @@ html {
 }
 
 .rewind-reader-footer {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-3) var(--space-6);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(20, 11, 15, 0.8);
-  margin-top: auto;
+  background: rgba(20, 11, 15, 0.95);
   position: relative;
   z-index: 10;
 }

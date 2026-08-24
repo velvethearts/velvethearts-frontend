@@ -26,6 +26,7 @@ export const RewindLetterReaderModal = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const timeoutRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
   const handleCloseWithRollIn = () => {
     if (isClosing) return;
@@ -36,6 +37,13 @@ export const RewindLetterReaderModal = ({
       setIsClosing(false);
     }, 400);
   };
+
+  // Auto-scroll body as text is written
+  useEffect(() => {
+    if (isWriting && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
+  }, [displayedLength, isWriting]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -275,7 +283,7 @@ export const RewindLetterReaderModal = ({
           </div>
 
           {/* Letter Parchment Body with Handwriting */}
-          <div className="rewind-reader-body">
+          <div className="rewind-reader-body" ref={scrollContainerRef}>
             <div className="rewind-reader-quotes-accent">
               <Quotes size={32} weight="fill" />
             </div>
