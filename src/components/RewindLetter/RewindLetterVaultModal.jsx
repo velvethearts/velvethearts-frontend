@@ -10,7 +10,8 @@ import {
   PencilSimple,
   CalendarBlank,
   PaperPlaneTilt,
-  Trash
+  Trash,
+  Plus
 } from '@phosphor-icons/react';
 
 const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
@@ -28,16 +29,32 @@ export const RewindLetterVaultModal = ({
 }) => {
   const [activeTab, setActiveTab] = useState('received'); // 'received' | 'sent'
 
+  // Extract arrays from letterStatus or fallbacks
+  const myLetter = letterStatus?.myLetter;
+  const receivedLetter = deliveredLetter || (letterStatus?.receivedLetter?.status === 'SEALED' ? letterStatus.receivedLetter : null);
+
+  const sentLetters = Array.isArray(letterStatus?.sentLetters) && letterStatus.sentLetters.length > 0
+    ? letterStatus.sentLetters
+    : (myLetter ? [myLetter] : []);
+
+  const receivedLetters = Array.isArray(letterStatus?.receivedLetters) && letterStatus.receivedLetters.length > 0
+    ? letterStatus.receivedLetters
+    : (deliveredLetter
+        ? [{ ...deliveredLetter, status: 'DELIVERED' }]
+        : (receivedLetter ? [receivedLetter] : []));
+
+  const hasSealedSentLetter = sentLetters.some(l => l.status === 'SEALED');
+
   // Default to 'sent' if no received letter exists but sent letter does
   useEffect(() => {
     if (isOpen) {
-      if (!deliveredLetter && letterStatus?.receivedLetter?.status !== 'SEALED' && letterStatus?.myLetter) {
+      if (receivedLetters.length === 0 && sentLetters.length > 0) {
         setActiveTab('sent');
       } else {
         setActiveTab('received');
       }
     }
-  }, [isOpen, deliveredLetter, letterStatus]);
+  }, [isOpen]);
 
   // Handle ESC key dismiss
   useEffect(() => {
@@ -60,13 +77,6 @@ export const RewindLetterVaultModal = ({
         year: 'numeric'
       })
     : 'Recently';
-
-  const myLetter = letterStatus?.myLetter;
-  const receivedLetter = deliveredLetter || (letterStatus?.receivedLetter?.status === 'SEALED' ? letterStatus.receivedLetter : null);
-
-  const isEditable = myLetter?.status === 'SEALED' && myLetter?.createdAt
-    ? (Date.now() - new Date(myLetter.createdAt).getTime()) <= FORTY_EIGHT_HOURS_MS
-    : false;
 
   const formatDeliveredDate = (dateStr) => {
     if (!dateStr) return 'Recently';
@@ -148,11 +158,9 @@ export const RewindLetterVaultModal = ({
             onClick={() => setActiveTab('received')}
           >
             <span>From {partnerName}</span>
-            {deliveredLetter ? (
-              <span className="rewind-vault-tab-pill delivered">Delivered</span>
-            ) : letterStatus?.receivedLetter?.status === 'SEALED' ? (
-              <span className="rewind-vault-tab-pill sealed">Sealed 🔒</span>
-            ) : null}
+            <span className="rewind-vault-tab-count">
+              {receivedLetters.length}
+            </span>
           </button>
 
           <button
@@ -163,11 +171,9 @@ export const RewindLetterVaultModal = ({
             onClick={() => setActiveTab('sent')}
           >
             <span>Sent by You</span>
-            {myLetter?.status === 'DELIVERED' ? (
-              <span className="rewind-vault-tab-pill delivered">Delivered</span>
-            ) : myLetter?.status === 'SEALED' ? (
-              <span className="rewind-vault-tab-pill sealed">Sealed 🔒</span>
-            ) : null}
+            <span className="rewind-vault-tab-count">
+              {sentLetters.length}
+            </span>
           </button>
         </div>
 
@@ -176,58 +182,77 @@ export const RewindLetterVaultModal = ({
           {/* RECEIVED TAB */}
           {activeTab === 'received' && (
             <div className="rewind-vault-content-section animate-fade">
-              {deliveredLetter ? (
-                <div className="rewind-vault-letter-card">
-                  <div className="rewind-vault-letter-meta-row font-ui">
-                    <div>
-                      <span className="rewind-vault-letter-author font-display">From {partnerName}</span>
-                      <span className="rewind-vault-letter-date font-body">
-                        Delivered on {formatDeliveredDate(deliveredLetter.deliveredAt)}
-                      </span>
-                    </div>
-                    <div className="rewind-vault-wax-seal" title="Authentic Velvet Hearts Seal">
-                      <Heart size={16} weight="fill" />
-                    </div>
-                  </div>
+              {receivedLetters.length > 0 ? (
+                <div className="rewind-vault-letters-list">
+                  {receivedLetters.map((letter) => (
+                    <div key={letter.id} className="rewind-vault-letter-item">
+                      {letter.status === 'DELIVERED' && letter.content ? (
+                        <div className="rewind-vault-letter-card">
+                          <div className="rewind-vault-letter-meta-row font-ui">
+                            <div>
+                              <span className="rewind-vault-letter-author font-display">From {partnerName}</span>
+                              <span className="rewind-vault-letter-date font-body">
+                                Delivered on {formatDeliveredDate(letter.deliveredAt)}
+                              </span>
+                            </div>
+                            <div className="rewind-vault-wax-seal" title="Authentic Velvet Hearts Seal">
+                              <Heart size={16} weight="fill" />
+                            </div>
+                          </div>
 
-                  <div className="rewind-vault-quote-body">
-                    <Quotes size={24} weight="fill" className="rewind-vault-quote-icon" />
-                    <p className="rewind-vault-letter-text font-body">
-                      {deliveredLetter.content}
-                    </p>
+                          <div className="rewind-vault-quote-body">
+                            <Quotes size={24} weight="fill" className="rewind-vault-quote-icon" />
+                            <p className="rewind-vault-letter-text font-body">
+                              {letter.content}
+                            </p>
 
-                    {/* Aesthetic Letter Signature */}
-                    <div className="rewind-letter-signature">
-                      <div className="rewind-signature-divider" />
-                      <div className="rewind-signature-content">
-                        <span className="rewind-signature-date font-ui">
-                          Written on {formatWrittenDate(deliveredLetter.createdAt)}
-                        </span>
-                        <span className="rewind-signature-author font-display">
-                          Sent with care, {partnerName} <span className="rewind-signature-heart">❤️</span>
-                        </span>
-                      </div>
+                            {/* Aesthetic Letter Signature */}
+                            <div className="rewind-letter-signature">
+                              <div className="rewind-signature-divider" />
+                              <div className="rewind-signature-content">
+                                <span className="rewind-signature-date font-ui">
+                                  Written on {formatWrittenDate(letter.createdAt)}
+                                </span>
+                                <span className="rewind-signature-author font-display">
+                                  Sent with care, {partnerName} <span className="rewind-signature-heart">❤️</span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="rewind-vault-letter-footer font-ui" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>A private memory preserved from when you first connected.</span>
+                            <button
+                              type="button"
+                              className="rewind-vault-delete-btn font-ui"
+                              title="Delete Letter from Vault"
+                              onClick={() => {
+                                if (onDeleteLetter) onDeleteLetter(letter.id);
+                              }}
+                            >
+                              <Trash size={14} weight="bold" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="rewind-vault-sealed-card">
+                          <div className="rewind-vault-sealed-icon-box">
+                            <LockKey size={32} weight="duotone" />
+                          </div>
+                          <h4 className="rewind-vault-sealed-title font-display">
+                            {partnerName} Sealed a Rewind Letter
+                          </h4>
+                          <p className="rewind-vault-sealed-desc font-body">
+                            This time-capsule letter was written by {partnerName}. It is safely encrypted in the Velvet Hearts vault and will automatically unlock on its scheduled delivery date.
+                          </p>
+                          <div className="rewind-vault-sealed-hint font-ui">
+                            🔒 Scheduled to unlock: {formatDeliveredDate(letter.deliverAfter)}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-
-                  <div className="rewind-vault-letter-footer font-ui">
-                    <span>A private memory preserved from when you first connected.</span>
-                  </div>
-                </div>
-              ) : letterStatus?.receivedLetter?.status === 'SEALED' ? (
-                <div className="rewind-vault-sealed-card">
-                  <div className="rewind-vault-sealed-icon-box">
-                    <LockKey size={32} weight="duotone" />
-                  </div>
-                  <h4 className="rewind-vault-sealed-title font-display">
-                    {partnerName} Sealed a Rewind Letter
-                  </h4>
-                  <p className="rewind-vault-sealed-desc font-body">
-                    This time-capsule letter was written when you first connected. It is safely encrypted in the Velvet Hearts vault and will automatically unlock on its scheduled delivery date.
-                  </p>
-                  <div className="rewind-vault-sealed-hint font-ui">
-                    🔒 Scheduled to unlock: {formatDeliveredDate(letterStatus.receivedLetter.deliverAfter)}
-                  </div>
+                  ))}
                 </div>
               ) : (
                 <div className="rewind-vault-empty-state font-ui">
@@ -243,120 +268,149 @@ export const RewindLetterVaultModal = ({
           {/* SENT TAB */}
           {activeTab === 'sent' && (
             <div className="rewind-vault-content-section animate-fade">
-              {myLetter ? (
-                <div className="rewind-vault-letter-card">
-                  <div className="rewind-vault-letter-meta-row font-ui">
-                    <div>
-                      <span className="rewind-vault-letter-author font-display">Your Note for {partnerName}</span>
-                      <span className="rewind-vault-letter-date font-body">
-                        {myLetter.status === 'DELIVERED'
-                          ? `Delivered on ${formatDeliveredDate(myLetter.deliveredAt)}`
-                          : `Sealed on ${formatWrittenDate(myLetter.createdAt)}`}
-                      </span>
-                    </div>
-                    <span className={`rewind-vault-status-pill ${myLetter.status === 'DELIVERED' ? 'delivered' : 'sealed'} font-ui`}>
-                      {myLetter.status === 'DELIVERED' ? 'Delivered' : 'Sealed 🔒'}
-                    </span>
-                  </div>
+              {/* If no sealed letter is pending, show button to write a new one */}
+              {!hasSealedSentLetter && (
+                <div className="rewind-vault-write-bar">
+                  <button
+                    type="button"
+                    className="rewind-vault-write-action-btn font-ui"
+                    onClick={() => {
+                      onClose();
+                      if (onOpenCompose) onOpenCompose();
+                    }}
+                  >
+                    <Plus size={16} weight="bold" />
+                    <span>Write Another Rewind Letter</span>
+                  </button>
+                </div>
+              )}
 
-                  <div className="rewind-vault-quote-body">
-                    <Quotes size={24} weight="fill" className="rewind-vault-quote-icon" />
-                    <p className="rewind-vault-letter-text font-body">
-                      {myLetter.content || 'Your private sealed letter is safely stored.'}
-                    </p>
+              {sentLetters.length > 0 ? (
+                <div className="rewind-vault-letters-list">
+                  {sentLetters.map((letter) => {
+                    const isLetterEditable = letter.status === 'SEALED' && letter.createdAt
+                      ? (Date.now() - new Date(letter.createdAt).getTime()) <= FORTY_EIGHT_HOURS_MS
+                      : false;
 
-                    {/* Aesthetic Letter Signature */}
-                    <div className="rewind-letter-signature">
-                      <div className="rewind-signature-divider" />
-                      <div className="rewind-signature-content">
-                        <span className="rewind-signature-date font-ui">
-                          Written on {formatWrittenDate(myLetter.createdAt)}
-                        </span>
-                        <span className="rewind-signature-author font-display">
-                          Sent with care, You <span className="rewind-signature-heart">❤️</span>
-                        </span>
+                    return (
+                      <div key={letter.id} className="rewind-vault-letter-item">
+                        <div className="rewind-vault-letter-card">
+                          <div className="rewind-vault-letter-meta-row font-ui">
+                            <div>
+                              <span className="rewind-vault-letter-author font-display">Your Note for {partnerName}</span>
+                              <span className="rewind-vault-letter-date font-body">
+                                {letter.status === 'DELIVERED'
+                                  ? `Delivered on ${formatDeliveredDate(letter.deliveredAt)}`
+                                  : `Sealed on ${formatWrittenDate(letter.createdAt)}`}
+                              </span>
+                            </div>
+                            <span className={`rewind-vault-status-pill ${letter.status === 'DELIVERED' ? 'delivered' : 'sealed'} font-ui`}>
+                              {letter.status === 'DELIVERED' ? 'Delivered' : 'Sealed 🔒'}
+                            </span>
+                          </div>
+
+                          <div className="rewind-vault-quote-body">
+                            <Quotes size={24} weight="fill" className="rewind-vault-quote-icon" />
+                            <p className="rewind-vault-letter-text font-body">
+                              {letter.content || 'Your private sealed letter is safely stored.'}
+                            </p>
+
+                            {/* Aesthetic Letter Signature */}
+                            <div className="rewind-letter-signature">
+                              <div className="rewind-signature-divider" />
+                              <div className="rewind-signature-content">
+                                <span className="rewind-signature-date font-ui">
+                                  Written on {formatWrittenDate(letter.createdAt)}
+                                </span>
+                                <span className="rewind-signature-author font-display">
+                                  Sent with care, You <span className="rewind-signature-heart">❤️</span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {letter.status === 'SEALED' && (
+                            <div className="rewind-vault-reschedule-banner">
+                              <div className="rewind-vault-reschedule-info">
+                                <Clock size={16} weight="duotone" />
+                                <span className="font-ui">
+                                  Unlocks on {formatDeliveredDate(letter.deliverAfter)}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {isLetterEditable ? (
+                                  <button
+                                    type="button"
+                                    className="rewind-vault-reschedule-btn font-ui"
+                                    onClick={() => {
+                                      onClose();
+                                      if (onOpenEdit) onOpenEdit(letter);
+                                    }}
+                                  >
+                                    <PencilSimple size={14} weight="bold" />
+                                    <span>Edit Note</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="rewind-vault-reschedule-btn font-ui"
+                                    onClick={() => {
+                                      onClose();
+                                      if (onOpenReschedule) onOpenReschedule(letter);
+                                    }}
+                                  >
+                                    <Clock size={14} weight="bold" />
+                                    <span>Adjust Days</span>
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  className="rewind-vault-delete-btn font-ui"
+                                  title="Delete / Unsend Letter"
+                                  onClick={() => {
+                                    if (onDeleteLetter) onDeleteLetter(letter.id);
+                                  }}
+                                >
+                                  <Trash size={14} weight="bold" />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="rewind-vault-letter-footer font-ui" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>
+                              {letter.status === 'DELIVERED'
+                                ? `Delivered to ${partnerName}'s chat and vault.`
+                                : isLetterEditable
+                                ? `48-hour edit window active. You can edit or delete this letter.`
+                                : `Content locked in vault. Delivery timeframe can still be adjusted.`}
+                            </span>
+                            {letter.status === 'DELIVERED' && (
+                              <button
+                                type="button"
+                                className="rewind-vault-delete-btn font-ui"
+                                title="Delete Letter"
+                                onClick={() => {
+                                  if (onDeleteLetter) onDeleteLetter(letter.id);
+                                }}
+                              >
+                                <Trash size={14} weight="bold" />
+                                <span>Delete</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-
-                  {myLetter.status === 'SEALED' && (
-                    <div className="rewind-vault-reschedule-banner">
-                      <div className="rewind-vault-reschedule-info">
-                        <Clock size={16} weight="duotone" />
-                        <span className="font-ui">
-                          Unlocks on {formatDeliveredDate(myLetter.deliverAfter)}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {isEditable ? (
-                          <button
-                            type="button"
-                            className="rewind-vault-reschedule-btn font-ui"
-                            onClick={() => {
-                              onClose();
-                              if (onOpenEdit) onOpenEdit(myLetter);
-                            }}
-                          >
-                            <PencilSimple size={14} weight="bold" />
-                            <span>Edit Note</span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="rewind-vault-reschedule-btn font-ui"
-                            onClick={() => {
-                              onClose();
-                              if (onOpenReschedule) onOpenReschedule();
-                            }}
-                          >
-                            <Clock size={14} weight="bold" />
-                            <span>Adjust Days</span>
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          className="rewind-vault-delete-btn font-ui"
-                          title="Delete / Unsend Letter"
-                          onClick={() => {
-                            if (onDeleteLetter) onDeleteLetter();
-                          }}
-                        >
-                          <Trash size={14} weight="bold" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="rewind-vault-letter-footer font-ui" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>
-                      {myLetter.status === 'DELIVERED'
-                        ? `Delivered to ${partnerName}'s chat and vault.`
-                        : isEditable
-                        ? `48-hour edit window active. You can edit or delete this letter.`
-                        : `Content locked in vault. Delivery timeframe can still be adjusted.`}
-                    </span>
-                    {myLetter.status === 'DELIVERED' && (
-                      <button
-                        type="button"
-                        className="rewind-vault-delete-btn font-ui"
-                        title="Delete Letter"
-                        onClick={() => {
-                          if (onDeleteLetter) onDeleteLetter();
-                        }}
-                      >
-                        <Trash size={14} weight="bold" />
-                        <span>Delete Letter</span>
-                      </button>
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="rewind-vault-empty-state font-ui">
                   <PaperPlaneTilt size={36} weight="duotone" className="rewind-vault-empty-icon" />
                   <p className="rewind-vault-empty-text font-body">
-                    You haven't written a Rewind Letter for {partnerName} yet. Capture your first impressions in a private time capsule!
+                    You haven't written a Rewind Letter for {partnerName} yet. Capture your impressions in a private time capsule!
                   </p>
                   <button
                     type="button"

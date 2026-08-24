@@ -224,23 +224,24 @@ export const api = {
         });
     },
 
-    editRewindLetter(matchId, content, deliveryDays) {
+    editRewindLetter(matchId, content, deliveryDays, letterId) {
         return request(`/api/v1/rewind-letter/${matchId}`, {
             method: 'PUT',
-            body: { content, deliveryDays }
+            body: { content, deliveryDays, letterId }
         });
     },
 
-    deleteRewindLetter(matchId) {
-        return request(`/api/v1/rewind-letter/${matchId}`, {
-            method: 'DELETE'
+    deleteRewindLetter(matchId, letterId) {
+        return request(`/api/v1/rewind-letter/${matchId}${letterId ? `?letterId=${letterId}` : ''}`, {
+            method: 'DELETE',
+            body: letterId ? { letterId } : undefined
         });
     },
 
-    updateRewindLetterSchedule(matchId, deliveryDays) {
+    updateRewindLetterSchedule(matchId, deliveryDays, letterId) {
         return request(`/api/v1/rewind-letter/${matchId}/schedule`, {
             method: 'PATCH',
-            body: { deliveryDays }
+            body: { deliveryDays, letterId }
         });
     },
 

@@ -2381,6 +2381,62 @@ html {
   gap: var(--space-4);
 }
 
+.rewind-vault-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 7px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.rewind-vault-tab.active .rewind-vault-tab-count {
+  background: var(--burgundy-500, #b8334a);
+  color: #ffffff;
+}
+
+.rewind-vault-write-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-3);
+}
+
+.rewind-vault-write-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(184, 51, 74, 0.2);
+  color: var(--burgundy-300, #f87171);
+  border: 1px solid rgba(184, 51, 74, 0.35);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.rewind-vault-write-action-btn:hover {
+  background: var(--burgundy-500, #b8334a);
+  color: #ffffff;
+  border-color: var(--burgundy-500);
+  transform: translateY(-1px);
+}
+
+.rewind-vault-letters-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.rewind-vault-letter-item {
+  display: flex;
+  flex-direction: column;
+}
+
 .rewind-vault-letter-card {
   background: var(--bg-surface-warm, rgba(255, 255, 255, 0.03));
   border: 1px solid var(--border-default, rgba(255, 255, 255, 0.1));

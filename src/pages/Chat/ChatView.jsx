@@ -831,23 +831,22 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     setIsRewindDismissed(true);
   };
 
-  const handleDeleteRewindLetter = async () => {
+  const handleDeleteRewindLetter = async (letterId) => {
     if (!activeMatchId) return;
     const confirmed = await showConfirm({
       title: 'Delete Rewind Letter',
-      message: `Are you sure you want to delete your sealed letter for ${activePartner.name}? This will permanently remove it from the vault and cannot be undone.`,
+      message: `Are you sure you want to delete this letter? This will permanently remove it from the vault and cannot be undone.`,
       confirmText: 'Delete Letter',
       danger: true,
     });
     if (!confirmed) return;
 
     try {
-      await api.deleteRewindLetter(activeMatchId);
-      setLetterStatus(prev => ({ ...prev, myLetter: null }));
+      await api.deleteRewindLetter(activeMatchId, letterId);
       fetchLetterData();
       showAlert({
         title: 'Letter Deleted',
-        message: 'Your Rewind Letter has been successfully removed.',
+        message: 'The Rewind Letter has been successfully removed.',
       });
     } catch (err) {
       showAlert({
