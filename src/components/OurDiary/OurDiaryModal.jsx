@@ -175,37 +175,43 @@ export const OurDiaryModal = ({
     };
   }, [isOpen, matchId]);
 
-  // Group entries into pages by Date with viewer's local timezone/locale
+  // Group entries into pages: Exactly 1 page per calendar day that has at least one entry
   const groupEntriesIntoPages = () => {
     if (!entries || entries.length === 0) {
       return [];
     }
 
-    const groupedByDate = {};
+    const groupedByDate = new Map();
+
     entries.forEach(entry => {
-      const dateKey = new Date(entry.createdAt).toLocaleDateString(undefined, {
+      const dateObj = new Date(entry.createdAt);
+      const dateLabel = dateObj.toLocaleDateString(undefined, {
         month: 'long',
         day: 'numeric',
         year: 'numeric'
       });
-      if (!groupedByDate[dateKey]) {
-        groupedByDate[dateKey] = [];
-      }
-      groupedByDate[dateKey].push(entry);
-    });
+      const dateSortKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
 
-    const pages = [];
-    Object.entries(groupedByDate).forEach(([dateLabel, items]) => {
-      for (let i = 0; i < items.length; i += 2) {
-        pages.push({
+      if (!groupedByDate.has(dateSortKey)) {
+        groupedByDate.set(dateSortKey, {
           dateLabel,
-          items: items.slice(i, i + 2),
-          pageNumber: pages.length + 1
+          rawDate: dateObj,
+          items: []
         });
       }
+      groupedByDate.get(dateSortKey).items.push(entry);
     });
 
-    return pages;
+    // Sort calendar days in ascending chronological order (Oldest day = Page 1, Most Recent day = Last Page)
+    const sortedDays = Array.from(groupedByDate.values()).sort(
+      (a, b) => a.rawDate.getTime() - b.rawDate.getTime()
+    );
+
+    return sortedDays.map((dayGroup, index) => ({
+      dateLabel: dayGroup.dateLabel,
+      items: dayGroup.items, // All entries on this calendar day stacked together in order
+      pageNumber: index + 1
+    }));
   };
 
   const pages = groupEntriesIntoPages();
