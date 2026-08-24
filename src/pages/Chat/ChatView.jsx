@@ -1892,10 +1892,10 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   initialContent={composeMode === 'edit' ? (editingLetterTarget?.content || letterStatus?.myLetter?.content || '') : ''}
                   initialDays={
                     composeMode === 'edit' || composeMode === 'reschedule'
-                      ? (editingLetterTarget?.deliverAfter && activePartner?.createdAt
-                        ? Math.max(7, Math.min(90, Math.round((new Date(editingLetterTarget.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
-                        : (letterStatus?.myLetter?.deliverAfter && activePartner?.createdAt
-                          ? Math.max(7, Math.min(90, Math.round((new Date(letterStatus.myLetter.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
+                      ? (editingLetterTarget?.deliverAfter && editingLetterTarget?.createdAt
+                        ? Math.max(7, Math.min(90, Math.round((new Date(editingLetterTarget.deliverAfter).getTime() - new Date(editingLetterTarget.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
+                        : (letterStatus?.myLetter?.deliverAfter && letterStatus?.myLetter?.createdAt
+                          ? Math.max(7, Math.min(90, Math.round((new Date(letterStatus.myLetter.deliverAfter).getTime() - new Date(letterStatus.myLetter.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
                           : 7))
                       : 7
                   }
