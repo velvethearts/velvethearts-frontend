@@ -40,7 +40,7 @@ import { RewindLetterVaultModal } from '../../components/RewindLetter/RewindLett
 const parseNoteReply = (text) => {
   if (!text || typeof text !== 'string') return null;
   const str = text.trim();
-  
+
   const tagMatch = str.match(/^\[NOTE_REPLY:"([^"]+)"\]\s*([\s\S]*)$/i);
   if (tagMatch) {
     return { quotedNote: tagMatch[1], replyText: tagMatch[2] };
@@ -300,7 +300,7 @@ const SwipeableMessageRow = ({ children, onReply, disabled, isUser, id, classNam
       const passed = clampedX >= THRESHOLD;
       if (passed && !hasPassedThreshold) {
         if (typeof navigator !== 'undefined' && navigator?.vibrate) {
-          try { navigator.vibrate(10); } catch (_) {}
+          try { navigator.vibrate(10); } catch (_) { }
         }
       }
       setHasPassedThreshold(passed);
@@ -762,9 +762,9 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
             uploadRes = res;
           } catch (uploadErr) {
             console.error('File upload error:', uploadErr);
-            const isModerationErr = uploadErr?.message?.toLowerCase().includes('inappropriate') || 
-                                   uploadErr?.message?.toLowerCase().includes('explicit') || 
-                                   uploadErr?.message?.toLowerCase().includes('moderation');
+            const isModerationErr = uploadErr?.message?.toLowerCase().includes('inappropriate') ||
+              uploadErr?.message?.toLowerCase().includes('explicit') ||
+              uploadErr?.message?.toLowerCase().includes('moderation');
             if (isModerationErr) {
               moderatedFiles.push(file.name);
             } else {
@@ -1269,12 +1269,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <h2 className="active-header-name font-display">{activePartner.name}</h2>
                       {/* Header Badge */}
-                      {letterStatus?.myLetter?.status === 'DELIVERED' ? (
-                        <span className="rewind-header-badge delivered" title={`Your Rewind Letter has been delivered to ${activePartner.name}`}>
-                          <EnvelopeOpen size={12} weight="fill" />
-                          <span>Your Letter Delivered</span>
-                        </span>
-                      ) : letterStatus?.myLetter?.status === 'SEALED' && letterStatus?.receivedLetter?.status === 'SEALED' ? (
+                      {letterStatus?.myLetter?.status === 'SEALED' && letterStatus?.receivedLetter?.status === 'SEALED' ? (
                         <button
                           type="button"
                           className="rewind-header-badge clickable"
@@ -1300,12 +1295,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                           }}
                         >
                           <LockKey size={12} weight="fill" />
-                          <span>Your Letter Sealed</span>
+                          <span>Your letter has been sealed.</span>
                         </button>
                       ) : letterStatus?.receivedLetter?.status === 'SEALED' ? (
                         <span className="rewind-header-badge" title={`${activePartner.name} sealed a Rewind Letter for you!`}>
                           <LockKey size={12} weight="fill" />
                           <span>{activePartner.name} Sealed a Letter</span>
+                        </span>
+                      ) : letterStatus?.myLetter?.status === 'DELIVERED' ? (
+                        <span className="rewind-header-badge delivered" title={`Your Rewind Letter has been delivered to ${activePartner.name}`}>
+                          <EnvelopeOpen size={12} weight="fill" />
+                          <span>Your letter has been delivered.</span>
                         </span>
                       ) : null}
                     </div>
@@ -1379,26 +1379,23 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                     onCompose={() => setShowRewindCompose(true)}
                     onDismiss={handleDismissPrompt}
                   />
-              )}
+                )}
 
               {/* Chat Log */}
               <div className="chat-log-container">
                 <div className="chat-log-scroll">
-                  {/* Card for letter received from partner (Delivered - auto-archived after 2 days) */}
-                  {deliveredLetter && ((Date.now() - new Date(deliveredLetter.deliveredAt || Date.now()).getTime()) < 2 * 24 * 60 * 60 * 1000) && (
-                    <RewindLetterCard
-                      letter={deliveredLetter}
-                      partnerName={activePartner.name}
-                    />
-                  )}
-
-                  {/* Card when partner has sealed a letter for user (Locked in vault) */}
-                  {!deliveredLetter && letterStatus?.receivedLetter?.status === 'SEALED' && (
+                  {/* Card when partner has sealed a new letter for user (Locked in vault) */}
+                  {letterStatus?.receivedLetter?.status === 'SEALED' ? (
                     <RewindLetterCard
                       letter={{ ...letterStatus.receivedLetter, partnerName: activePartner.name }}
                       partnerName={activePartner.name}
                     />
-                  )}
+                  ) : deliveredLetter && ((Date.now() - new Date(deliveredLetter.deliveredAt || Date.now()).getTime()) < 2 * 24 * 60 * 60 * 1000) ? (
+                    <RewindLetterCard
+                      letter={deliveredLetter}
+                      partnerName={activePartner.name}
+                    />
+                  ) : null}
 
                   <div className="chat-welcome-indicator font-body">
                     🛡️ Conversations are confidential. Always feel free to block or report from the menu.
@@ -1896,10 +1893,10 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   initialDays={
                     composeMode === 'edit' || composeMode === 'reschedule'
                       ? (editingLetterTarget?.deliverAfter && activePartner?.createdAt
-                          ? Math.max(7, Math.min(90, Math.round((new Date(editingLetterTarget.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
-                          : (letterStatus?.myLetter?.deliverAfter && activePartner?.createdAt
-                              ? Math.max(7, Math.min(90, Math.round((new Date(letterStatus.myLetter.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
-                              : 7))
+                        ? Math.max(7, Math.min(90, Math.round((new Date(editingLetterTarget.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
+                        : (letterStatus?.myLetter?.deliverAfter && activePartner?.createdAt
+                          ? Math.max(7, Math.min(90, Math.round((new Date(letterStatus.myLetter.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
+                          : 7))
                       : 7
                   }
                   onClose={() => {
