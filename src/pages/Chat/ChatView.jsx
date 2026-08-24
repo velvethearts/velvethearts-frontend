@@ -449,6 +449,18 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
       sessionStorage.removeItem('vh-active-chat-id');
     }
   };
+
+  // Find active chat partner details
+  const activePartner = connections.find(c => c.id === activeChatId || c.matchId === activeChatId || c.userId === activeChatId);
+
+  const conversation = conversations.find(c =>
+    c.id === activeChatId ||
+    c.partnerId === activeChatId ||
+    (activePartner && (c.partnerId === activePartner.userId || c.partnerId === activePartner.id))
+  );
+  const conversationId = conversation?.id;
+  const activeMatchId = activePartner?.matchId || conversation?.matchId || (connections.find(c => c.id === activeChatId || c.userId === activeChatId)?.matchId);
+
   const [messageText, setMessageText] = useState('');
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editingText, setEditingText] = useState('');
@@ -480,25 +492,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     setEditingText('');
   };
 
-  const handleSaveEdit = async (messageId) => {
-    if (!editingText.trim() || !activeChatId) return;
-    let newText = editingText.trim();
-
-    // Preserve quoted note prefix if editing a note reply
-    const originalMsg = activeMessages.find(m => m.id === messageId);
-    if (originalMsg && originalMsg.text) {
-      const parsed = parseNoteReply(originalMsg.text);
-      if (parsed) {
-        newText = `[NOTE_REPLY:"${parsed.quotedNote}"] ${newText}`;
-      }
-    }
-
-    setEditingMessageId(null);
-    setEditingText('');
-
+  const handleSaveEdit = async (msgId) => {
+    if (!editingText.trim()) return;
     try {
-      await editMessage(activeChatId, messageId, newText);
+      await editMessage(msgId, editingText.trim(), activeChatId, conversationId);
+      setEditingMessageId(null);
+      setEditingText('');
     } catch (err) {
+      console.error('Failed to save message edit:', err);
       await showAlert({ title: 'Edit Failed', message: err?.message || 'Could not update message. Messages can only be edited within 15 minutes of sending.' });
     }
   };
@@ -560,24 +561,35 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   };
 
   const handleConfirmSaveToDiary = async () => {
-    if (!savingToDiaryMsg || !activeMatchId) return;
+    if (!savingToDiaryMsg) return;
+    const targetMatchId = activeMatchId || activePartner?.matchId || conversation?.matchId || (connections.find(c => c.id === activeChatId || c.userId === activeChatId)?.matchId);
+    if (!targetMatchId) {
+      if (showAlert) showAlert({ title: 'Notice', message: 'Could not find an active match for this chat.' });
+      return;
+    }
     try {
       setIsSavingToDiary(true);
+      const firstAtt = savingToDiaryMsg.attachments?.[0];
       const res = await api.saveMessageToDiary(
-        activeMatchId,
+        targetMatchId,
         savingToDiaryMsg.id,
-        diarySaveCaption.trim() || undefined
+        diarySaveCaption.trim() || undefined,
+        {
+          text: savingToDiaryMsg.text || undefined,
+          attachmentUrl: firstAtt?.secureUrl || undefined,
+          sourceType: firstAtt?.fileType === 'AUDIO' ? 'VOICE_NOTE' : firstAtt?.fileType === 'IMAGE' ? 'IMAGE' : 'MESSAGE',
+        }
       );
       if (res && res.success) {
-        showToast('Saved to Our Diary ✨', 'success');
         setSavingToDiaryMsg(null);
         setDiarySaveCaption('');
+        if (showAlert) showAlert({ title: 'Saved to Our Diary ✨', message: 'This moment has been added to your shared scrapbook.' });
       } else {
-        showToast(res?.message || 'Failed to save to diary', 'error');
+        if (showAlert) showAlert({ title: 'Save Failed', message: res?.message || 'Failed to save moment to diary.' });
       }
     } catch (err) {
       console.error('Error saving message to diary:', err);
-      showToast(err?.message || 'Failed to save to diary', 'error');
+      if (showAlert) showAlert({ title: 'Save Failed', message: err?.message || 'Failed to save moment to diary.' });
     } finally {
       setIsSavingToDiary(false);
     }
@@ -923,16 +935,6 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   // All connections are valid chat partners
   const chatPartners = connections;
 
-  // Find active chat partner details
-  const activePartner = connections.find(c => c.id === activeChatId || c.matchId === activeChatId || c.userId === activeChatId);
-
-  const conversation = conversations.find(c =>
-    c.id === activeChatId ||
-    c.partnerId === activeChatId ||
-    (activePartner && (c.partnerId === activePartner.userId || c.partnerId === activePartner.id))
-  );
-  const conversationId = conversation?.id;
-
   const activeMessagesRaw = activeChatId ? (
     chats[activeChatId] ||
     (activePartner?.userId ? chats[activePartner.userId] : null) ||
@@ -997,8 +999,6 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
       fetchConversationMessages(conversationId, activePartner.id);
     }
   }, [conversationId, activePartner?.id]);
-
-  const activeMatchId = activePartner?.matchId;
 
   // Sync dismissal status when active chat changes
   useEffect(() => {

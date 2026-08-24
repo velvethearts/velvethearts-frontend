@@ -416,10 +416,10 @@ export const api = {
         return request(`/api/v1/diary/${matchId}`);
     },
 
-    saveMessageToDiary(matchId, messageId, caption) {
+    saveMessageToDiary(matchId, messageId, caption, fallbackData = {}) {
         return request(`/api/v1/diary/${matchId}/message`, {
             method: 'POST',
-            body: { messageId, caption }
+            body: { messageId, caption, ...fallbackData }
         });
     },
 

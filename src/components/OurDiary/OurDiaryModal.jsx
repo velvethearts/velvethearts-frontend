@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  X, 
-  BookBookmark, 
-  CaretLeft, 
-  CaretRight, 
-  Plus, 
-  Image as ImageIcon, 
-  NotePencil, 
-  Trash, 
-  Play, 
-  Pause, 
-  CalendarBlank, 
-  Sparkle, 
+import {
+  X,
+  BookBookmark,
+  CaretLeft,
+  CaretRight,
+  Plus,
+  Image as ImageIcon,
+  NotePencil,
+  Trash,
+  Play,
+  Pause,
+  CalendarBlank,
+  Sparkle,
   Heart,
   UploadSimple,
   WarningCircle,
@@ -76,8 +76,8 @@ const DiaryAudioPlayer = ({ url }) => {
       </button>
       <div className="diary-audio-waveform">
         <div className="diary-audio-progress-bar">
-          <div 
-            className="diary-audio-progress-fill" 
+          <div
+            className="diary-audio-progress-fill"
             style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
           />
         </div>
@@ -90,16 +90,16 @@ const DiaryAudioPlayer = ({ url }) => {
   );
 };
 
-export const OurDiaryModal = ({ 
-  isOpen, 
-  onClose, 
-  matchId, 
-  partnerName, 
-  partnerPhoto, 
+export const OurDiaryModal = ({
+  isOpen,
+  onClose,
+  matchId,
+  partnerName,
+  partnerPhoto,
   userName,
-  userPhoto 
+  userPhoto
 }) => {
-  const { showToast, showConfirm } = useApp();
+  const { showAlert, showConfirm } = useApp();
   const [isBookOpen, setIsBookOpen] = useState(false);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -132,7 +132,7 @@ export const OurDiaryModal = ({
     } catch (err) {
       console.error('Failed to fetch diary entries:', err);
       if (err?.message?.includes('not found') || err?.message?.includes('not part') || err?.message?.includes('active')) {
-        showToast('This connection is no longer active.', 'info');
+        if (showAlert) showAlert({ title: 'Notice', message: 'This connection is no longer active.' });
         onClose();
       }
     } finally {
@@ -175,43 +175,37 @@ export const OurDiaryModal = ({
     };
   }, [isOpen, matchId]);
 
-  // Group entries into pages: Exactly 1 page per calendar day that has at least one entry
+  // Group entries into pages by Date with viewer's local timezone/locale
   const groupEntriesIntoPages = () => {
     if (!entries || entries.length === 0) {
       return [];
     }
 
-    const groupedByDate = new Map();
-
+    const groupedByDate = {};
     entries.forEach(entry => {
-      const dateObj = new Date(entry.createdAt);
-      const dateLabel = dateObj.toLocaleDateString(undefined, {
+      const dateKey = new Date(entry.createdAt).toLocaleDateString(undefined, {
         month: 'long',
         day: 'numeric',
         year: 'numeric'
       });
-      const dateSortKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
-
-      if (!groupedByDate.has(dateSortKey)) {
-        groupedByDate.set(dateSortKey, {
-          dateLabel,
-          rawDate: dateObj,
-          items: []
-        });
+      if (!groupedByDate[dateKey]) {
+        groupedByDate[dateKey] = [];
       }
-      groupedByDate.get(dateSortKey).items.push(entry);
+      groupedByDate[dateKey].push(entry);
     });
 
-    // Sort calendar days in ascending chronological order (Oldest day = Page 1, Most Recent day = Last Page)
-    const sortedDays = Array.from(groupedByDate.values()).sort(
-      (a, b) => a.rawDate.getTime() - b.rawDate.getTime()
-    );
+    const pages = [];
+    Object.entries(groupedByDate).forEach(([dateLabel, items]) => {
+      for (let i = 0; i < items.length; i += 2) {
+        pages.push({
+          dateLabel,
+          items: items.slice(i, i + 2),
+          pageNumber: pages.length + 1
+        });
+      }
+    });
 
-    return sortedDays.map((dayGroup, index) => ({
-      dateLabel: dayGroup.dateLabel,
-      items: dayGroup.items, // All entries on this calendar day stacked together in order
-      pageNumber: index + 1
-    }));
+    return pages;
   };
 
   const pages = groupEntriesIntoPages();
@@ -318,7 +312,6 @@ export const OurDiaryModal = ({
         setIsSubmitting(true);
         const res = await api.addDiaryNote(matchId, noteText.trim(), captionText.trim() || undefined);
         if (res && res.success) {
-          showToast('Sweet moment added to Our Diary ✨', 'success');
           setNoteText('');
           setCaptionText('');
           setShowComposer(false);
@@ -345,7 +338,6 @@ export const OurDiaryModal = ({
         setIsSubmitting(true);
         const res = await api.uploadDiaryPhoto(matchId, selectedPhotoFile, captionText.trim() || undefined);
         if (res && res.success) {
-          showToast('Photo added to Our Diary 📷', 'success');
           setSelectedPhotoFile(null);
           setPhotoPreviewUrl(null);
           setCaptionText('');
@@ -379,12 +371,11 @@ export const OurDiaryModal = ({
         try {
           const res = await api.deleteDiaryEntry(matchId, entryId);
           if (res && res.success) {
-            showToast('Moment removed from diary', 'info');
             await fetchEntries();
           }
         } catch (err) {
           console.error('Failed to delete entry:', err);
-          showToast(err?.message || 'Failed to delete entry', 'error');
+          if (showAlert) showAlert({ title: 'Delete Failed', message: err?.message || 'Failed to delete entry' });
         }
       }
     });
@@ -411,8 +402,8 @@ export const OurDiaryModal = ({
             {isBookOpen && (
               <>
                 {pages.length > 1 && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="diary-top-action-btn"
                     onClick={() => setShowDateJump(!showDateJump)}
                     title="Jump to date"
@@ -421,8 +412,8 @@ export const OurDiaryModal = ({
                     <span className="diary-btn-label">Dates</span>
                   </button>
                 )}
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="diary-top-action-btn primary"
                   onClick={() => {
                     setComposerError(null);
@@ -436,9 +427,9 @@ export const OurDiaryModal = ({
               </>
             )}
 
-            <button 
-              type="button" 
-              className="our-diary-close-btn" 
+            <button
+              type="button"
+              className="our-diary-close-btn"
               onClick={onClose}
               aria-label="Close Diary"
               title="Close Diary"
@@ -472,7 +463,7 @@ export const OurDiaryModal = ({
         <div className="our-diary-stage">
           {!isBookOpen ? (
             /* CLOSED BOOK COVER */
-            <div 
+            <div
               className="diary-book-cover"
               onClick={handleOpenBook}
               role="button"
@@ -498,9 +489,8 @@ export const OurDiaryModal = ({
                   </p>
 
                   <div className="diary-cover-open-prompt">
-                    <span className="diary-open-sparkle">✨</span>
                     <span>Tap to Open</span>
-                    <span className="diary-open-sparkle">✨</span>
+                    <span className="diary-open-sparkle">🥰</span>
                   </div>
                 </div>
               </div>
@@ -558,8 +548,8 @@ export const OurDiaryModal = ({
                         });
 
                         return (
-                          <div 
-                            key={entry.id} 
+                          <div
+                            key={entry.id}
                             className={`diary-moment-card type-${entry.sourceType.toLowerCase()}`}
                           >
                             {/* Saved By badge & Delete control */}
@@ -762,7 +752,7 @@ export const OurDiaryModal = ({
                         </button>
                       </div>
                     ) : (
-                      <div 
+                      <div
                         className="diary-upload-dropzone"
                         onClick={() => fileInputRef.current?.click()}
                       >
