@@ -238,6 +238,13 @@ export const OurDiaryModal = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isBookOpen, showComposer, currentPageIndex, totalPages]);
 
+  const handleOpenBook = () => {
+    setIsBookOpen(true);
+    // Jump straight to the most recent page (like a bookmark placed at the end)
+    const currentPages = groupEntriesIntoPages();
+    setCurrentPageIndex(Math.max(0, currentPages.length - 1));
+  };
+
   const handleNextPage = () => {
     if (currentPageIndex < totalPages - 1 && !isFlipping) {
       setFlipDirection('next');
@@ -461,10 +468,10 @@ export const OurDiaryModal = ({
             /* CLOSED BOOK COVER */
             <div 
               className="diary-book-cover"
-              onClick={() => setIsBookOpen(true)}
+              onClick={handleOpenBook}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setIsBookOpen(true); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenBook(); }}
             >
               <div className="diary-cover-spine" />
               <div className="diary-cover-texture">
