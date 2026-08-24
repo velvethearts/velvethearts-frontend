@@ -2476,6 +2476,57 @@ html {
   text-align: right;
 }
 
+/* Letter Aesthetic Signature */
+.rewind-letter-signature {
+  margin-top: var(--space-4);
+  padding-top: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rewind-signature-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(184, 51, 74, 0.45) 0%, rgba(214, 69, 93, 0.2) 60%, transparent 100%);
+}
+
+.rewind-signature-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.rewind-signature-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: normal;
+  letter-spacing: 0.02em;
+}
+
+.rewind-signature-author {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--burgundy-300, #f87171);
+  font-style: italic;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rewind-signature-heart {
+  display: inline-block;
+  animation: pulse-heart 2.5s infinite ease-in-out;
+}
+
+@keyframes pulse-heart {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
 .rewind-vault-sealed-card {
   padding: var(--space-6) var(--space-4);
   background: var(--bg-surface-warm, rgba(255, 255, 255, 0.02));

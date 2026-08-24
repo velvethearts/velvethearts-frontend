@@ -195,6 +195,19 @@ export const RewindLetterVaultModal = ({
                     <p className="rewind-vault-letter-text font-body">
                       {deliveredLetter.content}
                     </p>
+
+                    {/* Aesthetic Letter Signature */}
+                    <div className="rewind-letter-signature">
+                      <div className="rewind-signature-divider" />
+                      <div className="rewind-signature-content">
+                        <span className="rewind-signature-date font-ui">
+                          Written on {formatWrittenDate(deliveredLetter.createdAt)}
+                        </span>
+                        <span className="rewind-signature-author font-display">
+                          Sent with care, {partnerName} <span className="rewind-signature-heart">❤️</span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="rewind-vault-letter-footer font-ui">
@@ -251,6 +264,19 @@ export const RewindLetterVaultModal = ({
                     <p className="rewind-vault-letter-text font-body">
                       {myLetter.content || 'Your private sealed letter is safely stored.'}
                     </p>
+
+                    {/* Aesthetic Letter Signature */}
+                    <div className="rewind-letter-signature">
+                      <div className="rewind-signature-divider" />
+                      <div className="rewind-signature-content">
+                        <span className="rewind-signature-date font-ui">
+                          Written on {formatWrittenDate(myLetter.createdAt)}
+                        </span>
+                        <span className="rewind-signature-author font-display">
+                          Sent with care, You <span className="rewind-signature-heart">❤️</span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   {myLetter.status === 'SEALED' && (

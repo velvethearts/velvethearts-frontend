@@ -212,6 +212,19 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
                 <p className="rewind-unfolded-text font-body">
                   {letter.content}
                 </p>
+
+                {/* Aesthetic Letter Signature */}
+                <div className="rewind-letter-signature">
+                  <div className="rewind-signature-divider" />
+                  <div className="rewind-signature-content">
+                    <span className="rewind-signature-date font-ui">
+                      Written on {writtenDate || 'connection day'}
+                    </span>
+                    <span className="rewind-signature-author font-display">
+                      Sent with care, {author} <span className="rewind-signature-heart">❤️</span>
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div className="rewind-unfolded-footer font-ui">

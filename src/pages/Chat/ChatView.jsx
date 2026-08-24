@@ -801,13 +801,21 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
       }
     };
 
+    const handleLetterUpdated = (data) => {
+      if (data?.matchId === activeMatchId) {
+        fetchLetterData();
+      }
+    };
+
     socket.on('rewind_letter_delivered', handleLetterDelivered);
     socket.on('rewind_letter_sealed', handleLetterSealed);
     socket.on('rewind_letter_deleted', handleLetterDeleted);
+    socket.on('rewind_letter_updated', handleLetterUpdated);
     return () => {
       socket.off('rewind_letter_delivered', handleLetterDelivered);
       socket.off('rewind_letter_sealed', handleLetterSealed);
       socket.off('rewind_letter_deleted', handleLetterDeleted);
+      socket.off('rewind_letter_updated', handleLetterUpdated);
     };
   }, [activeMatchId]);
 
