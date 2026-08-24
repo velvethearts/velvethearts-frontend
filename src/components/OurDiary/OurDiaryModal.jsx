@@ -579,9 +579,9 @@ export const OurDiaryModal = ({
       return;
     }
 
-    const maxSize = isVideo ? 50 * 1024 * 1024 : 15 * 1024 * 1024;
+    const maxSize = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
     if (file.size > maxSize) {
-      setComposerError(`${isVideo ? 'Video' : 'Photo'} must be ${isVideo ? '50MB' : '15MB'} or smaller.`);
+      setComposerError(`${isVideo ? 'Video' : 'Photo'} must be ${isVideo ? '100MB (approx. 1–2 minutes)' : '15MB'} or smaller.`);
       return;
     }
 
@@ -1065,7 +1065,7 @@ export const OurDiaryModal = ({
                       >
                         <UploadSimple size={28} />
                         <span className="diary-dropzone-text">Choose a photo or video</span>
-                        <span className="diary-dropzone-sub">Photos up to 15MB • Videos up to 50MB (MP4, MOV, WebM)</span>
+                        <span className="diary-dropzone-sub">Photos up to 15MB • Videos up to 100MB (1–2 mins, MP4, MOV, WebM)</span>
                       </div>
                     )}
                   </div>
