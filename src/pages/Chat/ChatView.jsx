@@ -2458,7 +2458,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
         }
 
         .user-sent .message-bubble-text {
-          background: linear-gradient(145deg, #a8233f 0%, #881337 100%);
+          background: linear-gradient(145deg, #b73a55ff 0%, #a13656ff 100%);
           color: #FFFFFF;
           border: 1px solid rgba(255, 180, 195, 0.22);
           box-shadow: 0 2px 10px rgba(136, 19, 55, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);

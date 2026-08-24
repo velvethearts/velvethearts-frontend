@@ -264,11 +264,18 @@ export const RewindLetterVaultModal = ({
                                 </p>
 
                                 <div className="rewind-vault-read-action font-ui">
-                                  <span className="rewind-vault-read-link">
+                                  <button
+                                    type="button"
+                                    className="rewind-vault-read-link font-ui"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenReader(letter, false);
+                                    }}
+                                  >
                                     <BookOpen size={14} weight="bold" />
                                     <span>Read Full Letter</span>
                                     <ArrowRight size={13} weight="bold" />
-                                  </span>
+                                  </button>
                                 </div>
                               </div>
 
@@ -405,11 +412,18 @@ export const RewindLetterVaultModal = ({
                                 </p>
 
                                 <div className="rewind-vault-read-action font-ui">
-                                  <span className="rewind-vault-read-link">
+                                  <button
+                                    type="button"
+                                    className="rewind-vault-read-link font-ui"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpenReader(letter, true);
+                                    }}
+                                  >
                                     <BookOpen size={14} weight="bold" />
                                     <span>Read Full Letter</span>
                                     <ArrowRight size={13} weight="bold" />
-                                  </span>
+                                  </button>
                                 </div>
                               </div>
 
@@ -421,7 +435,7 @@ export const RewindLetterVaultModal = ({
                                       Unlocks on {formatDeliveredDate(letter.deliverAfter)}
                                     </span>
                                   </div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <div className="rewind-vault-reschedule-actions">
                                     {isLetterEditable ? (
                                       <button
                                         type="button"
