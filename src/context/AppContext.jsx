@@ -908,7 +908,7 @@ export const AppProvider = ({ children }) => {
                                         const isPartnerSender = message.senderId === c.partnerId;
                                         const displayLastMsg = message.isDeleted
                                             ? 'Message deleted'
-                                            : message.text === '__REWIND_CAPSULE__'
+                                            : message.text?.startsWith('__REWIND_CAPSULE__')
                                                 ? '🔒 Rewind Letter sealed'
                                                 : (message.text || 'Sent an attachment');
                                         return {

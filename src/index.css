@@ -3533,6 +3533,20 @@ html {
   margin: 0;
 }
 
+.rewind-capsule-unlock-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--burgundy-300, #f87171);
+  background: rgba(184, 51, 74, 0.12);
+  border: 1px solid rgba(184, 51, 74, 0.25);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  align-self: flex-start;
+}
+
 .rewind-capsule-action-row {
   display: flex;
   justify-content: flex-end;

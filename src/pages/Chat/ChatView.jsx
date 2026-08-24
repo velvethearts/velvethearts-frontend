@@ -1385,26 +1385,41 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
               {/* Chat Log */}
               <div className="chat-log-container">
                 <div className="chat-log-scroll">
-                  {/* Card when partner has sealed a new letter for user (Locked in vault) */}
-                  {letterStatus?.receivedLetter?.status === 'SEALED' ? (
+                  {/* Top Banners for Sealed / Delivered Rewind Letters */}
+                  {letterStatus?.receivedLetter?.status === 'SEALED' && (
                     <RewindLetterCard
-                      letter={{ ...letterStatus.receivedLetter, partnerName: activePartner.name }}
+                      letter={{ ...letterStatus.receivedLetter, isAuthor: false, partnerName: activePartner.name }}
                       partnerName={activePartner.name}
                     />
-                  ) : deliveredLetter && ((Date.now() - new Date(deliveredLetter.deliveredAt || Date.now()).getTime()) < 2 * 24 * 60 * 60 * 1000) ? (
+                  )}
+                  {letterStatus?.myLetter?.status === 'SEALED' && (
+                    <RewindLetterCard
+                      letter={{ ...letterStatus.myLetter, isAuthor: true, partnerName: activePartner.name }}
+                      partnerName={activePartner.name}
+                    />
+                  )}
+                  {!letterStatus?.receivedLetter && deliveredLetter && ((Date.now() - new Date(deliveredLetter.deliveredAt || Date.now()).getTime()) < 2 * 24 * 60 * 60 * 1000) && (
                     <RewindLetterCard
                       letter={deliveredLetter}
                       partnerName={activePartner.name}
                     />
-                  ) : null}
+                  )}
 
                   <div className="chat-welcome-indicator font-body">
                     🛡️ Conversations are confidential. Always feel free to block or report from the menu.
                   </div>
 
                   {activeMessages.map(msg => {
-                    if (msg.text === '__REWIND_CAPSULE__') {
+                    if (typeof msg.text === 'string' && msg.text.startsWith('__REWIND_CAPSULE__')) {
                       const isUser = msg.sender === 'user';
+                      const parts = msg.text.split(':');
+                      const dateFromMsg = parts[1] ? new Date(parts.slice(1).join(':')) : null;
+                      const fallbackDate = isUser ? letterStatus?.myLetter?.deliverAfter : letterStatus?.receivedLetter?.deliverAfter;
+                      const effectiveDate = (dateFromMsg && !isNaN(dateFromMsg.getTime())) ? dateFromMsg : fallbackDate;
+                      const unlockDateStr = effectiveDate && !isNaN(new Date(effectiveDate).getTime())
+                        ? new Date(effectiveDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                        : null;
+
                       return (
                         <div
                           key={msg.id}
@@ -1439,6 +1454,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                                   ? `You sealed a private Rewind Letter for ${activePartner?.name || 'your match'}.`
                                   : `${activePartner?.name || 'Your match'} sealed a private Rewind Letter for you.`}
                               </p>
+
+                              {unlockDateStr && (
+                                <div className="rewind-capsule-unlock-tag font-ui">
+                                  <Clock size={13} weight="duotone" />
+                                  <span>Unlocks on {unlockDateStr}</span>
+                                </div>
+                              )}
+
                               <div className="rewind-capsule-action-row">
                                 <span className="rewind-capsule-vault-link font-ui">
                                   <LockKey size={14} weight="duotone" />

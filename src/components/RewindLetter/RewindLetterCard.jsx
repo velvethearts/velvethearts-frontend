@@ -24,6 +24,10 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
   if (!letter) return null;
 
   const author = isAuthor ? 'You' : (partnerName || letter.authorName || 'Your match');
+  const bannerTitle = isAuthor
+    ? `Your Rewind Letter for ${partnerName || 'your match'}`
+    : `Rewind Letter from ${author}`;
+
   const deliveredDate = letter.deliveredAt
     ? new Date(letter.deliveredAt).toLocaleDateString(undefined, {
         month: 'short',
@@ -31,6 +35,14 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
         year: 'numeric',
       })
     : 'Recently';
+
+  const unlockDate = letter?.deliverAfter
+    ? new Date(letter.deliverAfter).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : null;
 
   const writtenDate = letter.createdAt
     ? new Date(letter.createdAt).toLocaleDateString(undefined, {
@@ -148,7 +160,7 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
         <div className="rewind-delivery-text">
           <div className="rewind-delivery-title-row">
             <span className="rewind-delivery-title font-ui">
-              Rewind Letter from {author}
+              {bannerTitle}
             </span>
             <span className={`rewind-delivery-badge ${!hasEverOpened && !isAuthor && isDelivered ? 'new' : ''} font-ui`}>
               {isSealed ? 'Sealed 🔒' : (!hasEverOpened ? 'Tap to Unseal' : 'Unlocked')}
@@ -158,7 +170,7 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
             {isOpen
               ? 'Tap to collapse'
               : isSealed
-              ? 'Sealed in a time capsule • Unlocks on scheduled delivery date'
+              ? (unlockDate ? `Sealed in a time capsule • Unlocks on ${unlockDate}` : 'Sealed in a time capsule • Unlocks on scheduled date')
               : !hasEverOpened
               ? 'A sealed time capsule has arrived for you • Tap to unseal & read'
               : 'Sealed time capsule written when you connected • Tap to re-read'}
@@ -186,7 +198,9 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
               </div>
               <div className="rewind-unfolded-body">
                 <p className="rewind-unfolded-text font-body" style={{ fontStyle: 'normal' }}>
-                  {author} tucked away a private letter when you first matched. It is safely locked in the Velvet Hearts vault and will automatically unlock on its scheduled delivery date.
+                  {isAuthor
+                    ? `You tucked away a private letter for ${partnerName || 'your match'}. It is safely locked in the Velvet Hearts vault and will automatically unlock on ${unlockDate || 'its scheduled delivery date'}.`
+                    : `${author} tucked away a private letter when you first matched. It is safely locked in the Velvet Hearts vault and will automatically unlock on ${unlockDate || 'its scheduled delivery date'}.`}
                 </p>
               </div>
               <div className="rewind-unfolded-footer font-ui">
