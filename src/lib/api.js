@@ -443,6 +443,10 @@ export const api = {
         });
     },
 
+    uploadDiaryMedia(matchId, file, caption) {
+        return this.uploadDiaryPhoto(matchId, file, caption);
+    },
+
     deleteDiaryEntry(matchId, entryId) {
         return request(`/api/v1/diary/${matchId}/${entryId}`, {
             method: 'DELETE'

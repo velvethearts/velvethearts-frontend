@@ -6,6 +6,7 @@ import {
   CaretRight,
   Plus,
   Image as ImageIcon,
+  VideoCamera,
   NotePencil,
   Trash,
   Play,
@@ -349,6 +350,7 @@ export const OurDiaryModal = ({
   const [captionText, setCaptionText] = useState('');
   const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState(null);
+  const [isVideoFile, setIsVideoFile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [composerError, setComposerError] = useState(null);
   const [showDateJump, setShowDateJump] = useState(false);
@@ -569,17 +571,22 @@ export const OurDiaryModal = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      setComposerError('Please select a valid image file (JPG, PNG, WebP).');
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
+    if (!isImage && !isVideo) {
+      setComposerError('Please select a valid image (JPG, PNG, WebP) or video (MP4, MOV, WebM).');
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setComposerError('Photo must be 10MB or smaller.');
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 15 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setComposerError(`${isVideo ? 'Video' : 'Photo'} must be ${isVideo ? '50MB' : '15MB'} or smaller.`);
       return;
     }
 
     setSelectedPhotoFile(file);
+    setIsVideoFile(isVideo);
     setPhotoPreviewUrl(URL.createObjectURL(file));
     setComposerError(null);
   };
@@ -608,9 +615,9 @@ export const OurDiaryModal = ({
         setIsSubmitting(false);
       }
     } else {
-      // Photo upload
+      // Photo / Video upload
       if (!selectedPhotoFile) {
-        setComposerError('Please choose a photo to upload.');
+        setComposerError('Please choose a photo or video to upload.');
         return;
       }
 
@@ -619,12 +626,13 @@ export const OurDiaryModal = ({
         await api.uploadDiaryPhoto(matchId, selectedPhotoFile, captionText.trim() || undefined);
         setSelectedPhotoFile(null);
         setPhotoPreviewUrl(null);
+        setIsVideoFile(false);
         setCaptionText('');
         setShowComposer(false);
         await fetchEntries(true);
       } catch (err) {
-        console.error('Error uploading diary photo:', err);
-        setComposerError(err?.message || "That image couldn't be added.");
+        console.error('Error uploading diary media:', err);
+        setComposerError(err?.message || "That media couldn't be added.");
       } finally {
         setIsSubmitting(false);
       }
@@ -842,8 +850,30 @@ export const OurDiaryModal = ({
                                 </div>
                               )}
 
+                              {/* 5. VIDEO MEMORY (Placed Vintage Reel style) */}
+                              {entry.sourceType === 'VIDEO' && (
+                                <div className="diary-polaroid-frame diary-video-frame">
+                                  <div className="diary-polaroid-tape" />
+                                  <div className="diary-video-wrap">
+                                    <video
+                                      src={entry.attachmentUrl}
+                                      controls
+                                      playsInline
+                                      preload="metadata"
+                                      className="diary-moment-video"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                  {entry.caption && (
+                                    <p className="diary-polaroid-caption font-body">
+                                      {entry.caption}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+
                               {/* Optional user-added caption for text/voice items */}
-                              {entry.sourceType !== 'IMAGE' && entry.caption && (
+                              {entry.sourceType !== 'IMAGE' && entry.sourceType !== 'VIDEO' && entry.caption && (
                                 <div className="diary-entry-caption font-body">
                                   <span>{entry.caption}</span>
                                 </div>
@@ -898,6 +928,7 @@ export const OurDiaryModal = ({
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpenBook(); }}
             >
               <div className="diary-cover-spine" />
+              <div className="diary-cover-ribbon" />
               <div className="diary-cover-texture">
                 <div className="diary-cover-gold-border">
                   <div className="diary-cover-corner tl" />
@@ -944,7 +975,7 @@ export const OurDiaryModal = ({
                 </button>
               </div>
 
-              {/* Tabs: Note vs Photo */}
+              {/* Tabs: Note vs Media */}
               <div className="diary-composer-tabs">
                 <button
                   type="button"
@@ -968,7 +999,8 @@ export const OurDiaryModal = ({
                   disabled={isSubmitting}
                 >
                   <ImageIcon size={16} />
-                  <span>Photo Memory</span>
+                  <VideoCamera size={16} />
+                  <span>Photo / Video</span>
                 </button>
               </div>
 
@@ -991,29 +1023,33 @@ export const OurDiaryModal = ({
                   </div>
                 )}
 
-                {/* Photo Tab Inputs */}
+                {/* Photo / Video Tab Inputs */}
                 {composerTab === 'photo' && (
                   <div className="diary-input-group">
-                    <label className="diary-input-label">Select Photo</label>
+                    <label className="diary-input-label">Select Photo or Video</label>
                     <input
                       type="file"
                       ref={fileInputRef}
                       onChange={handlePhotoSelect}
-                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm"
                       style={{ display: 'none' }}
                       disabled={isSubmitting}
                     />
 
                     {photoPreviewUrl ? (
                       <div className="diary-photo-preview-wrap">
-                        <img src={photoPreviewUrl} alt="Preview" className="diary-photo-preview" />
+                        {isVideoFile ? (
+                          <video src={photoPreviewUrl} controls className="diary-photo-preview" />
+                        ) : (
+                          <img src={photoPreviewUrl} alt="Preview" className="diary-photo-preview" />
+                        )}
                         <button
                           type="button"
                           className="diary-change-photo-btn"
                           onClick={() => fileInputRef.current?.click()}
                           disabled={isSubmitting}
                         >
-                          Change Photo
+                          Change Media
                         </button>
                       </div>
                     ) : (
@@ -1022,8 +1058,8 @@ export const OurDiaryModal = ({
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <UploadSimple size={28} />
-                        <span className="diary-dropzone-text">Choose a photo from library or camera</span>
-                        <span className="diary-dropzone-sub">JPG, PNG, WebP up to 10MB</span>
+                        <span className="diary-dropzone-text">Choose a photo or video</span>
+                        <span className="diary-dropzone-sub">Photos up to 15MB • Videos up to 50MB (MP4, MOV, WebM)</span>
                       </div>
                     )}
                   </div>
@@ -1069,7 +1105,7 @@ export const OurDiaryModal = ({
                     {isSubmitting ? (
                       <>
                         <Sparkle size={15} className="spin" />
-                        <span>{composerTab === 'photo' ? 'Scanning & Adding...' : 'Saving Moment...'}</span>
+                        <span>{composerTab === 'photo' ? 'Adding to Diary...' : 'Saving Moment...'}</span>
                       </>
                     ) : (
                       <>
