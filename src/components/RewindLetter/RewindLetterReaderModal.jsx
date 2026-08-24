@@ -180,18 +180,18 @@ export const RewindLetterReaderModal = ({
         if (e.target === e.currentTarget) handleCloseWithRollIn();
       }}
     >
-      {/* Parchment Scroll Roll Container */}
-      <div className={`rewind-parchment-scroll-wrapper ${isClosing ? 'roll-in-closing' : ''}`}>
+      {/* Parchment Scroll Roll Container (Animates as a unified scroll) */}
+      <div className={`rewind-parchment-scroll-wrapper ${isClosing ? 'roll-in-closing' : 'unroll-opening'}`}>
         {/* Top Decorative Scroll Cylinder / Header Roller */}
-        <div className={`rewind-parchment-roller top ${isClosing ? 'roll-in' : ''}`}>
+        <div className="rewind-parchment-roller top">
           <div className="rewind-parchment-roller-cap left" />
           <div className="rewind-parchment-roller-rod" />
           <div className="rewind-parchment-roller-cap right" />
         </div>
 
-        {/* Unrolling / Rolling-in Letter Parchment */}
+        {/* Letter Parchment */}
         <div
-          className={`rewind-reader-parchment ${isClosing ? 'roll-in-animation' : 'unroll-animation'}`}
+          className="rewind-reader-parchment"
           onClick={isWriting ? handleSkipAnimation : undefined}
           title={isWriting ? 'Click to show entire letter' : undefined}
         >
@@ -331,7 +331,7 @@ export const RewindLetterReaderModal = ({
         </div>
 
         {/* Bottom Decorative Scroll Cylinder / Footer Roller */}
-        <div className={`rewind-parchment-roller bottom ${isClosing ? 'roll-in' : ''}`}>
+        <div className="rewind-parchment-roller bottom">
           <div className="rewind-parchment-roller-cap left" />
           <div className="rewind-parchment-roller-rod" />
           <div className="rewind-parchment-roller-cap right" />
