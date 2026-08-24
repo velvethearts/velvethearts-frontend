@@ -5720,17 +5720,17 @@ html {
   }
   30% {
     transform-origin: left center;
-    transform: rotateY(-35deg) skewY(-1.5deg);
+    transform: rotateY(35deg) skewY(1.5deg);
     box-shadow: -15px 25px 50px rgba(0, 0, 0, 0.6);
   }
   70% {
     transform-origin: left center;
-    transform: rotateY(-80deg) skewY(-2.5deg);
+    transform: rotateY(80deg) skewY(2.5deg);
     box-shadow: -25px 20px 40px rgba(0, 0, 0, 0.4);
   }
   100% {
     transform-origin: left center;
-    transform: rotateY(-110deg) skewY(-3deg);
+    transform: rotateY(110deg) skewY(3deg);
     box-shadow: none;
     opacity: 0;
   }
@@ -5739,18 +5739,18 @@ html {
 @keyframes coverSwingClose {
   0% {
     transform-origin: left center;
-    transform: rotateY(-110deg) skewY(-3deg);
+    transform: rotateY(110deg) skewY(3deg);
     opacity: 0;
   }
   30% {
     transform-origin: left center;
-    transform: rotateY(-75deg) skewY(-2deg);
+    transform: rotateY(75deg) skewY(2deg);
     opacity: 1;
     box-shadow: -25px 20px 40px rgba(0, 0, 0, 0.4);
   }
   70% {
     transform-origin: left center;
-    transform: rotateY(-25deg) skewY(-1deg);
+    transform: rotateY(25deg) skewY(1deg);
     box-shadow: -10px 25px 50px rgba(0, 0, 0, 0.6);
   }
   100% {
@@ -5770,41 +5770,41 @@ html {
   }
   35% {
     transform-origin: left center;
-    transform: rotateY(-45deg) skewY(-2deg) scaleY(0.98);
+    transform: rotateY(45deg) skewY(2deg) scaleY(0.98);
     box-shadow: -20px 22px 35px rgba(0, 0, 0, 0.35);
-    filter: brightness(0.92);
+    filter: brightness(0.95);
   }
   70% {
     transform-origin: left center;
-    transform: rotateY(-90deg) skewY(-3.5deg) scaleY(0.95);
+    transform: rotateY(90deg) skewY(3.5deg) scaleY(0.96);
     box-shadow: -35px 18px 25px rgba(0, 0, 0, 0.25);
-    filter: brightness(0.85);
+    filter: brightness(0.88);
   }
   100% {
     transform-origin: left center;
-    transform: rotateY(-115deg) skewY(-4deg) scaleY(0.93);
+    transform: rotateY(115deg) skewY(4deg) scaleY(0.94);
     opacity: 0;
-    filter: brightness(0.78);
+    filter: brightness(0.82);
   }
 }
 
 @keyframes pageFlipBackward {
   0% {
     transform-origin: left center;
-    transform: rotateY(-115deg) skewY(-4deg) scaleY(0.93);
+    transform: rotateY(115deg) skewY(4deg) scaleY(0.94);
     opacity: 0;
-    filter: brightness(0.78);
+    filter: brightness(0.82);
   }
   35% {
     transform-origin: left center;
-    transform: rotateY(-80deg) skewY(-3deg) scaleY(0.95);
+    transform: rotateY(80deg) skewY(3deg) scaleY(0.96);
     opacity: 1;
     box-shadow: -30px 20px 30px rgba(0, 0, 0, 0.3);
-    filter: brightness(0.86);
+    filter: brightness(0.88);
   }
   70% {
     transform-origin: left center;
-    transform: rotateY(-25deg) skewY(-1.2deg) scaleY(0.98);
+    transform: rotateY(25deg) skewY(1.2deg) scaleY(0.98);
     box-shadow: -12px 20px 40px rgba(0, 0, 0, 0.4);
     filter: brightness(0.96);
   }
