@@ -191,21 +191,28 @@ export const OurDiaryModal = ({
       if (!groupedByDate[dateKey]) {
         groupedByDate[dateKey] = [];
       }
-      groupedByDate[dateKey].push(entry);
-    });
+      const dateSortKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
 
-    const pages = [];
-    Object.entries(groupedByDate).forEach(([dateLabel, items]) => {
-      for (let i = 0; i < items.length; i += 2) {
-        pages.push({
+      if (!groupedByDate.has(dateSortKey)) {
+        groupedByDate.set(dateSortKey, {
           dateLabel,
-          items: items.slice(i, i + 2),
-          pageNumber: pages.length + 1
+          rawDate: dateObj,
+          items: []
         });
       }
+      groupedByDate.get(dateSortKey).items.push(entry);
     });
 
-    return pages;
+    // Sort calendar days in ascending chronological order (Oldest day = Page 1, Most Recent day = Last Page)
+    const sortedDays = Array.from(groupedByDate.values()).sort(
+      (a, b) => a.rawDate.getTime() - b.rawDate.getTime()
+    );
+
+    return sortedDays.map((dayGroup, index) => ({
+      dateLabel: dayGroup.dateLabel,
+      items: dayGroup.items, // All entries on this calendar day stacked together in order
+      pageNumber: index + 1
+    }));
   };
 
   const pages = groupEntriesIntoPages();
@@ -310,17 +317,11 @@ export const OurDiaryModal = ({
 
       try {
         setIsSubmitting(true);
-        const res = await api.addDiaryNote(matchId, noteText.trim(), captionText.trim() || undefined);
-        if (res && res.success) {
-          setNoteText('');
-          setCaptionText('');
-          setShowComposer(false);
-          await fetchEntries();
-          // Jump to the latest page
-          setCurrentPageIndex(Math.max(groupEntriesIntoPages().length - 1, 0));
-        } else {
-          setComposerError(res?.message || 'Failed to save moment.');
-        }
+        await api.addDiaryNote(matchId, noteText.trim(), captionText.trim() || undefined);
+        setNoteText('');
+        setCaptionText('');
+        setShowComposer(false);
+        await fetchEntries(true);
       } catch (err) {
         console.error('Error adding note:', err);
         setComposerError(err?.message || 'Failed to save note.');
@@ -336,25 +337,15 @@ export const OurDiaryModal = ({
 
       try {
         setIsSubmitting(true);
-        const res = await api.uploadDiaryPhoto(matchId, selectedPhotoFile, captionText.trim() || undefined);
-        if (res && res.success) {
-          setSelectedPhotoFile(null);
-          setPhotoPreviewUrl(null);
-          setCaptionText('');
-          setShowComposer(false);
-          await fetchEntries();
-          setCurrentPageIndex(Math.max(groupEntriesIntoPages().length - 1, 0));
-        } else {
-          // Moderation rejection handling
-          if (res?.moderationRejected) {
-            setComposerError("That image couldn't be added.");
-          } else {
-            setComposerError(res?.message || "That image couldn't be added.");
-          }
-        }
+        await api.uploadDiaryPhoto(matchId, selectedPhotoFile, captionText.trim() || undefined);
+        setSelectedPhotoFile(null);
+        setPhotoPreviewUrl(null);
+        setCaptionText('');
+        setShowComposer(false);
+        await fetchEntries(true);
       } catch (err) {
         console.error('Error uploading diary photo:', err);
-        setComposerError("That image couldn't be added.");
+        setComposerError(err?.message || "That image couldn't be added.");
       } finally {
         setIsSubmitting(false);
       }
@@ -369,10 +360,8 @@ export const OurDiaryModal = ({
       cancelText: 'Keep',
       onConfirm: async () => {
         try {
-          const res = await api.deleteDiaryEntry(matchId, entryId);
-          if (res && res.success) {
-            await fetchEntries();
-          }
+          await api.deleteDiaryEntry(matchId, entryId);
+          await fetchEntries(true);
         } catch (err) {
           console.error('Failed to delete entry:', err);
           if (showAlert) showAlert({ title: 'Delete Failed', message: err?.message || 'Failed to delete entry' });
