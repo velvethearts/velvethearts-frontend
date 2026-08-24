@@ -46,12 +46,16 @@ export const RewindLetterCompose = ({
   const isReschedule = mode === 'reschedule';
   const isEdit = mode === 'edit';
 
-  // Base date calculation (normalized to midnight)
+  const creationTime = useMemo(() => {
+    return letterCreatedAt ? new Date(letterCreatedAt) : new Date();
+  }, [letterCreatedAt]);
+
+  // Midnight-normalized base date for calendar day arithmetic
   const baseDate = useMemo(() => {
-    const d = letterCreatedAt ? new Date(letterCreatedAt) : new Date();
+    const d = new Date(creationTime);
     d.setHours(0, 0, 0, 0);
     return d;
-  }, [letterCreatedAt]);
+  }, [creationTime]);
 
   // Minimum selectable date: baseDate + 7 days
   const minSelectableDate = useMemo(() => {
@@ -191,7 +195,7 @@ export const RewindLetterCompose = ({
     year: 'numeric'
   });
 
-  const formattedSelectedTime = new Date(baseDate).toLocaleTimeString(undefined, {
+  const formattedSelectedTime = creationTime.toLocaleTimeString(undefined, {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
