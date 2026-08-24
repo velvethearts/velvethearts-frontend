@@ -3151,29 +3151,133 @@ html {
 .rewind-reader-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 20000;
   padding: var(--space-4);
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.25s ease-out;
 }
 
-.rewind-reader-parchment {
-  background: radial-gradient(circle at 50% 0%, #29151d 0%, #150d11 100%);
-  border: 1px solid rgba(248, 113, 113, 0.35);
-  border-radius: var(--radius-2xl, 24px);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(184, 51, 74, 0.2);
+/* Parchment Scroll Wrapper */
+.rewind-parchment-scroll-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
-  max-width: 600px;
-  max-height: 88vh;
+  max-width: 620px;
+  position: relative;
+  perspective: 1200px;
+}
+
+/* Decorative Antique Brass/Wine Rollers */
+.rewind-parchment-roller {
+  width: calc(100% + 24px);
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 15;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+}
+
+.rewind-parchment-roller.top {
+  margin-bottom: -7px;
+  animation: rollerSlideDown 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rewind-parchment-roller.bottom {
+  margin-top: -7px;
+  animation: rollerSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rewind-parchment-roller-rod {
+  flex: 1;
+  height: 10px;
+  background: linear-gradient(180deg, #421c27 0%, #7e2238 40%, #a22b48 50%, #421c27 100%);
+  border-radius: 5px;
+  border-top: 1px solid rgba(252, 211, 77, 0.5);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.8);
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.2), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.rewind-parchment-roller-cap {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fde68a 0%, #d97706 60%, #78350f 100%);
+  border: 1px solid #fef3c7;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), inset 0 0 3px rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+/* The Unrolling Parchment Letter Body */
+.rewind-reader-parchment {
+  background: 
+    radial-gradient(ellipse at 50% 0%, rgba(68, 27, 43, 0.4) 0%, rgba(20, 11, 16, 0.95) 75%),
+    linear-gradient(180deg, #24131b 0%, #1a0d13 50%, #15090f 100%);
+  border-left: 2px solid rgba(248, 113, 113, 0.3);
+  border-right: 2px solid rgba(248, 113, 113, 0.3);
+  border-top: 1px solid rgba(252, 211, 77, 0.25);
+  border-bottom: 1px solid rgba(252, 211, 77, 0.25);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 
+    0 25px 60px rgba(0, 0, 0, 0.85),
+    0 0 45px rgba(184, 51, 74, 0.25),
+    inset 0 0 60px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-height: 84vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   position: relative;
+  transform-origin: center top;
+}
+
+.rewind-reader-parchment.unroll-animation {
+  animation: parchmentUnroll 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes parchmentUnroll {
+  0% {
+    transform: scaleY(0.04);
+    opacity: 0.2;
+    filter: brightness(0.6);
+  }
+  60% {
+    transform: scaleY(1.03);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@keyframes rollerSlideDown {
+  0% { transform: translateY(40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes rollerSlideUp {
+  0% { transform: translateY(-40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Subtle Vintage Watermark */
+.rewind-parchment-watermark {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(248, 113, 113, 0.04);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .rewind-reader-header {
@@ -3221,14 +3325,6 @@ html {
   color: var(--gold-300, #fcd34d);
 }
 
-.rewind-reader-seal-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--gold-400, #f59e0b);
-  box-shadow: 0 0 8px #f59e0b;
-}
-
 .rewind-reader-close-btn {
   background: transparent;
   border: none;
@@ -3249,6 +3345,8 @@ html {
 
 .rewind-reader-meta-section {
   padding: var(--space-5) var(--space-6) var(--space-3);
+  position: relative;
+  z-index: 2;
 }
 
 .rewind-reader-meta-title-box {
@@ -3299,9 +3397,56 @@ html {
   border: 1px solid rgba(234, 179, 8, 0.3);
 }
 
+/* Replay / Skip Buttons */
+.rewind-reader-skip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--text-secondary, #e2d9dc);
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  margin-left: auto;
+}
+
+.rewind-reader-skip-btn:hover {
+  background: var(--burgundy-500, #b8334a);
+  color: #ffffff;
+  border-color: var(--burgundy-400);
+}
+
+.rewind-reader-replay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(252, 211, 77, 0.1);
+  border: 1px solid rgba(252, 211, 77, 0.25);
+  color: var(--gold-300, #fcd34d);
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  margin-left: auto;
+}
+
+.rewind-reader-replay-btn:hover {
+  background: rgba(252, 211, 77, 0.2);
+  color: #ffffff;
+  border-color: var(--gold-400);
+}
+
 .rewind-reader-body {
   padding: var(--space-4) var(--space-6) var(--space-6);
   position: relative;
+  z-index: 2;
+  cursor: default;
 }
 
 .rewind-reader-quotes-accent {
@@ -3310,14 +3455,38 @@ html {
   margin-bottom: var(--space-2);
 }
 
-.rewind-reader-letter-content {
-  font-size: 15px;
-  line-height: 1.8;
-  color: #fce7eb;
+/* Handwriting Letter Content */
+.rewind-reader-letter-handwriting {
+  font-family: 'Caveat', 'Dancing Script', cursive, -apple-system, sans-serif;
+  font-size: 23px;
+  font-weight: 500;
+  line-height: 1.85;
+  color: #fff4ea;
   white-space: pre-wrap;
   word-break: break-word;
-  font-style: italic;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  min-height: 120px;
+  padding: 4px 2px;
+}
+
+/* Glowing fountain pen writing cursor */
+.rewind-ink-pen-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 22px;
+  background: var(--gold-300, #fcd34d);
+  box-shadow: 0 0 8px rgba(252, 211, 77, 0.9), 0 0 16px rgba(248, 113, 113, 0.6);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: inkPulse 0.6s infinite alternate;
+}
+
+@keyframes inkPulse {
+  0% { opacity: 0.3; transform: scaleY(0.85); }
+  100% { opacity: 1; transform: scaleY(1.1); }
 }
 
 .rewind-reader-signature {
@@ -3326,6 +3495,14 @@ html {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.rewind-reader-signature.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .rewind-reader-sig-line {
@@ -3348,11 +3525,12 @@ html {
   color: var(--text-muted);
 }
 
-.rewind-reader-sig-author {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--burgundy-300, #f87171);
-  font-style: italic;
+.font-handwriting-sig {
+  font-family: 'Dancing Script', 'Caveat', cursive;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold-300, #fcd34d);
+  text-shadow: 0 0 10px rgba(252, 211, 77, 0.3);
 }
 
 .rewind-reader-footer {
@@ -3363,6 +3541,8 @@ html {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(20, 11, 15, 0.8);
   margin-top: auto;
+  position: relative;
+  z-index: 10;
 }
 
 .rewind-reader-footer-note {
@@ -3397,29 +3577,6 @@ html {
   border-color: #ef4444;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-}
-
-.rewind-vault-delete-icon-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-full);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  cursor: pointer;
-  transition: all var(--duration-fast);
-  flex-shrink: 0;
-}
-
-.rewind-vault-delete-icon-btn:hover {
-  background: #dc2626;
-  color: #ffffff;
-  border-color: #ef4444;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
 }
 
 .rewind-reader-done-btn {

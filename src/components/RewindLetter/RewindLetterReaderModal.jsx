@@ -1,13 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   X,
   CaretLeft,
   CalendarBlank,
   Quotes,
-  EnvelopeOpen,
-  LockKey,
   Trash,
-  Clock,
+  Sparkle,
+  ArrowCounterClockwise,
+  FastForward,
+  PenNib,
   Heart
 } from '@phosphor-icons/react';
 
@@ -19,6 +20,12 @@ export const RewindLetterReaderModal = ({
   isSentByMe = false,
   onDeleteLetter,
 }) => {
+  const fullText = letter?.content || '';
+  const [displayedLength, setDisplayedLength] = useState(0);
+  const [isWriting, setIsWriting] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const timeoutRef = useRef(null);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
@@ -27,6 +34,102 @@ export const RewindLetterReaderModal = ({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
+
+  // Handwriting Animation Loop
+  useEffect(() => {
+    if (!isOpen || !fullText) {
+      setDisplayedLength(0);
+      setIsWriting(false);
+      setIsCompleted(false);
+      return;
+    }
+
+    // Reset and start handwriting after parchment unrolls (500ms)
+    setDisplayedLength(0);
+    setIsCompleted(false);
+    setIsWriting(true);
+
+    let currentIndex = 0;
+    const totalChars = fullText.length;
+
+    const writeNextChar = () => {
+      if (currentIndex >= totalChars) {
+        setIsWriting(false);
+        setIsCompleted(true);
+        return;
+      }
+
+      currentIndex += 1;
+      setDisplayedLength(currentIndex);
+
+      const char = fullText[currentIndex - 1];
+      let delay = 22; // Base speed per char
+
+      if (char === '.' || char === '!' || char === '?') {
+        delay = 140; // Natural pause after sentences
+      } else if (char === ',') {
+        delay = 80;
+      } else if (char === '\n') {
+        delay = 120;
+      }
+
+      timeoutRef.current = setTimeout(writeNextChar, delay);
+    };
+
+    const initialDelay = setTimeout(() => {
+      writeNextChar();
+    }, 450);
+
+    return () => {
+      clearTimeout(initialDelay);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [isOpen, fullText]);
+
+  const handleSkipAnimation = (e) => {
+    if (e) e.stopPropagation();
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setDisplayedLength(fullText.length);
+    setIsWriting(false);
+    setIsCompleted(true);
+  };
+
+  const handleReplay = (e) => {
+    if (e) e.stopPropagation();
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setDisplayedLength(0);
+    setIsCompleted(false);
+    setIsWriting(true);
+
+    let currentIndex = 0;
+    const totalChars = fullText.length;
+
+    const writeNextChar = () => {
+      if (currentIndex >= totalChars) {
+        setIsWriting(false);
+        setIsCompleted(true);
+        return;
+      }
+
+      currentIndex += 1;
+      setDisplayedLength(currentIndex);
+
+      const char = fullText[currentIndex - 1];
+      let delay = 20;
+
+      if (char === '.' || char === '!' || char === '?') {
+        delay = 140;
+      } else if (char === ',') {
+        delay = 80;
+      } else if (char === '\n') {
+        delay = 120;
+      }
+
+      timeoutRef.current = setTimeout(writeNextChar, delay);
+    };
+
+    timeoutRef.current = setTimeout(writeNextChar, 100);
+  };
 
   if (!isOpen || !letter) return null;
 
@@ -51,6 +154,8 @@ export const RewindLetterReaderModal = ({
     });
   };
 
+  const displayedText = fullText.slice(0, displayedLength);
+
   return (
     <div
       className="rewind-reader-overlay"
@@ -61,108 +166,161 @@ export const RewindLetterReaderModal = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="rewind-reader-parchment animate-fade">
-        {/* Top Header Controls */}
-        <div className="rewind-reader-header font-ui">
-          <button
-            type="button"
-            className="rewind-reader-back-btn"
-            onClick={onClose}
-            aria-label="Back"
-          >
-            <CaretLeft size={18} weight="bold" />
-            <span>Back to Vault</span>
-          </button>
-
-          <div className="rewind-reader-seal-badge font-ui">
-            <span className="rewind-reader-seal-dot" />
-            <span>Velvet Hearts Capsule</span>
-          </div>
-
-          <button
-            type="button"
-            className="rewind-reader-close-btn"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            <X size={18} />
-          </button>
+      {/* Parchment Scroll Roll Container */}
+      <div className="rewind-parchment-scroll-wrapper">
+        {/* Top Decorative Scroll Cylinder / Header Roller */}
+        <div className="rewind-parchment-roller top">
+          <div className="rewind-parchment-roller-cap left" />
+          <div className="rewind-parchment-roller-rod" />
+          <div className="rewind-parchment-roller-cap right" />
         </div>
 
-        {/* Letter Metadata */}
-        <div className="rewind-reader-meta-section">
-          <div className="rewind-reader-meta-title-box">
-            <h2 id="reader-letter-title" className="rewind-reader-title font-display">
-              {isSentByMe ? `Letter for ${partnerName}` : `Letter from ${partnerName}`}
-            </h2>
-            <div className="rewind-reader-meta-tags font-ui">
-              <span className="rewind-reader-date-tag">
-                <CalendarBlank size={14} weight="duotone" />
-                <span>
-                  {letter.status === 'DELIVERED'
-                    ? `Delivered on ${formatDeliveredDate(letter.deliveredAt)}`
-                    : `Sealed on ${formatWrittenDate(letter.createdAt)}`}
-                </span>
-              </span>
-              <span className={`rewind-reader-status-tag ${letter.status === 'DELIVERED' ? 'delivered' : 'sealed'}`}>
-                {letter.status === 'DELIVERED' ? 'Delivered' : 'Sealed Time Capsule'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Letter Parchment Body */}
-        <div className="rewind-reader-body">
-          <div className="rewind-reader-quotes-accent">
-            <Quotes size={32} weight="fill" />
+        {/* Unrolling Letter Parchment */}
+        <div
+          className="rewind-reader-parchment unroll-animation"
+          onClick={isWriting ? handleSkipAnimation : undefined}
+          title={isWriting ? 'Click to show entire letter' : undefined}
+        >
+          {/* Subtle Vintage Watermark */}
+          <div className="rewind-parchment-watermark" aria-hidden="true">
+            <Heart size={140} weight="duotone" />
           </div>
 
-          <div className="rewind-reader-letter-content font-body">
-            {letter.content || 'Your letter content is safely preserved.'}
-          </div>
-
-          {/* Aesthetic Closing Signature */}
-          <div className="rewind-reader-signature">
-            <div className="rewind-reader-sig-line" />
-            <div className="rewind-reader-sig-details">
-              <span className="rewind-reader-sig-meta font-ui">
-                Preserved since {formatWrittenDate(letter.createdAt)}
-              </span>
-              <span className="rewind-reader-sig-author font-display">
-                With care, {authorName}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Actions Footer */}
-        <div className="rewind-reader-footer font-ui">
-          <span className="rewind-reader-footer-note font-ui">
-            Private memory between you and {partnerName}.
-          </span>
-          <div className="rewind-reader-footer-actions">
-            {onDeleteLetter && (
-              <button
-                type="button"
-                className="rewind-reader-delete-icon-btn"
-                title="Delete Letter"
-                aria-label="Delete Letter"
-                onClick={() => {
-                  onDeleteLetter(letter.id);
-                  onClose();
-                }}
-              >
-                <Trash size={17} weight="bold" />
-              </button>
-            )}
+          {/* Top Header Controls */}
+          <div className="rewind-reader-header font-ui">
             <button
               type="button"
-              className="rewind-reader-done-btn font-ui"
+              className="rewind-reader-back-btn"
               onClick={onClose}
+              aria-label="Back"
             >
-              Done
+              <CaretLeft size={18} weight="bold" />
+              <span>Back to Vault</span>
+            </button>
+
+            <div className="rewind-reader-seal-badge font-ui">
+              <PenNib size={14} weight="duotone" style={{ color: 'var(--gold-400, #f59e0b)' }} />
+              <span>Velvet Hearts Capsule</span>
+            </div>
+
+            <button
+              type="button"
+              className="rewind-reader-close-btn"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              <X size={18} />
             </button>
           </div>
+
+          {/* Letter Metadata */}
+          <div className="rewind-reader-meta-section">
+            <div className="rewind-reader-meta-title-box">
+              <h2 id="reader-letter-title" className="rewind-reader-title font-display">
+                {isSentByMe ? `Letter for ${partnerName}` : `Letter from ${partnerName}`}
+              </h2>
+              <div className="rewind-reader-meta-tags font-ui">
+                <span className="rewind-reader-date-tag">
+                  <CalendarBlank size={14} weight="duotone" />
+                  <span>
+                    {letter.status === 'DELIVERED'
+                      ? `Delivered on ${formatDeliveredDate(letter.deliveredAt)}`
+                      : `Sealed on ${formatWrittenDate(letter.createdAt)}`}
+                  </span>
+                </span>
+                <span className={`rewind-reader-status-tag ${letter.status === 'DELIVERED' ? 'delivered' : 'sealed'}`}>
+                  {letter.status === 'DELIVERED' ? 'Delivered' : 'Sealed Time Capsule'}
+                </span>
+
+                {/* Animation Status / Skip Button */}
+                {isWriting && (
+                  <button
+                    type="button"
+                    className="rewind-reader-skip-btn font-ui"
+                    onClick={handleSkipAnimation}
+                    title="Skip typing animation"
+                  >
+                    <FastForward size={13} weight="bold" />
+                    <span>Show All</span>
+                  </button>
+                )}
+
+                {isCompleted && (
+                  <button
+                    type="button"
+                    className="rewind-reader-replay-btn font-ui"
+                    onClick={handleReplay}
+                    title="Replay handwriting animation"
+                  >
+                    <ArrowCounterClockwise size={13} weight="bold" />
+                    <span>Replay Pen</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Letter Parchment Body with Handwriting */}
+          <div className="rewind-reader-body">
+            <div className="rewind-reader-quotes-accent">
+              <Quotes size={32} weight="fill" />
+            </div>
+
+            <div className="rewind-reader-letter-handwriting">
+              {displayedText}
+              {isWriting && <span className="rewind-ink-pen-cursor" />}
+            </div>
+
+            {/* Aesthetic Closing Signature */}
+            <div className={`rewind-reader-signature ${isCompleted ? 'visible' : ''}`}>
+              <div className="rewind-reader-sig-line" />
+              <div className="rewind-reader-sig-details">
+                <span className="rewind-reader-sig-meta font-ui">
+                  Preserved since {formatWrittenDate(letter.createdAt)}
+                </span>
+                <span className="rewind-reader-sig-author font-handwriting-sig">
+                  With care, {authorName}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Actions Footer */}
+          <div className="rewind-reader-footer font-ui">
+            <span className="rewind-reader-footer-note font-ui">
+              Private memory between you and {partnerName}.
+            </span>
+            <div className="rewind-reader-footer-actions">
+              {onDeleteLetter && (
+                <button
+                  type="button"
+                  className="rewind-reader-delete-icon-btn"
+                  title="Delete Letter"
+                  aria-label="Delete Letter"
+                  onClick={() => {
+                    onDeleteLetter(letter.id);
+                    onClose();
+                  }}
+                >
+                  <Trash size={17} weight="bold" />
+                </button>
+              )}
+              <button
+                type="button"
+                className="rewind-reader-done-btn font-ui"
+                onClick={onClose}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Decorative Scroll Cylinder / Footer Roller */}
+        <div className="rewind-parchment-roller bottom">
+          <div className="rewind-parchment-roller-cap left" />
+          <div className="rewind-parchment-roller-rod" />
+          <div className="rewind-parchment-roller-cap right" />
         </div>
       </div>
     </div>
