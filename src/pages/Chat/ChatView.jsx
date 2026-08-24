@@ -25,7 +25,8 @@ import {
   Sparkle,
   EnvelopeSimple,
   EnvelopeOpen,
-  LockKey
+  LockKey,
+  Clock
 } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
@@ -367,6 +368,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const [letterStatus, setLetterStatus] = useState(null);
   const [deliveredLetter, setDeliveredLetter] = useState(null);
   const [showRewindCompose, setShowRewindCompose] = useState(false);
+  const [isReschedulingRewind, setIsReschedulingRewind] = useState(false);
   const [isRewindDismissed, setIsRewindDismissed] = useState(false);
 
   // Message Reply State & Helpers
@@ -1055,15 +1057,33 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                           <span>Your Letter Delivered</span>
                         </span>
                       ) : letterStatus?.myLetter?.status === 'SEALED' && letterStatus?.receivedLetter?.status === 'SEALED' ? (
-                        <span className="rewind-header-badge" title="Both of you have sealed Rewind Letters for each other!">
+                        <button
+                          type="button"
+                          className="rewind-header-badge clickable"
+                          title="Both letters sealed! Click to reschedule your unlock date."
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsReschedulingRewind(true);
+                            setShowRewindCompose(true);
+                          }}
+                        >
                           <LockKey size={12} weight="fill" />
                           <span>Both Letters Sealed</span>
-                        </span>
+                        </button>
                       ) : letterStatus?.myLetter?.status === 'SEALED' ? (
-                        <span className="rewind-header-badge" title={`Your Rewind Letter for ${activePartner.name} is sealed in your time capsule`}>
+                        <button
+                          type="button"
+                          className="rewind-header-badge clickable"
+                          title={`Your Rewind Letter for ${activePartner.name} is sealed. Click to edit unlock date.`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsReschedulingRewind(true);
+                            setShowRewindCompose(true);
+                          }}
+                        >
                           <LockKey size={12} weight="fill" />
                           <span>Your Letter Sealed</span>
-                        </span>
+                        </button>
                       ) : letterStatus?.receivedLetter?.status === 'SEALED' ? (
                         <span className="rewind-header-badge" title={`${activePartner.name} sealed a Rewind Letter for you!`}>
                           <LockKey size={12} weight="fill" />
@@ -1092,6 +1112,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                         <button
                           onClick={() => {
                             setShowDropdown(false);
+                            setIsReschedulingRewind(false);
                             setShowRewindCompose(true);
                           }}
                           role="menuitem"
@@ -1099,6 +1120,20 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                         >
                           <EnvelopeSimple size={16} />
                           <span>Write Rewind Letter</span>
+                        </button>
+                      )}
+                      {notifications?.rewindLettersEnabled !== false && letterStatus?.myLetter?.status === 'SEALED' && (
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            setIsReschedulingRewind(true);
+                            setShowRewindCompose(true);
+                          }}
+                          role="menuitem"
+                          className="dropdown-item"
+                        >
+                          <Clock size={16} />
+                          <span>Reschedule Rewind Letter</span>
                         </button>
                       )}
                       <button onClick={handleDeleteChat} role="menuitem" className="dropdown-item danger">
@@ -1626,26 +1661,43 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
               )}
 
               {/* Rewind Letter Compose Modal */}
-              {showRewindCompose && activeMatchId && (
+              {showRewindCompose && (
                 <RewindLetterCompose
                   matchId={activeMatchId}
-                  partnerName={activePartner.name}
+                  partnerName={activePartner?.name}
                   isOpen={showRewindCompose}
-                  onClose={() => setShowRewindCompose(false)}
+                  isReschedule={isReschedulingRewind}
+                  initialDays={
+                    letterStatus?.myLetter?.deliverAfter && activePartner?.createdAt
+                      ? Math.max(7, Math.min(90, Math.round((new Date(letterStatus.myLetter.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
+                      : 7
+                  }
+                  onClose={() => {
+                    setShowRewindCompose(false);
+                    setIsReschedulingRewind(false);
+                  }}
                   onSuccess={(sealedLetter) => {
-                    setLetterStatus(prev => ({
-                      ...(prev || {}),
-                      myLetter: {
-                        id: sealedLetter?.id || 'temp',
-                        status: sealedLetter?.status || 'SEALED',
-                        createdAt: new Date().toISOString()
-                      }
-                    }));
                     fetchLetterData();
-                    showAlert({
-                      title: 'Letter Sealed ✉️',
-                      message: `Your letter for ${activePartner.name} is now safely sealed. It will be delivered privately after 7 days or 50 messages.`,
-                    });
+                    if (isReschedulingRewind) {
+                      showAlert({
+                        title: 'Schedule Updated ✉️',
+                        message: `The delivery timeframe for your Rewind Letter has been successfully updated.`,
+                      });
+                    } else {
+                      setLetterStatus(prev => ({
+                        ...prev,
+                        myLetter: {
+                          id: sealedLetter?.id,
+                          status: sealedLetter?.status || 'SEALED',
+                          deliverAfter: sealedLetter?.deliverAfter,
+                          createdAt: new Date().toISOString()
+                        }
+                      }));
+                      showAlert({
+                        title: 'Letter Sealed ✉️',
+                        message: `Your letter for ${activePartner.name} is now safely sealed in your time capsule.`,
+                      });
+                    }
                   }}
                 />
               )}

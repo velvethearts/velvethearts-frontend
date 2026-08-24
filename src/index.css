@@ -1569,6 +1569,18 @@ html {
   font-weight: 500;
   color: var(--text-accent);
   cursor: default;
+  font-family: inherit;
+}
+
+.rewind-header-badge.clickable {
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.rewind-header-badge.clickable:hover {
+  background: rgba(184, 51, 74, 0.25);
+  border-color: var(--burgundy-400);
+  transform: translateY(-1px);
 }
 
 /* --- Compose Modal --- */
@@ -1731,6 +1743,93 @@ html {
 
 .rewind-char-counter.error {
   color: var(--error);
+}
+
+.rewind-duration-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--bg-surface-subtle, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+}
+
+.rewind-duration-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-ui);
+}
+
+.rewind-duration-label {
+  font-size: var(--text-caption);
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rewind-duration-value {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--burgundy-300, #f87171);
+  background: rgba(184, 51, 74, 0.15);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.rewind-duration-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.rewind-preset-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: var(--text-caption);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.rewind-preset-btn:hover {
+  border-color: var(--burgundy-400);
+  color: var(--text-primary);
+}
+
+.rewind-preset-btn.active {
+  background: var(--burgundy-500);
+  color: #fff;
+  border-color: var(--burgundy-400);
+  box-shadow: 0 2px 8px rgba(184, 51, 74, 0.35);
+}
+
+.rewind-duration-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.rewind-duration-slider {
+  flex: 1;
+  accent-color: var(--burgundy-500);
+  cursor: pointer;
+}
+
+.rewind-duration-range-limits {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
 }
 
 .rewind-modal-actions {

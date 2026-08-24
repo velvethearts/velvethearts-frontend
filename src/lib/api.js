@@ -217,10 +217,17 @@ export const api = {
     // REWIND LETTER
     // ==========================================================
 
-    writeRewindLetter(matchId, content) {
+    writeRewindLetter(matchId, content, deliveryDays = 7) {
         return request('/api/v1/rewind-letter', {
             method: 'POST',
-            body: { matchId, content }
+            body: { matchId, content, deliveryDays }
+        });
+    },
+
+    updateRewindLetterSchedule(matchId, deliveryDays) {
+        return request(`/api/v1/rewind-letter/${matchId}/schedule`, {
+            method: 'PATCH',
+            body: { deliveryDays }
         });
     },
 
