@@ -3538,12 +3538,10 @@ html {
   align-items: center;
   gap: 5px;
   font-size: 11px;
-  font-weight: 600;
-  color: var(--burgundy-300, #f87171);
-  background: rgba(184, 51, 74, 0.12);
-  border: 1px solid rgba(184, 51, 74, 0.25);
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
+  font-weight: 500;
+  color: var(--text-secondary, #e2d9dc);
+  background: transparent;
+  padding: 0;
   align-self: flex-start;
 }
 
@@ -3556,20 +3554,20 @@ html {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  color: #ffffff;
-  background: var(--burgundy-500, #b8334a);
-  border: 1px solid var(--burgundy-400, #d6455d);
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
+  color: var(--burgundy-300, #f87171);
+  background: transparent;
+  border: none;
+  padding: 4px 0;
   transition: all var(--duration-fast);
-  box-shadow: 0 2px 8px rgba(184, 51, 74, 0.35);
+  cursor: pointer;
 }
 
 .rewind-capsule-chat-card:hover .rewind-capsule-vault-link {
-  background: var(--burgundy-600, #9f1239);
-  transform: translateX(2px);
+  color: #ffffff;
+  transform: translateX(3px);
+  text-decoration: underline;
 }
 
 .rewind-capsule-card-footer {

@@ -16,9 +16,9 @@ import {
 import { api } from '../../lib/api';
 
 const MAX_WORDS = 500;
-const MIN_DAYS = 7;
+const MIN_DAYS = 1;
 const MAX_DAYS = 90;
-const PRESET_DAYS = [7, 14, 30, 60, 90];
+const PRESET_DAYS = [1, 3, 7, 14, 30, 90];
 const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -340,7 +340,7 @@ export const RewindLetterCompose = ({
                   onClick={() => handleSliderChange(days)}
                   disabled={isSubmitting}
                 >
-                  {days} Days
+                  {days === 1 ? '1 Day' : `${days} Days`}
                 </button>
               ))}
             </div>
@@ -360,7 +360,7 @@ export const RewindLetterCompose = ({
             </div>
 
             <div className="rewind-duration-range-limits font-ui">
-              <span>Min: {MIN_DAYS} days</span>
+              <span>Min: 1 day</span>
               <span className="rewind-duration-live-date font-body">
                 Unlocks on <strong>{formattedSelectedDate}</strong>
               </span>
