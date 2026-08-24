@@ -1049,13 +1049,6 @@ export const AppProvider = ({ children }) => {
                     }
                 });
 
-                socket.on('spark_nudged', ({ senderName, message }) => {
-                    addToast({
-                        title: 'Spark Nudge ✨',
-                        message: message || `${senderName} nudged your spark! Say hi 👋`,
-                    });
-                });
-
                 socket.on('user_presence', ({ userId, isOnline }) => {
                     if (!userId || typeof userId !== 'string') return;
                     setOnlineUserIds(prev => {
@@ -1891,44 +1884,7 @@ export const AppProvider = ({ children }) => {
         }
     };
 
-    // ─── 24h Unsent Spark Timer Auto-Text Dispatcher ────────────────────
-    useEffect(() => {
-        if (!isLoggedIn || !isOnboarded || !connections || connections.length === 0) return;
 
-        connections.forEach(async (conn) => {
-            const targetPartnerId = conn.id || conn.userId;
-            if (!targetPartnerId) return;
-
-            const conv = conversations.find(c => c.partnerId === targetPartnerId || c.id === targetPartnerId);
-            const connChats = chats[targetPartnerId] || chats[conn.id] || chats[conn.userId] || [];
-            const hasChatted = Boolean((conv?.lastMessage && conv.lastMessage.trim()) || connChats.length > 0);
-
-            const rawTime = conn.matchedAt || conn.matchedCreatedAt || conn.createdAt;
-            const parsedTime = rawTime ? new Date(rawTime).getTime() : Date.now();
-            const matchTime = isNaN(parsedTime) ? Date.now() : parsedTime;
-            const hoursElapsed = Math.max(0, (Date.now() - matchTime) / (1000 * 60 * 60));
-
-            const notifKey = `vh-24h-notified-${targetPartnerId}`;
-            if (hoursElapsed >= 24 && hoursElapsed < 48 && !hasChatted && !localStorage.getItem(notifKey)) {
-                localStorage.setItem(notifKey, 'true');
-
-                const autoIcebreaker = `🕛 24h Spark Nudge: Hey ${conn.name || 'there'}! 24 hours passed since matching— hello! 🙌`;
-
-                try {
-                    await sendMessage(targetPartnerId, autoIcebreaker);
-                } catch (err) {
-                    console.error('Failed auto-sending 24h spark text in AppContext:', err);
-                }
-
-                addToast({
-                    title: '24h Spark Notice ⏱️',
-                    message: `24 hours completed! Auto-sent a spark icebreaker text to ${conn.name || 'your match'}.`,
-                    partnerId: targetPartnerId,
-                    photo: conn.photo || conn.photos?.[0]
-                });
-            }
-        });
-    }, [isLoggedIn, isOnboarded, connections, conversations, chats, sendMessage, addToast]);
 
     const deleteMessage = async (profileId, messageId) => {
         const conversation = conversations.find(c =>
@@ -2099,26 +2055,10 @@ export const AppProvider = ({ children }) => {
         }
     }, []);
 
-    const nudgeSpark = (targetUserId, targetName) => {
-        const socket = getSocket();
-        if (socket) {
-            socket.emit('nudge_spark', {
-                targetUserId,
-                senderName: userProfile?.name || 'Someone'
-            });
-        }
-        showAlert({
-            title: 'Spark Nudged! ✨',
-            message: `You sent a playful nudge to ${targetName}.`,
-            variant: 'info'
-        });
-    };
-
     const chatUnreadCount = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
 
     return (
         <AppContext.Provider value={{
-            nudgeSpark,
             authLoading,
             isLoggedIn,
             setIsLoggedIn,

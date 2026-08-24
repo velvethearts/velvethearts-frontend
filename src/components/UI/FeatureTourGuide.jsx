@@ -87,8 +87,8 @@ export const FeatureTourGuide = () => {
       badge: 'Mutual Connections',
       badgeIcon: Heart,
       badgeColor: '#D4AD6A',
-      title: 'Connections & 24h Spark Nudges',
-      subtitle: 'When interest is mutual, a connection forms. View match details, vibe scores, and 24-hour response countdowns.',
+      title: 'Mutual Connections',
+      subtitle: 'When interest is mutual, a connection forms. View match details, shared interests, and vibe scores.',
       targetSelector: '.connections-grid, .match-profile-card, .recent-matches-carousel-wrap',
       fallbackSelector: '[data-tour-nav="matches"]',
       preferredPlacement: 'bottom'
