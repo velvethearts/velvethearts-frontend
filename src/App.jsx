@@ -276,7 +276,7 @@ function AppContent() {
 
   // 3. Authenticated and Onboarded: Layout wrapping Main Navigation
   return (
-    <Navigation>
+    <Navigation isChatViewActive={activeTab === 'chat' && !selectedProfile}>
       <Suspense fallback={<AuthLoadingScreen />}>
         {renderActivePage()}
       </Suspense>

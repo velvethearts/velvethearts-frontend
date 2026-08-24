@@ -4,8 +4,10 @@ import { Compass, Heart, Chats, User, ShieldCheck, Sliders, Crown, Bell } from '
 import { ThemeToggle } from './UI/ThemeToggle';
 import logo from "../assets/velvet-heart-logo.png";
 
-export const Navigation = ({ children }) => {
+export const Navigation = ({ children, isChatViewActive }) => {
   const { activeTab, setActiveTab, userProfile, userRole, notificationUnreadCount, chatUnreadCount } = useApp();
+
+  const isChatLayout = isChatViewActive !== undefined ? isChatViewActive : activeTab === 'chat';
 
   const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
@@ -84,7 +86,7 @@ export const Navigation = ({ children }) => {
       </aside>
 
       {/* Main Content Area */}
-      <main className={`main-content-layout ${activeTab === 'chat' ? 'chat-active-layout' : ''}`}>
+      <main className={`main-content-layout ${isChatLayout ? 'chat-active-layout' : ''}`}>
         {children}
       </main>
 
