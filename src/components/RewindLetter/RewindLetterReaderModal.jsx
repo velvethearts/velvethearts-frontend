@@ -9,7 +9,8 @@ import {
   ArrowCounterClockwise,
   FastForward,
   PenNib,
-  Heart
+  Heart,
+  LockKey
 } from '@phosphor-icons/react';
 
 export const RewindLetterReaderModal = ({
@@ -20,6 +21,7 @@ export const RewindLetterReaderModal = ({
   isSentByMe = false,
   onDeleteLetter,
 }) => {
+  const isSealedRecipient = letter?.status === 'SEALED' && !isSentByMe;
   const fullText = letter?.content || '';
   const [displayedLength, setDisplayedLength] = useState(0);
   const [isWriting, setIsWriting] = useState(false);
@@ -282,29 +284,61 @@ export const RewindLetterReaderModal = ({
             </div>
           </div>
 
-          {/* Letter Parchment Body with Handwriting */}
+          {/* Letter Parchment Body */}
           <div className="rewind-reader-body" ref={scrollContainerRef}>
-            <div className="rewind-reader-quotes-accent">
-              <Quotes size={32} weight="fill" />
-            </div>
-
-            <div className="rewind-reader-letter-handwriting">
-              {displayedText}
-              {isWriting && <span className="rewind-ink-pen-cursor" />}
-            </div>
-
-            {/* Aesthetic Closing Signature */}
-            <div className={`rewind-reader-signature ${isCompleted ? 'visible' : ''}`}>
-              <div className="rewind-reader-sig-line" />
-              <div className="rewind-reader-sig-details">
-                <span className="rewind-reader-sig-meta font-ui">
-                  Preserved since {formatWrittenDate(letter.createdAt)}
-                </span>
-                <span className="rewind-reader-sig-author font-handwriting-sig">
-                  With care, {authorName}
-                </span>
+            {isSealedRecipient ? (
+              <div className="rewind-reader-sealed-canvas font-body">
+                <div className="rewind-reader-sealed-wax-seal" aria-hidden="true">
+                  <LockKey size={36} weight="fill" />
+                </div>
+                <h3 className="rewind-reader-sealed-title font-display">Time Capsule Sealed with Care</h3>
+                <p className="rewind-reader-sealed-desc font-body">
+                  {partnerName} tucked away a private letter when you first matched. It is safely encrypted and preserved in the Velvet Hearts vault.
+                </p>
+                <div className="rewind-reader-sealed-timer-badge font-ui">
+                  <Sparkle size={14} weight="fill" />
+                  <span>Scheduled to unlock on {formatDeliveredDate(letter.deliverAfter || letter.deliveredAt)}</span>
+                </div>
+                <p className="rewind-reader-sealed-quote font-body">
+                  “Some words are worth waiting for. When the day arrives, this scroll will automatically unseal with your private letter.”
+                </p>
+                <div className="rewind-reader-signature visible">
+                  <div className="rewind-reader-sig-line" />
+                  <div className="rewind-reader-sig-details">
+                    <span className="rewind-reader-sig-meta font-ui">
+                      Preserved since {formatWrittenDate(letter.createdAt)}
+                    </span>
+                    <span className="rewind-reader-sig-author font-handwriting-sig">
+                      With care, {authorName}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="rewind-reader-quotes-accent">
+                  <Quotes size={32} weight="fill" />
+                </div>
+
+                <div className="rewind-reader-letter-handwriting">
+                  {displayedText}
+                  {isWriting && <span className="rewind-ink-pen-cursor" />}
+                </div>
+
+                {/* Aesthetic Closing Signature */}
+                <div className={`rewind-reader-signature ${isCompleted ? 'visible' : ''}`}>
+                  <div className="rewind-reader-sig-line" />
+                  <div className="rewind-reader-sig-details">
+                    <span className="rewind-reader-sig-meta font-ui">
+                      Preserved since {formatWrittenDate(letter.createdAt)}
+                    </span>
+                    <span className="rewind-reader-sig-author font-handwriting-sig">
+                      With care, {authorName}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Bottom Actions Footer */}

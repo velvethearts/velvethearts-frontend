@@ -2170,45 +2170,45 @@ html {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--bg-surface-warm);
-  border: 1px solid var(--border-default);
+  padding: 10px 16px;
+  background: 
+    radial-gradient(ellipse at 10% 50%, rgba(184, 51, 74, 0.18) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(38, 20, 27, 0.95) 0%, rgba(26, 14, 19, 0.95) 100%);
+  border: 1px solid rgba(248, 113, 113, 0.25);
   border-radius: var(--radius-lg);
   cursor: pointer;
   text-align: left;
-  transition: all var(--duration-fast) var(--ease-out-smooth);
-  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   position: relative;
 }
 
 .rewind-delivery-banner:hover {
-  background: var(--bg-surface);
-  border-color: var(--border-focus);
-  box-shadow: var(--shadow-md);
-}
-
-.rewind-delivery-container.is-opened .rewind-delivery-banner {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  border-bottom: 1px dashed var(--border-subtle);
-  background: var(--bg-surface);
+  background: 
+    radial-gradient(ellipse at 10% 50%, rgba(184, 51, 74, 0.28) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(46, 24, 33, 0.98) 0%, rgba(32, 17, 24, 0.98) 100%);
+  border-color: rgba(252, 211, 77, 0.45);
+  box-shadow: 0 6px 20px rgba(184, 51, 74, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
 }
 
 .rewind-delivery-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-full);
-  background: var(--bg-accent-subtle);
-  color: var(--text-accent);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(252, 211, 77, 0.2) 0%, rgba(184, 51, 74, 0.35) 100%);
+  border: 1px solid rgba(252, 211, 77, 0.3);
+  color: var(--gold-300, #fcd34d);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: transform var(--duration-fast) var(--ease-spring);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2), 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
 }
 
 .rewind-delivery-banner:hover .rewind-delivery-icon-box {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .rewind-delivery-text {
@@ -2225,45 +2225,59 @@ html {
 
 .rewind-delivery-title {
   font-weight: 600;
-  font-size: var(--text-body-sm);
-  color: var(--text-primary);
+  font-size: 14px;
+  color: #fff4ea;
+  letter-spacing: -0.01em;
 }
 
 .rewind-delivery-badge {
   display: inline-flex;
   align-items: center;
-  padding: 1px 7px;
-  background: var(--bg-accent-subtle);
-  color: var(--text-accent);
-  border: 1px solid var(--border-subtle);
+  padding: 1px 8px;
   border-radius: var(--radius-full);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
-.rewind-delivery-badge.new {
-  background: var(--bg-accent);
-  color: var(--text-on-accent);
-  border-color: transparent;
-  animation: pulseGlow 2s ease-in-out infinite;
+.rewind-delivery-badge.sealed-pill {
+  background: rgba(234, 179, 8, 0.15);
+  color: #fde047;
+  border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.rewind-delivery-badge.delivered-pill {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.35);
 }
 
 .rewind-delivery-sub {
-  font-size: var(--text-caption);
-  color: var(--text-secondary);
-  line-height: var(--leading-normal);
+  font-size: 12px;
+  color: rgba(255, 244, 234, 0.7);
   margin-top: 2px;
 }
 
-.rewind-delivery-toggle {
-  color: var(--text-muted);
-  display: flex;
+.rewind-delivery-action-chip {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 4px;
-  transition: transform var(--duration-fast);
+  gap: 5px;
+  padding: 5px 11px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.rewind-delivery-banner:hover .rewind-delivery-action-chip {
+  background: var(--burgundy-500, #b8334a);
+  border-color: var(--burgundy-400);
+  box-shadow: 0 2px 8px rgba(184, 51, 74, 0.4);
 }
 
 @keyframes pulseGlow {
@@ -3608,6 +3622,76 @@ html {
   font-weight: 700;
   color: var(--gold-300, #fcd34d);
   text-shadow: 0 0 10px rgba(252, 211, 77, 0.3);
+}
+
+/* Sealed Capsule Canvas inside Reader Modal */
+.rewind-reader-sealed-canvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-4) var(--space-4) var(--space-6);
+  gap: var(--space-3);
+  position: relative;
+  z-index: 2;
+}
+
+.rewind-reader-sealed-wax-seal {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fde68a 0%, #d97706 60%, #78350f 100%);
+  border: 2px solid #fef3c7;
+  color: #3b1704;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+  margin-bottom: var(--space-2);
+  animation: sealFloat 3s ease-in-out infinite alternate;
+}
+
+@keyframes sealFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-4px); }
+}
+
+.rewind-reader-sealed-title {
+  font-size: 22px;
+  color: #fff4ea;
+  margin: 0;
+}
+
+.rewind-reader-sealed-desc {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: rgba(255, 244, 234, 0.85);
+  max-width: 440px;
+  margin: 0;
+}
+
+.rewind-reader-sealed-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(252, 211, 77, 0.12);
+  border: 1px solid rgba(252, 211, 77, 0.35);
+  color: var(--gold-300, #fcd34d);
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 0 16px rgba(252, 211, 77, 0.15);
+  margin: var(--space-2) 0;
+}
+
+.rewind-reader-sealed-quote {
+  font-style: italic;
+  font-size: 13.5px;
+  color: rgba(248, 113, 113, 0.8);
+  max-width: 420px;
+  margin: 0;
 }
 
 .rewind-reader-footer {
