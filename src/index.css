@@ -2047,6 +2047,48 @@ html {
   }
 }
 
+/* --- Swipe to Reply Gesture --- */
+.swipeable-message-container {
+  position: relative;
+  width: 100%;
+  touch-action: pan-y;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.swipe-reply-indicator {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast), box-shadow var(--duration-fast);
+}
+
+.swipe-reply-indicator.active {
+  background: var(--burgundy-500, #b8334a);
+  border-color: var(--burgundy-400, #e11d48);
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(184, 51, 74, 0.7);
+}
+
+.swipeable-message-body {
+  width: 100%;
+  will-change: transform;
+}
+
 /* --- Unfolded Letter View --- */
 .rewind-unfolded-card {
   background: var(--bg-surface);

@@ -250,6 +250,172 @@ const VoiceNotePlayer = ({ url, isUser }) => {
   );
 };
 
+const SwipeableMessageRow = ({ children, onReply, disabled, isUser, id, className }) => {
+  const [translateX, setTranslateX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const [hasPassedThreshold, setHasPassedThreshold] = useState(false);
+
+  const startXRef = useRef(0);
+  const startYRef = useRef(0);
+  const isHorizontalSwipeRef = useRef(null);
+  const currentTranslateRef = useRef(0);
+  const isPointerDownRef = useRef(false);
+
+  const THRESHOLD = 42;
+  const MAX_TRANSLATE = 68;
+
+  // Touch handlers (Mobile)
+  const handleTouchStart = (e) => {
+    if (disabled) return;
+    const touch = e.touches[0];
+    startXRef.current = touch.clientX;
+    startYRef.current = touch.clientY;
+    isHorizontalSwipeRef.current = null;
+    currentTranslateRef.current = 0;
+  };
+
+  const handleTouchMove = (e) => {
+    if (disabled) return;
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startXRef.current;
+    const deltaY = touch.clientY - startYRef.current;
+
+    if (isHorizontalSwipeRef.current === null) {
+      if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+        if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) {
+          isHorizontalSwipeRef.current = true;
+        } else {
+          isHorizontalSwipeRef.current = false;
+        }
+      }
+    }
+
+    if (isHorizontalSwipeRef.current) {
+      if (e.cancelable) e.preventDefault();
+      setIsSwiping(true);
+      const clampedX = Math.max(0, Math.min(MAX_TRANSLATE, deltaX * 0.65));
+      currentTranslateRef.current = clampedX;
+      setTranslateX(clampedX);
+
+      const passed = clampedX >= THRESHOLD;
+      if (passed && !hasPassedThreshold) {
+        if (typeof navigator !== 'undefined' && navigator?.vibrate) {
+          try { navigator.vibrate(10); } catch (_) {}
+        }
+      }
+      setHasPassedThreshold(passed);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (disabled || !isSwiping) {
+      isHorizontalSwipeRef.current = null;
+      return;
+    }
+
+    if (currentTranslateRef.current >= THRESHOLD) {
+      if (onReply) onReply();
+    }
+
+    setIsSwiping(false);
+    setTranslateX(0);
+    setHasPassedThreshold(false);
+    currentTranslateRef.current = 0;
+    isHorizontalSwipeRef.current = null;
+  };
+
+  // Pointer/Mouse handlers (Desktop drag)
+  const handlePointerDown = (e) => {
+    if (disabled || e.button !== 0) return;
+    const tag = e.target?.tagName?.toUpperCase();
+    if (['BUTTON', 'INPUT', 'TEXTAREA', 'A', 'VIDEO', 'AUDIO'].includes(tag)) return;
+    if (e.target?.closest?.('button, a, input, textarea, video, audio, .chat-attached-video, .voice-play-btn')) return;
+
+    isPointerDownRef.current = true;
+    startXRef.current = e.clientX;
+    startYRef.current = e.clientY;
+    isHorizontalSwipeRef.current = null;
+    currentTranslateRef.current = 0;
+  };
+
+  const handlePointerMove = (e) => {
+    if (!isPointerDownRef.current || disabled) return;
+    const deltaX = e.clientX - startXRef.current;
+    const deltaY = e.clientY - startYRef.current;
+
+    if (isHorizontalSwipeRef.current === null) {
+      if (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) {
+        if (Math.abs(deltaX) > Math.abs(deltaY) && deltaX > 0) {
+          isHorizontalSwipeRef.current = true;
+        } else {
+          isHorizontalSwipeRef.current = false;
+        }
+      }
+    }
+
+    if (isHorizontalSwipeRef.current) {
+      setIsSwiping(true);
+      const clampedX = Math.max(0, Math.min(MAX_TRANSLATE, deltaX * 0.6));
+      currentTranslateRef.current = clampedX;
+      setTranslateX(clampedX);
+      setHasPassedThreshold(clampedX >= THRESHOLD);
+    }
+  };
+
+  const handlePointerUp = () => {
+    if (!isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
+
+    if (isSwiping && currentTranslateRef.current >= THRESHOLD) {
+      if (onReply) onReply();
+    }
+
+    setIsSwiping(false);
+    setTranslateX(0);
+    setHasPassedThreshold(false);
+    currentTranslateRef.current = 0;
+    isHorizontalSwipeRef.current = null;
+  };
+
+  const progress = Math.min(1, translateX / THRESHOLD);
+
+  return (
+    <div
+      id={id}
+      className={`swipeable-message-container ${className || ''}`}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+    >
+      <div
+        className={`swipe-reply-indicator ${hasPassedThreshold ? 'active' : ''}`}
+        style={{
+          opacity: progress,
+          transform: `translateY(-50%) scale(${0.35 + progress * 0.75})`,
+        }}
+        aria-hidden="true"
+      >
+        <ArrowBendUpLeft size={16} weight="bold" />
+      </div>
+
+      <div
+        className="swipeable-message-body"
+        style={{
+          transform: `translateX(${translateX}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.28s cubic-bezier(0.18, 0.89, 0.32, 1.28)',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelectProfile }) => {
   const { userProfile, connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages, notifications } = useApp();
 
@@ -1243,290 +1409,297 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                     const hasAttachments = !msg.isDeleted && Array.isArray(msg.attachments) && msg.attachments.length > 0;
 
                     return (
-                      <div
+                      <SwipeableMessageRow
                         key={msg.id}
                         id={`msg-bubble-${msg.id}`}
-                        className={`chat-message-bubble-row ${isUser ? 'user-sent' : 'partner-sent'} ${highlightedMessageId === msg.id ? 'is-highlighted-reply' : ''}`}
+                        className={`${isUser ? 'user-sent' : 'partner-sent'} ${highlightedMessageId === msg.id ? 'is-highlighted-reply' : ''}`}
+                        onReply={() => setReplyingTo(msg)}
+                        disabled={msg.isDeleted || editingMessageId === msg.id}
+                        isUser={isUser}
                       >
-                        {!isUser && (
-                          <img src={activePartner.photo} alt={activePartner.name} className="message-bubble-img" />
-                        )}
-                        <div className="message-bubble-content">
-                          {/* Quoted Message Reply Pill */}
-                          {(msg.replyTo || msg.replyToId) && (() => {
-                            const quotedMsg = msg.replyTo || activeMessages.find(m => m.id === msg.replyToId);
-                            const isUserQuoted = quotedMsg?.senderId === userProfile?.userId ||
-                              quotedMsg?.senderId === userProfile?.id ||
-                              quotedMsg?.sender === 'user';
-                            return (
-                              <div
-                                className="quoted-reply-card font-ui font-body"
-                                onClick={() => scrollToMessage(msg.replyToId || msg.replyTo?.id)}
-                                title="Click to jump to quoted message"
-                              >
-                                <div className="quoted-reply-accent" />
-                                <div className="quoted-reply-details">
-                                  <span className="quoted-reply-author">
-                                    {isUserQuoted ? 'You' : activePartner?.name}
-                                  </span>
-                                  <span className="quoted-reply-text font-body">
-                                    {getQuotedSnippet(quotedMsg)}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })()}
-
-                          {/* Attachments rendering */}
-                          {hasAttachments && (
-                            <div className="message-attachments-container">
-                              {msg.attachments.map((att, idx) => {
-                                const url = att.secureUrl || att.localPreview;
-                                const isAud = att.fileType === 'AUDIO' ||
-                                  (att.mimeType && att.mimeType.startsWith('audio/')) ||
-                                  (att.fileName && att.fileName.includes('voice-note')) ||
-                                  (typeof url === 'string' && (Boolean(url.match(/\.(mp3|wav|ogg|m4a|aac)/i)) || url.includes('voice-note') || url.includes('/raw/upload/')));
-
-                                const isImg = !isAud && (
-                                  att.fileType === 'IMAGE' ||
-                                  (att.mimeType && att.mimeType.startsWith('image/')) ||
-                                  (typeof url === 'string' && (Boolean(url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i)) || url.includes('/image/upload/')))
-                                );
-
-                                const isVid = !isAud && !isImg && (
-                                  att.fileType === 'VIDEO' ||
-                                  (att.mimeType && att.mimeType.startsWith('video/')) ||
-                                  (typeof url === 'string' && (Boolean(url.match(/\.(mp4|mov|m4v)/i)) || url.includes('/video/upload/')))
-                                );
-
-                                if (isAud) {
-                                  return (
-                                    <div key={att.id || idx} className="message-audio-attachment-wrapper">
-                                      <VoiceNotePlayer url={url} isUser={isUser} />
-                                      {isUser && !msg.isDeleted && (
-                                        <button
-                                          type="button"
-                                          className="attachment-delete-overlay-btn audio-del"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteMessage(msg.id);
-                                          }}
-                                          aria-label="Delete voice note"
-                                          title="Delete voice note"
-                                        >
-                                          <Trash size={16} />
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                }
-
-                                if (isImg) {
-                                  return (
-                                    <div
-                                      key={att.id || idx}
-                                      className="message-image-attachment"
-                                      onClick={() => setLightboxImage({ type: 'image', url, name: att.fileName || 'Image', messageId: msg.id, isUser })}
-                                    >
-                                      <ProtectedImage
-                                        src={url}
-                                        alt={att.fileName || 'Attachment'}
-                                        className="chat-attached-img-wrap"
-                                        imgClassName="chat-attached-img"
-                                      />
-                                      {isUser && !msg.isDeleted && (
-                                        <button
-                                          type="button"
-                                          className="attachment-delete-overlay-btn"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteMessage(msg.id);
-                                          }}
-                                          aria-label="Delete photo"
-                                          title="Delete photo"
-                                        >
-                                          <Trash size={16} />
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                }
-
-                                if (isVid) {
-                                  return (
-                                    <div key={att.id || idx} className="message-video-attachment-wrapper">
-                                      <video
-                                        src={url}
-                                        controls
-                                        preload="metadata"
-                                        className="chat-attached-video"
-                                      />
-                                      {isUser && !msg.isDeleted && (
-                                        <button
-                                          type="button"
-                                          className="attachment-delete-overlay-btn"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteMessage(msg.id);
-                                          }}
-                                          aria-label="Delete video"
-                                          title="Delete video"
-                                        >
-                                          <Trash size={16} />
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                }
-
-                                return (
-                                  <div key={att.id || idx} className="message-file-attachment-wrapper">
-                                    <a
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      download={att.fileName || 'download'}
-                                      className="message-file-attachment font-ui"
-                                    >
-                                      <div className="file-att-icon">
-                                        <FileText size={24} weight="duotone" />
-                                      </div>
-                                      <div className="file-att-details">
-                                        <span className="file-att-name">{att.fileName || 'Attachment File'}</span>
-                                        <span className="file-att-size">{formatFileSize(att.fileSize)}</span>
-                                      </div>
-                                      <div className="file-att-download">
-                                        <DownloadSimple size={18} />
-                                      </div>
-                                    </a>
-                                    {isUser && !msg.isDeleted && (
-                                      <button
-                                        type="button"
-                                        className="file-att-delete-btn"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          handleDeleteMessage(msg.id);
-                                        }}
-                                        aria-label="Delete file"
-                                        title="Delete file"
-                                      >
-                                        <Trash size={16} />
-                                      </button>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
+                        <div
+                          className={`chat-message-bubble-row ${isUser ? 'user-sent' : 'partner-sent'} ${highlightedMessageId === msg.id ? 'is-highlighted-reply' : ''}`}
+                        >
+                          {!isUser && (
+                            <img src={activePartner.photo} alt={activePartner.name} className="message-bubble-img" />
                           )}
-
-                          {/* Message text / inline edit field */}
-                          {(msg.text || msg.isDeleted) && (
-                            editingMessageId === msg.id ? (
-                              <div className="message-inline-edit-box font-body">
-                                <input
-                                  type="text"
-                                  className="message-edit-input font-body"
-                                  value={editingText}
-                                  onChange={(e) => setEditingText(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.preventDefault();
-                                      handleSaveEdit(msg.id);
-                                    } else if (e.key === 'Escape') {
-                                      e.preventDefault();
-                                      handleCancelEdit();
-                                    }
-                                  }}
-                                  autoFocus
-                                />
-                                <div className="message-edit-btns font-ui">
-                                  <button type="button" className="edit-btn save" onClick={() => handleSaveEdit(msg.id)} title="Save (Enter)">
-                                    <Check size={14} weight="bold" />
-                                    <span>Save</span>
-                                  </button>
-                                  <button type="button" className="edit-btn cancel" onClick={handleCancelEdit} title="Cancel (Esc)">
-                                    <X size={14} weight="bold" />
-                                    <span>Cancel</span>
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (() => {
-                              const noteReplyData = !msg.isDeleted ? parseNoteReply(msg.text) : null;
-                              if (noteReplyData) {
-                                return (
-                                  <div className="insta-note-reply-card font-ui">
-                                    <div className="insta-note-reply-header font-ui">
-                                      <Sparkle size={11} weight="fill" className="sparkle-icon" />
-                                      <span>Replied to note</span>
-                                    </div>
-                                    <div className="insta-note-quote-box font-ui">
-                                      &ldquo;{noteReplyData.quotedNote}&rdquo;
-                                    </div>
-                                    {noteReplyData.replyText ? (
-                                      <div className="insta-note-reply-text font-body">
-                                        {noteReplyData.replyText}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                );
-                              }
+                          <div className="message-bubble-content">
+                            {/* Quoted Message Reply Pill */}
+                            {(msg.replyTo || msg.replyToId) && (() => {
+                              const quotedMsg = msg.replyTo || activeMessages.find(m => m.id === msg.replyToId);
+                              const isUserQuoted = quotedMsg?.senderId === userProfile?.userId ||
+                                quotedMsg?.senderId === userProfile?.id ||
+                                quotedMsg?.sender === 'user';
                               return (
-                                <div className={`message-bubble-text font-body ${msg.isDeleted ? 'deleted' : ''}`}>
-                                  {msg.isDeleted ? 'This message was deleted' : msg.text}
+                                <div
+                                  className="quoted-reply-card font-ui font-body"
+                                  onClick={() => scrollToMessage(msg.replyToId || msg.replyTo?.id)}
+                                  title="Click to jump to quoted message"
+                                >
+                                  <div className="quoted-reply-accent" />
+                                  <div className="quoted-reply-details">
+                                    <span className="quoted-reply-author">
+                                      {isUserQuoted ? 'You' : activePartner?.name}
+                                    </span>
+                                    <span className="quoted-reply-text font-body">
+                                      {getQuotedSnippet(quotedMsg)}
+                                    </span>
+                                  </div>
                                 </div>
                               );
-                            })()
-                          )}
+                            })()}
 
-                          {!msg.isDeleted && editingMessageId !== msg.id && (
-                            <div className="message-bubble-actions">
-                              <button
-                                type="button"
-                                className="message-action-btn reply"
-                                onClick={() => setReplyingTo(msg)}
-                                aria-label="Reply to message"
-                                title="Reply to message"
-                              >
-                                <Quotes size={14} weight="fill" />
-                              </button>
+                            {/* Attachments rendering */}
+                            {hasAttachments && (
+                              <div className="message-attachments-container">
+                                {msg.attachments.map((att, idx) => {
+                                  const url = att.secureUrl || att.localPreview;
+                                  const isAud = att.fileType === 'AUDIO' ||
+                                    (att.mimeType && att.mimeType.startsWith('audio/')) ||
+                                    (att.fileName && att.fileName.includes('voice-note')) ||
+                                    (typeof url === 'string' && (Boolean(url.match(/\.(mp3|wav|ogg|m4a|aac)/i)) || url.includes('voice-note') || url.includes('/raw/upload/')));
 
-                              {isUser && canEditMessage(msg) && (
+                                  const isImg = !isAud && (
+                                    att.fileType === 'IMAGE' ||
+                                    (att.mimeType && att.mimeType.startsWith('image/')) ||
+                                    (typeof url === 'string' && (Boolean(url.match(/\.(jpeg|jpg|gif|png|webp|svg)/i)) || url.includes('/image/upload/')))
+                                  );
+
+                                  const isVid = !isAud && !isImg && (
+                                    att.fileType === 'VIDEO' ||
+                                    (att.mimeType && att.mimeType.startsWith('video/')) ||
+                                    (typeof url === 'string' && (Boolean(url.match(/\.(mp4|mov|m4v)/i)) || url.includes('/video/upload/')))
+                                  );
+
+                                  if (isAud) {
+                                    return (
+                                      <div key={att.id || idx} className="message-audio-attachment-wrapper">
+                                        <VoiceNotePlayer url={url} isUser={isUser} />
+                                        {isUser && !msg.isDeleted && (
+                                          <button
+                                            type="button"
+                                            className="attachment-delete-overlay-btn audio-del"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteMessage(msg.id);
+                                            }}
+                                            aria-label="Delete voice note"
+                                            title="Delete voice note"
+                                          >
+                                            <Trash size={16} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+
+                                  if (isImg) {
+                                    return (
+                                      <div
+                                        key={att.id || idx}
+                                        className="message-image-attachment"
+                                        onClick={() => setLightboxImage({ type: 'image', url, name: att.fileName || 'Image', messageId: msg.id, isUser })}
+                                      >
+                                        <ProtectedImage
+                                          src={url}
+                                          alt={att.fileName || 'Attachment'}
+                                          className="chat-attached-img-wrap"
+                                          imgClassName="chat-attached-img"
+                                        />
+                                        {isUser && !msg.isDeleted && (
+                                          <button
+                                            type="button"
+                                            className="attachment-delete-overlay-btn"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteMessage(msg.id);
+                                            }}
+                                            aria-label="Delete photo"
+                                            title="Delete photo"
+                                          >
+                                            <Trash size={16} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+
+                                  if (isVid) {
+                                    return (
+                                      <div key={att.id || idx} className="message-video-attachment-wrapper">
+                                        <video
+                                          src={url}
+                                          controls
+                                          preload="metadata"
+                                          className="chat-attached-video"
+                                        />
+                                        {isUser && !msg.isDeleted && (
+                                          <button
+                                            type="button"
+                                            className="attachment-delete-overlay-btn"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteMessage(msg.id);
+                                            }}
+                                            aria-label="Delete video"
+                                            title="Delete video"
+                                          >
+                                            <Trash size={16} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <div key={att.id || idx} className="message-file-attachment-wrapper">
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        download={att.fileName || 'download'}
+                                        className="message-file-attachment font-ui"
+                                      >
+                                        <div className="file-att-icon">
+                                          <FileText size={24} weight="duotone" />
+                                        </div>
+                                        <div className="file-att-details">
+                                          <span className="file-att-name">{att.fileName || 'Attachment File'}</span>
+                                          <span className="file-att-size">{formatFileSize(att.fileSize)}</span>
+                                        </div>
+                                        <div className="file-att-download">
+                                          <DownloadSimple size={18} />
+                                        </div>
+                                      </a>
+                                      {isUser && !msg.isDeleted && (
+                                        <button
+                                          type="button"
+                                          className="file-att-delete-btn"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleDeleteMessage(msg.id);
+                                          }}
+                                          aria-label="Delete file"
+                                          title="Delete file"
+                                        >
+                                          <Trash size={16} />
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Message text / inline edit field */}
+                            {(msg.text || msg.isDeleted) && (
+                              editingMessageId === msg.id ? (
+                                <div className="message-inline-edit-box font-body">
+                                  <input
+                                    type="text"
+                                    className="message-edit-input font-body"
+                                    value={editingText}
+                                    onChange={(e) => setEditingText(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleSaveEdit(msg.id);
+                                      } else if (e.key === 'Escape') {
+                                        e.preventDefault();
+                                        handleCancelEdit();
+                                      }
+                                    }}
+                                    autoFocus
+                                  />
+                                  <div className="message-edit-btns font-ui">
+                                    <button type="button" className="edit-btn save" onClick={() => handleSaveEdit(msg.id)} title="Save (Enter)">
+                                      <Check size={14} weight="bold" />
+                                      <span>Save</span>
+                                    </button>
+                                    <button type="button" className="edit-btn cancel" onClick={handleCancelEdit} title="Cancel (Esc)">
+                                      <X size={14} weight="bold" />
+                                      <span>Cancel</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (() => {
+                                const noteReplyData = !msg.isDeleted ? parseNoteReply(msg.text) : null;
+                                if (noteReplyData) {
+                                  return (
+                                    <div className="insta-note-reply-card font-ui">
+                                      <div className="insta-note-reply-header font-ui">
+                                        <Sparkle size={11} weight="fill" className="sparkle-icon" />
+                                        <span>Replied to note</span>
+                                      </div>
+                                      <div className="insta-note-quote-box font-ui">
+                                        &ldquo;{noteReplyData.quotedNote}&rdquo;
+                                      </div>
+                                      {noteReplyData.replyText ? (
+                                        <div className="insta-note-reply-text font-body">
+                                          {noteReplyData.replyText}
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <div className={`message-bubble-text font-body ${msg.isDeleted ? 'deleted' : ''}`}>
+                                    {msg.isDeleted ? 'This message was deleted' : msg.text}
+                                  </div>
+                                );
+                              })()
+                            )}
+
+                            {!msg.isDeleted && editingMessageId !== msg.id && (
+                              <div className="message-bubble-actions">
                                 <button
                                   type="button"
-                                  className="message-action-btn edit"
-                                  onClick={() => handleStartEdit(msg)}
-                                  aria-label="Edit message"
-                                  title="Edit message (available for 15 mins)"
+                                  className="message-action-btn reply"
+                                  onClick={() => setReplyingTo(msg)}
+                                  aria-label="Reply to message"
+                                  title="Reply to message"
                                 >
-                                  <PencilSimple size={14} />
+                                  <Quotes size={14} weight="fill" />
                                 </button>
+
+                                {isUser && canEditMessage(msg) && (
+                                  <button
+                                    type="button"
+                                    className="message-action-btn edit"
+                                    onClick={() => handleStartEdit(msg)}
+                                    aria-label="Edit message"
+                                    title="Edit message (available for 15 mins)"
+                                  >
+                                    <PencilSimple size={14} />
+                                  </button>
+                                )}
+
+                                {isUser && (
+                                  <button
+                                    type="button"
+                                    className="message-action-btn delete"
+                                    onClick={() => handleDeleteMessage(msg.id)}
+                                    aria-label="Delete message"
+                                    title="Delete message"
+                                  >
+                                    <Trash size={14} />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                            <div className="message-bubble-footer font-ui">
+                              <span className="message-bubble-time">{msg.timestamp}</span>
+                              {msg.isEdited && !msg.isDeleted && (
+                                <span className="edited-status-text">• Edited</span>
                               )}
-
-                              {isUser && (
-                                <button
-                                  type="button"
-                                  className="message-action-btn delete"
-                                  onClick={() => handleDeleteMessage(msg.id)}
-                                  aria-label="Delete message"
-                                  title="Delete message"
-                                >
-                                  <Trash size={14} />
-                                </button>
+                              {isUser && !msg.isDeleted && msg.seen && (
+                                <span className="seen-status-text page-enter">• Seen</span>
                               )}
                             </div>
-                          )}
-                          <div className="message-bubble-footer font-ui">
-                            <span className="message-bubble-time">{msg.timestamp}</span>
-                            {msg.isEdited && !msg.isDeleted && (
-                              <span className="edited-status-text">• Edited</span>
-                            )}
-                            {isUser && !msg.isDeleted && msg.seen && (
-                              <span className="seen-status-text page-enter">• Seen</span>
-                            )}
                           </div>
                         </div>
-                      </div>
+                      </SwipeableMessageRow>
                     );
                   })}
 
