@@ -4519,9 +4519,9 @@ html {
    ========================================================================== */
 .diary-book-cover {
   width: 100%;
-  max-width: 380px;
+  max-width: 440px;
   height: 100%;
-  max-height: 480px;
+  max-height: 570px;
   position: absolute;
   cursor: pointer;
   transform-origin: left center;
@@ -4687,9 +4687,9 @@ html {
    ========================================================================= */
 .diary-open-book-spread {
   width: 100%;
-  max-width: 380px;
+  max-width: 440px;
   height: 100%;
-  max-height: 480px;
+  max-height: 570px;
   position: relative;
   display: flex;
   align-items: center;
@@ -5712,8 +5712,8 @@ html {
 
   .diary-book-cover,
   .diary-open-book-spread {
-    max-width: 340px;
-    max-height: 450px;
+    max-width: 380px;
+    max-height: 520px;
   }
 
   .diary-paper-page {
