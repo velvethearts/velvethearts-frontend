@@ -5708,9 +5708,113 @@ html {
   box-shadow: 0 2px 8px rgba(184, 51, 74, 0.35);
 }
 
-.diary-save-confirm-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* ==========================================================================
+   AUTHENTIC 3D BOOK & PAGE FLIP KEYFRAMES
+   ========================================================================== */
+
+@keyframes coverSwingOpen {
+  0% {
+    transform-origin: left center;
+    transform: rotateY(0deg);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+  }
+  30% {
+    transform-origin: left center;
+    transform: rotateY(-35deg) skewY(-1.5deg);
+    box-shadow: -15px 25px 50px rgba(0, 0, 0, 0.6);
+  }
+  70% {
+    transform-origin: left center;
+    transform: rotateY(-80deg) skewY(-2.5deg);
+    box-shadow: -25px 20px 40px rgba(0, 0, 0, 0.4);
+  }
+  100% {
+    transform-origin: left center;
+    transform: rotateY(-110deg) skewY(-3deg);
+    box-shadow: none;
+    opacity: 0;
+  }
+}
+
+@keyframes coverSwingClose {
+  0% {
+    transform-origin: left center;
+    transform: rotateY(-110deg) skewY(-3deg);
+    opacity: 0;
+  }
+  30% {
+    transform-origin: left center;
+    transform: rotateY(-75deg) skewY(-2deg);
+    opacity: 1;
+    box-shadow: -25px 20px 40px rgba(0, 0, 0, 0.4);
+  }
+  70% {
+    transform-origin: left center;
+    transform: rotateY(-25deg) skewY(-1deg);
+    box-shadow: -10px 25px 50px rgba(0, 0, 0, 0.6);
+  }
+  100% {
+    transform-origin: left center;
+    transform: rotateY(0deg);
+    opacity: 1;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+  }
+}
+
+@keyframes pageFlipForward {
+  0% {
+    transform-origin: left center;
+    transform: rotateY(0deg) skewY(0deg);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+    filter: brightness(1);
+  }
+  35% {
+    transform-origin: left center;
+    transform: rotateY(-45deg) skewY(-2deg) scaleY(0.98);
+    box-shadow: -20px 22px 35px rgba(0, 0, 0, 0.35);
+    filter: brightness(0.92);
+  }
+  70% {
+    transform-origin: left center;
+    transform: rotateY(-90deg) skewY(-3.5deg) scaleY(0.95);
+    box-shadow: -35px 18px 25px rgba(0, 0, 0, 0.25);
+    filter: brightness(0.85);
+  }
+  100% {
+    transform-origin: left center;
+    transform: rotateY(-115deg) skewY(-4deg) scaleY(0.93);
+    opacity: 0;
+    filter: brightness(0.78);
+  }
+}
+
+@keyframes pageFlipBackward {
+  0% {
+    transform-origin: left center;
+    transform: rotateY(-115deg) skewY(-4deg) scaleY(0.93);
+    opacity: 0;
+    filter: brightness(0.78);
+  }
+  35% {
+    transform-origin: left center;
+    transform: rotateY(-80deg) skewY(-3deg) scaleY(0.95);
+    opacity: 1;
+    box-shadow: -30px 20px 30px rgba(0, 0, 0, 0.3);
+    filter: brightness(0.86);
+  }
+  70% {
+    transform-origin: left center;
+    transform: rotateY(-25deg) skewY(-1.2deg) scaleY(0.98);
+    box-shadow: -12px 20px 40px rgba(0, 0, 0, 0.4);
+    filter: brightness(0.96);
+  }
+  100% {
+    transform-origin: left center;
+    transform: rotateY(0deg) skewY(0deg) scaleY(1);
+    opacity: 1;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+    filter: brightness(1);
+  }
 }
 
 /* Mobile Optimization for Our Diary */
