@@ -199,7 +199,7 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
                 <div className="rewind-unfolded-author-info">
                   <span className="rewind-unfolded-author font-display">{author}</span>
                   <span className="rewind-unfolded-meta">
-                    Written {writtenDate ? `on ${writtenDate}` : 'when you matched'} • Delivered {deliveredDate}
+                    Delivered on {deliveredDate}
                   </span>
                 </div>
                 <div className={`rewind-unfolded-seal ${isFirstOpenAnimation ? 'seal-stamp-pop' : ''}`}>

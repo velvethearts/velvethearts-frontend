@@ -182,7 +182,7 @@ export const RewindLetterVaultModal = ({
                     <div>
                       <span className="rewind-vault-letter-author font-display">From {partnerName}</span>
                       <span className="rewind-vault-letter-date font-body">
-                        Written {formatWrittenDate(deliveredLetter.createdAt)} • Delivered {formatDeliveredDate(deliveredLetter.deliveredAt)}
+                        Delivered on {formatDeliveredDate(deliveredLetter.deliveredAt)}
                       </span>
                     </div>
                     <div className="rewind-vault-wax-seal" title="Authentic Velvet Hearts Seal">

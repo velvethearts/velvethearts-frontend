@@ -760,10 +760,13 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
         if (statusData.receivedLetter?.status === 'DELIVERED') {
           const deliveredRes = await api.getDeliveredRewindLetter(activeMatchId);
           const deliveredData = deliveredRes?.data || deliveredRes;
-          if (deliveredData) {
-            setDeliveredLetter(deliveredData);
-          }
+          setDeliveredLetter(deliveredData || null);
+        } else {
+          setDeliveredLetter(null);
         }
+      } else {
+        setLetterStatus(null);
+        setDeliveredLetter(null);
       }
     } catch (err) {
       console.debug('Rewind letter status fetch error:', err);
@@ -1171,7 +1174,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                           <span>Write Rewind Letter</span>
                         </button>
                       )}
-                      {(letterStatus?.myLetter || letterStatus?.receivedLetter || deliveredLetter) && (
+                      {notifications?.rewindLettersEnabled !== false && (
                         <button
                           onClick={() => {
                             setShowDropdown(false);
