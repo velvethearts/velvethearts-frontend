@@ -19,13 +19,31 @@ import { ProfileDetail } from './pages/ProfileDetail/ProfileDetail';
 import { ToastContainer } from './components/UI/ToastContainer';
 import { FeatureTourGuide } from './components/UI/FeatureTourGuide';
 
+// Auto-recovering lazy import helper to handle stale Vite chunks
+const lazyWithRetry = (componentImport) =>
+  lazy(async () => {
+    const hasBeenRefreshed = sessionStorage.getItem('vh-chunk-refreshed') === 'true';
+    try {
+      const component = await componentImport();
+      sessionStorage.removeItem('vh-chunk-refreshed');
+      return component;
+    } catch (error) {
+      if (!hasBeenRefreshed) {
+        sessionStorage.setItem('vh-chunk-refreshed', 'true');
+        window.location.reload();
+        return { default: () => null };
+      }
+      throw error;
+    }
+  });
+
 // Lazy-loaded Secondary Routes for Performance Optimization
-const OnboardingFlow = lazy(() => import('./pages/Onboarding/OnboardingFlow').then(m => ({ default: m.OnboardingFlow })));
-const EditProfile = lazy(() => import('./pages/Profile/EditProfile').then(m => ({ default: m.EditProfile })));
-const SavedProfilesPage = lazy(() => import('./pages/Profile/SavedProfilesPage').then(m => ({ default: m.SavedProfilesPage })));
-const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
-const SafetyCenter = lazy(() => import('./pages/Safety/SafetyCenter').then(m => ({ default: m.SafetyCenter })));
-const NotificationsPage = lazy(() => import('./pages/Notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
+const OnboardingFlow = lazyWithRetry(() => import('./pages/Onboarding/OnboardingFlow').then(m => ({ default: m.OnboardingFlow })));
+const EditProfile = lazyWithRetry(() => import('./pages/Profile/EditProfile').then(m => ({ default: m.EditProfile })));
+const SavedProfilesPage = lazyWithRetry(() => import('./pages/Profile/SavedProfilesPage').then(m => ({ default: m.SavedProfilesPage })));
+const SettingsPage = lazyWithRetry(() => import('./pages/Settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const SafetyCenter = lazyWithRetry(() => import('./pages/Safety/SafetyCenter').then(m => ({ default: m.SafetyCenter })));
+const NotificationsPage = lazyWithRetry(() => import('./pages/Notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 
 const AuthLoadingScreen = () => {
   return (
