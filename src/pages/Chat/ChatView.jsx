@@ -26,7 +26,8 @@ import {
   EnvelopeSimple,
   EnvelopeOpen,
   LockKey,
-  Clock
+  Clock,
+  Archive
 } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
@@ -34,6 +35,7 @@ import { getSocket, joinConversation, leaveConversation, emitStartTyping, emitSt
 import { RewindLetterPrompt } from '../../components/RewindLetter/RewindLetterPrompt';
 import { RewindLetterCompose } from '../../components/RewindLetter/RewindLetterCompose';
 import { RewindLetterCard } from '../../components/RewindLetter/RewindLetterCard';
+import { RewindLetterVaultModal } from '../../components/RewindLetter/RewindLetterVaultModal';
 
 const parseNoteReply = (text) => {
   if (!text || typeof text !== 'string') return null;
@@ -368,6 +370,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const [letterStatus, setLetterStatus] = useState(null);
   const [deliveredLetter, setDeliveredLetter] = useState(null);
   const [showRewindCompose, setShowRewindCompose] = useState(false);
+  const [showRewindVault, setShowRewindVault] = useState(false);
   const [isReschedulingRewind, setIsReschedulingRewind] = useState(false);
   const [isRewindDismissed, setIsRewindDismissed] = useState(false);
 
@@ -1136,6 +1139,19 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                           <span>Reschedule Rewind Letter</span>
                         </button>
                       )}
+                      {(letterStatus?.myLetter || letterStatus?.receivedLetter || deliveredLetter) && (
+                        <button
+                          onClick={() => {
+                            setShowDropdown(false);
+                            setShowRewindVault(true);
+                          }}
+                          role="menuitem"
+                          className="dropdown-item"
+                        >
+                          <Archive size={16} />
+                          <span>Rewind Letters Vault</span>
+                        </button>
+                      )}
                       <button onClick={handleDeleteChat} role="menuitem" className="dropdown-item danger">
                         <Trash size={16} />
                         <span>Delete my chat</span>
@@ -1167,8 +1183,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
               {/* Chat Log */}
               <div className="chat-log-container">
                 <div className="chat-log-scroll">
-                  {/* Card for letter received from partner (Delivered) */}
-                  {deliveredLetter && (
+                  {/* Card for letter received from partner (Delivered - auto-archived after 2 days) */}
+                  {deliveredLetter && ((Date.now() - new Date(deliveredLetter.deliveredAt || Date.now()).getTime()) < 2 * 24 * 60 * 60 * 1000) && (
                     <RewindLetterCard
                       letter={deliveredLetter}
                       partnerName={activePartner.name}
@@ -1698,6 +1714,25 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                         message: `Your letter for ${activePartner.name} is now safely sealed in your time capsule.`,
                       });
                     }
+                  }}
+                />
+              )}
+
+              {/* Rewind Letters Vault Modal */}
+              {showRewindVault && (
+                <RewindLetterVaultModal
+                  isOpen={showRewindVault}
+                  onClose={() => setShowRewindVault(false)}
+                  partner={activePartner}
+                  letterStatus={letterStatus}
+                  deliveredLetter={deliveredLetter}
+                  onOpenCompose={() => {
+                    setIsReschedulingRewind(false);
+                    setShowRewindCompose(true);
+                  }}
+                  onOpenReschedule={() => {
+                    setIsReschedulingRewind(true);
+                    setShowRewindCompose(true);
                   }}
                 />
               )}
