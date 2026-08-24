@@ -15,7 +15,7 @@ import {
 } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
 
-const MAX_CHARS = 500;
+const MAX_WORDS = 500;
 const MIN_DAYS = 7;
 const MAX_DAYS = 90;
 const PRESET_DAYS = [7, 14, 30, 60, 90];
@@ -144,10 +144,10 @@ export const RewindLetterCompose = ({
 
   if (!isOpen) return null;
 
-  const charCount = content.length;
-  const remaining = MAX_CHARS - charCount;
-  const isOverLimit = remaining < 0;
-  const isValid = isReschedule ? true : (content.trim().length > 0 && !isOverLimit);
+  const wordCount = content.trim() ? content.trim().split(/\s+/).filter(Boolean).length : 0;
+  const remainingWords = MAX_WORDS - wordCount;
+  const isOverLimit = remainingWords < 0;
+  const isValid = isReschedule ? true : (wordCount > 0 && !isOverLimit);
 
   // Month navigation boundary guards
   const currentViewMonthStart = new Date(viewYear, viewMonth, 1);
@@ -247,7 +247,7 @@ export const RewindLetterCompose = ({
                 ? `Pick an unlock date within 3 months (minimum 7 days).`
                 : isEdit
                 ? `Edit your message or adjust unlock timeframe within 48 hours.`
-                : `A private message sealed until your chosen future date.`}
+                : `A private message (up to ${MAX_WORDS} words) sealed until delivery.`}
             </p>
           </div>
           <button
@@ -292,16 +292,15 @@ export const RewindLetterCompose = ({
             <div className="rewind-textarea-wrapper">
               <textarea
                 className="rewind-textarea"
-                placeholder={`What stood out about ${partnerName || 'them'}? What are you curious to know? Write your thoughts here...`}
+                placeholder={`What stood out about ${partnerName || 'them'}? What are you curious to know? Write your thoughts here (up to ${MAX_WORDS} words)...`}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={5}
-                maxLength={MAX_CHARS + 50}
                 disabled={isSubmitting}
                 autoFocus
               />
-              <div className={`rewind-char-counter ${remaining < 20 ? 'warning' : ''} ${isOverLimit ? 'error' : ''}`}>
-                {charCount} / {MAX_CHARS}
+              <div className={`rewind-char-counter ${remainingWords < 30 ? 'warning' : ''} ${isOverLimit ? 'error' : ''}`}>
+                {wordCount} / {MAX_WORDS} words
               </div>
             </div>
           )}
