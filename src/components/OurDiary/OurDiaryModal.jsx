@@ -671,7 +671,7 @@ export const OurDiaryModal = ({
         <div className="our-diary-top-bar">
           <div className="our-diary-top-left">
             <span className="our-diary-header-badge font-display">
-              <Sparkle size={15} weight="fill" />
+              <Heart size={18} weight="fill" className="our-diary-heart-icon" />
               <span>Sweet Moments</span>
             </span>
           </div>

@@ -4263,8 +4263,8 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background: rgba(26, 18, 22, 0.75);
+  padding: 22px 18px 14px;
+  background: rgba(26, 18, 22, 0.9);
   backdrop-filter: blur(12px);
   border-radius: var(--radius-lg, 16px) var(--radius-lg, 16px) 0 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -4274,11 +4274,16 @@ html {
 .our-diary-header-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--gold-300, #fcd34d);
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f4728c; /* Velvet Hearts app rose color */
   letter-spacing: 0.02em;
+}
+
+.our-diary-heart-icon {
+  color: #e11d48;
+  filter: drop-shadow(0 0 6px rgba(225, 29, 72, 0.6));
 }
 
 .our-diary-top-right {
@@ -5693,7 +5698,7 @@ html {
   }
 
   .our-diary-top-bar {
-    padding: 10px 12px;
+    padding: 26px 16px 14px;
   }
 
   .our-diary-brand span {
