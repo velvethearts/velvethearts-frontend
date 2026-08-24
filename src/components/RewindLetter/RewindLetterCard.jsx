@@ -31,11 +31,11 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
     triggerHaptic('light');
     playHapticSound('pop');
 
-    // If sealed and not the author, display the locked message modal
-    if (isSealed && !isAuthor) {
+    // If sealed, ALWAYS display the locked message modal (never open scroll)
+    if (isSealed) {
       setIsLockedModalOpen(true);
     } else {
-      // If unlocked/delivered (or author viewing their letter), open scroll animation
+      // Only open the scroll animation when the letter is delivered/unlocked
       setIsReaderOpen(true);
     }
   };
@@ -106,11 +106,13 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
             </div>
 
             <h3 id="locked-modal-title" className="rewind-locked-modal-title font-display">
-              {author} Sealed a Rewind Letter
+              {isAuthor ? `You Sealed a Rewind Letter for ${partnerName || 'your match'}` : `${author} Sealed a Rewind Letter`}
             </h3>
 
             <p className="rewind-locked-modal-desc font-body">
-              This time-capsule letter was written by {author}. It is safely encrypted in the Velvet Hearts vault and will automatically unlock on its scheduled delivery date.
+              {isAuthor
+                ? `You tucked away a private letter for ${partnerName || 'your match'}. It is safely encrypted and preserved in the Velvet Hearts vault and will automatically unlock on its scheduled delivery date.`
+                : `This time-capsule letter was written by ${author}. It is safely encrypted in the Velvet Hearts vault and will automatically unlock on its scheduled delivery date.`}
             </p>
 
             <div className="rewind-locked-modal-date-badge font-ui">
