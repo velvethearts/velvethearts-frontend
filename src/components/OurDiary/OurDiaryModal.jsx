@@ -126,9 +126,8 @@ export const OurDiaryModal = ({
     try {
       if (!silent) setLoading(true);
       const res = await api.getDiaryEntries(matchId);
-      if (res && res.success && Array.isArray(res.data)) {
-        setEntries(res.data);
-      }
+      const list = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      setEntries(list);
     } catch (err) {
       console.error('Failed to fetch diary entries:', err);
       if (err?.message?.includes('not found') || err?.message?.includes('not part') || err?.message?.includes('active')) {
@@ -175,22 +174,21 @@ export const OurDiaryModal = ({
     };
   }, [isOpen, matchId]);
 
-  // Group entries into pages by Date with viewer's local timezone/locale
+  // Group entries into pages: Exactly 1 page per calendar day that has at least one entry
   const groupEntriesIntoPages = () => {
     if (!entries || entries.length === 0) {
       return [];
     }
 
-    const groupedByDate = {};
+    const groupedByDate = new Map();
+
     entries.forEach(entry => {
-      const dateKey = new Date(entry.createdAt).toLocaleDateString(undefined, {
+      const dateObj = new Date(entry.createdAt);
+      const dateLabel = dateObj.toLocaleDateString(undefined, {
         month: 'long',
         day: 'numeric',
         year: 'numeric'
       });
-      if (!groupedByDate[dateKey]) {
-        groupedByDate[dateKey] = [];
-      }
       const dateSortKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
 
       if (!groupedByDate.has(dateSortKey)) {
