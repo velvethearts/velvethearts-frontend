@@ -2458,15 +2458,18 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
         }
 
         .user-sent .message-bubble-text {
-          background-color: var(--burgundy-500);
+          background: linear-gradient(145deg, #a8233f 0%, #881337 100%);
           color: #FFFFFF;
+          border: 1px solid rgba(255, 180, 195, 0.22);
+          box-shadow: 0 2px 10px rgba(136, 19, 55, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
           border-bottom-right-radius: var(--radius-sm);
         }
 
         .partner-sent .message-bubble-text {
-          background-color: var(--bg-surface);
-          color: var(--text-primary);
-          border: 1px solid var(--border-subtle);
+          background-color: #1e1619;
+          color: #fce7eb;
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
           border-bottom-left-radius: var(--radius-sm);
         }
 
@@ -2507,44 +2510,46 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           align-items: center;
           justify-content: center;
           color: var(--text-secondary);
-          background-color: var(--bg-surface);
-          border: 1px solid var(--border-subtle);
+          background-color: #1c1417;
+          border: 1px solid rgba(255, 255, 255, 0.1);
           cursor: pointer;
           transition: all var(--duration-fast);
           box-shadow: var(--shadow-sm);
         }
 
         .message-action-btn.reply:hover {
-          color: var(--burgundy-500);
+          color: var(--burgundy-300);
           border-color: var(--burgundy-400);
-          background-color: var(--bg-surface-warm);
+          background-color: #27171d;
         }
 
-        /* Quoted Reply Card inside Message Bubble */
+        /* Tactile Quoted Reply Card inside Message Bubble */
         .quoted-reply-card {
           display: flex;
           align-items: stretch;
           gap: var(--space-2);
           padding: 6px 10px;
-          background: rgba(0, 0, 0, 0.06);
+          background: #140d10;
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: var(--radius-md);
           margin-bottom: 4px;
           cursor: pointer;
-          transition: background-color var(--duration-fast);
+          transition: all var(--duration-fast);
           max-width: 100%;
           overflow: hidden;
         }
 
         .user-sent .quoted-reply-card {
-          background: rgba(255, 255, 255, 0.16);
+          background: #6e1029;
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .quoted-reply-card:hover {
-          background: rgba(0, 0, 0, 0.12);
+          background: #1d1317;
         }
 
         .user-sent .quoted-reply-card:hover {
-          background: rgba(255, 255, 255, 0.26);
+          background: #7d1330;
         }
 
         .quoted-reply-accent {
@@ -2569,7 +2574,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
         .quoted-reply-author {
           font-size: 11px;
           font-weight: 700;
-          color: var(--burgundy-600);
+          color: var(--burgundy-400);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -2588,19 +2593,19 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
         }
 
         .user-sent .quoted-reply-text {
-          color: rgba(255, 255, 255, 0.92);
+          color: rgba(255, 255, 255, 0.95);
         }
 
-        /* Glassmorphism Active Reply Banner */
+        /* Solid Tactile Active Reply Banner */
         .chat-replying-banner {
           display: flex;
           align-items: center;
           gap: var(--space-3);
           padding: var(--space-3) var(--space-4);
-          background: var(--bg-surface-warm);
-          border-top: 1px solid var(--border-subtle);
-          border-bottom: 1px solid var(--border-subtle);
-          backdrop-filter: blur(12px);
+          background: #191014;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.35);
         }
 
         .replying-accent-bar {
