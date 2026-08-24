@@ -16,9 +16,10 @@ export const RewindLetterCompose = ({
   mode = 'create', // 'create' | 'edit' | 'reschedule'
   initialContent = '',
   initialDays = 7,
+  letterId = null,
 }) => {
-  const [content, setContent] = useState(initialContent);
-  const [deliveryDays, setDeliveryDays] = useState(initialDays);
+  const [content, setContent] = useState('');
+  const [deliveryDays, setDeliveryDays] = useState(7);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,11 +28,19 @@ export const RewindLetterCompose = ({
 
   useEffect(() => {
     if (isOpen) {
-      setContent(initialContent || '');
-      setDeliveryDays(initialDays || 7);
+      if (mode === 'create') {
+        setContent('');
+        setDeliveryDays(7);
+      } else if (mode === 'edit') {
+        setContent(initialContent || '');
+        setDeliveryDays(initialDays || 7);
+      } else if (mode === 'reschedule') {
+        setContent('');
+        setDeliveryDays(initialDays || 7);
+      }
       setError('');
     }
-  }, [isOpen, initialContent, initialDays]);
+  }, [isOpen, mode, initialContent, initialDays]);
 
   if (!isOpen) return null;
 
@@ -49,11 +58,11 @@ export const RewindLetterCompose = ({
 
     try {
       if (isReschedule) {
-        const res = await api.updateRewindLetterSchedule(matchId, Number(deliveryDays));
+        const res = await api.updateRewindLetterSchedule(matchId, Number(deliveryDays), letterId);
         if (onSuccess) onSuccess(res?.data || res);
         onClose();
       } else if (isEdit) {
-        const res = await api.editRewindLetter(matchId, content.trim(), Number(deliveryDays));
+        const res = await api.editRewindLetter(matchId, content.trim(), Number(deliveryDays), letterId);
         if (onSuccess) onSuccess(res?.data || res);
         onClose();
       } else {

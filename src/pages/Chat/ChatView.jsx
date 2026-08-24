@@ -371,6 +371,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const [deliveredLetter, setDeliveredLetter] = useState(null);
   const [showRewindCompose, setShowRewindCompose] = useState(false);
   const [composeMode, setComposeMode] = useState('create'); // 'create' | 'edit' | 'reschedule'
+  const [editingLetterTarget, setEditingLetterTarget] = useState(null);
   const [showRewindVault, setShowRewindVault] = useState(false);
   const [isRewindDismissed, setIsRewindDismissed] = useState(false);
 
@@ -1717,15 +1718,21 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   partnerName={activePartner?.name}
                   isOpen={showRewindCompose}
                   mode={composeMode}
-                  initialContent={letterStatus?.myLetter?.content || ''}
+                  letterId={editingLetterTarget?.id || (composeMode !== 'create' ? letterStatus?.myLetter?.id : null)}
+                  initialContent={composeMode === 'edit' ? (editingLetterTarget?.content || letterStatus?.myLetter?.content || '') : ''}
                   initialDays={
-                    letterStatus?.myLetter?.deliverAfter && activePartner?.createdAt
-                      ? Math.max(7, Math.min(90, Math.round((new Date(letterStatus.myLetter.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
+                    composeMode === 'edit' || composeMode === 'reschedule'
+                      ? (editingLetterTarget?.deliverAfter && activePartner?.createdAt
+                          ? Math.max(7, Math.min(90, Math.round((new Date(editingLetterTarget.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
+                          : (letterStatus?.myLetter?.deliverAfter && activePartner?.createdAt
+                              ? Math.max(7, Math.min(90, Math.round((new Date(letterStatus.myLetter.deliverAfter).getTime() - new Date(activePartner.createdAt).getTime()) / (24 * 60 * 60 * 1000))))
+                              : 7))
                       : 7
                   }
                   onClose={() => {
                     setShowRewindCompose(false);
                     setComposeMode('create');
+                    setEditingLetterTarget(null);
                   }}
                   onSuccess={(sealedLetter) => {
                     fetchLetterData();
@@ -1768,14 +1775,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   letterStatus={letterStatus}
                   deliveredLetter={deliveredLetter}
                   onOpenCompose={() => {
+                    setEditingLetterTarget(null);
                     setComposeMode('create');
                     setShowRewindCompose(true);
                   }}
                   onOpenEdit={(letter) => {
+                    setEditingLetterTarget(letter);
                     setComposeMode('edit');
                     setShowRewindCompose(true);
                   }}
-                  onOpenReschedule={() => {
+                  onOpenReschedule={(letter) => {
+                    setEditingLetterTarget(letter);
                     setComposeMode('reschedule');
                     setShowRewindCompose(true);
                   }}
