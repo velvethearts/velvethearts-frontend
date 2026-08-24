@@ -18,13 +18,24 @@ export const RewindLetterCard = ({ letter, partnerName }) => {
     ? `Your Rewind Letter for ${partnerName || 'your match'}`
     : `Rewind Letter from ${author}`;
 
-  const unlockDate = letter?.deliverAfter
-    ? new Date(letter.deliverAfter).toLocaleDateString(undefined, {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : null;
+  const formatUnlockDateTime = (dateStr) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    const datePart = d.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    const timePart = d.toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+    return `${datePart} at ${timePart}`;
+  };
+
+  const unlockDate = formatUnlockDateTime(letter?.deliverAfter);
 
   const handleBannerClick = (e) => {
     e?.preventDefault();

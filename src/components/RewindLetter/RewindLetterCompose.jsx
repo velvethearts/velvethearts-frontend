@@ -191,6 +191,12 @@ export const RewindLetterCompose = ({
     year: 'numeric'
   });
 
+  const formattedSelectedTime = new Date(baseDate).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isValid || isSubmitting) return;
@@ -362,7 +368,7 @@ export const RewindLetterCompose = ({
             <div className="rewind-duration-range-limits font-ui">
               <span>Min: 1 day</span>
               <span className="rewind-duration-live-date font-body">
-                Unlocks on <strong>{formattedSelectedDate}</strong>
+                Unlocks on <strong>{formattedSelectedDate} at {formattedSelectedTime}</strong>
               </span>
               <span>Max: {MAX_DAYS} days</span>
             </div>
@@ -507,7 +513,7 @@ export const RewindLetterCompose = ({
 
               <div className="rewind-cal-popover-footer font-ui">
                 <div className="rewind-cal-footer-preview">
-                  <span>Selected: <strong>{formattedSelectedDate}</strong></span>
+                  <span>Selected: <strong>{formattedSelectedDate} at {formattedSelectedTime}</strong></span>
                   <span className="rewind-cal-footer-pill">in {deliveryDays} days</span>
                 </div>
                 <button

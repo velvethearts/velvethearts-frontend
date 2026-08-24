@@ -1454,7 +1454,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                       const fallbackDate = isUser ? letterStatus?.myLetter?.deliverAfter : letterStatus?.receivedLetter?.deliverAfter;
                       const effectiveDate = (dateFromMsg && !isNaN(dateFromMsg.getTime())) ? dateFromMsg : fallbackDate;
                       const unlockDateStr = effectiveDate && !isNaN(new Date(effectiveDate).getTime())
-                        ? new Date(effectiveDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                        ? `${new Date(effectiveDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} at ${new Date(effectiveDate).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true })}`
                         : null;
 
                       return (

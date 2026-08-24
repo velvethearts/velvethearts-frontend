@@ -126,11 +126,19 @@ export const RewindLetterVaultModal = ({
 
   const formatDeliveredDate = (dateStr) => {
     if (!dateStr) return 'Recently';
-    return new Date(dateStr).toLocaleDateString(undefined, {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'Recently';
+    const datePart = d.toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
+    const timePart = d.toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    return `${datePart} at ${timePart}`;
   };
 
   const formatWrittenDate = (dateStr) => {
