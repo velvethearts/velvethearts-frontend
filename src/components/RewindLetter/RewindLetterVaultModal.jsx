@@ -283,14 +283,14 @@ export const RewindLetterVaultModal = ({
                                 <span>A private memory preserved from when you first connected.</span>
                                 <button
                                   type="button"
-                                  className="rewind-vault-delete-btn font-ui"
+                                  className="rewind-vault-delete-icon-btn font-ui"
                                   title="Delete Letter from Vault"
+                                  aria-label="Delete Letter"
                                   onClick={() => {
                                     if (onDeleteLetter) onDeleteLetter(letter.id);
                                   }}
                                 >
-                                  <Trash size={14} weight="bold" />
-                                  <span>Delete</span>
+                                  <Trash size={16} weight="bold" />
                                 </button>
                               </div>
                             </div>
@@ -464,14 +464,14 @@ export const RewindLetterVaultModal = ({
 
                                     <button
                                       type="button"
-                                      className="rewind-vault-delete-btn font-ui"
+                                      className="rewind-vault-delete-icon-btn font-ui"
                                       title="Delete / Unsend Letter"
+                                      aria-label="Delete Letter"
                                       onClick={() => {
                                         if (onDeleteLetter) onDeleteLetter(letter.id);
                                       }}
                                     >
-                                      <Trash size={14} weight="bold" />
-                                      <span>Delete</span>
+                                      <Trash size={16} weight="bold" />
                                     </button>
                                   </div>
                                 </div>
@@ -488,14 +488,14 @@ export const RewindLetterVaultModal = ({
                                 {letter.status === 'DELIVERED' && (
                                   <button
                                     type="button"
-                                    className="rewind-vault-delete-btn font-ui"
+                                    className="rewind-vault-delete-icon-btn font-ui"
                                     title="Delete Letter"
+                                    aria-label="Delete Letter"
                                     onClick={() => {
                                       if (onDeleteLetter) onDeleteLetter(letter.id);
                                     }}
                                   >
-                                    <Trash size={14} weight="bold" />
-                                    <span>Delete</span>
+                                    <Trash size={16} weight="bold" />
                                   </button>
                                 )}
                               </div>

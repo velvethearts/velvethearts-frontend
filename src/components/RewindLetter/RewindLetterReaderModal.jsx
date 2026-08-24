@@ -144,14 +144,15 @@ export const RewindLetterReaderModal = ({
             {onDeleteLetter && (
               <button
                 type="button"
-                className="rewind-reader-delete-btn font-ui"
+                className="rewind-reader-delete-icon-btn"
+                title="Delete Letter"
+                aria-label="Delete Letter"
                 onClick={() => {
                   onDeleteLetter(letter.id);
                   onClose();
                 }}
               >
-                <Trash size={15} weight="bold" />
-                <span>Delete Letter</span>
+                <Trash size={17} weight="bold" />
               </button>
             )}
             <button
