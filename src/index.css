@@ -1780,6 +1780,16 @@ html {
   border-radius: var(--radius-full);
 }
 
+.rewind-duration-preview-badge {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: #fde047;
+  background: rgba(234, 179, 8, 0.12);
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
 .rewind-duration-presets {
   display: flex;
   gap: 6px;

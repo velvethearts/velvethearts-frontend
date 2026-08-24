@@ -17,6 +17,7 @@ export const RewindLetterCompose = ({
   initialContent = '',
   initialDays = 7,
   letterId = null,
+  letterCreatedAt = null,
 }) => {
   const [content, setContent] = useState('');
   const [deliveryDays, setDeliveryDays] = useState(7);
@@ -43,6 +44,15 @@ export const RewindLetterCompose = ({
   }, [isOpen, mode, initialContent, initialDays]);
 
   if (!isOpen) return null;
+
+  const baseDate = letterCreatedAt ? new Date(letterCreatedAt) : new Date();
+  const previewUnlockDate = new Date(baseDate);
+  previewUnlockDate.setDate(previewUnlockDate.getDate() + Number(deliveryDays));
+  const formattedPreviewDate = previewUnlockDate.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
   const charCount = content.length;
   const remaining = MAX_CHARS - charCount;
@@ -125,7 +135,7 @@ export const RewindLetterCompose = ({
             <span>
               {isReschedule ? (
                 <>
-                  <strong>Adjust unlock timeframe:</strong> Set how long your letter remains sealed. It will unlock after <strong>{deliveryDays} days</strong> of matching.
+                  <strong>Adjust unlock timeframe:</strong> Set how long your letter remains sealed. It will unlock after <strong>{deliveryDays} days</strong> of sealing.
                 </>
               ) : isEdit ? (
                 <>
@@ -133,7 +143,7 @@ export const RewindLetterCompose = ({
                 </>
               ) : (
                 <>
-                  <strong>48-hour grace edit window:</strong> Once sealed, you can edit or delete this letter within 48 hours. After 48 hours, it is permanently locked until delivery ({deliveryDays} days from matching).
+                  <strong>48-hour grace edit window:</strong> Once sealed, you can edit or delete this letter within 48 hours. After 48 hours, it is permanently locked until delivery ({deliveryDays} days from sealing).
                 </>
               )}
             </span>
@@ -171,9 +181,14 @@ export const RewindLetterCompose = ({
                 <Calendar size={16} weight="duotone" />
                 <span>Unlock Timeframe</span>
               </span>
-              <span className="rewind-duration-value">
-                {deliveryDays} Days
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="rewind-duration-preview-badge font-ui">
+                  Unlocks on {formattedPreviewDate}
+                </span>
+                <span className="rewind-duration-value">
+                  {deliveryDays} Days
+                </span>
+              </div>
             </div>
 
             <div className="rewind-duration-presets">

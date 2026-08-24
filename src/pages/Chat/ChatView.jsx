@@ -1889,6 +1889,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   isOpen={showRewindCompose}
                   mode={composeMode}
                   letterId={editingLetterTarget?.id || (composeMode !== 'create' ? letterStatus?.myLetter?.id : null)}
+                  letterCreatedAt={editingLetterTarget?.createdAt || (composeMode !== 'create' ? letterStatus?.myLetter?.createdAt : null)}
                   initialContent={composeMode === 'edit' ? (editingLetterTarget?.content || letterStatus?.myLetter?.content || '') : ''}
                   initialDays={
                     composeMode === 'edit' || composeMode === 'reschedule'
@@ -1906,6 +1907,20 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   }}
                   onSuccess={(sealedLetter) => {
                     fetchLetterData();
+                    if (sealedLetter) {
+                      setLetterStatus(prev => {
+                        if (!prev) return prev;
+                        const targetId = sealedLetter.id || editingLetterTarget?.id || prev.myLetter?.id;
+                        const updatedSent = Array.isArray(prev.sentLetters)
+                          ? prev.sentLetters.map(l => l.id === targetId ? { ...l, ...sealedLetter } : l)
+                          : [sealedLetter];
+                        return {
+                          ...prev,
+                          myLetter: prev.myLetter?.id === targetId ? { ...prev.myLetter, ...sealedLetter } : (sealedLetter || prev.myLetter),
+                          sentLetters: updatedSent,
+                        };
+                      });
+                    }
                     if (composeMode === 'edit') {
                       showAlert({
                         title: 'Letter Updated ✉️',
@@ -1917,16 +1932,6 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                         message: `The delivery timeframe for your Rewind Letter has been successfully updated.`,
                       });
                     } else {
-                      setLetterStatus(prev => ({
-                        ...prev,
-                        myLetter: {
-                          id: sealedLetter?.id,
-                          status: sealedLetter?.status || 'SEALED',
-                          content: sealedLetter?.content,
-                          deliverAfter: sealedLetter?.deliverAfter,
-                          createdAt: new Date().toISOString()
-                        }
-                      }));
                       showAlert({
                         title: 'Letter Sealed ✉️',
                         message: `Your letter for ${activePartner.name} is now safely sealed in your time capsule.`,
