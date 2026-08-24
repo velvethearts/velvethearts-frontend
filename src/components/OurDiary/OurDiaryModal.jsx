@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   X,
   BookBookmark,
@@ -22,6 +22,122 @@ import { api } from '../../lib/api';
 import { useApp } from '../../context/AppContext';
 import { ProtectedImage } from '../UI/ProtectedImage';
 import { getSocket } from '../../lib/socket';
+
+// Interactive Mini Calendar Popover with Moment Markings
+const DiaryCalendarPopover = ({
+  pages,
+  currentPageIndex,
+  onSelectPage,
+  onClose
+}) => {
+  const currentPageDate = pages[currentPageIndex]?.rawDate || new Date();
+  const [viewDate, setViewDate] = useState(() => new Date(currentPageDate.getFullYear(), currentPageDate.getMonth(), 1));
+
+  // Map each date ('YYYY-MM-DD') to its page index and item count
+  const dateMap = useMemo(() => {
+    const map = new Map();
+    pages.forEach((p, idx) => {
+      if (p.rawDate) {
+        const d = p.rawDate;
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        map.set(key, { pageIndex: idx, count: p.items.length, dateLabel: p.dateLabel });
+      }
+    });
+    return map;
+  }, [pages]);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  const prevMonth = (e) => {
+    e.stopPropagation();
+    setViewDate(new Date(year, month - 1, 1));
+  };
+
+  const nextMonth = (e) => {
+    e.stopPropagation();
+    setViewDate(new Date(year, month + 1, 1));
+  };
+
+  const monthLabel = viewDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+  // Compute days in month
+  const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0 = Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const calendarCells = [];
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    calendarCells.push({ key: `blank-${i}`, isBlank: true });
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const entryData = dateMap.get(key);
+    const isSelected = entryData && entryData.pageIndex === currentPageIndex;
+    calendarCells.push({
+      key,
+      day,
+      hasEntries: Boolean(entryData),
+      pageIndex: entryData?.pageIndex,
+      count: entryData?.count || 0,
+      isSelected,
+    });
+  }
+
+  const daysOfWeek = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+  return (
+    <div className="diary-calendar-popover font-ui" onClick={(e) => e.stopPropagation()}>
+      <div className="diary-calendar-header">
+        <button type="button" className="diary-cal-nav-btn" onClick={prevMonth} aria-label="Previous month">
+          <CaretLeft size={14} weight="bold" />
+        </button>
+        <span className="diary-calendar-month-title font-display">{monthLabel}</span>
+        <button type="button" className="diary-cal-nav-btn" onClick={nextMonth} aria-label="Next month">
+          <CaretRight size={14} weight="bold" />
+        </button>
+      </div>
+
+      <div className="diary-calendar-weekdays">
+        {daysOfWeek.map((d, i) => (
+          <span key={i} className="diary-cal-weekday">{d}</span>
+        ))}
+      </div>
+
+      <div className="diary-calendar-grid">
+        {calendarCells.map((cell) => {
+          if (cell.isBlank) {
+            return <div key={cell.key} className="diary-cal-cell blank" />;
+          }
+
+          return (
+            <button
+              key={cell.key}
+              type="button"
+              className={`diary-cal-cell ${cell.hasEntries ? 'has-moments' : 'empty-day'} ${cell.isSelected ? 'selected' : ''}`}
+              disabled={!cell.hasEntries}
+              onClick={() => {
+                if (cell.hasEntries && cell.pageIndex !== undefined) {
+                  onSelectPage(cell.pageIndex);
+                }
+              }}
+              title={cell.hasEntries ? `${cell.count} moment${cell.count > 1 ? 's' : ''} on this date` : 'No moments'}
+            >
+              <span>{cell.day}</span>
+              {cell.hasEntries && <span className="diary-cal-dot" />}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="diary-calendar-footer">
+        <div className="diary-cal-legend">
+          <span className="diary-cal-dot-sample" />
+          <span>Marked dates have moments</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Full waveform Voice Note Player (matching ChatView)
 const DiaryVoiceNotePlayer = ({ url, isUser }) => {
@@ -329,6 +445,7 @@ export const OurDiaryModal = ({
 
     return sortedDays.map((dayGroup, index) => ({
       dateLabel: dayGroup.dateLabel,
+      rawDate: dayGroup.rawDate,
       items: dayGroup.items, // All entries on this calendar day stacked together in order
       pageNumber: index + 1
     }));
@@ -526,10 +643,10 @@ export const OurDiaryModal = ({
               <>
                 <button
                   type="button"
-                  className="diary-top-action-btn font-ui"
+                  className={`diary-top-action-btn font-ui ${showDateJump ? 'active' : ''}`}
                   onClick={() => setShowDateJump(prev => !prev)}
-                  title="Jump to date"
-                  aria-label="Jump to date"
+                  title="Open Calendar"
+                  aria-label="Open Calendar"
                 >
                   <CalendarBlank size={16} />
                   <span className="hide-mobile">Dates</span>
@@ -560,24 +677,17 @@ export const OurDiaryModal = ({
           </div>
         </div>
 
-        {/* Date Jump Menu Popover */}
-        {showDateJump && pages.length > 0 && (
-          <div className="diary-date-jump-popover">
-            <div className="diary-date-jump-title">Jump to Date</div>
-            <div className="diary-date-jump-list">
-              {pages.map((p, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className={`diary-date-jump-item ${currentPageIndex === idx ? 'active' : ''}`}
-                  onClick={() => handleJumpToPage(idx)}
-                >
-                  <span>{p.dateLabel}</span>
-                  <span className="diary-date-page-badge">Page {idx + 1}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Interactive Mini Calendar Popover */}
+        {showDateJump && (
+          <DiaryCalendarPopover
+            pages={pages}
+            currentPageIndex={currentPageIndex}
+            onSelectPage={(idx) => {
+              handleJumpToPage(idx);
+              setShowDateJump(false);
+            }}
+            onClose={() => setShowDateJump(false)}
+          />
         )}
 
         {/* --- BOOK STAGE --- */}
