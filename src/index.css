@@ -2724,23 +2724,21 @@ html {
 .rewind-vault-write-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  background: rgba(184, 51, 74, 0.2);
+  padding: 4px 6px;
+  background: transparent;
   color: var(--burgundy-300, #f87171);
-  border: 1px solid rgba(184, 51, 74, 0.35);
-  border-radius: var(--radius-full);
-  font-size: 12px;
+  border: none;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--duration-fast);
 }
 
 .rewind-vault-write-action-btn:hover {
-  background: var(--burgundy-500, #b8334a);
   color: #ffffff;
-  border-color: var(--burgundy-500);
-  transform: translateY(-1px);
+  text-decoration: underline;
+  background: transparent;
+  transform: none;
 }
 
 .rewind-vault-letters-list {

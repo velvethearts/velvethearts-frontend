@@ -370,8 +370,7 @@ export const RewindLetterVaultModal = ({
                         if (onOpenCompose) onOpenCompose();
                       }}
                     >
-                      <Plus size={16} weight="bold" />
-                      <span>Write Another Rewind Letter</span>
+                      Write Another Rewind Letter
                     </button>
                   </div>
                 )}
