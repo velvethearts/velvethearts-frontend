@@ -21,6 +21,7 @@ import {
 import { api } from '../../lib/api';
 import { useApp } from '../../context/AppContext';
 import { ProtectedImage } from '../UI/ProtectedImage';
+import { getSocket } from '../../lib/socket';
 
 // In-Diary Voice Note Player
 const DiaryAudioPlayer = ({ url }) => {
@@ -120,18 +121,22 @@ export const OurDiaryModal = ({
   const fileInputRef = useRef(null);
 
   // Fetch diary entries
-  const fetchEntries = async () => {
+  const fetchEntries = async (silent = false) => {
     if (!matchId) return;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const res = await api.getDiaryEntries(matchId);
       if (res && res.success && Array.isArray(res.data)) {
         setEntries(res.data);
       }
     } catch (err) {
       console.error('Failed to fetch diary entries:', err);
+      if (err?.message?.includes('not found') || err?.message?.includes('not part') || err?.message?.includes('active')) {
+        showToast('This connection is no longer active.', 'info');
+        onClose();
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -143,7 +148,34 @@ export const OurDiaryModal = ({
     }
   }, [isOpen, matchId]);
 
-  // Group entries into pages by Date (or cluster if single date has many)
+  // Live Sync via Socket.IO
+  useEffect(() => {
+    if (!isOpen || !matchId) return;
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleDiaryAdded = (payload) => {
+      if (payload?.matchId === matchId) {
+        fetchEntries(true);
+      }
+    };
+
+    const handleDiaryDeleted = (payload) => {
+      if (payload?.matchId === matchId) {
+        fetchEntries(true);
+      }
+    };
+
+    socket.on('diary_entry_added', handleDiaryAdded);
+    socket.on('diary_entry_deleted', handleDiaryDeleted);
+
+    return () => {
+      socket.off('diary_entry_added', handleDiaryAdded);
+      socket.off('diary_entry_deleted', handleDiaryDeleted);
+    };
+  }, [isOpen, matchId]);
+
+  // Group entries into pages by Date with viewer's local timezone/locale
   const groupEntriesIntoPages = () => {
     if (!entries || entries.length === 0) {
       return [];
@@ -151,7 +183,7 @@ export const OurDiaryModal = ({
 
     const groupedByDate = {};
     entries.forEach(entry => {
-      const dateKey = new Date(entry.createdAt).toLocaleDateString('en-US', {
+      const dateKey = new Date(entry.createdAt).toLocaleDateString(undefined, {
         month: 'long',
         day: 'numeric',
         year: 'numeric'
@@ -164,7 +196,6 @@ export const OurDiaryModal = ({
 
     const pages = [];
     Object.entries(groupedByDate).forEach(([dateLabel, items]) => {
-      // Chunk items into pages of max 2 items per page to give a spacious physical feel
       for (let i = 0; i < items.length; i += 2) {
         pages.push({
           dateLabel,
@@ -179,6 +210,33 @@ export const OurDiaryModal = ({
 
   const pages = groupEntriesIntoPages();
   const totalPages = Math.max(pages.length, 1);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isOpen || !isBookOpen || showComposer) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleNextPage();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrevPage();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        handleJumpToPage(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        handleJumpToPage(totalPages - 1);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isBookOpen, showComposer, currentPageIndex, totalPages]);
 
   const handleNextPage = () => {
     if (currentPageIndex < totalPages - 1 && !isFlipping) {
