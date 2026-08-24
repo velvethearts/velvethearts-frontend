@@ -4770,11 +4770,69 @@ html {
 }
 
 .diary-paper-page.flipping-next {
-  animation: pageFlipForward 0.38s cubic-bezier(0.25, 1, 0.5, 1);
+  transform-origin: left center;
+  animation: coverSwingOpen 0.42s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  pointer-events: none;
 }
 
 .diary-paper-page.flipping-prev {
-  animation: pageFlipBackward 0.38s cubic-bezier(0.25, 1, 0.5, 1);
+  transform-origin: left center;
+  animation: coverSwingClose 0.42s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   AUTHENTIC 3D BOOK & PAGE FLIP KEYFRAMES
+   ========================================================================== */
+
+@keyframes coverSwingOpen {
+  0% {
+    transform-origin: left center;
+    transform: rotateY(0deg);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
+  }
+  35% {
+    transform-origin: left center;
+    transform: rotateY(-40deg) skewY(-1.5deg);
+    box-shadow: -15px 20px 35px rgba(0, 0, 0, 0.35);
+  }
+  75% {
+    transform-origin: left center;
+    transform: rotateY(-85deg) skewY(-2.5deg);
+    box-shadow: -25px 15px 25px rgba(0, 0, 0, 0.2);
+  }
+  100% {
+    transform-origin: left center;
+    transform: rotateY(-110deg) skewY(-3deg);
+    box-shadow: none;
+    opacity: 0;
+  }
+}
+
+@keyframes coverSwingClose {
+  0% {
+    transform-origin: left center;
+    transform: rotateY(-110deg) skewY(-3deg);
+    opacity: 0;
+    box-shadow: none;
+  }
+  30% {
+    transform-origin: left center;
+    transform: rotateY(-80deg) skewY(-2.5deg);
+    opacity: 1;
+    box-shadow: -25px 15px 25px rgba(0, 0, 0, 0.2);
+  }
+  70% {
+    transform-origin: left center;
+    transform: rotateY(-30deg) skewY(-1deg);
+    box-shadow: -15px 20px 35px rgba(0, 0, 0, 0.35);
+  }
+  100% {
+    transform-origin: left center;
+    transform: rotateY(0deg);
+    opacity: 1;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
+  }
 }
 
 /* 4. Placed Polaroid Photo & Video */

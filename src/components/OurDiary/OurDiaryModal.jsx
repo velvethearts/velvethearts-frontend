@@ -532,7 +532,7 @@ export const OurDiaryModal = ({
       setTimeout(() => {
         setCurrentPageIndex(prev => prev + 1);
         setIsFlipping(false);
-      }, 380);
+      }, 420);
     }
   };
 
@@ -551,7 +551,7 @@ export const OurDiaryModal = ({
       setTimeout(() => {
         setCurrentPageIndex(prev => prev - 1);
         setIsFlipping(false);
-      }, 380);
+      }, 420);
     }
   };
 
