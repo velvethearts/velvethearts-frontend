@@ -759,7 +759,6 @@ export const OurDiaryModal = ({
         <div className="diary-modal-header">
           <div className="diary-header-left">
             <span className="diary-header-badge font-display">
-              <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-header-logo-img" />
               <span>Our Diary</span>
             </span>
           </div>

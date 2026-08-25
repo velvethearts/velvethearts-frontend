@@ -77,18 +77,18 @@ export const DiaryBookFlip = forwardRef(({
   const [dimensions, setDimensions] = useState(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
     const isShort = typeof window !== 'undefined' && window.innerHeight < 700;
-    const w = isMobile ? Math.min(window.innerWidth - 40, 300) : 330;
-    const h = isShort ? Math.min(window.innerHeight - 260, 390) : (isMobile ? 415 : 450);
-    return { width: Math.max(w, 260), height: Math.max(h, 360) };
+    const w = isMobile ? Math.min(window.innerWidth - 36, 325) : 340;
+    const h = isShort ? Math.min(window.innerHeight - 240, 420) : (isMobile ? 440 : 475);
+    return { width: Math.max(w, 290), height: Math.max(h, 400) };
   });
 
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 640;
       const isShort = window.innerHeight < 700;
-      const w = isMobile ? Math.min(window.innerWidth - 40, 300) : 330;
-      const h = isShort ? Math.min(window.innerHeight - 260, 390) : (isMobile ? 415 : 450);
-      setDimensions({ width: Math.max(w, 260), height: Math.max(h, 360) });
+      const w = isMobile ? Math.min(window.innerWidth - 36, 325) : 340;
+      const h = isShort ? Math.min(window.innerHeight - 240, 420) : (isMobile ? 440 : 475);
+      setDimensions({ width: Math.max(w, 290), height: Math.max(h, 400) });
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);

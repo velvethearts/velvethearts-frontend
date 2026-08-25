@@ -5987,7 +5987,7 @@ html {
 .diary-modal-wrapper {
   position: relative;
   width: 100%;
-  max-width: min(94vw, 440px);
+  max-width: min(95vw, 460px);
   height: auto !important;
   max-height: calc(100dvh - 130px);
   display: flex;
@@ -6004,7 +6004,7 @@ html {
 
 @media (min-width: 640px) {
   .diary-modal-wrapper {
-    max-width: 480px;
+    max-width: 490px;
     height: auto !important;
     max-height: calc(100dvh - 80px);
   }
