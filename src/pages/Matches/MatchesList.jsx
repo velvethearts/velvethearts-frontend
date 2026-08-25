@@ -9,6 +9,7 @@ import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getProfilePhoto, getDefaultAvatar } from '../../utils/avatar';
 import { computeVibeMatch } from '../../utils/vibe';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
+import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 
 const DEMO_ACTIVE_CONNECTION = {
   id: 'demo-active-match-1',
@@ -588,9 +589,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                         <span>{vibeScore}% Vibe</span>
                       </span>
                       {conn.verified && (
-                        <span className="match-verified-badge font-ui">
-                          Verified
-                        </span>
+                        <VerifiedBadge variant="pill" size="sm" />
                       )}
                     </div>
 

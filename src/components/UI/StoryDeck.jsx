@@ -21,6 +21,7 @@ import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 import { PromptReactionModal } from './PromptReactionModal';
 import { ProtectedImage } from './ProtectedImage';
+import { VerifiedBadge } from './VerifiedBadge';
 
 export const StoryDeck = ({
   profiles = [],
@@ -479,9 +480,7 @@ export const StoryDeck = ({
               <span>{vibeScore}% Vibe Match</span>
             </div>
             {activeProfile.verified && (
-              <span className="badge-verified font-ui">
-                <CheckCircle size={12} weight="fill" /> Verified
-              </span>
+              <VerifiedBadge variant="pill" size="md" />
             )}
           </div>
 

@@ -4,6 +4,7 @@ import { CheckCircle, Heart, DotsThreeVertical, Bookmark, Prohibit, ShieldWarnin
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 import { computeVibeMatch } from '../../utils/vibe';
 import { ProtectedImage } from './ProtectedImage';
+import { VerifiedBadge } from './VerifiedBadge';
 
 export const ProfileCard = ({
   profile,
@@ -177,10 +178,7 @@ export const ProfileCard = ({
             <span>{vibeScore}% Vibe</span>
           </span>
           {profile.verified && (
-            <span className="badge-verified font-ui">
-              <CheckCircle size={12} weight="fill" />
-              Verified
-            </span>
+            <VerifiedBadge variant="pill" size="sm" />
           )}
           {profile.isPremium && (
             <span className="badge-premium font-ui">Premium</span>

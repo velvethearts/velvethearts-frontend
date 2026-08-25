@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Modal } from '../../components/UI/Modal';
 import { Button } from '../../components/UI/Button';
+import { ShieldCheck } from '@phosphor-icons/react';
 
 export const DiscoverPreferences = ({ onClose }) => {
   const { filters, setFilters } = useApp();
@@ -57,7 +58,8 @@ export const DiscoverPreferences = ({ onClose }) => {
       ageMin: 18,
       ageMax: 60,
       distanceMax: 50,
-      sortBy: 'default'
+      sortBy: 'default',
+      verifiedOnly: false
     });
   };
 
@@ -189,6 +191,28 @@ export const DiscoverPreferences = ({ onClose }) => {
             onChange={(e) => setLocalFilters(prev => ({ ...prev, city: e.target.value }))}
             className="pref-text-input font-ui"
           />
+        </div>
+
+        {/* Verified Profiles Only Toggle */}
+        <div className="pref-item-section border-top">
+          <label className="checkbox-label" style={{ justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldCheck size={20} weight="fill" color="#B8436A" />
+              <div>
+                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>
+                  Verified Profiles Only
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  Only show members with photo-verified authentic profiles
+                </div>
+              </div>
+            </div>
+            <input
+              type="checkbox"
+              checked={Boolean(localFilters.verifiedOnly)}
+              onChange={() => handleToggle('verifiedOnly')}
+            />
+          </label>
         </div>
       </div>
 

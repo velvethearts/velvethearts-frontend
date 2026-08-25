@@ -5,10 +5,13 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import { Card } from '../../components/UI/Card';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getProfilePhoto, extractPhotoUrls } from '../../utils/avatar';
+import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
+import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
 
 export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile }) => {
   const { userProfile, setActiveTab, logout, showConfirm, savedProfileObjects = [] } = useApp();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
   const userPhotosList = extractPhotoUrls(userProfile);
   const displayUserPhotos = userPhotosList.length > 0 ? userPhotosList : [getProfilePhoto(userProfile)];
@@ -153,6 +156,7 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
               <div className="preview-name-row">
                 <h2 className="preview-name font-display">{userProfile.name || 'Your Name'}</h2>
                 <span className="preview-age font-ui">, {getAge()}</span>
+                {userProfile?.verified && <VerifiedBadge variant="icon" size="md" />}
               </div>
               <p className="preview-location font-ui">{userProfile.city || 'Your City'}</p>
               
@@ -189,6 +193,38 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
               <div className="tile-text">
                 <span className="tile-title">Edit Profile Details</span>
                 <span className="tile-desc">Update your story, interests, or photos</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Photo Verification Action Tile */}
+          <Card
+            hoverable
+            onClick={() => {
+              if (!userProfile?.verified) {
+                setIsVerifyModalOpen(true);
+              } else {
+                setActiveTab('safety');
+              }
+            }}
+            className="you-tile-card you-verify-tile"
+          >
+            <div className="you-tile-btn-body">
+              <ShieldCheck size={24} className="tile-icon font-success" weight="fill" color="#B8436A" />
+              <div className="tile-text">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="tile-title">Photo Verification</span>
+                  {userProfile?.verified ? (
+                    <VerifiedBadge variant="pill" size="sm" interactive={false} />
+                  ) : (
+                    <span className="safety-unverified-tag font-ui" style={{ fontSize: '10px' }}>Get Verified</span>
+                  )}
+                </div>
+                <span className="tile-desc">
+                  {userProfile?.verified
+                    ? 'Your profile is authenticated with a verified live pose'
+                    : 'Confirm your authenticity with a quick 1-handed selfie'}
+                </span>
               </div>
             </div>
           </Card>
@@ -616,6 +652,12 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
           max-width: 280px;
         }
       `}</style>
+
+      <PhotoVerificationModal
+        isOpen={isVerifyModalOpen}
+        onClose={() => setIsVerifyModalOpen(false)}
+        onVerified={() => setIsVerifyModalOpen(false)}
+      />
     </div>
   );
 };

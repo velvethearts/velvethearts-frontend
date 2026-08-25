@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
+import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 
 export const ProfileDetail = ({ profile, onBack }) => {
@@ -226,10 +227,7 @@ export const ProfileDetail = ({ profile, onBack }) => {
 
           <div className="detail-img-badges">
             {profile.verified && (
-              <span className="badge-verified font-ui">
-                <CheckCircle size={12} weight="fill" />
-                Verified
-              </span>
+              <VerifiedBadge variant="pill" size="md" />
             )}
             {profile.isPremium && (
               <span className="badge-premium font-ui">Premium</span>

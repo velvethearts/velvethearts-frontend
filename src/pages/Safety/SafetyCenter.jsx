@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { auth } from '../../lib/firebase';
-import { ShieldCheck, Users, Info, HandWaving, EnvelopeSimple } from '@phosphor-icons/react';
+import { ShieldCheck, Users, Info, HandWaving, EnvelopeSimple, Camera } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Card } from '../../components/UI/Card';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
 import { Textarea } from '../../components/UI/Textarea';
 import { EmptyState } from '../../components/UI/EmptyState';
+import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
+import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 
 export const SafetyCenter = () => {
   const { blockedUsers, unblockUser, reportedUsers, submitSupportTicket, setActiveTab, profiles, showAlert, userProfile } = useApp();
   const [unblockingId, setUnblockingId] = useState(null);
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
   // Support Form State
   const [supportName, setSupportName] = useState('');
@@ -109,8 +112,46 @@ export const SafetyCenter = () => {
       />
 
       <div className="safety-container font-ui">
-        {/* Guidelines */}
+        {/* Identity & Photo Verification Section */}
         <section className="safety-section">
+          <h2 className="section-title">
+            <ShieldCheck size={20} className="section-title-icon font-success" />
+            <span>Identity &amp; Photo Verification</span>
+          </h2>
+          <Card className="safety-verify-card">
+            <div className="safety-verify-content">
+              <div className="safety-verify-icon-badge">
+                <ShieldCheck size={32} weight="fill" color="#B8436A" />
+              </div>
+              <div className="safety-verify-info">
+                <div className="safety-verify-header-row">
+                  <h3 className="safety-verify-title font-display">Profile Authenticity</h3>
+                  {userProfile?.verified ? (
+                    <VerifiedBadge variant="pill" size="md" />
+                  ) : (
+                    <span className="safety-unverified-tag font-ui">Not Verified</span>
+                  )}
+                </div>
+                <p className="safety-verify-desc font-body">
+                  {userProfile?.verified
+                    ? 'Your identity is confirmed with a verified live pose selfie. Your profile displays the official Verified Badge to all matches.'
+                    : 'Prevent catfishing and get up to 3x more meaningful connections by verifying your identity with a quick one-handed selfie gesture.'}
+                </p>
+              </div>
+            </div>
+            {!userProfile?.verified && (
+              <div className="safety-verify-action">
+                <Button variant="primary" onClick={() => setIsVerifyModalOpen(true)}>
+                  <Camera size={18} weight="bold" />
+                  <span>Verify Profile Now</span>
+                </Button>
+              </div>
+            )}
+          </Card>
+        </section>
+
+        {/* Guidelines */}
+        <section className="safety-section border-top">
           <h2 className="section-title">
             <HandWaving size={20} className="section-title-icon" />
             <span>Community Guidelines</span>
@@ -592,6 +633,12 @@ export const SafetyCenter = () => {
           color: var(--rose-400, #F0A0AD);
         }
       `}</style>
+
+      <PhotoVerificationModal
+        isOpen={isVerifyModalOpen}
+        onClose={() => setIsVerifyModalOpen(false)}
+        onVerified={() => setIsVerifyModalOpen(false)}
+      />
     </div>
   );
 };

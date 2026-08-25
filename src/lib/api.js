@@ -134,6 +134,13 @@ export const api = {
         });
     },
 
+    verifyPhoto(data) {
+        return request('/api/v1/profile/verify-photo', {
+            method: 'POST',
+            body: data
+        });
+    },
+
     deleteAccount(feedbackData = {}) {
         return request('/api/v1/profile', {
             method: 'DELETE',

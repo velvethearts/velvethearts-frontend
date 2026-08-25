@@ -117,6 +117,9 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       if (!isNaN(distNum) && distNum > filters.distanceMax) return false;
     }
 
+    // Enforce Verified Only filter
+    if (filters.verifiedOnly && !profile.verified) return false;
+
     return true;
   });
 
