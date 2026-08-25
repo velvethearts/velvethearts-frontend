@@ -260,16 +260,11 @@ export const DiaryBookFlip = forwardRef(({
                 </div>
               </div>
 
-              {/* 3. Bottom Section: Counter Badge & Tap prompt */}
+              {/* 3. Bottom Section: Counter Badge */}
               <div className="diary-cover-bottom-group font-ui">
                 <div className="diary-cover-count-badge font-ui">
                   <Sparkle size={12} weight="fill" />
                   <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
-                </div>
-
-                <div className="diary-cover-tap-prompt font-ui">
-                  <span>Tap to open diary</span>
-                  <CaretRight size={13} weight="bold" />
                 </div>
               </div>
             </div>
