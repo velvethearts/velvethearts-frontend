@@ -5944,9 +5944,9 @@ html {
 .diary-modal-wrapper {
   position: relative;
   width: 100%;
-  max-width: 620px;
-  height: 88vh;
-  max-height: 780px;
+  max-width: 680px;
+  height: 92vh;
+  max-height: 840px;
   display: flex;
   flex-direction: column;
   background: var(--bg-surface-warm, #FFF8F0);
@@ -6040,12 +6040,15 @@ html {
   transition: all var(--duration-fast);
 }
 
-.diary-header-toggle-btn:hover,
-.diary-header-toggle-btn.active {
+.diary-header-toggle-btn:hover {
   background: var(--burgundy-100, #F9E0E6);
-  color: var(--burgundy-700, #7A2842);
-  border-color: var(--burgundy-400, #D0607F);
-  transform: translateY(-1px);
+  border-color: var(--burgundy-300, #E08DA3);
+}
+
+.diary-header-toggle-btn.active {
+  background: var(--burgundy-500, #B8436A);
+  color: #ffffff;
+  border-color: var(--burgundy-500, #B8436A);
 }
 
 .diary-modal-close-btn {
@@ -6078,23 +6081,25 @@ html {
   padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  background: var(--bg-surface-warm, #FFF8F0);
+  align-items: center;
+  justify-content: center;
+  position: relative;
   overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--bg-surface-warm, #FFF8F0);
 }
 
 /* ==========================================================================
    STATE A: "ADD AN ENTRY" DEDICATED SCREEN
    ========================================================================== */
 .diary-add-screen {
+  width: 100%;
+  max-width: 540px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 16px;
   margin: auto;
-  width: 100%;
-  max-width: 480px;
-  padding: 10px 0;
-  animation: diaryFadeIn var(--duration-fast) var(--ease-out);
 }
 
 /* ==========================================================================
@@ -6106,14 +6111,17 @@ html {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 12px 0 20px;
+  margin: 12px auto 20px;
   width: 100%;
+  max-width: 540px;
+  overflow: visible;
+  padding: 0 20px;
 }
 
 .diary-3d-book {
   position: relative;
-  width: 235px;
-  height: 315px;
+  width: 230px;
+  height: 310px;
   transform-style: preserve-3d;
   /* Resting-state 3D dimensional tilt even before tapped */
   transform: rotateY(-12deg) rotateX(6deg) rotateZ(-1.5deg);
@@ -6127,7 +6135,7 @@ html {
 }
 
 .diary-3d-book.book-open {
-  transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg) translateX(30px);
+  transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg) translateX(50px);
 }
 
 /* 1. Base Page revealed underneath */

@@ -376,7 +376,7 @@ export const OurDiaryModal = ({
   // Dual State: 'browse' (Day card view) or 'add' (Create moment screen)
   const [viewState, setViewState] = useState('browse');
   const [addMode, setAddMode] = useState(null); // 'type' | 'record' | 'photo' | null
-  const [isBookOpen, setIsBookOpen] = useState(true);
+  const [isBookOpen, setIsBookOpen] = useState(false);
 
   // Entries & Pages
   const [entries, setEntries] = useState([]);
@@ -821,9 +821,11 @@ export const OurDiaryModal = ({
               className={`diary-header-toggle-btn font-ui ${viewState === 'add' ? 'active' : ''}`}
               onClick={() => {
                 if (viewState === 'browse') {
+                  setIsBookOpen(false);
                   setViewState('add');
                   setAddMode(null);
                 } else {
+                  setIsBookOpen(true);
                   setViewState('browse');
                   setAddMode(null);
                   cancelAudioRecording();
@@ -870,11 +872,11 @@ export const OurDiaryModal = ({
                 <div
                   className={`diary-3d-book ${isBookOpen ? 'book-open' : 'book-closed'}`}
                   onClick={() => {
-                    if (!isBookOpen && !addMode) {
+                    if (!addMode) {
                       setIsBookOpen(true);
                       setTimeout(() => {
                         setViewState('browse');
-                      }, 480);
+                      }, 420);
                     }
                   }}
                   title="Tap to open diary"
