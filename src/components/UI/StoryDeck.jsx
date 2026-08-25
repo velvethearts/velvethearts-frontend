@@ -819,22 +819,23 @@ export const StoryDeck = ({
 
         .story-photo-dots {
           position: absolute;
-          top: var(--space-3);
-          left: 50%;
-          transform: translateX(-50%);
+          top: 8px;
+          left: 12px;
+          right: 12px;
           display: flex;
           gap: 4px;
           width: calc(100% - 24px);
-          max-width: 140px;
+          max-width: none;
           z-index: 12;
         }
 
         .story-photo-dot {
           flex: 1;
           height: 3px;
-          background-color: rgba(255, 255, 255, 0.4);
+          background-color: rgba(255, 255, 255, 0.35);
           border-radius: 999px;
           transition: background-color var(--duration-fast);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
         }
 
         .story-photo-dot.active {
@@ -871,10 +872,11 @@ export const StoryDeck = ({
 
         .story-top-badges {
           position: absolute;
-          top: var(--space-3);
-          left: var(--space-3);
+          top: 18px;
+          left: 12px;
           display: flex;
-          gap: var(--space-2);
+          align-items: center;
+          gap: 6px;
           z-index: 10;
         }
 
