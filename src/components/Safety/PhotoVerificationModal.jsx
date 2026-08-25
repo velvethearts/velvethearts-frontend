@@ -55,13 +55,13 @@ const detectPhoneBezelAndDeviceFrame = (data, size = 100) => {
   let verticalLineColumns = 0;
 
   // Scan vertical columns for straight uninterrupted phone edges
-  for (let x = 12; x < size - 12; x++) {
+  for (let x = 10; x < size - 10; x++) {
     let continuousEdgeCount = 0;
     let maxContinuous = 0;
 
-    for (let y = 15; y < size - 15; y++) {
+    for (let y = 12; y < size - 12; y++) {
       const edge = computeSobelEdgeMagnitude(data, size, size, x, y);
-      if (edge > 25) {
+      if (edge > 22) {
         continuousEdgeCount++;
         if (continuousEdgeCount > maxContinuous) maxContinuous = continuousEdgeCount;
       } else {
@@ -69,13 +69,13 @@ const detectPhoneBezelAndDeviceFrame = (data, size = 100) => {
       }
     }
 
-    // A phone screen border creates a straight continuous line spanning 22+ pixels vertically
-    if (maxContinuous >= 22) {
+    // A phone screen border creates a straight continuous line spanning 20+ pixels vertically
+    if (maxContinuous >= 20) {
       verticalLineColumns++;
     }
   }
 
-  // If 2 or more vertical border lines (left and right sides of phone casing) are detected
+  // If vertical border lines (left/right sides of phone casing or screen) are detected
   if (verticalLineColumns >= 2) {
     return {
       isScreen: true,
@@ -87,8 +87,156 @@ const detectPhoneBezelAndDeviceFrame = (data, size = 100) => {
 };
 
 /**
+ * Facial Occlusion Detector
+ * Catches sunglasses, face masks, ski hoods, and hands covering the face
+ */
+const detectFacialOcclusion = (data, size = 100) => {
+  let eyeSkin = 0;
+  let eyeTotal = 0;
+  let mouthSkin = 0;
+  let mouthTotal = 0;
+
+  for (let y = 20; y < 40; y += 2) {
+    for (let x = 25; x < 75; x += 2) {
+      const idx = (y * size + x) * 4;
+      if (isSkinOrFacePixel(data[idx], data[idx + 1], data[idx + 2])) eyeSkin++;
+      eyeTotal++;
+    }
+  }
+
+  for (let y = 58; y < 85; y += 2) {
+    for (let x = 30; x < 70; x += 2) {
+      const idx = (y * size + x) * 4;
+      if (isSkinOrFacePixel(data[idx], data[idx + 1], data[idx + 2])) mouthSkin++;
+      mouthTotal++;
+    }
+  }
+
+  const eyeRatio = eyeSkin / Math.max(1, eyeTotal);
+  const mouthRatio = mouthSkin / Math.max(1, mouthTotal);
+
+  if (eyeRatio < 0.08) {
+    return {
+      isOccluded: true,
+      reason: 'Eyes are covered or obscured. Please remove sunglasses, tinted eyewear, or hats covering your eyes.'
+    };
+  }
+
+  if (mouthRatio < 0.06) {
+    return {
+      isOccluded: true,
+      reason: 'Lower face is covered or obscured. Please remove face masks and keep hands away from your face.'
+    };
+  }
+
+  return { isOccluded: false };
+};
+
+/**
+ * Image Blur & Sharpness Quality Analyzer
+ */
+const detectImageBlur = (data, size = 100) => {
+  let totalEdge = 0;
+  let sampleCount = 0;
+  for (let y = 20; y < 80; y += 2) {
+    for (let x = 20; x < 80; x += 2) {
+      totalEdge += computeSobelEdgeMagnitude(data, size, size, x, y);
+      sampleCount++;
+    }
+  }
+  const avgEdge = totalEdge / Math.max(1, sampleCount);
+  if (avgEdge < 3.0) {
+    return {
+      isBlurry: true,
+      reason: 'Image is too blurry. Please clean your camera lens, increase room lighting, and hold steady.'
+    };
+  }
+  return { isBlurry: false };
+};
+
+/**
+ * Extreme Lighting & Silhouette Detector
+ */
+const detectLightingQuality = (data, size = 100) => {
+  let centerLum = 0;
+  let centerCount = 0;
+  let bgLum = 0;
+  let bgCount = 0;
+
+  for (let y = 0; y < size; y += 3) {
+    for (let x = 0; x < size; x += 3) {
+      const idx = (y * size + x) * 4;
+      const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+      if (x > 25 && x < 75 && y > 20 && y < 80) {
+        centerLum += lum;
+        centerCount++;
+      } else {
+        bgLum += lum;
+        bgCount++;
+      }
+    }
+  }
+
+  const avgCenter = centerLum / Math.max(1, centerCount);
+  const avgBg = bgLum / Math.max(1, bgCount);
+
+  if (avgCenter < 16) {
+    return {
+      isBadLighting: true,
+      reason: 'Lighting is too dark. Please increase room lighting and face the camera.'
+    };
+  }
+
+  if (avgCenter > 248) {
+    return {
+      isBadLighting: true,
+      reason: 'Severe camera glare or overexposure. Please step away from direct blinding light.'
+    };
+  }
+
+  if (avgBg > avgCenter + 130) {
+    return {
+      isBadLighting: true,
+      reason: 'Strong backlight detected (silhouette). Please turn to face the light source.'
+    };
+  }
+
+  return { isBadLighting: false };
+};
+
+/**
+ * Head Pose & Symmetry Analyzer
+ */
+const detectHeadPoseAngle = (data, size = 100) => {
+  let leftEdge = 0;
+  let rightEdge = 0;
+
+  for (let y = 20; y < 80; y += 2) {
+    for (let x = 18; x < 50; x += 2) {
+      leftEdge += computeSobelEdgeMagnitude(data, size, size, x, y);
+    }
+    for (let x = 50; x < 82; x += 2) {
+      rightEdge += computeSobelEdgeMagnitude(data, size, size, x, y);
+    }
+  }
+
+  const total = leftEdge + rightEdge;
+  if (total > 100) {
+    const asymmetry = Math.abs(leftEdge - rightEdge) / total;
+    if (asymmetry > 0.58) {
+      return {
+        isSideAngle: true,
+        reason: 'Please look directly forward into the camera. Side profile angles are not permitted.'
+      };
+    }
+  }
+
+  return { isSideAngle: false };
+};
+
+/**
  * Biometric Live Face Structure Analyzer
- * Checks that a human face is present and free of device screens
+ * Checks that a human face is present, in-focus, well-lit, unoccluded, and free of device screens
  */
 const analyzeLiveFaceStructure = async (imageSource) => {
   if (!imageSource) return { isValid: true };
@@ -114,10 +262,35 @@ const analyzeLiveFaceStructure = async (imageSource) => {
         // 1. Phone Bezel & Device Frame check
         const bezelCheck = detectPhoneBezelAndDeviceFrame(imgData, size);
         if (bezelCheck.isScreen) {
-          resolve({
-            isValid: false,
-            reason: bezelCheck.reason
-          });
+          resolve({ isValid: false, reason: bezelCheck.reason });
+          return;
+        }
+
+        // 2. Facial Occlusion check (sunglasses / masks / hands)
+        const occlusionCheck = detectFacialOcclusion(imgData, size);
+        if (occlusionCheck.isOccluded) {
+          resolve({ isValid: false, reason: occlusionCheck.reason });
+          return;
+        }
+
+        // 3. Image Blur check
+        const blurCheck = detectImageBlur(imgData, size);
+        if (blurCheck.isBlurry) {
+          resolve({ isValid: false, reason: blurCheck.reason });
+          return;
+        }
+
+        // 4. Lighting Quality check
+        const lightCheck = detectLightingQuality(imgData, size);
+        if (lightCheck.isBadLighting) {
+          resolve({ isValid: false, reason: lightCheck.reason });
+          return;
+        }
+
+        // 5. Head Pose Angle check
+        const poseCheck = detectHeadPoseAngle(imgData, size);
+        if (poseCheck.isSideAngle) {
+          resolve({ isValid: false, reason: poseCheck.reason });
           return;
         }
 
