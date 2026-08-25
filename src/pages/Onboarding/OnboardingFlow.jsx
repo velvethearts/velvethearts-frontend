@@ -1330,6 +1330,12 @@ export const OnboardingFlow = () => {
           flex-direction: column;
           gap: var(--space-6);
           padding-bottom: var(--space-8);
+          position: relative;
+          z-index: 50;
+        }
+
+        .step-content:has(.is-dropdown-open) {
+          z-index: 9999;
         }
 
         .step-heading {
@@ -1948,12 +1954,12 @@ export const OnboardingFlow = () => {
 
         /* Footer CTA */
         .onboarding-actions-footer {
-          position: sticky;
-          bottom: 0;
+          position: relative;
           background-color: var(--bg-page);
           padding: var(--space-4) 0 var(--space-6);
           border-top: 1px solid var(--border-subtle);
           margin-top: auto;
+          z-index: 1;
         }
 
         .onboarding-continue-btn {

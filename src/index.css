@@ -10367,7 +10367,7 @@ html {
 }
 
 .state-select-wrapper.is-dropdown-open {
-  z-index: 2500;
+  z-index: 99999 !important;
 }
 
 .state-select-trigger {
@@ -10444,7 +10444,7 @@ html {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 20px rgba(184, 67, 106, 0.25);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  z-index: 2501;
+  z-index: 999999 !important;
   display: flex;
   flex-direction: column;
   overflow: hidden;
