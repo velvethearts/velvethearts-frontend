@@ -49,34 +49,52 @@ const computeSobelEdgeMagnitude = (data, w, h, x, y) => {
 
 /**
  * Phone Bezel & Screen Edge Detector
- * Identifies straight rectangular borders and device frames held in front of the camera
+ * Identifies enclosed floating rectangular device frames held in front of the camera
  */
 const detectPhoneBezelAndDeviceFrame = (data, size = 100) => {
-  let verticalLineColumns = 0;
+  let topHoriz = false;
+  let bottomHoriz = false;
+  let leftVert = false;
+  let rightVert = false;
 
-  // Scan vertical columns for straight uninterrupted phone edges
-  for (let x = 10; x < size - 10; x++) {
-    let continuousEdgeCount = 0;
-    let maxContinuous = 0;
-
-    for (let y = 12; y < size - 12; y++) {
-      const edge = computeSobelEdgeMagnitude(data, size, size, x, y);
-      if (edge > 22) {
-        continuousEdgeCount++;
-        if (continuousEdgeCount > maxContinuous) maxContinuous = continuousEdgeCount;
-      } else {
-        continuousEdgeCount = 0;
-      }
+  // Check for top horizontal screen edge in central foreground
+  for (let y = 15; y <= 30; y += 2) {
+    let edgeRun = 0;
+    for (let x = 25; x <= 75; x += 2) {
+      if (computeSobelEdgeMagnitude(data, size, size, x, y) > 40) edgeRun++;
     }
-
-    // A phone screen border creates a straight continuous line spanning 20+ pixels vertically
-    if (maxContinuous >= 20) {
-      verticalLineColumns++;
-    }
+    if (edgeRun > 14) topHoriz = true;
   }
 
-  // If vertical border lines (left/right sides of phone casing or screen) are detected
-  if (verticalLineColumns >= 2) {
+  // Check for bottom horizontal screen edge in central foreground
+  for (let y = 70; y <= 85; y += 2) {
+    let edgeRun = 0;
+    for (let x = 25; x <= 75; x += 2) {
+      if (computeSobelEdgeMagnitude(data, size, size, x, y) > 40) edgeRun++;
+    }
+    if (edgeRun > 14) bottomHoriz = true;
+  }
+
+  // Check for left vertical screen edge
+  for (let x = 18; x <= 30; x += 2) {
+    let edgeRun = 0;
+    for (let y = 25; y <= 75; y += 2) {
+      if (computeSobelEdgeMagnitude(data, size, size, x, y) > 40) edgeRun++;
+    }
+    if (edgeRun > 16) leftVert = true;
+  }
+
+  // Check for right vertical screen edge
+  for (let x = 70; x <= 82; x += 2) {
+    let edgeRun = 0;
+    for (let y = 25; y <= 75; y += 2) {
+      if (computeSobelEdgeMagnitude(data, size, size, x, y) > 40) edgeRun++;
+    }
+    if (edgeRun > 16) rightVert = true;
+  }
+
+  // Only flag if an ENCLOSED 4-sided floating rectangular device box is held in the frame
+  if (topHoriz && bottomHoriz && leftVert && rightVert) {
     return {
       isScreen: true,
       reason: 'Digital smartphone screen or held-up device detected. Please scan your real face directly in front of the camera.'
