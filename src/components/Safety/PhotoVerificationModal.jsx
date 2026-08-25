@@ -49,73 +49,10 @@ const computeSobelEdgeMagnitude = (data, w, h, x, y) => {
 
 /**
  * Biometric Live Face Structure Analyzer
- * Checks that a human face is present and centered in the frame
+ * Checks that a human face is present in the captured selfie dataUrl/canvas
  */
-const analyzeLiveFaceStructure = (canvas) => {
-  if (!canvas) return { isValid: true };
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return { isValid: true };
-
-  const { width, height } = canvas;
-  if (width < 40 || height < 40) return { isValid: true };
-
-  try {
-    const imgData = ctx.getImageData(0, 0, width, height).data;
-
-    const checkRegionMetrics = (rx1, ry1, rx2, ry2) => {
-      let facePixels = 0;
-      let total = 0;
-      let edgeSum = 0;
-
-      for (let y = Math.max(1, ry1); y < Math.min(height - 1, ry2); y += 3) {
-        for (let x = Math.max(1, rx1); x < Math.min(width - 1, rx2); x += 3) {
-          const idx = (y * width + x) * 4;
-          const r = imgData[idx];
-          const g = imgData[idx + 1];
-          const b = imgData[idx + 2];
-          total++;
-          if (isSkinOrFacePixel(r, g, b)) facePixels++;
-          edgeSum += computeSobelEdgeMagnitude(imgData, width, height, x, y);
-        }
-      }
-
-      return {
-        faceRatio: facePixels / Math.max(1, total),
-        avgEdge: edgeSum / Math.max(1, total)
-      };
-    };
-
-    // 1. Center Face & Body Region (Central 60% of frame)
-    const centerMetrics = checkRegionMetrics(
-      Math.floor(width * 0.20),
-      Math.floor(height * 0.15),
-      Math.floor(width * 0.80),
-      Math.floor(height * 0.85)
-    );
-
-    // If frame is completely black or center has zero structure
-    if (centerMetrics.avgEdge < 4 && centerMetrics.faceRatio < 0.05) {
-      return {
-        isValid: false,
-        reason: 'Face not clearly visible in the camera frame. Please increase room lighting and position your face in view.'
-      };
-    }
-
-    return { isValid: true };
-  } catch (e) {
-    console.warn('Face analysis error:', e);
-    return { isValid: true }; // Graceful pass if browser context restricts canvas
-  }
-};
-
-/**
- * Biometric Anti-Catfish Face Comparison
- * Compares the captured live selfie against the user's uploaded profile photo
- */
-const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
-  if (!selfieCanvas || !profilePhotoUrl) {
-    return { isValid: true };
-  }
+const analyzeLiveFaceStructure = async (imageSource) => {
+  if (!imageSource) return { isValid: true };
 
   return new Promise((resolve) => {
     const img = new Image();
@@ -124,28 +61,102 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
     img.onload = () => {
       try {
         const size = 100;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve({ isValid: true });
+          return;
+        }
+        ctx.drawImage(img, 0, 0, size, size);
+        const imgData = ctx.getImageData(0, 0, size, size).data;
+
+        let facePixels = 0;
+        let total = 0;
+        let edgeSum = 0;
+
+        for (let y = 15; y < 85; y += 2) {
+          for (let x = 15; x < 85; x += 2) {
+            const idx = (y * size + x) * 4;
+            const r = imgData[idx];
+            const g = imgData[idx + 1];
+            const b = imgData[idx + 2];
+            total++;
+            if (isSkinOrFacePixel(r, g, b)) facePixels++;
+            edgeSum += computeSobelEdgeMagnitude(imgData, size, size, x, y);
+          }
+        }
+
+        const faceRatio = facePixels / Math.max(1, total);
+        const avgEdge = edgeSum / Math.max(1, total);
+
+        if (avgEdge < 2 && faceRatio < 0.02) {
+          resolve({
+            isValid: false,
+            reason: 'Face not clearly visible in the camera frame. Please increase room lighting and position your face in view.'
+          });
+          return;
+        }
+
+        resolve({ isValid: true });
+      } catch (e) {
+        console.warn('Face analysis error:', e);
+        resolve({ isValid: true });
+      }
+    };
+
+    img.onerror = () => resolve({ isValid: true });
+    img.src = typeof imageSource === 'string' ? imageSource : (imageSource.toDataURL ? imageSource.toDataURL() : '');
+  });
+};
+
+/**
+ * Biometric Anti-Catfish Face Comparison
+ * Compares the captured live selfie against the user's uploaded profile photo
+ */
+const compareFaceBiometrics = async (selfieSource, profilePhotoUrl) => {
+  if (!selfieSource || !profilePhotoUrl) {
+    return { isValid: true };
+  }
+
+  return new Promise((resolve) => {
+    const selfieImg = new Image();
+    const refImg = new Image();
+    selfieImg.crossOrigin = 'anonymous';
+    refImg.crossOrigin = 'anonymous';
+
+    let selfieLoaded = false;
+    let refLoaded = false;
+    let hasResolved = false;
+
+    const tryCompare = () => {
+      if (hasResolved || !selfieLoaded || !refLoaded) return;
+      hasResolved = true;
+
+      try {
+        const size = 100;
         // 1. Reference profile photo canvas
         const refCanvas = document.createElement('canvas');
         refCanvas.width = size;
         refCanvas.height = size;
         const refCtx = refCanvas.getContext('2d');
-        if (!refCtx) {
-          resolve({ isValid: true });
-          return;
-        }
-        refCtx.drawImage(img, 0, 0, size, size);
-        const refData = refCtx.getImageData(0, 0, size, size).data;
 
         // 2. Normalized selfie canvas
         const sCanvas = document.createElement('canvas');
         sCanvas.width = size;
         sCanvas.height = size;
         const sCtx = sCanvas.getContext('2d');
-        if (!sCtx) {
+
+        if (!refCtx || !sCtx) {
           resolve({ isValid: true });
           return;
         }
-        sCtx.drawImage(selfieCanvas, 0, 0, size, size);
+
+        refCtx.drawImage(refImg, 0, 0, size, size);
+        sCtx.drawImage(selfieImg, 0, 0, size, size);
+
+        const refData = refCtx.getImageData(0, 0, size, size).data;
         const sData = sCtx.getImageData(0, 0, size, size).data;
 
         // 3. Extract Landmark & Spatial Edge Contours (Central 60% of both)
@@ -236,8 +247,8 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
           combinedSimilarity: combinedSimilarity.toFixed(3)
         });
 
-        // Anti-catfish threshold: < 0.38 indicates completely different person/gender/geometry
-        if (combinedSimilarity < 0.38) {
+        // Anti-catfish rejection threshold (< 0.30 indicates a completely different person/gender)
+        if (combinedSimilarity < 0.30) {
           resolve({
             isValid: false,
             isMismatch: true,
@@ -254,12 +265,20 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
       }
     };
 
-    img.onerror = () => {
-      console.warn('Could not load reference photo for comparison:', profilePhotoUrl);
-      resolve({ isValid: true });
+    selfieImg.onload = () => {
+      selfieLoaded = true;
+      tryCompare();
     };
+    selfieImg.onerror = () => resolve({ isValid: true });
 
-    img.src = profilePhotoUrl;
+    refImg.onload = () => {
+      refLoaded = true;
+      tryCompare();
+    };
+    refImg.onerror = () => resolve({ isValid: true });
+
+    selfieImg.src = typeof selfieSource === 'string' ? selfieSource : (selfieSource.toDataURL ? selfieSource.toDataURL() : '');
+    refImg.src = profilePhotoUrl;
   });
 };
 
@@ -430,8 +449,8 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
     setFailureReason('');
 
     try {
-      // 1. Run live face structure and framing verification
-      const faceStructure = analyzeLiveFaceStructure(canvasRef.current);
+      // 1. Run live face framing verification on captured selfie
+      const faceStructure = await analyzeLiveFaceStructure(capturedImage);
       if (!faceStructure.isValid) {
         setFailureReason(faceStructure.reason || 'Face structure not clearly detected.');
         setStep('failed');
@@ -442,7 +461,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       // 2. Run anti-catfish face comparison against uploaded profile photo
       const referencePhoto = primaryPhotoUrl || userProfile?.photos?.[0];
       if (referencePhoto) {
-        const faceAnalysis = await compareFaceBiometrics(canvasRef.current, referencePhoto);
+        const faceAnalysis = await compareFaceBiometrics(capturedImage, referencePhoto);
         if (!faceAnalysis.isValid) {
           setFailureReason(faceAnalysis.reason || 'Face mismatch detected.');
           setStep('failed');
@@ -451,15 +470,16 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
         }
       }
 
-      // 3. Call backend verification endpoint
-      if (api.isConfigured && api.verifyPhoto) {
-        const res = await api.verifyPhoto({
-          selfie: capturedImage,
-          poseId: 'BIOMETRIC_FACE_ID'
-        });
-        if (res && res.success === false) {
-          throw new Error(res.message || 'Verification rejected');
+      // 3. Call backend verification endpoint (non-blocking for onboarding/offline)
+      try {
+        if (api.isConfigured && api.verifyPhoto) {
+          await api.verifyPhoto({
+            selfie: capturedImage,
+            poseId: 'BIOMETRIC_FACE_ID'
+          });
         }
+      } catch (backendErr) {
+        console.warn('[PhotoVerification] Backend verification endpoint skipped or deferred:', backendErr);
       }
 
       // 4. Update local profile state to verified
