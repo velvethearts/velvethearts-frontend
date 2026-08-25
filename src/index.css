@@ -6186,8 +6186,10 @@ html {
 .diary-modal-stage.add-mode {
   align-items: stretch;
   justify-content: flex-start;
-  padding: 10px 12px;
-  overflow-y: auto;
+  padding: 12px 10px 24px 10px;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  display: block;
 }
 
 [data-theme="dark"] .diary-modal-stage {
@@ -7001,20 +7003,20 @@ html {
    ========================================================================== */
 .diary-add-composer-screen {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
+  height: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-  padding: 4px 2px;
+  gap: 14px;
+  padding: 4px 2px 28px 2px;
+  box-sizing: border-box;
 }
 
 .diary-live-preview-box {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1;
-  min-height: 210px;
+  flex-shrink: 0;
 }
 
 .diary-live-preview-tag {
@@ -7039,8 +7041,8 @@ html {
   border-radius: 16px;
   padding: 16px 18px;
   box-shadow: 0 6px 20px rgba(74, 30, 42, 0.1);
-  flex: 1;
-  min-height: 190px;
+  min-height: 180px;
+  max-height: 240px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
