@@ -6090,7 +6090,272 @@ html {
 }
 
 /* ==========================================================================
-   CLEAN JOURNAL DAY-CARD (Single Focused Page with Page Flip & Actions)
+   STATE A: "BROWSE" 3D HARDCOVER BOOK SHOWCASE (Flips Open to Diary)
+   ========================================================================== */
+.diary-browse-cover-screen {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin: auto;
+  animation: diaryModalFadeIn 0.3s ease;
+}
+
+.diary-3d-scene {
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px auto 14px;
+  width: 100%;
+  max-width: 500px;
+  overflow: visible;
+  padding: 0 20px;
+}
+
+.diary-3d-book {
+  position: relative;
+  width: 230px;
+  height: 310px;
+  transform-style: preserve-3d;
+  /* Resting-state 3D dimensional tilt */
+  transform: rotateY(-12deg) rotateX(6deg) rotateZ(-1.5deg);
+  transition: transform 0.65s cubic-bezier(0.25, 1, 0.35, 1);
+  cursor: pointer;
+  outline: none;
+}
+
+.diary-3d-book:hover:not(.book-open) {
+  transform: rotateY(-18deg) rotateX(8deg) rotateZ(-2deg) translateY(-4px);
+}
+
+.diary-3d-book.book-open {
+  transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg) translateX(45px);
+}
+
+/* Base Page revealed underneath */
+.diary-book-base-page {
+  position: absolute;
+  inset: 0;
+  background: #FFFFFF;
+  border-radius: 4px 14px 14px 4px;
+  box-shadow: 
+    inset -3px 0 6px rgba(0, 0, 0, 0.04),
+    3px 6px 20px rgba(42, 8, 18, 0.14),
+    2px 0 0 #fff,
+    4px 0 0 #f5f1f2,
+    6px 0 0 #e8e3e4;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-left: 3px solid #C4964A;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px 14px;
+  overflow: hidden;
+}
+
+.diary-base-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-subtle, #E8E3E4);
+  padding-bottom: 6px;
+  width: 100%;
+}
+
+.diary-base-page-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--burgundy-500, #B8436A);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.diary-base-page-date {
+  font-size: 10px;
+  color: var(--text-muted, #998D8F);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diary-base-page-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 10px 4px;
+}
+
+.diary-base-page-quote {
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--charcoal-800, #3D3335);
+  margin: 0;
+}
+
+.diary-base-page-footer {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid var(--border-subtle, #E8E3E4);
+  padding-top: 4px;
+}
+
+.diary-base-page-counter {
+  font-size: 10px;
+  color: var(--text-muted, #998D8F);
+  font-weight: 600;
+}
+
+/* Front Cover Hinged on Left Spine Edge */
+.diary-book-cover-hinge {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0% 50%;
+  transform-style: preserve-3d;
+  transition: transform 0.72s cubic-bezier(0.25, 1, 0.35, 1);
+  z-index: 2;
+}
+
+.diary-3d-book.book-open .diary-book-cover-hinge {
+  transform: rotateY(-155deg);
+}
+
+.diary-book-cover-front {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: linear-gradient(135deg, var(--burgundy-700, #7A2842) 0%, var(--burgundy-900, #3A0E1A) 100%);
+  border-radius: 4px 14px 14px 4px;
+  box-shadow: 0 14px 35px rgba(42, 8, 18, 0.28), 0 3px 8px rgba(42, 8, 18, 0.12);
+  display: flex;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  z-index: 2;
+}
+
+.diary-preview-spine {
+  width: 18px;
+  background: linear-gradient(90deg, #B58434 0%, #D4AD6A 50%, #C4964A 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: inset -2px 0 4px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.diary-preview-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 12px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.diary-preview-emblem {
+  color: var(--gold-300, #E4C88E);
+  margin-bottom: 6px;
+}
+
+.diary-preview-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.diary-preview-subtitle {
+  font-size: 11px;
+  color: var(--burgundy-200, #F0BDC8);
+  margin: 4px 0 10px;
+  font-style: italic;
+}
+
+.diary-preview-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  padding: 3px 8px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gold-300, #E4C88E);
+  border: 1px solid rgba(228, 200, 142, 0.3);
+}
+
+.diary-cover-tap-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--gold-300, #E4C88E);
+  margin-top: 10px;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  transition: transform var(--duration-fast);
+}
+
+.diary-3d-book:hover .diary-cover-tap-hint {
+  transform: translateX(2px);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.diary-book-cover-inside {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: linear-gradient(135deg, #FFF8F0 0%, #F5EDE4 100%);
+  border-radius: 14px 4px 4px 14px;
+  border: 1px solid rgba(184, 67, 106, 0.18);
+  box-shadow: inset 4px 0 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.diary-book-inside-crease {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.06) 100%);
+}
+
+.diary-book-inside-emblem {
+  color: var(--burgundy-300, #E08DA3);
+  opacity: 0.7;
+}
+
+.diary-browse-hint-text {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text-secondary, #5A4E50);
+  text-align: center;
+  margin: 0;
+  max-width: 320px;
+}
+
+/* ==========================================================================
+   STATE B: CLEAN JOURNAL DAY-CARD (Single Focused Page with Page Flip & Actions)
    ========================================================================== */
 .diary-journal-stage-inner {
   width: 100%;

@@ -497,8 +497,9 @@ export const OurDiaryModal = ({
   useEffect(() => {
     if (isOpen && matchId) {
       fetchEntries();
-      setViewState('browse');
+      setViewState('add');
       setAddMode(null);
+      setIsBookOpen(false);
     }
   }, [isOpen, matchId]);
 
@@ -711,7 +712,7 @@ export const OurDiaryModal = ({
         setNoteText('');
         setCaptionText('');
         setAddMode(null);
-        setViewState('browse');
+        setViewState('add');
         await fetchEntries(true);
       } catch (err) {
         console.error('Error saving note:', err);
@@ -732,7 +733,7 @@ export const OurDiaryModal = ({
         cancelAudioRecording();
         setCaptionText('');
         setAddMode(null);
-        setViewState('browse');
+        setViewState('add');
         await fetchEntries(true);
       } catch (err) {
         console.error('Error saving voice note:', err);
@@ -754,7 +755,7 @@ export const OurDiaryModal = ({
         setIsVideoFile(false);
         setCaptionText('');
         setAddMode(null);
-        setViewState('browse');
+        setViewState('add');
         await fetchEntries(true);
       } catch (err) {
         console.error('Error uploading photo/video:', err);
@@ -815,34 +816,35 @@ export const OurDiaryModal = ({
           </div>
 
           <div className="diary-header-right">
-            {/* Toggle between Browse and Add */}
+            {/* Toggle between Browse Book and Diary Page */}
             <button
               type="button"
-              className={`diary-header-toggle-btn font-ui ${viewState === 'add' ? 'active' : ''}`}
+              className={`diary-header-toggle-btn font-ui ${viewState === 'browse' ? 'active' : ''}`}
               onClick={() => {
-                if (viewState === 'browse') {
+                if (viewState === 'add') {
                   setIsBookOpen(false);
-                  setViewState('add');
-                  setAddMode(null);
-                } else {
-                  setIsBookOpen(true);
                   setViewState('browse');
                   setAddMode(null);
                   cancelAudioRecording();
+                } else {
+                  setIsBookOpen(true);
+                  setTimeout(() => {
+                    setViewState('add');
+                  }, 420);
                 }
               }}
-              title={viewState === 'browse' ? "Add a new moment directly" : "Back to browse diary"}
-              aria-label={viewState === 'browse' ? "Add a new moment directly" : "Back to browse diary"}
+              title={viewState === 'add' ? "View 3D Book Cover" : "Open Diary Page"}
+              aria-label={viewState === 'add' ? "View 3D Book Cover" : "Open Diary Page"}
             >
-              {viewState === 'browse' ? (
+              {viewState === 'add' ? (
                 <>
-                  <Plus size={14} weight="bold" />
-                  <span>Add</span>
+                  <Books size={14} weight="duotone" />
+                  <span>Browse Book</span>
                 </>
               ) : (
                 <>
-                  <Books size={14} weight="duotone" />
-                  <span>Browse</span>
+                  <BookOpen size={14} weight="bold" />
+                  <span>Open Diary</span>
                 </>
               )}
             </button>
@@ -859,13 +861,97 @@ export const OurDiaryModal = ({
         </div>
 
         {/* ============================================================
-           MAIN STAGE: CLEAN DAY-CARD JOURNAL WITH PAGE FLIP CONTROLS
+           MAIN STAGE: BROWSE 3D BOOK COVER VS ACTIVE DIARY DAY-CARD
            ============================================================ */}
         <div className="diary-modal-stage">
-          <div className="diary-journal-stage-inner">
-            {/* Stacked Day-Card with Page Flip Controls & Swipe */}
-            <div
-              className="diary-card-stack-viewport font-ui"
+          {viewState === 'browse' ? (
+            /* ==========================================================
+               STATE A: "BROWSE" 3D HARDCOVER BOOK SHOWCASE
+               ========================================================== */
+            <div className="diary-browse-cover-screen font-ui">
+              {/* 3D Hinged Hardcover Book Object with Resting-State Dimensional Tilt */}
+              <div className="diary-3d-scene">
+                <div
+                  className={`diary-3d-book ${isBookOpen ? 'book-open' : 'book-closed'}`}
+                  onClick={() => {
+                    if (!isBookOpen) {
+                      setIsBookOpen(true);
+                      setTimeout(() => {
+                        setViewState('add');
+                      }, 440);
+                    }
+                  }}
+                  title="Tap the book to open your diary"
+                  role="button"
+                  tabIndex={0}
+                >
+                  {/* Underneath: The First Page revealed as cover swings open */}
+                  <div className="diary-book-base-page font-ui">
+                    <div className="diary-base-page-header">
+                      <span className="diary-base-page-tag font-ui">VOLUME 1</span>
+                      <span className="diary-base-page-date font-display">
+                        {pages?.[0]?.dateLabel || 'Today'}
+                      </span>
+                    </div>
+                    <div className="diary-base-page-content font-display">
+                      <p className="diary-base-page-quote">
+                        {pages?.[0]?.items?.[0]?.content
+                          ? `“${pages[0].items[0].content.slice(0, 70)}${pages[0].items[0].content.length > 70 ? '...' : ''}”`
+                          : '“A collection of our sweetest memories, shared thoughts, and voice notes.”'}
+                      </p>
+                    </div>
+                    <div className="diary-base-page-footer">
+                      <span className="diary-base-page-counter font-ui">Page 1</span>
+                    </div>
+                  </div>
+
+                  {/* Front Cover: Hinged on the Left Spine Edge */}
+                  <div className="diary-book-cover-hinge">
+                    {/* Front Face (Closed Book Cover) */}
+                    <div className="diary-book-cover-front">
+                      <div className="diary-preview-spine" />
+                      <div className="diary-preview-body">
+                        <div className="diary-preview-emblem">
+                          <BookBookmark size={36} weight="duotone" />
+                        </div>
+                        <h3 className="diary-preview-title font-display">Our Diary</h3>
+                        <p className="diary-preview-subtitle font-display">
+                          {userName || 'You'} &amp; {partnerName || 'Partner'}
+                        </p>
+                        <span className="diary-preview-badge font-ui">
+                          <Sparkle size={12} weight="fill" />
+                          <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
+                        </span>
+                        <span className="diary-cover-tap-hint font-ui">
+                          <span>Tap to open</span>
+                          <CaretRight size={12} weight="bold" />
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Inside Face (Swung Open Lining) */}
+                    <div className="diary-book-cover-inside">
+                      <div className="diary-book-inside-crease" />
+                      <div className="diary-book-inside-emblem">
+                        <Heart size={24} weight="duotone" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p className="diary-browse-hint-text font-display">
+                Tap the book to open and browse your memories ✨
+              </p>
+            </div>
+          ) : (
+            /* ==========================================================
+               STATE B: ACTIVE DIARY DAY-CARD (WITH MOMENTS, ACTIONS & CREATORS)
+               ========================================================== */
+            <div className="diary-journal-stage-inner">
+              {/* Stacked Day-Card with Page Flip Controls & Swipe */}
+              <div
+                className="diary-card-stack-viewport font-ui"
               onTouchStart={(e) => {
                 cardTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
               }}
@@ -1309,7 +1395,8 @@ export const OurDiaryModal = ({
               </div>
             )}
           </div>
-        </div>
+        )}
+      </div>
 
         {/* ============================================================
            PERSISTENT BOTTOM SLIDE-UP DATE DRAWER
