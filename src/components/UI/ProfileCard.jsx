@@ -171,19 +171,12 @@ export const ProfileCard = ({
           </>
         )}
         
-        {/* Vibe Match & Verification Badges */}
-        <div className="profile-badge-row font-ui">
-          <span className="badge-vibe-pill font-ui" title={`${vibeScore}% Vibe Match`}>
-            <Sparkle size={12} color="#F3C68F" weight="fill" />
-            <span>{vibeScore}% Vibe</span>
-          </span>
-          {profile.verified && (
-            <VerifiedBadge variant="pill" size="sm" />
-          )}
-          {profile.isPremium && (
+        {/* Premium Badge if applicable */}
+        {profile.isPremium && (
+          <div className="profile-badge-row font-ui">
             <span className="badge-premium font-ui">Premium</span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Dropdown Options */}
         <div className="profile-card-options-wrap" ref={dropdownRef}>
@@ -242,8 +235,19 @@ export const ProfileCard = ({
 
       <div className="profile-card-details">
         <div className="card-name-row">
-          <h3 className="card-name font-display">{profile.name}</h3>
-          <span className="card-age font-ui">, {profile.age}</span>
+          <div className="card-name-left">
+            <h3 className="card-name font-display">{profile.name}</h3>
+            <span className="card-age font-ui">, {profile.age}</span>
+            {profile.verified && (
+              <VerifiedBadge variant="icon" size="sm" />
+            )}
+            {vibeScore > 0 && (
+              <span className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Match`}>
+                <Sparkle size={11} color="var(--gold-500, #D4AD6A)" weight="fill" />
+                <span>{vibeScore}% Vibe</span>
+              </span>
+            )}
+          </div>
         </div>
 
         <p className="card-location font-ui">{profile.city}</p>
@@ -531,7 +535,17 @@ export const ProfileCard = ({
 
         .card-name-row {
           display: flex;
-          align-items: baseline;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--space-2);
+        }
+
+        .card-name-left {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 4px 6px;
+          min-width: 0;
         }
 
         .card-name {
@@ -544,7 +558,28 @@ export const ProfileCard = ({
         .card-age {
           font-size: var(--text-heading-sm);
           color: var(--text-secondary);
-          margin-left: 2px;
+          margin-left: 1px;
+        }
+
+        .badge-vibe-inline {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          background: rgba(212, 173, 106, 0.14);
+          border: 1px solid rgba(212, 173, 106, 0.35);
+          color: var(--gold-700, #8A6D3B);
+          font-size: 10px;
+          font-weight: 700;
+          padding: 1.5px 6px;
+          border-radius: var(--radius-full);
+          line-height: 1;
+          white-space: nowrap;
+        }
+
+        [data-theme="dark"] .badge-vibe-inline {
+          background: rgba(212, 173, 106, 0.16);
+          border-color: rgba(212, 173, 106, 0.35);
+          color: var(--gold-300, #E6C78E);
         }
 
         .card-location {

@@ -1,15 +1,16 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
-import { CheckCircle, Heart, ShieldWarning, Prohibit, X, CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { CheckCircle, Heart, ShieldWarning, Prohibit, X, CaretLeft, CaretRight, Sparkle } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
+import { computeVibeMatch } from '../../utils/vibe';
 
 export const ProfileDetail = ({ profile, onBack }) => {
-  const { connections, interestsSent, sendInterest, unsendInterest, reportUser, blockUser, showConfirm, unmatchConnection, showAlert } = useApp();
+  const { connections, interestsSent, sendInterest, unsendInterest, reportUser, blockUser, showConfirm, unmatchConnection, showAlert, userProfile } = useApp();
   const [showReportSheet, setShowReportSheet] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportComment, setReportComment] = useState('');
@@ -148,12 +149,24 @@ export const ProfileDetail = ({ profile, onBack }) => {
   const isMatchedConnection = Boolean(mId);
 
   const actionButtonLabel = isMatchedConnection ? 'Remove Connection' : isInterestSent ? 'Unsend Invite' : 'Remove Profile';
+  const vibeScore = computeVibeMatch(userProfile, profile) || profile.vibeScore || 0;
 
   return (
     <div className="profile-detail-page page-enter">
       {/* Aligned PageHeader */}
       <PageHeader
-        title={profile.name}
+        title={
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span>{profile.name}</span>
+            {profile.verified && <VerifiedBadge variant="icon" size="md" />}
+            {vibeScore > 0 && (
+              <span className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Match`}>
+                <Sparkle size={12} color="var(--gold-500, #D4AD6A)" weight="fill" />
+                <span>{vibeScore}% Vibe</span>
+              </span>
+            )}
+          </div>
+        }
         subtitle={`${profile.city} · ${profile.pronouns || ''}`}
         onBack={onBack}
         actions={
@@ -225,14 +238,11 @@ export const ProfileDetail = ({ profile, onBack }) => {
             </>
           )}
 
-          <div className="detail-img-badges">
-            {profile.verified && (
-              <VerifiedBadge variant="pill" size="md" />
-            )}
-            {profile.isPremium && (
+          {profile.isPremium && (
+            <div className="detail-img-badges">
               <span className="badge-premium font-ui">Premium</span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="detail-info-panel font-ui">
@@ -695,6 +705,27 @@ export const ProfileDetail = ({ profile, onBack }) => {
         .report-success-desc {
           font-size: var(--text-body-sm);
           color: var(--text-secondary);
+        }
+
+        .badge-vibe-inline {
+          display: inline-flex;
+          align-items: center;
+          gap: 3.5px;
+          background: rgba(212, 173, 106, 0.14);
+          border: 1px solid rgba(212, 173, 106, 0.35);
+          color: var(--gold-700, #8A6D3B);
+          font-size: 11px;
+          font-weight: 700;
+          padding: 2px 7px;
+          border-radius: var(--radius-full);
+          line-height: 1;
+          white-space: nowrap;
+        }
+
+        [data-theme="dark"] .badge-vibe-inline {
+          background: rgba(212, 173, 106, 0.16);
+          border-color: rgba(212, 173, 106, 0.35);
+          color: var(--gold-300, #E6C78E);
         }
       `}</style>
     </div>

@@ -582,17 +582,6 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                     {/* Gradient Overlay for Text Readability */}
                     <div className="match-card-gradient-overlay" />
 
-                    {/* Top Badges */}
-                    <div className="match-card-top-badges font-ui">
-                      <span className="match-vibe-pill font-ui" title={`${vibeScore}% Vibe Match`}>
-                        <Sparkle size={12} color="#F3C68F" weight="fill" />
-                        <span>{vibeScore}% Vibe</span>
-                      </span>
-                      {conn.verified && (
-                        <VerifiedBadge variant="pill" size="sm" />
-                      )}
-                    </div>
-
                     {/* Voice Intro Player button */}
                     {hasVoiceIntro && (
                       <button
@@ -636,6 +625,15 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                       <div className="match-name-age-row">
                         <h3 className="match-card-name font-display">{conn.name}</h3>
                         <span className="match-card-age font-ui">, {conn.age}</span>
+                        {conn.verified && (
+                          <VerifiedBadge variant="icon" size="sm" />
+                        )}
+                        {vibeScore > 0 && (
+                          <span className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Match`}>
+                            <Sparkle size={11} color="var(--gold-500, #D4AD6A)" weight="fill" />
+                            <span>{vibeScore}% Vibe</span>
+                          </span>
+                        )}
                       </div>
                       <p className="match-card-location-intent font-ui">
                         {conn.city} {conn.relationshipIntent ? `• ${conn.relationshipIntent}` : ''}
@@ -752,6 +750,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
             <div className="received-grid">
               {paginatedReceivedInvites.map(profile => {
                 const isSuper = profile.isSuper || profile.isSuperSpark || profile.isSuperLike;
+                const vibeScore = computeVibeMatch(userProfile, profile);
                 return (
                   <div
                     key={profile.id}
@@ -783,6 +782,15 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                       <div className="received-name-row">
                         <h3 className="received-name font-display">{profile.name}</h3>
                         <span className="received-age font-ui">, {profile.age}</span>
+                        {profile.verified && (
+                          <VerifiedBadge variant="icon" size="sm" />
+                        )}
+                        {vibeScore > 0 && (
+                          <span className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Match`}>
+                            <Sparkle size={11} color="var(--gold-500, #D4AD6A)" weight="fill" />
+                            <span>{vibeScore}% Vibe</span>
+                          </span>
+                        )}
                       </div>
                       <p className="received-meta font-ui">{profile.city} {profile.relationshipIntent ? `• ${profile.relationshipIntent}` : ''}</p>
                       {profile.story && (
@@ -855,6 +863,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
               {paginatedSentInterests.map(profile => {
                 const status = interestStatuses[profile.id];
                 const isSuper = profile.isSuper || profile.isSuperSpark || status === 'super';
+                const vibeScore = computeVibeMatch(userProfile, profile);
                 return (
                   <div key={profile.id} className={`pending-profile-card ${isSuper ? 'is-super-sent' : ''}`}>
                     <ProtectedImage
@@ -870,6 +879,15 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                       <div className="pending-name-row">
                         <span className="pending-name font-display">{profile.name}</span>
                         <span className="pending-age font-ui">, {profile.age}</span>
+                        {profile.verified && (
+                          <VerifiedBadge variant="icon" size="sm" />
+                        )}
+                        {vibeScore > 0 && (
+                          <span className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Match`}>
+                            <Sparkle size={11} color="var(--gold-500, #D4AD6A)" weight="fill" />
+                            <span>{vibeScore}% Vibe</span>
+                          </span>
+                        )}
                       </div>
                       <p className="pending-meta">{profile.city}</p>
                       <span className={`pending-status-badge font-ui ${isSuper ? 'status-super' : status === 'pending' ? 'status-review' : ''}`}>
@@ -896,7 +914,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
         ) : (
           <div className="empty-pending-wrap font-ui">
             <p className="no-pending-text font-body">
-              You don't have any pending sent interests. Let someone know you're interested!
+              Profiles you have sent interest to will appear here until they respond.
             </p>
           </div>
         )}
@@ -1867,8 +1885,30 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .match-name-age-row {
           display: flex;
-          align-items: baseline;
-          gap: 2px;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 4px 6px;
+        }
+
+        .badge-vibe-inline {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          background: rgba(212, 173, 106, 0.14);
+          border: 1px solid rgba(212, 173, 106, 0.35);
+          color: var(--gold-700, #8A6D3B);
+          font-size: 10px;
+          font-weight: 700;
+          padding: 1.5px 6px;
+          border-radius: var(--radius-full);
+          line-height: 1;
+          white-space: nowrap;
+        }
+
+        [data-theme="dark"] .badge-vibe-inline {
+          background: rgba(212, 173, 106, 0.16);
+          border-color: rgba(212, 173, 106, 0.35);
+          color: var(--gold-300, #E6C78E);
         }
 
         .match-card-name {
@@ -2041,7 +2081,9 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .received-name-row {
           display: flex;
-          align-items: baseline;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 4px 6px;
         }
 
         .received-name {
@@ -2141,10 +2183,9 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .pending-name-row {
           display: flex;
-          align-items: baseline;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 4px 6px;
         }
 
         .pending-name {
