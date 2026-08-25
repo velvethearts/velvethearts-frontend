@@ -473,14 +473,6 @@ export const StoryDeck = ({
             </>
           )}
 
-          {/* Vibe Match Badge */}
-          <div className="story-top-badges">
-            <div className="badge-vibe-radar font-ui">
-              <Sparkle size={13} color="var(--gold-300)" weight="fill" />
-              <span>{vibeScore}% Vibe Match</span>
-            </div>
-          </div>
-
           {/* Photo Reaction Pin Launcher */}
           <button
             type="button"
@@ -510,23 +502,27 @@ export const StoryDeck = ({
             <span className="story-meta-intent">{activeProfile.relationshipIntent}</span>
           </p>
 
-          {/* Big editorial name + age + verified badge + bookmark */}
+          {/* Big editorial name + age + verified badge + vibe match badge + bookmark */}
           <div className="story-title-row">
-            <h2
-              className="story-card-name font-display"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
-              }}
-              title="View full profile"
-            >
-              {activeProfile.name}<span className="story-card-age">, {activeProfile.age}</span>
+            <div className="story-title-left">
+              <h2
+                className="story-card-name font-display"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
+                }}
+                title="View full profile"
+              >
+                {activeProfile.name}<span className="story-card-age">, {activeProfile.age}</span>
+              </h2>
               {activeProfile.verified && (
-                <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: '6px' }}>
-                  <VerifiedBadge variant="icon" size="md" />
-                </span>
+                <VerifiedBadge variant="icon" size="md" />
               )}
-            </h2>
+              <div className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Compatibility`}>
+                <Sparkle size={12} color="var(--gold-500, #D4AD6A)" weight="fill" />
+                <span>{vibeScore}% Vibe</span>
+              </div>
+            </div>
             <button
               type="button"
               onClick={(e) => {
@@ -873,44 +869,6 @@ export const StoryDeck = ({
         .story-photo-arrow.prev { left: var(--space-2); }
         .story-photo-arrow.next { right: var(--space-2); }
 
-        .story-top-badges {
-          position: absolute;
-          top: 24px;
-          left: 16px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          z-index: 10;
-        }
-
-        .badge-vibe-radar {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          background: rgba(26, 21, 23, 0.8);
-          border: 1px solid rgba(212, 173, 106, 0.45);
-          color: var(--cream-100);
-          font-size: 11.5px;
-          font-weight: 600;
-          padding: 4px 10px;
-          border-radius: var(--radius-full);
-          backdrop-filter: blur(8px);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-        }
-
-        .badge-verified {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          background: rgba(92, 154, 110, 0.9);
-          color: #FFFFFF;
-          font-size: 10px;
-          font-weight: 700;
-          padding: 3px var(--space-2);
-          border-radius: var(--radius-full);
-          backdrop-filter: blur(4px);
-        }
-
         .photo-pin-reaction-btn {
           position: absolute;
           bottom: var(--space-3);
@@ -967,10 +925,19 @@ export const StoryDeck = ({
 
         .story-title-row {
           display: flex;
-          align-items: flex-start;
+          align-items: center;
           justify-content: space-between;
           gap: var(--space-2);
           margin-bottom: 2px;
+        }
+
+        .story-title-left {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 6px 8px;
+          flex: 1;
+          min-width: 0;
         }
 
         .story-card-name {
@@ -979,12 +946,33 @@ export const StoryDeck = ({
           color: var(--text-primary);
           line-height: 1.15;
           cursor: pointer;
-          flex: 1;
           letter-spacing: -0.02em;
+          margin: 0;
         }
 
         .story-card-name:hover {
           color: var(--text-accent);
+        }
+
+        .badge-vibe-inline {
+          display: inline-flex;
+          align-items: center;
+          gap: 3.5px;
+          background: rgba(212, 173, 106, 0.14);
+          border: 1px solid rgba(212, 173, 106, 0.35);
+          color: var(--gold-700, #8A6D3B);
+          font-size: 11px;
+          font-weight: 700;
+          padding: 2px 7px;
+          border-radius: var(--radius-full);
+          line-height: 1;
+          white-space: nowrap;
+        }
+
+        [data-theme="dark"] .badge-vibe-inline {
+          background: rgba(212, 173, 106, 0.16);
+          border-color: rgba(212, 173, 106, 0.35);
+          color: var(--gold-300, #E6C78E);
         }
 
         .story-card-age {
