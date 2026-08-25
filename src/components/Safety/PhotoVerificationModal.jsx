@@ -48,8 +48,47 @@ const computeSobelEdgeMagnitude = (data, w, h, x, y) => {
 };
 
 /**
+ * Phone Bezel & Screen Edge Detector
+ * Identifies straight rectangular borders and device frames held in front of the camera
+ */
+const detectPhoneBezelAndDeviceFrame = (data, size = 100) => {
+  let verticalLineColumns = 0;
+
+  // Scan vertical columns for straight uninterrupted phone edges
+  for (let x = 12; x < size - 12; x++) {
+    let continuousEdgeCount = 0;
+    let maxContinuous = 0;
+
+    for (let y = 15; y < size - 15; y++) {
+      const edge = computeSobelEdgeMagnitude(data, size, size, x, y);
+      if (edge > 25) {
+        continuousEdgeCount++;
+        if (continuousEdgeCount > maxContinuous) maxContinuous = continuousEdgeCount;
+      } else {
+        continuousEdgeCount = 0;
+      }
+    }
+
+    // A phone screen border creates a straight continuous line spanning 22+ pixels vertically
+    if (maxContinuous >= 22) {
+      verticalLineColumns++;
+    }
+  }
+
+  // If 2 or more vertical border lines (left and right sides of phone casing) are detected
+  if (verticalLineColumns >= 2) {
+    return {
+      isScreen: true,
+      reason: 'Digital smartphone screen or held-up device detected. Please scan your real face directly in front of the camera.'
+    };
+  }
+
+  return { isScreen: false };
+};
+
+/**
  * Biometric Live Face Structure Analyzer
- * Checks that a human face is present in the captured selfie dataUrl/canvas
+ * Checks that a human face is present and free of device screens
  */
 const analyzeLiveFaceStructure = async (imageSource) => {
   if (!imageSource) return { isValid: true };
@@ -71,6 +110,16 @@ const analyzeLiveFaceStructure = async (imageSource) => {
         }
         ctx.drawImage(img, 0, 0, size, size);
         const imgData = ctx.getImageData(0, 0, size, size).data;
+
+        // 1. Phone Bezel & Device Frame check
+        const bezelCheck = detectPhoneBezelAndDeviceFrame(imgData, size);
+        if (bezelCheck.isScreen) {
+          resolve({
+            isValid: false,
+            reason: bezelCheck.reason
+          });
+          return;
+        }
 
         let facePixels = 0;
         let total = 0;
@@ -112,8 +161,8 @@ const analyzeLiveFaceStructure = async (imageSource) => {
 };
 
 /**
- * Biometric Anti-Catfish Face Comparison
- * Compares the captured live selfie against the user's uploaded profile photo
+ * High-Precision Biometric Anti-Catfish Face Comparison
+ * Compares facial landmark geometry, lower-face texture (beards/jawline), and structural cross-correlation
  */
 const compareFaceBiometrics = async (selfieSource, profilePhotoUrl) => {
   if (!selfieSource || !profilePhotoUrl) {
@@ -159,26 +208,39 @@ const compareFaceBiometrics = async (selfieSource, profilePhotoUrl) => {
         const refData = refCtx.getImageData(0, 0, size, size).data;
         const sData = sCtx.getImageData(0, 0, size, size).data;
 
-        // 3. Extract Landmark & Spatial Edge Contours (Central 60% of both)
-        const xMin = Math.floor(size * 0.18);
-        const xMax = Math.floor(size * 0.82);
-        const yMin = Math.floor(size * 0.18);
-        const yMax = Math.floor(size * 0.82);
+        // Device bezel check on live selfie
+        const bezelCheck = detectPhoneBezelAndDeviceFrame(sData, size);
+        if (bezelCheck.isScreen) {
+          resolve({
+            isValid: false,
+            isMismatch: true,
+            reason: bezelCheck.reason
+          });
+          return;
+        }
 
-        let refSkinSum = { r: 0, g: 0, b: 0, count: 0 };
-        let sSkinSum = { r: 0, g: 0, b: 0, count: 0 };
-        let edgeCorrelations = [];
+        // 3. Extract Multi-Sector Spatial Features (16-Sector Grid: 4x4)
+        const xMin = Math.floor(size * 0.15);
+        const xMax = Math.floor(size * 0.85);
+        const yMin = Math.floor(size * 0.15);
+        const yMax = Math.floor(size * 0.85);
 
-        // 9-Sector Grid
-        const sectors = 3;
+        const sectors = 4;
         const secW = (xMax - xMin) / sectors;
         const secH = (yMax - yMin) / sectors;
 
+        let sectorSimilarities = [];
+        let refLowerTexture = 0;
+        let sLowerTexture = 0;
+
         for (let sy = 0; sy < sectors; sy++) {
           for (let sx = 0; sx < sectors; sx++) {
-            let refSecEdge = 0;
-            let sSecEdge = 0;
-            let secTotal = 0;
+            let refEdgeSum = 0;
+            let sEdgeSum = 0;
+            let dotProduct = 0;
+            let normRef = 0;
+            let normS = 0;
+            let count = 0;
 
             const startX = Math.floor(xMin + sx * secW);
             const endX = Math.floor(xMin + (sx + 1) * secW);
@@ -187,78 +249,59 @@ const compareFaceBiometrics = async (selfieSource, profilePhotoUrl) => {
 
             for (let py = startY; py < endY; py += 2) {
               for (let px = startX; px < endX; px += 2) {
-                const idx = (py * size + px) * 4;
-                secTotal++;
+                const re = computeSobelEdgeMagnitude(refData, size, size, px, py);
+                const se = computeSobelEdgeMagnitude(sData, size, size, px, py);
 
-                const rr = refData[idx];
-                const rg = refData[idx + 1];
-                const rb = refData[idx + 2];
-                if (isSkinOrFacePixel(rr, rg, rb)) {
-                  refSkinSum.r += rr;
-                  refSkinSum.g += rg;
-                  refSkinSum.b += rb;
-                  refSkinSum.count++;
-                }
-                refSecEdge += computeSobelEdgeMagnitude(refData, size, size, px, py);
+                refEdgeSum += re;
+                sEdgeSum += se;
+                dotProduct += re * se;
+                normRef += re * re;
+                normS += se * se;
+                count++;
 
-                const sr = sData[idx];
-                const sg = sData[idx + 1];
-                const sb = sData[idx + 2];
-                if (isSkinOrFacePixel(sr, sg, sb)) {
-                  sSkinSum.r += sr;
-                  sSkinSum.g += sg;
-                  sSkinSum.b += sb;
-                  sSkinSum.count++;
+                // Track lower-face texture (mouth / jaw / beard area in bottom 2 rows)
+                if (sy >= 2) {
+                  refLowerTexture += re;
+                  sLowerTexture += se;
                 }
-                sSecEdge += computeSobelEdgeMagnitude(sData, size, size, px, py);
               }
             }
 
-            const avgRefEdge = refSecEdge / Math.max(1, secTotal);
-            const avgSEdge = sSecEdge / Math.max(1, secTotal);
-            const secDiff = Math.abs(avgRefEdge - avgSEdge) / Math.max(1, Math.max(avgRefEdge, avgSEdge));
-            edgeCorrelations.push(1 - Math.min(1, secDiff));
+            // Normalized Cross-Correlation for this sector
+            const denominator = Math.sqrt(normRef * normS);
+            const ncc = denominator > 0.001 ? dotProduct / denominator : 0.5;
+            sectorSimilarities.push(Math.max(0, Math.min(1, ncc)));
           }
         }
 
-        const structuralScore = edgeCorrelations.reduce((acc, v) => acc + v, 0) / edgeCorrelations.length;
+        // Structural cross-correlation across all 16 sectors
+        const structuralScore = sectorSimilarities.reduce((a, b) => a + b, 0) / sectorSimilarities.length;
 
-        // Chromatic similarity
-        let chromaticScore = 1.0;
-        if (refSkinSum.count > 10 && sSkinSum.count > 10) {
-          const refAvgR = refSkinSum.r / refSkinSum.count;
-          const refAvgG = refSkinSum.g / refSkinSum.count;
-          const refAvgB = refSkinSum.b / refSkinSum.count;
+        // Lower-face beard / texture ratio (penalizes beard vs clean-shaven mismatches)
+        const maxLower = Math.max(1, Math.max(refLowerTexture, sLowerTexture));
+        const lowerDiff = Math.abs(refLowerTexture - sLowerTexture) / maxLower;
+        const lowerFaceMatch = 1.0 - Math.min(1, lowerDiff * 1.5);
 
-          const sAvgR = sSkinSum.r / sSkinSum.count;
-          const sAvgG = sSkinSum.g / sSkinSum.count;
-          const sAvgB = sSkinSum.b / sSkinSum.count;
+        const totalIdentityScore = structuralScore * 0.70 + lowerFaceMatch * 0.30;
 
-          const rDiff = Math.abs(refAvgR - sAvgR) / 255;
-          const gDiff = Math.abs(refAvgG - sAvgG) / 255;
-          const bDiff = Math.abs(refAvgB - sAvgB) / 255;
-          chromaticScore = 1.0 - (rDiff + gDiff + bDiff) / 3;
-        }
-
-        const combinedSimilarity = structuralScore * 0.70 + chromaticScore * 0.30;
-        console.log('[BiometricVerification] Match score:', {
+        console.log('[BiometricVerification] Strict Face Match:', {
           structuralScore: structuralScore.toFixed(3),
-          chromaticScore: chromaticScore.toFixed(3),
-          combinedSimilarity: combinedSimilarity.toFixed(3)
+          lowerFaceMatch: lowerFaceMatch.toFixed(3),
+          totalIdentityScore: totalIdentityScore.toFixed(3)
         });
 
-        // Anti-catfish rejection threshold (< 0.30 indicates a completely different person/gender)
-        if (combinedSimilarity < 0.30) {
+        // Strict Anti-Catfish Rejection Threshold (>= 0.60 required for genuine match)
+        if (totalIdentityScore < 0.60) {
           resolve({
             isValid: false,
             isMismatch: true,
-            similarity: combinedSimilarity,
+            similarity: totalIdentityScore,
             reason: 'Face mismatch detected. The person in this live selfie does not match the photo on your profile. Please verify using your own face.'
           });
           return;
         }
 
-        resolve({ isValid: true, similarity: combinedSimilarity });
+        resolve({ isValid: true, similarity: totalIdentityScore });
       } catch (err) {
         console.warn('Biometric comparison error:', err);
         resolve({ isValid: true });
