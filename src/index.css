@@ -6369,7 +6369,7 @@ html {
 
 /* 1. FRONT HARDCOVER LEAF */
 .diary-cover-leaf {
-  background: #7A1D36 !important;
+  background: #661837 !important;
   border-radius: 6px 22px 22px 6px !important;
   cursor: pointer;
 }
@@ -6380,7 +6380,7 @@ html {
   top: 0;
   bottom: 0;
   width: 20px;
-  background: linear-gradient(90deg, #A67C34 0%, #F4E2B8 45%, #C99E54 75%, #7A1D36 100%);
+  background: linear-gradient(90deg, #A67C34 0%, #F4E2B8 45%, #C99E54 75%, #661837 100%);
   border-radius: 6px 0 0 6px;
   box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.3);
   z-index: 5;
@@ -6390,7 +6390,7 @@ html {
   position: absolute;
   inset: 0;
   left: 16px;
-  background: linear-gradient(145deg, #8B2240 0%, #6E162E 100%);
+  background: linear-gradient(145deg, #781F43 0%, #661837 60%, #52132C 100%);
   border-radius: 0 20px 20px 0;
   padding: 16px 12px;
   display: flex;
@@ -6911,7 +6911,7 @@ html {
 
 /* 3. BACK COVER LEAF */
 .diary-back-cover-leaf {
-  background: linear-gradient(145deg, #8B2240 0%, #6E162E 100%) !important;
+  background: linear-gradient(145deg, #781F43 0%, #661837 60%, #52132C 100%) !important;
   border-radius: 12px 6px 6px 12px;
   display: flex !important;
   align-items: center !important;
