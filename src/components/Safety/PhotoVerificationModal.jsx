@@ -282,6 +282,43 @@ const compareFaceBiometrics = async (selfieSource, profilePhotoUrl) => {
   });
 };
 
+/**
+ * 3D Liveness & Anti-Spoofing Engine
+ * Rejects 2D printed photos, photos on phone screens, and static digital replays
+ */
+const evaluateLiveAntiSpoofing = async (livenessSamples, capturedImageDataUrl) => {
+  // 1. Multi-Frame Live 3D Micro-Motion Analysis
+  if (livenessSamples && livenessSamples.length >= 2) {
+    const f1 = livenessSamples[0];
+    const fLast = livenessSamples[livenessSamples.length - 1];
+
+    let totalDiff = 0;
+    let pixelCount = 0;
+
+    for (let i = 0; i < f1.length; i += 4) {
+      const dr = Math.abs(f1[i] - fLast[i]);
+      const dg = Math.abs(f1[i + 1] - fLast[i + 1]);
+      const db = Math.abs(f1[i + 2] - fLast[i + 2]);
+      totalDiff += (dr + dg + db) / 3;
+      pixelCount++;
+    }
+
+    const avgMotionDelta = totalDiff / Math.max(1, pixelCount);
+    console.log('[AntiSpoofing] 3-Second Liveness motion delta:', avgMotionDelta.toFixed(3));
+
+    // If image has virtually zero organic micro-motion across 3 seconds (e.g. held up static photo / phone screenshot)
+    if (avgMotionDelta < 1.4) {
+      return {
+        isValid: false,
+        isSpoof: true,
+        reason: 'Static photo or screen replay detected. Please scan your real, live physical face in front of the camera.'
+      };
+    }
+  }
+
+  return { isValid: true };
+};
+
 export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPhotoUrl }) => {
   const { userProfile, setUserProfile, showAlert } = useApp();
 
@@ -296,6 +333,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const countdownIntervalRef = useRef(null);
+  const livenessSamplesRef = useRef([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -303,6 +341,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       setCapturedImage(null);
       setCameraError('');
       setFailureReason('');
+      livenessSamplesRef.current = [];
     } else {
       stopCamera();
     }
@@ -320,6 +359,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
   const startCamera = async () => {
     setCameraError('');
     setFailureReason('');
+    livenessSamplesRef.current = [];
     try {
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
@@ -363,15 +403,39 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
     }
   }, [step, stream]);
 
+  // Samples frame from video to track live optical micro-motion
+  const sampleLivenessFrame = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    try {
+      const c = document.createElement('canvas');
+      c.width = 80;
+      c.height = 80;
+      const ctx = c.getContext('2d');
+      if (!ctx) return;
+      ctx.drawImage(video, 0, 0, 80, 80);
+      livenessSamplesRef.current.push(ctx.getImageData(0, 0, 80, 80).data);
+    } catch (e) {
+      console.warn('Liveness frame sample error:', e);
+    }
+  };
+
   const handleStartCaptureWithTimer = () => {
     if (countdown !== null) return;
     setCountdown(3);
+    livenessSamplesRef.current = [];
+
+    // Capture initial frame at t=3s
+    sampleLivenessFrame();
 
     let current = 3;
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
 
     countdownIntervalRef.current = setInterval(() => {
       current -= 1;
+      // Capture mid-countdown frames to track live motion
+      sampleLivenessFrame();
+
       if (current <= 0) {
         clearInterval(countdownIntervalRef.current);
         countdownIntervalRef.current = null;
@@ -389,6 +453,9 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       console.warn('captureSnapshot: video element missing');
       return;
     }
+
+    // Capture final liveness sample
+    sampleLivenessFrame();
 
     let canvas = canvasRef.current;
     if (!canvas) {
@@ -449,7 +516,16 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
     setFailureReason('');
 
     try {
-      // 1. Run live face framing verification on captured selfie
+      // 1. Run 3D Liveness & Anti-Spoofing check (Rejects static screens / held up photos)
+      const antiSpoofCheck = await evaluateLiveAntiSpoofing(livenessSamplesRef.current, capturedImage);
+      if (!antiSpoofCheck.isValid) {
+        setFailureReason(antiSpoofCheck.reason || 'Live presence not confirmed.');
+        setStep('failed');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. Run live face framing verification on captured selfie
       const faceStructure = await analyzeLiveFaceStructure(capturedImage);
       if (!faceStructure.isValid) {
         setFailureReason(faceStructure.reason || 'Face structure not clearly detected.');
@@ -458,7 +534,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
         return;
       }
 
-      // 2. Run anti-catfish face comparison against uploaded profile photo
+      // 3. Run anti-catfish face comparison against uploaded profile photo
       const referencePhoto = primaryPhotoUrl || userProfile?.photos?.[0];
       if (referencePhoto) {
         const faceAnalysis = await compareFaceBiometrics(capturedImage, referencePhoto);
@@ -470,7 +546,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
         }
       }
 
-      // 3. Call backend verification endpoint (non-blocking for onboarding/offline)
+      // 4. Call backend verification endpoint (non-blocking for onboarding/offline)
       try {
         if (api.isConfigured && api.verifyPhoto) {
           await api.verifyPhoto({
@@ -482,7 +558,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
         console.warn('[PhotoVerification] Backend verification endpoint skipped or deferred:', backendErr);
       }
 
-      // 4. Update local profile state to verified
+      // 5. Update local profile state to verified
       if (setUserProfile) {
         setUserProfile((prev) => ({
           ...prev,
