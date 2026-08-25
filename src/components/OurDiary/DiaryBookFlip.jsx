@@ -232,7 +232,7 @@ export const DiaryBookFlip = forwardRef(({
           <div className="diary-cover-spine-edge" />
           <div className="diary-cover-inner-panel">
             <div className="diary-cover-gold-border">
-              {/* 1. Top Section: Logo, Title, Couple Names */}
+              {/* 1. Top Section: Logo, Title, Couple Names & Edition */}
               <div className="diary-cover-top-group">
                 <div className="diary-cover-emblem">
                   <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-cover-logo-img" />
@@ -243,25 +243,32 @@ export const DiaryBookFlip = forwardRef(({
                 <p className="diary-cover-names font-display">
                   {userName || 'You'} &amp; {partnerName || 'Partner'}
                 </p>
+
               </div>
 
-              {/* 2. Middle Centerpiece: Personalized Couple Quote */}
+              {/* 2. Middle Centerpiece: Personalized Romantic Inscription Plaque */}
               <div className="diary-cover-quote-wrapper">
-                <p className="diary-cover-quote-text font-display">
-                  {coupleQuote}
-                </p>
+                <div className="diary-cover-quote-plaque">
+                  <div className="diary-cover-flourish-line">
+                  </div>
+                  <p className="diary-cover-quote-text font-display">
+                    {coupleQuote}
+                  </p>
+                  <div className="diary-cover-flourish-line bottom">
+                  </div>
+                </div>
               </div>
 
               {/* 3. Bottom Section: Counter Badge & Tap prompt */}
               <div className="diary-cover-bottom-group font-ui">
                 <div className="diary-cover-count-badge font-ui">
-                  <Sparkle size={11} weight="fill" />
+                  <Sparkle size={12} weight="fill" />
                   <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
                 </div>
 
                 <div className="diary-cover-tap-prompt font-ui">
-                  <span>Tap to open</span>
-                  <CaretRight size={12} weight="bold" />
+                  <span>Tap to open diary</span>
+                  <CaretRight size={13} weight="bold" />
                 </div>
               </div>
             </div>
