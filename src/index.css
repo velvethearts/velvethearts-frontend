@@ -5983,19 +5983,19 @@ html {
   to { opacity: 1; }
 }
 
-/* Modal Wrapper — Compact & Well-Spaced */
+/* Modal Wrapper — Spacious & Balanced */
 .diary-modal-wrapper {
   position: relative;
   width: 100%;
-  max-width: min(92vw, 380px);
-  height: min(65vh, 480px);
-  max-height: calc(100dvh - 120px);
+  max-width: min(94vw, 440px);
+  height: min(74vh, 590px);
+  max-height: calc(100dvh - 100px);
   display: flex;
   flex-direction: column;
   background: var(--bg-surface-warm, #FFF8F0);
   border: 1.5px solid var(--border-subtle, #F0BDC8);
-  border-radius: 16px;
-  box-shadow: 0 16px 40px rgba(74, 30, 42, 0.22), 0 4px 14px rgba(184, 67, 106, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(74, 30, 42, 0.22), 0 4px 14px rgba(184, 67, 106, 0.1);
   overflow: hidden;
   z-index: 2;
   margin: auto;
@@ -6004,16 +6004,16 @@ html {
 
 @media (min-width: 640px) {
   .diary-modal-wrapper {
-    max-width: 420px;
-    height: min(72vh, 520px);
-    max-height: calc(100dvh - 80px);
+    max-width: 480px;
+    height: min(80vh, 640px);
+    max-height: calc(100dvh - 70px);
   }
 }
 
 [data-theme="dark"] .diary-modal-wrapper {
   background: #1A0E13;
   border-color: #4A2330;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(208, 96, 127, 0.15);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6), 0 4px 14px rgba(208, 96, 127, 0.15);
 }
 
 @keyframes diaryModalSlideUp {
@@ -6026,12 +6026,12 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
+  padding: 8px 12px;
   background: #FFFFFF;
   border-bottom: 1px solid var(--border-subtle, #E8E3E4);
   flex-shrink: 0;
   gap: 6px;
-  min-height: 40px;
+  min-height: 42px;
 }
 
 [data-theme="dark"] .diary-modal-header {
@@ -6049,7 +6049,7 @@ html {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--burgundy-800, #5C1A2E);
   line-height: 1;
@@ -6074,7 +6074,7 @@ html {
 }
 
 .diary-header-mode-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-secondary, #5A4E50);
   overflow: hidden;
@@ -6089,7 +6089,7 @@ html {
 .diary-header-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   flex-shrink: 0;
 }
 
@@ -6098,10 +6098,10 @@ html {
   align-items: center;
   justify-content: center;
   gap: 3px;
-  height: 26px;
-  padding: 0 8px;
+  height: 28px;
+  padding: 0 10px;
   border-radius: var(--radius-full, 9999px);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -6141,8 +6141,8 @@ html {
 }
 
 .diary-modal-close-btn {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -6171,7 +6171,7 @@ html {
 .diary-modal-stage {
   flex: 1;
   min-height: 0;
-  padding: 8px 10px;
+  padding: 4px 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -6435,7 +6435,7 @@ html {
   position: relative;
   width: 100%;
   height: 100%;
-  padding: 14px 16px 10px;
+  padding: 16px 18px 12px;
   display: flex;
   flex-direction: column;
   background: #FFFDF9;
@@ -6454,7 +6454,7 @@ html {
 }
 
 .diary-leaf-date {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: #3A0E1A !important;
   margin: 0;
@@ -6462,11 +6462,11 @@ html {
 }
 
 .diary-leaf-counter {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #7A2842;
   background: #FDF2F4;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 10px;
   border: 1px solid #F0BDC8;
   flex-shrink: 0;
@@ -6475,7 +6475,7 @@ html {
 .diary-leaf-divider {
   height: 1px;
   background: linear-gradient(90deg, #F0BDC8 0%, transparent 85%);
-  margin: 6px 0 8px;
+  margin: 7px 0 9px;
   flex-shrink: 0;
 }
 
@@ -6485,7 +6485,7 @@ html {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 11px;
   padding-right: 2px;
   position: relative;
   z-index: 10;
@@ -6497,13 +6497,13 @@ html {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 24px 12px;
+  padding: 28px 14px;
   margin: auto;
   gap: 6px;
 }
 
 .diary-leaf-empty-text {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #5A4E50;
   margin: 0;
 }
@@ -6525,7 +6525,7 @@ html {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 600;
   color: #8C7D80;
 }
@@ -6565,7 +6565,7 @@ html {
   background: #FFF5F7;
   border-left: 3.5px solid #B8436A;
   border-radius: 4px 8px 8px 4px;
-  padding: 8px 10px;
+  padding: 9px 12px;
 }
 
 .diary-leaf-quote-mark {
@@ -6581,32 +6581,32 @@ html {
 }
 
 .diary-leaf-quote-text {
-  font-size: 13px;
+  font-size: 14px;
   font-style: italic;
   color: #2C1820 !important;
-  line-height: 1.4;
+  line-height: 1.45;
   margin: 0;
 }
 
 .diary-leaf-note-box {
   background: #FFF9F2;
   border: 1px dashed rgba(184, 67, 106, 0.25);
-  border-radius: 6px;
-  padding: 8px 10px;
+  border-radius: 7px;
+  padding: 9px 12px;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
 .diary-leaf-note-text {
-  font-size: 13.5px;
-  line-height: 1.45;
+  font-size: 14.5px;
+  line-height: 1.5;
   color: #2C1820 !important;
   margin: 0;
 }
 
 .diary-leaf-caption {
-  font-size: 10.5px;
+  font-size: 11px;
   color: #9B3456;
   font-weight: 600;
   margin: 0;
@@ -6626,22 +6626,22 @@ html {
   background: #FFFFFF;
   border: 1px solid #E8E3E4;
   border-radius: 4px;
-  padding: 6px 6px 8px 6px;
+  padding: 7px 7px 9px 7px;
   box-shadow: 0 3px 10px rgba(74, 30, 42, 0.1);
   transform: rotate(-1.5deg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 3px auto;
-  max-width: 240px;
+  margin: 4px auto;
+  max-width: 255px;
   width: 100%;
 }
 
 .diary-leaf-washi-tape {
   position: absolute;
   top: -5px;
-  width: 40px;
-  height: 10px;
+  width: 42px;
+  height: 11px;
   background: rgba(228, 200, 142, 0.75);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   transform: rotate(1deg);
@@ -6650,7 +6650,7 @@ html {
 
 .diary-leaf-photo-frame {
   width: 100%;
-  height: 130px;
+  height: 145px;
   border-radius: 2px;
   overflow: hidden;
   background: #F5F1F2;
@@ -6664,7 +6664,7 @@ html {
 }
 
 .diary-leaf-polaroid-caption {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: #5C1A2E;
   margin: 4px 0 0;

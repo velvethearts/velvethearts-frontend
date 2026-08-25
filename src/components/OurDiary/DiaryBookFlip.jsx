@@ -43,19 +43,19 @@ export const DiaryBookFlip = forwardRef(({
 
   const [dimensions, setDimensions] = useState(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-    const isShort = typeof window !== 'undefined' && window.innerHeight < 720;
-    const w = isMobile ? Math.min(window.innerWidth - 60, 240) : 280;
-    const h = isShort || isMobile ? Math.min(window.innerHeight - 320, 330) : 380;
-    return { width: Math.max(w, 220), height: Math.max(h, 290) };
+    const isShort = typeof window !== 'undefined' && window.innerHeight < 700;
+    const w = isMobile ? Math.min(window.innerWidth - 40, 300) : 330;
+    const h = isShort ? Math.min(window.innerHeight - 260, 390) : (isMobile ? 415 : 450);
+    return { width: Math.max(w, 260), height: Math.max(h, 360) };
   });
 
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 640;
-      const isShort = window.innerHeight < 720;
-      const w = isMobile ? Math.min(window.innerWidth - 60, 240) : 280;
-      const h = isShort || isMobile ? Math.min(window.innerHeight - 320, 330) : 380;
-      setDimensions({ width: Math.max(w, 220), height: Math.max(h, 290) });
+      const isShort = window.innerHeight < 700;
+      const w = isMobile ? Math.min(window.innerWidth - 40, 300) : 330;
+      const h = isShort ? Math.min(window.innerHeight - 260, 390) : (isMobile ? 415 : 450);
+      setDimensions({ width: Math.max(w, 260), height: Math.max(h, 360) });
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -171,10 +171,10 @@ export const DiaryBookFlip = forwardRef(({
         width={dimensions.width}
         height={dimensions.height}
         size="fixed"
-        minWidth={220}
-        maxWidth={320}
-        minHeight={290}
-        maxHeight={440}
+        minWidth={250}
+        maxWidth={360}
+        minHeight={350}
+        maxHeight={500}
         maxShadowOpacity={0.5}
         showCover={true}
         mobileScrollSupport={false}
