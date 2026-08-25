@@ -6729,65 +6729,62 @@ html {
   color: #8C7D80;
 }
 
-[data-theme="dark"] .diary-leaf-author {
-  color: #8C7D80;
+/* Integrated Card Footer with Timestamp & Delete Button */
+.diary-leaf-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 5px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(184, 67, 106, 0.1);
+  width: 100%;
 }
 
-.diary-leaf-author-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #D0607F;
+.diary-leaf-card-meta {
+  font-size: 10px;
+  font-weight: 500;
+  color: #9E888E;
+  letter-spacing: 0.01em;
 }
 
-.diary-leaf-time {
-  color: #8C7D80;
+[data-theme="dark"] .diary-leaf-card-meta {
+  color: #9E888E;
 }
 
-[data-theme="dark"] .diary-leaf-time {
-  color: #8C7D80;
-}
-
-.diary-leaf-del-btn {
+.diary-leaf-card-del-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  min-width: 26px;
-  min-height: 26px;
-  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
   background: transparent;
-  color: #B0989E;
+  color: #B59EA4;
   border: none;
   cursor: pointer;
   padding: 0;
   pointer-events: auto;
   position: relative;
-  z-index: 50;
+  z-index: 25;
   touch-action: manipulation;
-  transition: all 0.18s ease;
+  transition: all 0.15s ease;
   margin-left: auto;
 }
 
-.diary-leaf-del-btn:hover,
-.diary-leaf-del-btn:active {
+.diary-leaf-card-del-btn:hover {
   background: rgba(184, 67, 106, 0.12);
-  color: #B83A5E;
-  transform: scale(1.1);
+  color: #C03858;
 }
 
-[data-theme="dark"] .diary-leaf-del-btn {
+[data-theme="dark"] .diary-leaf-card-del-btn {
   background: transparent;
-  color: #B0989E;
+  color: #B59EA4;
   border: none;
-  box-shadow: none;
 }
 
-[data-theme="dark"] .diary-leaf-del-btn:hover,
-[data-theme="dark"] .diary-leaf-del-btn:active {
+[data-theme="dark"] .diary-leaf-card-del-btn:hover {
   background: rgba(184, 67, 106, 0.12);
-  color: #B83A5E;
+  color: #C03858;
 }
 
 /* Scrapbook Treatments on Paper */
