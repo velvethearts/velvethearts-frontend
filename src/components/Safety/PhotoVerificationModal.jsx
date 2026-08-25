@@ -561,7 +561,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                   <UserFocus size={20} weight="fill" color="#D4AD6A" />
                   <div>
                     <strong>Face Centered</strong>
-                    <span>Position your face naturally in the oval frame</span>
+                    <span>Position your face naturally in the outline guide</span>
                   </div>
                 </div>
                 <div className="photo-verify-check-item">
@@ -601,7 +601,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                   Live Face Scan
                 </h3>
                 <p className="photo-verify-scan-subtitle font-body">
-                  Align your face within the oval and look straight into the camera
+                  Align your face within the outline and look straight into the camera
                 </p>
               </div>
 
