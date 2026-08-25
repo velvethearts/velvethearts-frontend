@@ -859,552 +859,492 @@ export const OurDiaryModal = ({
         </div>
 
         {/* ============================================================
-           MAIN STAGE (Light Warm Background)
+           MAIN STAGE: PHYSICAL 3D OPEN BOOK JOURNAL SPREAD
            ============================================================ */}
         <div className="diary-modal-stage">
-          {viewState === 'add' ? (
-            /* ==========================================================
-               STATE A: "ADD AN ENTRY" DEDICATED SCREEN
-               ========================================================== */
-            <div className="diary-add-screen font-ui">
-              {/* 3D Hinged Hardcover Book Object with Resting-State Dimensional Tilt */}
-              <div className="diary-3d-scene">
-                <div
-                  className={`diary-3d-book ${isBookOpen ? 'book-open' : 'book-closed'}`}
-                  onClick={() => {
-                    if (!addMode) {
-                      setIsBookOpen(true);
-                      setTimeout(() => {
-                        setViewState('browse');
-                      }, 420);
-                    }
-                  }}
-                  title="Tap to open diary"
-                  role="button"
-                  tabIndex={0}
+          <div className="diary-journal-stage-inner">
+            {/* 3D Open Book Spread with Left Cover/Page and Flippable Right Page */}
+            <div
+              className="diary-open-book-spread font-ui"
+              onTouchStart={(e) => {
+                cardTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+              }}
+              onTouchEnd={(e) => {
+                if (!cardTouchStart.current) return;
+                const deltaX = e.changedTouches[0].clientX - cardTouchStart.current.x;
+                const deltaY = e.changedTouches[0].clientY - cardTouchStart.current.y;
+                if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 35) {
+                  if (deltaX < 0) {
+                    handleNextCard();
+                  } else {
+                    handlePrevCard();
+                  }
+                }
+                cardTouchStart.current = null;
+              }}
+            >
+              {/* Floating Page Flip Navigation (Left/Prev) */}
+              {currentPageIndex > 0 && (
+                <button
+                  type="button"
+                  className="diary-flip-nav-btn prev font-ui"
+                  onClick={handlePrevCard}
+                  aria-label="Previous Page"
+                  title="Previous Page"
                 >
-                  {/* Underneath: The First Page revealed as cover swings open */}
-                  <div className="diary-book-base-page font-ui">
-                    <div className="diary-base-page-header">
-                      <span className="diary-base-page-tag font-ui">Volume 1</span>
-                      <span className="diary-base-page-date font-display">
-                        {pages?.[0]?.dateLabel || 'Today'}
-                      </span>
-                    </div>
-                    <div className="diary-base-page-content font-display">
-                      <p className="diary-base-page-quote">
-                        {pages?.[0]?.items?.[0]?.content
-                          ? `“${pages[0].items[0].content.slice(0, 70)}${pages[0].items[0].content.length > 70 ? '...' : ''}”`
-                          : '“A collection of our sweetest memories, shared thoughts, and voice notes.”'}
-                      </p>
-                    </div>
-                    <div className="diary-base-page-footer">
-                      <span className="diary-base-page-counter font-ui">Page 1</span>
-                    </div>
-                  </div>
+                  <CaretLeft size={20} weight="bold" />
+                </button>
+              )}
 
-                  {/* Front Cover: Hinged on the Left Spine Edge */}
-                  <div className="diary-book-cover-hinge">
-                    {/* Front Face (Closed Book Cover) */}
-                    <div className="diary-book-cover-front">
-                      <div className="diary-preview-spine" />
-                      <div className="diary-preview-body">
-                        <div className="diary-preview-emblem">
-                          <BookBookmark size={34} weight="duotone" />
-                        </div>
-                        <h3 className="diary-preview-title font-display">Our Diary</h3>
-                        <p className="diary-preview-subtitle font-display">
-                          {userName || 'You'} &amp; {partnerName || 'Partner'}
-                        </p>
-                        <span className="diary-preview-badge font-ui">
-                          <Sparkle size={12} weight="fill" />
-                          <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
-                        </span>
-                        {!addMode && (
-                          <span className="diary-cover-tap-hint font-ui">
-                            <span>Open diary</span>
-                            <CaretRight size={12} weight="bold" />
-                          </span>
-                        )}
-                      </div>
-                    </div>
+              {/* Floating Page Flip Navigation (Right/Next) */}
+              {currentPageIndex < totalPages - 1 && (
+                <button
+                  type="button"
+                  className="diary-flip-nav-btn next font-ui"
+                  onClick={handleNextCard}
+                  aria-label="Next Page"
+                  title="Next Page"
+                >
+                  <CaretRight size={20} weight="bold" />
+                </button>
+              )}
 
-                    {/* Inside Face (Swung Open Lining) */}
-                    <div className="diary-book-cover-inside">
-                      <div className="diary-book-inside-crease" />
-                      <div className="diary-book-inside-emblem">
-                        <Heart size={24} weight="duotone" />
-                      </div>
-                    </div>
+              {/* LEFT WING: Open Hardcover Lining & Inscription */}
+              <div className="diary-book-left-wing font-display">
+                <div className="diary-left-wing-header">
+                  <span className="diary-left-wing-volume">VOLUME 1</span>
+                  <span className="diary-left-wing-couple">{userName || 'You'} &amp; {partnerName || 'Partner'}</span>
+                </div>
+
+                <div className="diary-left-wing-center">
+                  <div className="diary-left-wing-watermark">
+                    <Heart size={38} weight="duotone" />
                   </div>
+                  <p className="diary-left-wing-quote font-display">
+                    “Every shared laughter, whisper, and story kept close to heart.”
+                  </p>
+                </div>
+
+                <div className="diary-left-wing-footer font-ui">
+                  <span className="diary-left-wing-badge">
+                    <Sparkle size={12} weight="fill" />
+                    <span>{pages.length} {pages.length === 1 ? 'Day Captured' : 'Days Captured'}</span>
+                  </span>
+                  <div className="diary-left-bookmark-ribbon" />
                 </div>
               </div>
 
-              {/* Instructional Copy */}
-              {!addMode && (
-                <div className="diary-add-instruction-wrap">
-                  <p className="diary-add-instruction-text font-body">
-                    Add a moment by recording a voice note, typing it out, or adding a photo.
-                  </p>
+              {/* CENTER SPINE: Golden Metallic Divider */}
+              <div className="diary-book-center-spine" />
 
-                  {/* Three Balanced Action Pill Buttons */}
-                  <div className="diary-add-action-pills">
-                    <button
-                      type="button"
-                      className="diary-action-pill-btn record-pill font-ui"
-                      onClick={() => {
-                        setAddMode('record');
-                        startAudioRecording();
-                      }}
-                    >
-                      <Microphone size={18} weight="bold" />
-                      <span>Record</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="diary-action-pill-btn type-pill font-ui"
-                      onClick={() => setAddMode('type')}
-                    >
-                      <NotePencil size={18} weight="bold" />
-                      <span>Type</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="diary-action-pill-btn photo-pill font-ui"
-                      onClick={() => setAddMode('photo')}
-                    >
-                      <ImageIcon size={18} weight="bold" />
-                      <span>Photo</span>
-                    </button>
-                  </div>
+              {/* RIGHT WING: Active Flippable Diary Page */}
+              <div
+                key={currentDayCard?.dayKey || currentPageIndex}
+                className={`diary-book-right-wing ${isPeeling ? `peeling-${peelDirection}` : ''}`}
+              >
+                {/* Page Top Row: Date & Counter */}
+                <div className="diary-card-top-row">
+                  <h2 className="diary-card-date font-display">
+                    {currentDayCard?.dateLabel || 'Today'}
+                  </h2>
+                  <button
+                    type="button"
+                    className="diary-card-counter font-ui"
+                    onClick={handleNextCard}
+                    title={currentPageIndex < totalPages - 1 ? 'Click to flip next page' : 'Last page'}
+                  >
+                    <span>{currentPageIndex + 1} / {totalPages}</span>
+                    {currentPageIndex < totalPages - 1 && <CaretRight size={10} weight="bold" />}
+                  </button>
                 </div>
-              )}
 
-              {/* Inline Creation Modes when clicked */}
-              {addMode === 'record' && (
-                <div className="diary-inline-creator-card font-ui">
-                  <div className="diary-creator-header">
-                    <span className="diary-creator-title font-display">
-                      <Microphone size={16} weight="fill" className="text-burgundy" />
-                      <span>Record Voice Note</span>
-                    </span>
-                    <button
-                      type="button"
-                      className="diary-creator-cancel-btn"
-                      onClick={() => {
-                        cancelAudioRecording();
-                        setAddMode(null);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                <div className="diary-card-divider" />
 
-                  {isRecording ? (
-                    <div className="diary-recording-active-box">
-                      <div className="diary-recording-pulse-dot" />
-                      <span className="diary-recording-timer font-ui">{formatTimer(recordingSeconds)}</span>
-                      <p className="diary-recording-status">Recording voice memory...</p>
+                {/* Page Content: Scrollable Moments or Empty State */}
+                <div className="diary-card-moments-scroll">
+                  {loading ? (
+                    <div className="diary-loading-state font-ui">
+                      <Sparkle size={24} className="spin text-burgundy" />
+                      <span>Loading sweet moments...</span>
+                    </div>
+                  ) : (!currentDayCard?.items || currentDayCard.items.length === 0) ? (
+                    <div className="diary-page-empty-box font-ui">
+                      <div className="diary-empty-icon-wrap">
+                        <Heart size={28} weight="duotone" className="text-burgundy" />
+                      </div>
+                      <h4 className="diary-empty-title font-display">No moments on this day</h4>
+                      <p className="diary-empty-desc font-body">
+                        Record a voice note, type a thought, or add a photo below to fill this page.
+                      </p>
+                    </div>
+                  ) : (
+                    currentDayCard.items.map((entry) => {
+                      if (!entry) return null;
+                      const isMine = Boolean(entry.isMine);
+                      const timeStr = entry.createdAt
+                        ? new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : '';
+
+                      const sourceType = (entry.sourceType || 'MESSAGE').toUpperCase();
+
+                      return (
+                        <div key={entry.id || Math.random()} className={`diary-moment-item type-${sourceType.toLowerCase()}`}>
+                          {/* Moment Header: Saved by & Delete icon */}
+                          <div className="diary-moment-meta">
+                            <span className="diary-moment-author font-ui">
+                              <span className="diary-author-dot" />
+                              <span>{isMine ? 'Saved by you' : `Saved by ${entry.savedByName || partnerName || 'Partner'}`}</span>
+                              {timeStr && <span className="diary-moment-time">· {timeStr}</span>}
+                            </span>
+
+                            {isMine && entry.id && (
+                              <button
+                                type="button"
+                                className="diary-moment-del-btn"
+                                onClick={() => handleDeleteEntry(entry.id)}
+                                title="Delete this moment"
+                                aria-label="Delete this moment"
+                              >
+                                <Trash size={14} />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* 1. Saved Chat Message (Quote Box) */}
+                          {sourceType === 'MESSAGE' && entry.content && (
+                            <div className="diary-quote-box">
+                              <Quotes size={18} weight="fill" className="diary-quote-mark" />
+                              <div className="diary-quote-content">
+                                <p className="diary-quote-text font-body">{entry.content}</p>
+                                {entry.caption && (
+                                  <p className="diary-quote-caption font-ui">{entry.caption}</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 2. Written Note (Warm Display Font) */}
+                          {sourceType === 'NOTE' && entry.content && (
+                            <div className="diary-note-box">
+                              <p className="diary-note-body font-display">{entry.content}</p>
+                              {entry.caption && (
+                                <p className="diary-note-caption font-ui">{entry.caption}</p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 3. Voice Note (Waveform Ribbon) */}
+                          {sourceType === 'VOICE_NOTE' && entry.attachmentUrl && (
+                            <div className="diary-voice-moment-box">
+                              <DiaryVoiceNotePlayer url={entry.attachmentUrl} />
+                              {entry.caption && (
+                                <p className="diary-voice-caption font-ui">{entry.caption}</p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 4. Polaroid Photo (Rotated Print with Tape) */}
+                          {sourceType === 'IMAGE' && entry.attachmentUrl && (
+                            <div className="diary-polaroid-moment">
+                              <div className="diary-polaroid-tape" />
+                              <div className="diary-polaroid-img-frame">
+                                <ProtectedImage
+                                  src={entry.attachmentUrl}
+                                  alt="Diary Memory"
+                                  className="diary-polaroid-photo"
+                                />
+                              </div>
+                              {entry.caption && (
+                                <p className="diary-polaroid-note font-display">{entry.caption}</p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* 5. HD Video Memory (Reel Print with Playable Video) */}
+                          {sourceType === 'VIDEO' && entry.attachmentUrl && (
+                            <div className="diary-polaroid-moment diary-video-moment">
+                              <div className="diary-polaroid-tape" />
+                              <div className="diary-video-player-frame">
+                                <video
+                                  src={entry.attachmentUrl}
+                                  controls
+                                  playsInline
+                                  preload="metadata"
+                                  className="diary-moment-video-player"
+                                />
+                              </div>
+                              {entry.caption && (
+                                <p className="diary-polaroid-note font-display">{entry.caption}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Page Footer */}
+                <div className="diary-right-page-footer font-ui">
+                  <span className="diary-right-page-num">Page {currentPageIndex + 1}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ACTION PROMPT & THREE PILL BUTTONS (Below the open book) */}
+            {!addMode ? (
+              <div className="diary-add-instruction-wrap">
+                <p className="diary-add-instruction-text font-body">
+                  Add a moment by recording a voice note, typing it out, or adding a photo.
+                </p>
+
+                <div className="diary-add-action-pills">
+                  <button
+                    type="button"
+                    className="diary-action-pill-btn record-pill font-ui"
+                    onClick={() => {
+                      setAddMode('record');
+                      startAudioRecording();
+                    }}
+                  >
+                    <Microphone size={18} weight="bold" />
+                    <span>Record</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="diary-action-pill-btn type-pill font-ui"
+                    onClick={() => setAddMode('type')}
+                  >
+                    <NotePencil size={18} weight="bold" />
+                    <span>Type</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="diary-action-pill-btn photo-pill font-ui"
+                    onClick={() => setAddMode('photo')}
+                  >
+                    <ImageIcon size={18} weight="bold" />
+                    <span>Photo</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Inline Creator Card */
+              <div className="diary-inline-creator-card font-ui">
+                {addMode === 'record' && (
+                  <>
+                    <div className="diary-creator-header">
+                      <span className="diary-creator-title font-display">
+                        <Microphone size={16} weight="fill" className="text-burgundy" />
+                        <span>Record Voice Note</span>
+                      </span>
                       <button
                         type="button"
-                        className="diary-stop-record-btn font-ui"
-                        onClick={stopAudioRecording}
+                        className="diary-creator-cancel-btn"
+                        onClick={() => {
+                          cancelAudioRecording();
+                          setAddMode(null);
+                        }}
                       >
-                        <Stop size={16} weight="fill" />
-                        <span>Done Recording</span>
+                        Cancel
                       </button>
                     </div>
-                  ) : recordedAudioUrl ? (
-                    <div className="diary-recording-preview-box">
-                      <p className="diary-preview-label">Voice note ready:</p>
-                      <DiaryVoiceNotePlayer url={recordedAudioUrl} />
-                      <input
-                        type="text"
-                        placeholder="Add a sweet caption (optional)..."
-                        value={captionText}
-                        onChange={(e) => setCaptionText(e.target.value)}
-                        className="diary-creator-caption-input font-ui"
-                        maxLength={120}
-                      />
-                      <div className="diary-creator-actions">
+
+                    {isRecording ? (
+                      <div className="diary-recording-active-box">
+                        <div className="diary-recording-pulse-dot" />
+                        <span className="diary-recording-timer font-ui">{formatTimer(recordingSeconds)}</span>
+                        <p className="diary-recording-status">Recording voice memory...</p>
                         <button
                           type="button"
-                          className="diary-creator-retry-btn"
-                          onClick={() => {
-                            cancelAudioRecording();
-                            startAudioRecording();
-                          }}
+                          className="diary-stop-record-btn font-ui"
+                          onClick={stopAudioRecording}
                         >
-                          Re-record
-                        </button>
-                        <button
-                          type="button"
-                          className="diary-creator-save-btn font-ui"
-                          onClick={handleSaveEntry}
-                          disabled={isSubmitting}
-                        >
-                          <Check size={16} weight="bold" />
-                          <span>{isSubmitting ? 'Saving...' : 'Save Voice Note'}</span>
+                          <Stop size={16} weight="fill" />
+                          <span>Done Recording</span>
                         </button>
                       </div>
-                    </div>
-                  ) : null}
+                    ) : recordedAudioUrl ? (
+                      <div className="diary-recording-preview-box">
+                        <p className="diary-preview-label">Voice note ready:</p>
+                        <DiaryVoiceNotePlayer url={recordedAudioUrl} />
+                        <input
+                          type="text"
+                          placeholder="Add a sweet caption (optional)..."
+                          value={captionText}
+                          onChange={(e) => setCaptionText(e.target.value)}
+                          className="diary-creator-caption-input font-ui"
+                          maxLength={120}
+                        />
+                        <div className="diary-creator-actions">
+                          <button
+                            type="button"
+                            className="diary-creator-retry-btn"
+                            onClick={() => {
+                              cancelAudioRecording();
+                              startAudioRecording();
+                            }}
+                          >
+                            Re-record
+                          </button>
+                          <button
+                            type="button"
+                            className="diary-creator-save-btn font-ui"
+                            onClick={handleSaveEntry}
+                            disabled={isSubmitting}
+                          >
+                            <Check size={16} weight="bold" />
+                            <span>{isSubmitting ? 'Saving...' : 'Save Voice Note'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                )}
 
-                  {composerError && <p className="diary-creator-error font-ui">{composerError}</p>}
-                </div>
-              )}
-
-              {addMode === 'type' && (
-                <div className="diary-inline-creator-card font-ui">
-                  <div className="diary-creator-header">
-                    <span className="diary-creator-title font-display">
-                      <NotePencil size={16} weight="bold" className="text-burgundy" />
-                      <span>Write Note</span>
-                    </span>
-                    <button
-                      type="button"
-                      className="diary-creator-cancel-btn"
-                      onClick={() => setAddMode(null)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-
-                  <textarea
-                    placeholder="Write a sweet memory, inside joke, or heartfelt thought..."
-                    value={noteText}
-                    onChange={(e) => setNoteText(e.target.value)}
-                    className="diary-creator-textarea font-display"
-                    rows={4}
-                    maxLength={1000}
-                    autoFocus
-                  />
-
-                  <input
-                    type="text"
-                    placeholder="Add a caption tag (optional)..."
-                    value={captionText}
-                    onChange={(e) => setCaptionText(e.target.value)}
-                    className="diary-creator-caption-input font-ui"
-                    maxLength={120}
-                  />
-
-                  {composerError && <p className="diary-creator-error font-ui">{composerError}</p>}
-
-                  <div className="diary-creator-footer">
-                    <span className="diary-char-count">{noteText.length}/1000</span>
-                    <button
-                      type="button"
-                      className="diary-creator-save-btn font-ui"
-                      onClick={handleSaveEntry}
-                      disabled={isSubmitting || !noteText.trim()}
-                    >
-                      <Check size={16} weight="bold" />
-                      <span>{isSubmitting ? 'Saving...' : 'Save to Diary'}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {addMode === 'photo' && (
-                <div className="diary-inline-creator-card font-ui">
-                  <div className="diary-creator-header">
-                    <span className="diary-creator-title font-display">
-                      <ImageIcon size={16} weight="bold" className="text-burgundy" />
-                      <span>Add Photo or Video</span>
-                    </span>
-                    <button
-                      type="button"
-                      className="diary-creator-cancel-btn"
-                      onClick={() => {
-                        setSelectedPhotoFile(null);
-                        setPhotoPreviewUrl(null);
-                        setAddMode(null);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-
-                  {!photoPreviewUrl ? (
-                    <label className="diary-photo-dropzone">
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
-                        onChange={handlePhotoSelect}
-                        className="diary-file-input-hidden"
-                      />
-                      <UploadSimple size={28} className="diary-upload-icon text-burgundy" />
-                      <span className="diary-dropzone-text">Tap to choose a photo or video</span>
-                      <span className="diary-dropzone-hint">Photos up to 15MB • Videos up to 100MB</span>
-                    </label>
-                  ) : (
-                    <div className="diary-photo-preview-wrap">
-                      {isVideoFile ? (
-                        <video src={photoPreviewUrl} controls playsInline className="diary-preview-media" />
-                      ) : (
-                        <img src={photoPreviewUrl} alt="Preview" className="diary-preview-media" />
-                      )}
+                {addMode === 'type' && (
+                  <>
+                    <div className="diary-creator-header">
+                      <span className="diary-creator-title font-display">
+                        <NotePencil size={16} weight="bold" className="text-burgundy" />
+                        <span>Write a Note</span>
+                      </span>
                       <button
                         type="button"
-                        className="diary-remove-media-btn"
+                        className="diary-creator-cancel-btn"
+                        onClick={() => {
+                          setNoteText('');
+                          setCaptionText('');
+                          setAddMode(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+
+                    <textarea
+                      placeholder="Write something memorable together..."
+                      value={noteText}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      className="diary-creator-textarea font-display"
+                      rows={4}
+                      maxLength={1000}
+                      autoFocus
+                    />
+
+                    <input
+                      type="text"
+                      placeholder="Add a caption or title (optional)..."
+                      value={captionText}
+                      onChange={(e) => setCaptionText(e.target.value)}
+                      className="diary-creator-caption-input font-ui"
+                      maxLength={120}
+                    />
+
+                    {composerError && <p className="diary-creator-error font-ui">{composerError}</p>}
+
+                    <div className="diary-creator-footer">
+                      <span className="diary-char-count">{noteText.length}/1000</span>
+                      <button
+                        type="button"
+                        className="diary-creator-save-btn font-ui"
+                        onClick={handleSaveEntry}
+                        disabled={isSubmitting || !noteText.trim()}
+                      >
+                        <Check size={16} weight="bold" />
+                        <span>{isSubmitting ? 'Saving...' : 'Save Note'}</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {addMode === 'photo' && (
+                  <>
+                    <div className="diary-creator-header">
+                      <span className="diary-creator-title font-display">
+                        <ImageIcon size={16} weight="bold" className="text-burgundy" />
+                        <span>Add Photo or Video</span>
+                      </span>
+                      <button
+                        type="button"
+                        className="diary-creator-cancel-btn"
                         onClick={() => {
                           setSelectedPhotoFile(null);
                           setPhotoPreviewUrl(null);
+                          setAddMode(null);
                         }}
                       >
-                        Change Media
+                        Cancel
                       </button>
                     </div>
-                  )}
 
-                  <input
-                    type="text"
-                    placeholder="Add a polaroid caption (optional)..."
-                    value={captionText}
-                    onChange={(e) => setCaptionText(e.target.value)}
-                    className="diary-creator-caption-input font-ui"
-                    maxLength={120}
-                  />
+                    {!photoPreviewUrl ? (
+                      <label className="diary-photo-dropzone">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                          onChange={handlePhotoSelect}
+                          className="diary-file-input-hidden"
+                        />
+                        <UploadSimple size={28} className="diary-upload-icon text-burgundy" />
+                        <span className="diary-dropzone-text">Tap to choose a photo or video</span>
+                        <span className="diary-dropzone-hint">Photos up to 15MB • Videos up to 100MB</span>
+                      </label>
+                    ) : (
+                      <div className="diary-photo-preview-wrap">
+                        {isVideoFile ? (
+                          <video src={photoPreviewUrl} controls playsInline className="diary-preview-media" />
+                        ) : (
+                          <img src={photoPreviewUrl} alt="Preview" className="diary-preview-media" />
+                        )}
+                        <button
+                          type="button"
+                          className="diary-remove-media-btn"
+                          onClick={() => {
+                            setSelectedPhotoFile(null);
+                            setPhotoPreviewUrl(null);
+                          }}
+                        >
+                          Change Media
+                        </button>
+                      </div>
+                    )}
 
-                  {composerError && <p className="diary-creator-error font-ui">{composerError}</p>}
+                    <input
+                      type="text"
+                      placeholder="Add a polaroid caption (optional)..."
+                      value={captionText}
+                      onChange={(e) => setCaptionText(e.target.value)}
+                      className="diary-creator-caption-input font-ui"
+                      maxLength={120}
+                    />
 
-                  <div className="diary-creator-footer">
-                    <button
-                      type="button"
-                      className="diary-creator-save-btn font-ui"
-                      onClick={handleSaveEntry}
-                      disabled={isSubmitting || !selectedPhotoFile}
-                    >
-                      <Check size={16} weight="bold" />
-                      <span>{isSubmitting ? 'Uploading...' : 'Save Moment'}</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            /* ==========================================================
-               STATE B: "BROWSE" STATE (DAY-CARD WITH PEEL TRANSITION)
-               ========================================================== */
-            <div className="diary-browse-canvas">
-              {loading ? (
-                <div className="diary-loading-state font-ui">
-                  <Sparkle size={24} className="spin text-burgundy" />
-                  <span>Loading sweet moments...</span>
-                </div>
-              ) : pages.length === 0 ? (
-                /* Empty State Card */
-                <div className="diary-day-card empty-card font-ui">
-                  <div className="diary-empty-icon-wrap">
-                    <Heart size={36} weight="duotone" className="text-burgundy" />
-                  </div>
-                  <h3 className="diary-empty-title font-display">Our story begins here</h3>
-                  <p className="diary-empty-desc font-body">
-                    Save special chat messages with the heart icon in your chat, or add moments directly using the <strong>Add</strong> button above.
-                  </p>
-                  <button
-                    type="button"
-                    className="diary-first-moment-btn font-ui"
-                    onClick={() => {
-                      setViewState('add');
-                      setAddMode(null);
-                    }}
-                  >
-                    <Plus size={16} weight="bold" />
-                    <span>Add First Moment</span>
-                  </button>
-                </div>
-              ) : (
-                /* Stacked Day-Card with 3D Peel/Slide Transition */
-                <div
-                  className="diary-card-stack-viewport"
-                  onTouchStart={(e) => {
-                    cardTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                  }}
-                  onTouchEnd={(e) => {
-                    if (!cardTouchStart.current) return;
-                    const deltaX = e.changedTouches[0].clientX - cardTouchStart.current.x;
-                    const deltaY = e.changedTouches[0].clientY - cardTouchStart.current.y;
-                    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 35) {
-                      if (deltaX < 0) {
-                        handleNextCard();
-                      } else {
-                        handlePrevCard();
-                      }
-                    }
-                    cardTouchStart.current = null;
-                  }}
-                >
-                  {/* Floating Page Flip Buttons (Left/Prev & Right/Next) */}
-                  {currentPageIndex > 0 && (
-                    <button
-                      type="button"
-                      className="diary-flip-nav-btn prev font-ui"
-                      onClick={handlePrevCard}
-                      aria-label="Previous Day"
-                      title="Previous Day"
-                    >
-                      <CaretLeft size={20} weight="bold" />
-                    </button>
-                  )}
+                    {composerError && <p className="diary-creator-error font-ui">{composerError}</p>}
 
-                  {currentPageIndex < totalPages - 1 && (
-                    <button
-                      type="button"
-                      className="diary-flip-nav-btn next font-ui"
-                      onClick={handleNextCard}
-                      aria-label="Next Day"
-                      title="Next Day"
-                    >
-                      <CaretRight size={20} weight="bold" />
-                    </button>
-                  )}
-
-                  {/* Underlying stack shadow effect */}
-                  <div className="diary-card-stack-underlay" />
-
-                  <div
-                    key={currentDayCard?.dayKey || currentPageIndex}
-                    className={`diary-day-card ${isPeeling ? `peeling-${peelDirection}` : ''}`}
-                  >
-                    {/* Top-Left Date Header using --font-display */}
-                    <div className="diary-card-top-row">
-                      <h2 className="diary-card-date font-display">
-                        {currentDayCard?.dateLabel || 'Today'}
-                      </h2>
+                    <div className="diary-creator-footer">
                       <button
                         type="button"
-                        className="diary-card-counter font-ui"
-                        onClick={handleNextCard}
-                        title={currentPageIndex < totalPages - 1 ? 'Click to flip next page' : 'Last page'}
+                        className="diary-creator-save-btn font-ui"
+                        onClick={handleSaveEntry}
+                        disabled={isSubmitting || !selectedPhotoFile}
                       >
-                        <span>{currentPageIndex + 1} / {totalPages}</span>
-                        {currentPageIndex < totalPages - 1 && <CaretRight size={10} weight="bold" />}
+                        <Check size={16} weight="bold" />
+                        <span>{isSubmitting ? 'Uploading...' : 'Save Moment'}</span>
                       </button>
                     </div>
-
-                    <div className="diary-card-divider" />
-
-                    {/* Day Entries List */}
-                    <div className="diary-card-moments-scroll">
-                      {(currentDayCard?.items || []).map((entry) => {
-                        if (!entry) return null;
-                        const isMine = Boolean(entry.isMine);
-                        const timeStr = entry.createdAt
-                          ? new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                          : '';
-
-                        const sourceType = (entry.sourceType || 'MESSAGE').toUpperCase();
-
-                        return (
-                          <div key={entry.id || Math.random()} className={`diary-moment-item type-${sourceType.toLowerCase()}`}>
-                            {/* Moment Header: Saved by & Delete icon */}
-                            <div className="diary-moment-meta">
-                              <span className="diary-moment-author font-ui">
-                                <span className="diary-author-dot" />
-                                <span>{isMine ? 'Saved by you' : `Saved by ${entry.savedByName || partnerName || 'Partner'}`}</span>
-                                {timeStr && <span className="diary-moment-time">· {timeStr}</span>}
-                              </span>
-
-                              {isMine && entry.id && (
-                                <button
-                                  type="button"
-                                  className="diary-moment-del-btn"
-                                  onClick={() => handleDeleteEntry(entry.id)}
-                                  title="Delete this moment"
-                                  aria-label="Delete this moment"
-                                >
-                                  <Trash size={14} />
-                                </button>
-                              )}
-                            </div>
-
-                            {/* 1. Saved Chat Message (Quote Box) */}
-                            {sourceType === 'MESSAGE' && entry.content && (
-                              <div className="diary-quote-box">
-                                <Quotes size={18} weight="fill" className="diary-quote-mark" />
-                                <div className="diary-quote-content">
-                                  <p className="diary-quote-text font-body">{entry.content}</p>
-                                  {entry.caption && (
-                                    <p className="diary-quote-caption font-ui">{entry.caption}</p>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* 2. Written Note (Warm Display Font) */}
-                            {sourceType === 'NOTE' && entry.content && (
-                              <div className="diary-note-box">
-                                <p className="diary-note-body font-display">{entry.content}</p>
-                                {entry.caption && (
-                                  <p className="diary-note-caption font-ui">{entry.caption}</p>
-                                )}
-                              </div>
-                            )}
-
-                            {/* 3. Voice Note (Waveform Ribbon) */}
-                            {sourceType === 'VOICE_NOTE' && entry.attachmentUrl && (
-                              <div className="diary-voice-moment-box">
-                                <DiaryVoiceNotePlayer url={entry.attachmentUrl} />
-                                {entry.caption && (
-                                  <p className="diary-voice-caption font-ui">{entry.caption}</p>
-                                )}
-                              </div>
-                            )}
-
-                            {/* 4. Polaroid Photo (Rotated Print with Tape) */}
-                            {sourceType === 'IMAGE' && entry.attachmentUrl && (
-                              <div className="diary-polaroid-moment">
-                                <div className="diary-polaroid-tape" />
-                                <div className="diary-polaroid-img-frame">
-                                  <ProtectedImage
-                                    src={entry.attachmentUrl}
-                                    alt="Diary Memory"
-                                    className="diary-polaroid-photo"
-                                  />
-                                </div>
-                                {entry.caption && (
-                                  <p className="diary-polaroid-note font-display">{entry.caption}</p>
-                                )}
-                              </div>
-                            )}
-
-                            {/* 5. HD Video Memory (Reel Print with Playable Video) */}
-                            {sourceType === 'VIDEO' && entry.attachmentUrl && (
-                              <div className="diary-polaroid-moment diary-video-moment">
-                                <div className="diary-polaroid-tape" />
-                                <div className="diary-video-player-frame">
-                                  <video
-                                    src={entry.attachmentUrl}
-                                    controls
-                                    playsInline
-                                    preload="metadata"
-                                    className="diary-moment-video-player"
-                                  />
-                                </div>
-                                {entry.caption && (
-                                  <p className="diary-polaroid-note font-display">{entry.caption}</p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ============================================================
-           PERSISTENT BOTTOM SLIDE-UP DATE DRAWER (In Browse State)
+           PERSISTENT BOTTOM SLIDE-UP DATE DRAWER
            ============================================================ */}
-        {viewState === 'browse' && pages && pages.length > 0 && (
+        {pages && pages.length > 0 && (
           <DiaryDateDrawer
             pages={pages}
             currentPageIndex={currentPageIndex}
