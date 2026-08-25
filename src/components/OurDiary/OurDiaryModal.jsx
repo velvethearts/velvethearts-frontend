@@ -9,7 +9,6 @@ import {
   Image as ImageIcon,
   NotePencil,
   Microphone,
-  Trash,
   Play,
   Pause,
   CalendarCheck,
@@ -23,14 +22,15 @@ import {
 import { api } from '../../lib/api';
 import { useApp } from '../../context/AppContext';
 import { getSocket } from '../../lib/socket';
+import { DiaryBookFlip } from './DiaryBookFlip';
 
 /**
  * Velvet Hearts — Our Diary Modal
- * Light Theme Aesthetic with Physical 3D Book & Live Preview Composer
+ * Realistic StPageFlip Book Engine + Live Preview Composer
  */
 
 // Voice Note Ribbon Player
-const DiaryVoiceNotePlayer = ({ url }) => {
+export const DiaryVoiceNotePlayer = ({ url }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -212,7 +212,7 @@ const DiaryDateDrawer = ({
         </button>
       </div>
 
-      {/* Weekday Strip (Always Visible) */}
+      {/* Weekday Strip */}
       <div className="diary-strip-week-row">
         {dayNames.map((dName, idx) => {
           const currentDayNum = activeDate.getDate();
@@ -242,7 +242,7 @@ const DiaryDateDrawer = ({
         })}
       </div>
 
-      {/* Full Month Calendar View (when expanded) */}
+      {/* Expanded Month Grid */}
       {isExpanded && (
         <div className="diary-calendar-expanded-view">
           <div className="diary-cal-month-nav">
@@ -302,19 +302,17 @@ export const OurDiaryModal = ({
   initialEntryId,
 }) => {
   const { showAlert, showConfirm } = useApp();
+  const bookFlipRef = useRef(null);
 
-  // Navigation: 'browse' (3D Book Cover & Flippable Day-Pages) vs 'add' (Live Preview & Composer)
+  // Navigation state: 'browse' (Realistic BookFlip View) vs 'add' (Live Preview Composer)
   const [viewState, setViewState] = useState('browse');
-  const [isBookOpen, setIsBookOpen] = useState(false);
-  const [isOpeningAnim, setIsOpeningAnim] = useState(false);
+  const [activeFlipPageIndex, setActiveFlipPageIndex] = useState(0); // 0 = Cover, 1+ = Day pages
   const [addMode, setAddMode] = useState('type'); // 'type' | 'record' | 'photo'
 
   // Entries & Grouped Day Pages
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const [isPeeling, setIsPeeling] = useState(false);
-  const [peelDirection, setPeelDirection] = useState('next'); // 'next' | 'prev'
 
   // Date Strip View Date
   const [viewDate, setViewDate] = useState(() => new Date());
@@ -337,9 +335,8 @@ export const OurDiaryModal = ({
 
   // Close Transition
   const [isClosingModal, setIsClosingModal] = useState(false);
-  const cardTouchStart = useRef(null);
 
-  // Group entries chronologically by local calendar day (oldest to newest)
+  // Group entries chronologically by calendar day
   const groupEntriesList = (entriesList) => {
     if (!entriesList || !Array.isArray(entriesList) || entriesList.length === 0) return [];
 
@@ -400,7 +397,6 @@ export const OurDiaryModal = ({
         const foundPageIdx = computedPages.findIndex(p => (p?.items || []).some(it => it?.id === initialEntryId));
         if (foundPageIdx !== -1) {
           setCurrentPageIndex(foundPageIdx);
-          setIsBookOpen(true);
           if (computedPages[foundPageIdx]?.rawDate) {
             setViewDate(new Date(computedPages[foundPageIdx].rawDate));
           }
@@ -408,7 +404,6 @@ export const OurDiaryModal = ({
         }
       }
 
-      // Default to most recent day
       if (computedPages.length > 0) {
         const latestIdx = computedPages.length - 1;
         setCurrentPageIndex(latestIdx);
@@ -428,8 +423,7 @@ export const OurDiaryModal = ({
     if (isOpen && matchId) {
       fetchEntries();
       setViewState('browse');
-      setIsBookOpen(false);
-      setIsOpeningAnim(false);
+      setActiveFlipPageIndex(0);
       setAddMode('type');
     }
   }, [isOpen, matchId]);
@@ -461,16 +455,6 @@ export const OurDiaryModal = ({
     };
   }, [isOpen, matchId]);
 
-  // Open Book with spine hinge animation
-  const handleOpenBook = () => {
-    if (isOpeningAnim || isBookOpen) return;
-    setIsOpeningAnim(true);
-    setTimeout(() => {
-      setIsBookOpen(true);
-      setIsOpeningAnim(false);
-    }, 600);
-  };
-
   // Close handler
   const handleCloseDiary = () => {
     if (isClosingModal) return;
@@ -484,15 +468,15 @@ export const OurDiaryModal = ({
 
   // Keyboard navigation
   useEffect(() => {
-    if (!isOpen || viewState === 'add' || !isBookOpen) return;
+    if (!isOpen || viewState === 'add') return;
 
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowRight') {
         e.preventDefault();
-        handleNextCard();
+        bookFlipRef.current?.flipNext();
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        handlePrevCard();
+        bookFlipRef.current?.flipPrev();
       } else if (e.key === 'Escape') {
         e.preventDefault();
         handleCloseDiary();
@@ -501,58 +485,30 @@ export const OurDiaryModal = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, viewState, isBookOpen, currentPageIndex, totalPages]);
+  }, [isOpen, viewState]);
 
-  // Page Turn / Peel Transitions
-  const handleNextCard = () => {
-    if (currentPageIndex < totalPages - 1 && !isPeeling) {
-      setPeelDirection('next');
-      setIsPeeling(true);
-      setTimeout(() => {
-        setCurrentPageIndex(prev => {
-          const nextIdx = prev + 1;
-          if (pages?.[nextIdx]?.rawDate) {
-            setViewDate(new Date(pages[nextIdx].rawDate));
-          }
-          return nextIdx;
-        });
-        setIsPeeling(false);
-      }, 350);
+  // Handle page flip events from StPageFlip engine
+  const handlePageFlipEvent = (pageIndex) => {
+    setActiveFlipPageIndex(pageIndex);
+    if (pageIndex > 0 && pageIndex <= pages.length) {
+      const dayIdx = pageIndex - 1;
+      setCurrentPageIndex(dayIdx);
+      if (pages[dayIdx]?.rawDate) {
+        setViewDate(new Date(pages[dayIdx].rawDate));
+      }
     }
   };
 
-  const handlePrevCard = () => {
-    if (currentPageIndex > 0 && !isPeeling) {
-      setPeelDirection('prev');
-      setIsPeeling(true);
-      setTimeout(() => {
-        setCurrentPageIndex(prev => {
-          const prevIdx = prev - 1;
-          if (pages?.[prevIdx]?.rawDate) {
-            setViewDate(new Date(pages[prevIdx].rawDate));
-          }
-          return prevIdx;
-        });
-        setIsPeeling(false);
-      }, 350);
+  // Turn to specific day page from Date Drawer
+  const handleSelectDayDate = (dayIndex) => {
+    setCurrentPageIndex(dayIndex);
+    if (pages[dayIndex]?.rawDate) {
+      setViewDate(new Date(pages[dayIndex].rawDate));
     }
+    bookFlipRef.current?.turnToPage(dayIndex);
   };
 
-  const handleJumpToPageIndex = (index) => {
-    if (index >= 0 && index < totalPages && index !== currentPageIndex && !isPeeling) {
-      setPeelDirection(index > currentPageIndex ? 'next' : 'prev');
-      setIsPeeling(true);
-      setTimeout(() => {
-        setCurrentPageIndex(index);
-        if (pages?.[index]?.rawDate) {
-          setViewDate(new Date(pages[index].rawDate));
-        }
-        setIsPeeling(false);
-      }, 250);
-    }
-  };
-
-  // Photo selection (Images only as per spec)
+  // Photo selection
   const handlePhotoSelect = (e) => {
     const file = e?.target?.files?.[0];
     if (!file) return;
@@ -725,8 +681,6 @@ export const OurDiaryModal = ({
 
   if (!isOpen) return null;
 
-  const currentDayCard = pages?.[currentPageIndex] || null;
-
   // Compute Today's Page data for Add Page Live Preview
   const todayRaw = new Date();
   const todayKey = `${todayRaw.getFullYear()}-${todayRaw.getMonth()}-${todayRaw.getDate()}`;
@@ -744,7 +698,7 @@ export const OurDiaryModal = ({
       <div className="diary-modal-backdrop" onClick={handleCloseDiary} />
 
       <div className="diary-modal-wrapper font-ui">
-        {/* Top Light Chrome Header Bar */}
+        {/* Top Header Bar */}
         <div className="diary-modal-header">
           <div className="diary-header-left">
             <span className="diary-header-badge font-display">
@@ -756,7 +710,7 @@ export const OurDiaryModal = ({
           <div className="diary-header-center">
             <span className="diary-header-mode-title font-display">
               {viewState === 'browse'
-                ? (!isBookOpen ? 'Our Shared Memories' : 'Browsing Memories')
+                ? (activeFlipPageIndex === 0 ? 'Our Shared Memories' : 'Browsing Memories')
                 : 'Add a Moment'}
             </span>
           </div>
@@ -764,15 +718,15 @@ export const OurDiaryModal = ({
           <div className="diary-header-right">
             {viewState === 'browse' ? (
               <>
-                {isBookOpen && (
+                {activeFlipPageIndex > 0 && (
                   <button
                     type="button"
                     className="diary-header-btn secondary font-ui"
-                    onClick={() => setIsBookOpen(false)}
+                    onClick={() => bookFlipRef.current?.turnToPage(0)}
                     title="Close book to cover"
                   >
                     <BookBookmark size={14} weight="bold" />
-                    <span>Close Cover</span>
+                    <span>Cover</span>
                   </button>
                 )}
 
@@ -795,7 +749,6 @@ export const OurDiaryModal = ({
                 className="diary-header-btn primary font-ui"
                 onClick={() => {
                   setViewState('browse');
-                  setIsBookOpen(true);
                 }}
                 title="View your diary book"
               >
@@ -819,241 +772,46 @@ export const OurDiaryModal = ({
         <div className="diary-modal-stage">
           {viewState === 'browse' ? (
             /* ==========================================================
-               SCREEN 1: BOOK PAGE — BROWSING
+               SCREEN 1: REALISTIC STPAGEFLIP BOOK ENGINE
                ========================================================== */
-            !isBookOpen ? (
-              /* Self-Contained 3D Book Graphic at Rest */
-              <div className="diary-cover-container font-ui">
-                <div className="diary-book-3d-scene">
-                  <div
-                    className={`diary-physical-book ${isOpeningAnim ? 'opening' : ''}`}
-                    onClick={handleOpenBook}
-                    title="Click to open your diary"
-                    role="button"
-                    tabIndex={0}
-                  >
-                    {/* Spine Edge on the Left */}
-                    <div className="diary-book-spine-edge" />
-
-                    {/* Book Front Hardcover */}
-                    <div className="diary-book-front-cover">
-                      <div className="diary-book-cover-inner-border">
-                        <div className="diary-book-gold-emblem">
-                          <Heart size={36} weight="duotone" />
-                        </div>
-
-                        <h2 className="diary-book-title font-display">Our Diary</h2>
-
-                        <p className="diary-book-subtitle font-display">
-                          {userName || 'You'} &amp; {partnerName || 'Partner'}
-                        </p>
-
-                        <div className="diary-book-saved-badge font-ui">
-                          <Sparkle size={12} weight="fill" />
-                          <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
-                        </div>
-
-                        <div className="diary-book-open-prompt font-ui">
-                          <span>Tap to Open</span>
-                          <CaretRight size={13} weight="bold" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Physical Paper Pages Edge (Right & Bottom Depth) */}
-                    <div className="diary-book-pages-edge" />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Open Book: Single Flippable Day-Page Card */
-              <div className="diary-open-page-container font-ui">
-                <div
-                  className="diary-day-page-wrapper"
-                  onTouchStart={(e) => {
-                    cardTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-                  }}
-                  onTouchEnd={(e) => {
-                    if (!cardTouchStart.current) return;
-                    const deltaX = e.changedTouches[0].clientX - cardTouchStart.current.x;
-                    const deltaY = e.changedTouches[0].clientY - cardTouchStart.current.y;
-                    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 35) {
-                      if (deltaX < 0) {
-                        handleNextCard();
-                      } else {
-                        handlePrevCard();
-                      }
-                    }
-                    cardTouchStart.current = null;
-                  }}
+            <div className="diary-bookflip-stage-wrapper font-ui">
+              {/* Floating Prev Arrow */}
+              {activeFlipPageIndex > 0 && (
+                <button
+                  type="button"
+                  className="diary-book-nav-arrow prev font-ui"
+                  onClick={() => bookFlipRef.current?.flipPrev()}
+                  title="Flip Previous Page"
+                  aria-label="Previous Page"
                 >
-                  {/* Floating Page Flip Nav (Prev) */}
-                  {currentPageIndex > 0 && (
-                    <button
-                      type="button"
-                      className="diary-page-nav-arrow prev font-ui"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePrevCard();
-                      }}
-                      aria-label="Previous Page"
-                      title="Previous Page"
-                    >
-                      <CaretLeft size={20} weight="bold" />
-                    </button>
-                  )}
+                  <CaretLeft size={22} weight="bold" />
+                </button>
+              )}
 
-                  {/* Floating Page Flip Nav (Next) */}
-                  {currentPageIndex < totalPages - 1 && (
-                    <button
-                      type="button"
-                      className="diary-page-nav-arrow next font-ui"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNextCard();
-                      }}
-                      aria-label="Next Page"
-                      title="Next Page"
-                    >
-                      <CaretRight size={20} weight="bold" />
-                    </button>
-                  )}
+              {/* The StPageFlip Book (Cover + Day Pages) */}
+              <DiaryBookFlip
+                ref={bookFlipRef}
+                pages={pages}
+                userName={userName}
+                partnerName={partnerName}
+                onDeleteEntry={handleDeleteEntry}
+                onPageFlip={handlePageFlipEvent}
+                VoicePlayerComponent={DiaryVoiceNotePlayer}
+              />
 
-                  {/* Clean White Day-Page Card */}
-                  <div
-                    key={currentDayCard?.dayKey || currentPageIndex}
-                    className={`diary-white-day-card ${isPeeling ? `peeling-${peelDirection}` : ''}`}
-                  >
-                    {/* Top Row: Date Header and Page Indicator */}
-                    <div className="diary-day-page-top">
-                      <h2 className="diary-day-page-date font-display">
-                        {currentDayCard?.dateLabel || 'Today'}
-                      </h2>
-
-                      <button
-                        type="button"
-                        className="diary-day-page-counter font-ui"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (currentPageIndex < totalPages - 1) handleNextCard();
-                        }}
-                        title={currentPageIndex < totalPages - 1 ? 'Flip to next day' : 'Last page'}
-                      >
-                        <span>Page {currentPageIndex + 1} of {totalPages}</span>
-                        {currentPageIndex < totalPages - 1 && <CaretRight size={11} weight="bold" />}
-                      </button>
-                    </div>
-
-                    <div className="diary-day-page-divider" />
-
-                    {/* Scrapbook Entries Area */}
-                    <div className="diary-day-page-entries-scroll">
-                      {loading ? (
-                        <div className="diary-empty-state font-ui">
-                          <Sparkle size={24} className="spin text-burgundy" />
-                          <span>Loading moments...</span>
-                        </div>
-                      ) : (!currentDayCard?.items || currentDayCard.items.length === 0) ? (
-                        <div className="diary-empty-state font-ui">
-                          <Heart size={32} weight="duotone" className="text-burgundy" />
-                          <h4 className="diary-empty-heading font-display">No moments on this day</h4>
-                          <p className="diary-empty-text font-body">
-                            Tap "+ Add Moment" above to write a note, record a voice clip, or save a photo.
-                          </p>
-                        </div>
-                      ) : (
-                        currentDayCard.items.map((entry) => {
-                          if (!entry) return null;
-                          const isMine = Boolean(entry.isMine);
-                          const timeStr = entry.createdAt
-                            ? new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                            : '';
-                          const sourceType = (entry.sourceType || 'MESSAGE').toUpperCase();
-
-                          return (
-                            <div key={entry.id || Math.random()} className={`diary-scrapbook-entry type-${sourceType.toLowerCase()}`}>
-                              <div className="diary-entry-meta-row">
-                                <span className="diary-entry-author font-ui">
-                                  <span className="diary-entry-author-dot" />
-                                  <span>{isMine ? 'Saved by you' : `Saved by ${entry.savedByName || partnerName || 'Partner'}`}</span>
-                                  {timeStr && <span className="diary-entry-time">· {timeStr}</span>}
-                                </span>
-
-                                {isMine && entry.id && (
-                                  <button
-                                    type="button"
-                                    className="diary-entry-del-btn"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteEntry(entry.id);
-                                    }}
-                                    title="Delete this moment"
-                                    aria-label="Delete this moment"
-                                  >
-                                    <Trash size={13} />
-                                  </button>
-                                )}
-                              </div>
-
-                              {/* 1. Saved Chat Message (Handwritten Quote with Quotation mark) */}
-                              {sourceType === 'MESSAGE' && entry.content && (
-                                <div className="diary-scrapbook-quote font-display">
-                                  <Quotes size={18} weight="fill" className="diary-quote-symbol" />
-                                  <div className="diary-quote-body">
-                                    <p className="diary-quote-main font-body">{entry.content}</p>
-                                    {entry.caption && (
-                                      <p className="diary-quote-sub font-ui">{entry.caption}</p>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* 2. Written Note (Warm Handwriting on Paper) */}
-                              {sourceType === 'NOTE' && entry.content && (
-                                <div className="diary-scrapbook-note">
-                                  <p className="diary-note-text font-display">{entry.content}</p>
-                                  {entry.caption && (
-                                    <p className="diary-note-sub font-ui">{entry.caption}</p>
-                                  )}
-                                </div>
-                              )}
-
-                              {/* 3. Voice Note (Blush Ribbon Waveform Player) */}
-                              {sourceType === 'VOICE_NOTE' && entry.attachmentUrl && (
-                                <div className="diary-scrapbook-voice">
-                                  <DiaryVoiceNotePlayer url={entry.attachmentUrl} />
-                                  {entry.caption && (
-                                    <p className="diary-voice-sub font-ui">{entry.caption}</p>
-                                  )}
-                                </div>
-                              )}
-
-                              {/* 4. Physical Polaroid Photo (No DRM wrapper, clean img) */}
-                              {sourceType === 'IMAGE' && entry.attachmentUrl && (
-                                <div className="diary-scrapbook-polaroid">
-                                  <div className="diary-polaroid-washi-tape" />
-                                  <div className="diary-polaroid-photo-frame">
-                                    <img
-                                      src={entry.attachmentUrl}
-                                      alt="Diary Memory"
-                                      className="diary-polaroid-img"
-                                      loading="lazy"
-                                    />
-                                  </div>
-                                  {entry.caption && (
-                                    <p className="diary-polaroid-caption font-display">{entry.caption}</p>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
+              {/* Floating Next Arrow */}
+              {activeFlipPageIndex < pages.length && (
+                <button
+                  type="button"
+                  className="diary-book-nav-arrow next font-ui"
+                  onClick={() => bookFlipRef.current?.flipNext()}
+                  title="Flip Next Page"
+                  aria-label="Next Page"
+                >
+                  <CaretRight size={22} weight="bold" />
+                </button>
+              )}
+            </div>
           ) : (
             /* ==========================================================
                SCREEN 2: ADD PAGE — COMPOSING WITH LIVE PREVIEW
@@ -1398,12 +1156,12 @@ export const OurDiaryModal = ({
           )}
         </div>
 
-        {/* Bottom Date-Strip Navigation (Browsing Mode & Book is Open) */}
-        {viewState === 'browse' && isBookOpen && pages && pages.length > 0 && (
+        {/* Bottom Date-Strip Navigation Drawer */}
+        {viewState === 'browse' && pages && pages.length > 0 && (
           <DiaryDateDrawer
             pages={pages}
             currentPageIndex={currentPageIndex}
-            onSelectDate={(idx) => handleJumpToPageIndex(idx)}
+            onSelectDate={handleSelectDayDate}
             viewDate={viewDate}
             setViewDate={setViewDate}
           />

@@ -6093,207 +6093,20 @@ html {
 }
 
 /* ==========================================================================
-   SCREEN 1: 3D BOOK COVER AT REST (LIGHT, CENTERED, PHYSICAL DEPTH)
+   SCREEN 1: REALISTIC STPAGEFLIP BOOK (STACK OF DISTINCT LEAVES)
    ========================================================================== */
-.diary-cover-container {
+.diary-bookflip-stage-wrapper {
+  position: relative;
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   margin: auto;
 }
 
-.diary-book-3d-scene {
-  perspective: 1200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.diary-physical-book {
-  position: relative;
-  width: 250px;
-  height: 350px;
-  background: #7A1D36;
-  border-radius: 6px 16px 16px 6px;
-  cursor: pointer;
-  transform-style: preserve-3d;
-  transform-origin: left center;
-  transform: rotateY(-14deg) rotateX(8deg) rotateZ(-2deg);
-  box-shadow: 18px 22px 38px rgba(74, 30, 42, 0.28), 4px 6px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.4, 1), box-shadow 0.4s ease;
-  user-select: none;
-}
-
-.diary-physical-book:hover:not(.opening) {
-  transform: rotateY(-8deg) rotateX(4deg) rotateZ(-1deg) scale(1.03);
-  box-shadow: 22px 28px 48px rgba(74, 30, 42, 0.35), 6px 8px 16px rgba(0, 0, 0, 0.14);
-}
-
-/* Spine Hinge Opening Animation */
-.diary-physical-book.opening {
-  animation: diarySpineOpen 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  pointer-events: none;
-}
-
-@keyframes diarySpineOpen {
-  0% {
-    transform: rotateY(-14deg) rotateX(8deg) rotateZ(-2deg);
-    opacity: 1;
-  }
-  50% {
-    transform: rotateY(-85deg) rotateX(2deg) rotateZ(0deg) scale(1.05);
-    opacity: 0.9;
-  }
-  100% {
-    transform: rotateY(-155deg) rotateX(0deg) rotateZ(0deg) scale(1.08);
-    opacity: 0;
-  }
-}
-
-/* Golden Spine Edge */
-.diary-book-spine-edge {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 22px;
-  background: linear-gradient(90deg, #A67C34 0%, #F4E2B8 45%, #C99E54 75%, #7A1D36 100%);
-  border-radius: 6px 0 0 6px;
-  box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.3);
-  z-index: 5;
-}
-
-/* Front Velvet Hardcover */
-.diary-book-front-cover {
-  position: absolute;
-  inset: 0;
-  left: 18px;
-  background: linear-gradient(145deg, #8B2240 0%, #6E162E 100%);
-  border-radius: 0 16px 16px 0;
-  padding: 24px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.25);
-  z-index: 4;
-}
-
-.diary-book-cover-inner-border {
-  width: 100%;
-  height: 100%;
-  border: 1.5px solid rgba(228, 200, 142, 0.6);
-  border-radius: 0 12px 12px 0;
-  padding: 20px 14px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.diary-book-gold-emblem {
-  color: #F4E2B8;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-  margin-top: 8px;
-}
-
-.diary-book-title {
-  font-size: 26px;
-  font-weight: 700;
-  color: #F4E2B8;
-  letter-spacing: 0.04em;
-  margin: 0;
-  line-height: 1.15;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
-}
-
-.diary-book-subtitle {
-  font-size: 14px;
-  font-style: italic;
-  color: #F0C4D0;
-  margin: 4px 0 0;
-  line-height: 1.3;
-}
-
-.diary-book-saved-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(244, 226, 184, 0.18);
-  border: 1px solid rgba(244, 226, 184, 0.4);
-  color: #F4E2B8;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.diary-book-open-prompt {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.15);
-  padding: 6px 14px;
-  border-radius: 20px;
-  letter-spacing: 0.02em;
-  transition: all 0.2s ease;
-}
-
-.diary-physical-book:hover .diary-book-open-prompt {
-  background: rgba(255, 255, 255, 0.25);
-  transform: scale(1.05);
-}
-
-/* Book Paper Pages Side Thickness */
-.diary-book-pages-edge {
-  position: absolute;
-  right: -8px;
-  top: 6px;
-  bottom: 6px;
-  width: 10px;
-  background: repeating-linear-gradient(
-    180deg,
-    #FFFDF9,
-    #FFFDF9 2px,
-    #E8E0D5 3px,
-    #FFFDF9 4px
-  );
-  border-radius: 0 4px 4px 0;
-  box-shadow: 3px 0 6px rgba(0, 0, 0, 0.15);
-  z-index: 2;
-}
-
-/* ==========================================================================
-   SCREEN 1: OPEN DAY-PAGE (CLEAN WHITE CARD WITH TACTILE PEEL FLIP)
-   ========================================================================== */
-.diary-open-page-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.diary-day-page-wrapper {
-  position: relative;
-  width: 100%;
-  max-width: 520px;
-  height: 480px;
-  display: flex;
-  flex-direction: column;
-  perspective: 1200px;
-}
-
 /* Floating Navigation Arrows */
-.diary-page-nav-arrow {
+.diary-book-nav-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -6308,19 +6121,19 @@ html {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 30;
+  z-index: 50;
   transition: all 0.2s ease;
 }
 
-.diary-page-nav-arrow.prev {
-  left: -22px;
+.diary-book-nav-arrow.prev {
+  left: 8px;
 }
 
-.diary-page-nav-arrow.next {
-  right: -22px;
+.diary-book-nav-arrow.next {
+  right: 8px;
 }
 
-.diary-page-nav-arrow:hover {
+.diary-book-nav-arrow:hover {
   background: var(--burgundy-600, #9B3456);
   color: #FFFFFF;
   border-color: var(--burgundy-600, #9B3456);
@@ -6328,32 +6141,427 @@ html {
   box-shadow: 0 6px 20px rgba(184, 67, 106, 0.3);
 }
 
-/* White Day-Page Card */
-.diary-white-day-card {
+/* StPageFlip Viewport & Book */
+.diary-st-pageflip-viewport {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diary-st-pageflip-book {
+  box-shadow: 0 20px 50px rgba(74, 30, 42, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 6px 14px 14px 6px;
+  background: #FFFFFF;
+}
+
+/* Individual Leaf / Page */
+.diary-leaf-page {
   position: relative;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  user-select: none;
   background: #FFFFFF;
-  border: 1px solid var(--border-subtle, #E8E3E4);
-  border-radius: 18px;
-  padding: 20px 22px;
-  box-shadow: 0 10px 30px rgba(74, 30, 42, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+/* 1. FRONT HARDCOVER LEAF */
+.diary-cover-leaf {
+  background: #7A1D36 !important;
+  border-radius: 6px 14px 14px 6px;
+  cursor: pointer;
+}
+
+.diary-cover-spine-edge {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(90deg, #A67C34 0%, #F4E2B8 45%, #C99E54 75%, #7A1D36 100%);
+  border-radius: 6px 0 0 6px;
+  box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.3);
+  z-index: 5;
+}
+
+.diary-cover-inner-panel {
+  position: absolute;
+  inset: 0;
+  left: 20px;
+  background: linear-gradient(145deg, #8B2240 0%, #6E162E 100%);
+  border-radius: 0 14px 14px 0;
+  padding: 22px 18px;
   display: flex;
   flex-direction: column;
-  z-index: 2;
-  transform-style: preserve-3d;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.25);
+  z-index: 4;
+}
+
+.diary-cover-gold-border {
+  width: 100%;
+  height: 100%;
+  border: 1.5px solid rgba(228, 200, 142, 0.65);
+  border-radius: 0 10px 10px 0;
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.diary-cover-emblem {
+  color: #F4E2B8;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  margin-top: 8px;
+}
+
+.diary-cover-main-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #F4E2B8;
+  letter-spacing: 0.04em;
+  margin: 0;
+  line-height: 1.15;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.diary-cover-names {
+  font-size: 15px;
+  font-style: italic;
+  color: #F0C4D0;
+  margin: 4px 0 0;
+  line-height: 1.3;
+}
+
+.diary-cover-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(244, 226, 184, 0.18);
+  border: 1px solid rgba(244, 226, 184, 0.4);
+  color: #F4E2B8;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.diary-cover-tap-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 6px 14px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+}
+
+.diary-cover-leaf:hover .diary-cover-tap-prompt {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(1.05);
+}
+
+/* 2. INNER WHITE DAY-PAGE LEAVES */
+.diary-inner-white-leaf {
+  background: #FFFFFF !important;
+  box-shadow: inset 20px 0 30px -15px rgba(74, 30, 42, 0.06);
+}
+
+.diary-leaf-paper-surface {
+  width: 100%;
+  height: 100%;
+  padding: 20px 22px 16px;
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+  box-sizing: border-box;
+}
+
+.diary-leaf-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.diary-leaf-date {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--burgundy-900, #3A0E1A);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.diary-leaf-counter {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--burgundy-700, #7A2842);
+  background: var(--burgundy-50, #FDF2F4);
+  padding: 3px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--burgundy-200, #F0BDC8);
+  flex-shrink: 0;
+}
+
+.diary-leaf-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--burgundy-200, #F0BDC8) 0%, transparent 85%);
+  margin: 10px 0 14px;
+  flex-shrink: 0;
+}
+
+.diary-leaf-scroll-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-right: 2px;
+}
+
+.diary-leaf-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 16px;
+  margin: auto;
+  gap: 8px;
+}
+
+.diary-leaf-empty-text {
+  font-size: 13px;
+  color: var(--text-secondary, #5A4E50);
+  margin: 0;
+}
+
+.diary-leaf-entry-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.diary-leaf-entry-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diary-leaf-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted, #998D8F);
+}
+
+.diary-leaf-author-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--burgundy-400, #D0607F);
+}
+
+.diary-leaf-time {
+  color: var(--text-muted, #998D8F);
+}
+
+.diary-leaf-del-btn {
+  background: transparent;
+  border: none;
+  color: var(--charcoal-400, #B5ABAD);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.diary-leaf-del-btn:hover {
+  color: var(--error, #C45A5A);
+}
+
+/* Scrapbook Treatments on Leaf */
+.diary-leaf-quote-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #FFF7F9;
+  border-left: 4px solid var(--burgundy-500, #B8436A);
+  border-radius: 4px 10px 10px 4px;
+  padding: 10px 14px;
+}
+
+.diary-leaf-quote-mark {
+  color: var(--burgundy-500, #B8436A);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.diary-leaf-quote-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diary-leaf-quote-text {
+  font-size: 14px;
+  font-style: italic;
+  color: #1A1517;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.diary-leaf-note-box {
+  background: #FFFAF5;
+  border: 1px dashed rgba(184, 67, 106, 0.25);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diary-leaf-note-text {
+  font-size: 15px;
+  line-height: 1.55;
+  color: #2C2426;
+  margin: 0;
+}
+
+.diary-leaf-caption {
+  font-size: 11px;
+  color: var(--burgundy-600, #9B3456);
+  font-weight: 600;
+  margin: 0;
+}
+
+.diary-leaf-voice-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diary-leaf-polaroid-box {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle, #E8E3E4);
+  border-radius: 4px;
+  padding: 8px 8px 14px 8px;
+  box-shadow: 0 4px 14px rgba(74, 30, 42, 0.1);
+  transform: rotate(-1.5deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 6px auto;
+  max-width: 280px;
+  width: 100%;
+}
+
+.diary-leaf-washi-tape {
+  position: absolute;
+  top: -7px;
+  width: 50px;
+  height: 14px;
+  background: rgba(228, 200, 142, 0.7);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transform: rotate(1deg);
+  border-radius: 2px;
+}
+
+.diary-leaf-photo-frame {
+  width: 100%;
+  height: 170px;
+  border-radius: 3px;
   overflow: hidden;
+  background: #F5F1F2;
 }
 
-/* Page Peel Transitions */
-.diary-white-day-card.peeling-next {
-  animation: pagePeelNextAnim 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-  transform-origin: bottom right;
+.diary-leaf-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-.diary-white-day-card.peeling-prev {
-  animation: pagePeelPrevAnim 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-  transform-origin: bottom left;
+.diary-leaf-polaroid-caption {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--burgundy-800, #5C1A2E);
+  margin: 8px 0 0;
+  text-align: center;
+}
+
+/* Page Footer with Turn Hint */
+.diary-leaf-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  margin-top: auto;
+  border-top: 1px dashed rgba(232, 227, 228, 0.8);
+  font-size: 11px;
+}
+
+.diary-leaf-footer-num {
+  color: var(--text-muted, #998D8F);
+  font-weight: 600;
+}
+
+.diary-leaf-curl-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--burgundy-600, #9B3456);
+  font-weight: 600;
+}
+
+/* 3. BACK COVER LEAF */
+.diary-back-cover-leaf {
+  background: #7A1D36 !important;
+  border-radius: 14px 6px 6px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diary-back-cover-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px 24px;
+  gap: 12px;
+}
+
+.diary-back-cover-emblem {
+  color: #F4E2B8;
+  opacity: 0.8;
+}
+
+.diary-back-cover-text {
+  font-size: 16px;
+  font-style: italic;
+  color: #F0C4D0;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.diary-back-cover-brand {
+  font-size: 11px;
+  font-weight: 700;
+  color: #F4E2B8;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 @keyframes pagePeelNextAnim {
