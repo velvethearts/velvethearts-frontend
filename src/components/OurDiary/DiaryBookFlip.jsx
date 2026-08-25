@@ -348,6 +348,26 @@ export const DiaryBookFlip = forwardRef(({
                             )}
                           </div>
                         )}
+
+                        {/* 5. Video Memory */}
+                        {sourceType === 'VIDEO' && entry.attachmentUrl && (
+                          <div className="diary-leaf-video-box">
+                            <div className="diary-leaf-washi-tape" />
+                            <div className="diary-leaf-video-frame">
+                              <video
+                                src={entry.attachmentUrl}
+                                controls
+                                playsInline
+                                preload="metadata"
+                                className="diary-leaf-video-element"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                            {entry.caption && (
+                              <p className="diary-leaf-polaroid-caption font-display">{entry.caption}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })

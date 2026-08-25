@@ -538,18 +538,21 @@ export const OurDiaryModal = ({
     bookFlipRef.current?.turnToPage(dayIndex);
   };
 
-  // Photo selection
+  // Photo & Video selection
   const handlePhotoSelect = (e) => {
     const file = e?.target?.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      setComposerError('Please choose a valid photo (JPG, PNG, WebP).');
+    const isImg = file.type.startsWith('image/');
+    const isVid = file.type.startsWith('video/');
+
+    if (!isImg && !isVid) {
+      setComposerError('Please choose a valid photo (JPG, PNG, WebP) or video (MP4, WebM, MOV).');
       return;
     }
 
-    if (file.size > 15 * 1024 * 1024) {
-      setComposerError('Photo must be 15MB or smaller.');
+    if (file.size > 100 * 1024 * 1024) {
+      setComposerError('Media file must be 100MB or smaller.');
       return;
     }
 
@@ -925,6 +928,22 @@ export const OurDiaryModal = ({
                                   {entry.caption && <p className="diary-polaroid-caption font-display">{entry.caption}</p>}
                                 </div>
                               )}
+
+                              {sourceType === 'VIDEO' && entry.attachmentUrl && (
+                                <div className="diary-scrapbook-video">
+                                  <div className="diary-polaroid-washi-tape" />
+                                  <div className="diary-video-photo-frame">
+                                    <video
+                                      src={entry.attachmentUrl}
+                                      controls
+                                      playsInline
+                                      preload="metadata"
+                                      className="diary-video-player-element"
+                                    />
+                                  </div>
+                                  {entry.caption && <p className="diary-polaroid-caption font-display">{entry.caption}</p>}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -965,22 +984,39 @@ export const OurDiaryModal = ({
                         )}
 
                         {addMode === 'photo' && photoPreviewUrl && (
-                          <div className="diary-scrapbook-entry type-photo live-draft">
+                          <div className={`diary-scrapbook-entry ${selectedPhotoFile?.type?.startsWith('video/') ? 'type-video' : 'type-photo'} live-draft`}>
                             <div className="diary-entry-meta-row">
                               <span className="diary-entry-author font-ui">
                                 <span className="diary-entry-author-dot draft-pulse" />
-                                <span>Selected photo</span>
+                                <span>{selectedPhotoFile?.type?.startsWith('video/') ? 'Selected video' : 'Selected photo'}</span>
                               </span>
                             </div>
-                            <div className="diary-scrapbook-polaroid draft-box">
-                              <div className="diary-polaroid-washi-tape" />
-                              <div className="diary-polaroid-photo-frame">
-                                <img src={photoPreviewUrl} alt="Draft" className="diary-polaroid-img" />
+                            {selectedPhotoFile?.type?.startsWith('video/') ? (
+                              <div className="diary-scrapbook-video draft-box">
+                                <div className="diary-polaroid-washi-tape" />
+                                <div className="diary-video-photo-frame">
+                                  <video
+                                    src={photoPreviewUrl}
+                                    controls
+                                    playsInline
+                                    className="diary-video-player-element"
+                                  />
+                                </div>
+                                {captionText.trim() && (
+                                  <p className="diary-polaroid-caption font-display">{captionText.trim()}</p>
+                                )}
                               </div>
-                              {captionText.trim() && (
-                                <p className="diary-polaroid-caption font-display">{captionText.trim()}</p>
-                              )}
-                            </div>
+                            ) : (
+                              <div className="diary-scrapbook-polaroid draft-box">
+                                <div className="diary-polaroid-washi-tape" />
+                                <div className="diary-polaroid-photo-frame">
+                                  <img src={photoPreviewUrl} alt="Draft" className="diary-polaroid-img" />
+                                </div>
+                                {captionText.trim() && (
+                                  <p className="diary-polaroid-caption font-display">{captionText.trim()}</p>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </>
@@ -1025,7 +1061,7 @@ export const OurDiaryModal = ({
                     }}
                   >
                     <ImageIcon size={16} weight="bold" />
-                    <span>Add Photo</span>
+                    <span>Photo / Video</span>
                   </button>
                 </div>
 
@@ -1131,25 +1167,35 @@ export const OurDiaryModal = ({
                   </div>
                 )}
 
-                {/* 3. ADD PHOTO */}
+                {/* 3. ADD PHOTO / VIDEO */}
                 {addMode === 'photo' && (
                   <div className="diary-composer-form">
                     {!selectedPhotoFile ? (
                       <label className="diary-photo-upload-zone">
                         <input
                           type="file"
-                          accept="image/png,image/jpeg,image/webp"
+                          accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/mov"
                           className="diary-hidden-file-input"
                           onChange={handlePhotoSelect}
                         />
                         <UploadSimple size={26} weight="bold" className="text-burgundy" />
-                        <span className="diary-photo-upload-title font-ui">Choose a photo</span>
-                        <span className="diary-photo-upload-sub font-ui">JPG, PNG, WebP up to 15MB</span>
+                        <span className="diary-photo-upload-title font-ui">Choose a photo or video</span>
+                        <span className="diary-photo-upload-sub font-ui">JPG, PNG, MP4, WebM up to 100MB</span>
                       </label>
                     ) : (
                       <div className="diary-photo-thumb-container">
                         <div className="diary-photo-thumb-frame">
-                          <img src={photoPreviewUrl} alt="Selected" className="diary-photo-thumb-img" />
+                          {selectedPhotoFile?.type?.startsWith('video/') ? (
+                            <video
+                              src={photoPreviewUrl}
+                              controls
+                              playsInline
+                              className="diary-photo-thumb-img"
+                              style={{ maxHeight: '180px', width: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <img src={photoPreviewUrl} alt="Selected" className="diary-photo-thumb-img" />
+                          )}
                           <button
                             type="button"
                             className="diary-photo-thumb-remove"
@@ -1167,7 +1213,7 @@ export const OurDiaryModal = ({
                     <input
                       type="text"
                       className="diary-form-caption font-ui"
-                      placeholder="Optional caption for this photo..."
+                      placeholder="Optional caption for this photo or video..."
                       value={captionText}
                       onChange={(e) => setCaptionText(e.target.value)}
                       maxLength={500}
@@ -1183,7 +1229,7 @@ export const OurDiaryModal = ({
                         disabled={isSubmitting || !selectedPhotoFile}
                       >
                         <Check size={16} weight="bold" />
-                        <span>{isSubmitting ? 'Uploading...' : 'Save Photo'}</span>
+                        <span>{isSubmitting ? 'Saving...' : 'Save to Today’s Page'}</span>
                       </button>
                     </div>
                   </div>

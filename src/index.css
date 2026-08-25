@@ -6790,6 +6790,48 @@ html {
   color: #5C1A2E;
 }
 
+/* Video Memory on Day Leaves */
+.diary-leaf-video-box {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid #E8E3E4;
+  border-radius: 4px;
+  padding: 7px 7px 9px 7px;
+  box-shadow: 0 3px 10px rgba(74, 30, 42, 0.1);
+  transform: rotate(-0.8deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 4px auto;
+  max-width: 255px;
+  width: 100%;
+}
+
+[data-theme="dark"] .diary-leaf-video-box {
+  background: #FFFFFF;
+  border-color: #E8E3E4;
+  box-shadow: 0 3px 10px rgba(74, 30, 42, 0.1);
+}
+
+.diary-leaf-video-frame {
+  width: 100%;
+  max-height: 155px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #180C11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diary-leaf-video-element {
+  width: 100%;
+  max-height: 155px;
+  border-radius: 2px;
+  object-fit: contain;
+  background: #180C11;
+}
+
 /* Page Footer with Turn Hint */
 .diary-leaf-footer {
   display: flex;
@@ -7338,6 +7380,48 @@ html {
 
 [data-theme="dark"] .diary-polaroid-caption {
   color: #5C1A2E;
+}
+
+/* Scrapbook Video Memory in Preview */
+.diary-scrapbook-video {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid #E8E3E4;
+  border-radius: 6px;
+  padding: 8px 8px 12px 8px;
+  box-shadow: 0 4px 14px rgba(74, 30, 42, 0.12);
+  transform: rotate(-0.8deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 6px auto;
+  max-width: 270px;
+  width: 100%;
+}
+
+[data-theme="dark"] .diary-scrapbook-video {
+  background: #FFFFFF;
+  border-color: #E8E3E4;
+  box-shadow: 0 4px 14px rgba(74, 30, 42, 0.12);
+}
+
+.diary-video-photo-frame {
+  width: 100%;
+  max-height: 165px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #180C11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diary-video-player-element {
+  width: 100%;
+  max-height: 165px;
+  border-radius: 3px;
+  object-fit: contain;
+  background: #180C11;
 }
 
 /* Empty State */
