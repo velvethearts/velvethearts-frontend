@@ -597,9 +597,12 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
           {step === 'camera' && (
             <div className="photo-verify-camera-step">
               <div className="photo-verify-camera-banner">
-                <span className="photo-verify-banner-title">
-                  Position your face in the oval and look at the camera
-                </span>
+                <h3 className="photo-verify-scan-title font-display">
+                  Live Face Scan
+                </h3>
+                <p className="photo-verify-scan-subtitle font-body">
+                  Align your face within the oval and look straight into the camera
+                </p>
               </div>
 
               {/* Viewfinder Container */}
@@ -612,8 +615,8 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                   className="photo-verify-video-element"
                 />
 
-                {/* Biometric Face Scan Overlay */}
-                <PoseGuideOverlay instruction="Center face in oval" />
+                {/* Centered Biometric Face Scan Overlay */}
+                <PoseGuideOverlay />
 
                 {/* Countdown Overlay (3, 2, 1) */}
                 {countdown !== null && (

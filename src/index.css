@@ -10021,51 +10021,52 @@ html {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-}
-
-.photo-verify-instruction-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--rose-100, #FFF5F7);
-  border: 1px solid rgba(184, 67, 106, 0.2);
-  padding: 8px 14px;
-  border-radius: var(--radius-full);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--burgundy-800, #7A2842);
+  gap: 14px;
   width: 100%;
-  box-sizing: border-box;
-  justify-content: center;
 }
 
-[data-theme="dark"] .photo-verify-instruction-bar {
-  background: rgba(184, 67, 106, 0.15);
-  color: #F8B4C4;
+.photo-verify-camera-banner {
+  text-align: center;
+  max-width: 320px;
+}
+
+.photo-verify-scan-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.photo-verify-scan-subtitle {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 4px 0 0;
 }
 
 .photo-verify-viewfinder-wrap {
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: 290px;
+  height: 290px;
   max-width: 100%;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl, 20px);
   overflow: hidden;
   background: #000000;
+  border: 1.5px solid rgba(212, 173, 106, 0.45);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(184, 67, 106, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.photo-verify-video {
+.photo-verify-video-element {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transform: scaleX(-1);
 }
 
-/* Pose Guide SVG Overlay */
 .pose-guide-overlay-container {
   position: absolute;
   inset: 0;
@@ -10075,13 +10076,13 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2;
+  z-index: 5;
 }
 
 .pose-guide-svg {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  display: block;
 }
 
 /* Biometric Face Scan Animation */
