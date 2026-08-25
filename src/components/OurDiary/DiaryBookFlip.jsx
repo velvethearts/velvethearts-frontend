@@ -341,7 +341,7 @@ export const DiaryBookFlip = forwardRef(({
                               title="Delete this memory"
                               aria-label="Delete this memory"
                             >
-                              <Trash size={12} weight="bold" />
+                              <Trash size={16} weight="bold" />
                             </button>
                           )}
                         </div>

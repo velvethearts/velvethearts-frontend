@@ -6752,38 +6752,46 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgba(184, 67, 106, 0.1);
-  color: #B8436A;
-  border: 1px solid rgba(184, 67, 106, 0.2);
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 8px;
+  background: #FFE8ED;
+  color: #D03050;
+  border: 1.5px solid #F8B4C4;
+  box-shadow: 0 2px 6px rgba(208, 48, 80, 0.12);
   cursor: pointer;
   padding: 0;
   pointer-events: auto;
   position: relative;
-  z-index: 30;
-  transition: all 0.15s ease;
+  z-index: 50;
+  touch-action: manipulation;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   margin-left: auto;
 }
 
-.diary-leaf-del-btn:hover {
-  background: #B8436A;
+.diary-leaf-del-btn:hover,
+.diary-leaf-del-btn:active {
+  background: #D03050;
   color: #FFFFFF;
-  border-color: #B8436A;
-  transform: scale(1.12);
+  border-color: #D03050;
+  transform: scale(1.1);
+  box-shadow: 0 4px 10px rgba(208, 48, 80, 0.28);
 }
 
 [data-theme="dark"] .diary-leaf-del-btn {
-  background: rgba(245, 198, 211, 0.15);
-  color: #F5C6D3;
-  border-color: rgba(245, 198, 211, 0.3);
+  background: #38121C;
+  color: #FF708F;
+  border-color: #7A283C;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-[data-theme="dark"] .diary-leaf-del-btn:hover {
-  background: #B8436A;
+[data-theme="dark"] .diary-leaf-del-btn:hover,
+[data-theme="dark"] .diary-leaf-del-btn:active {
+  background: #D03050;
   color: #FFFFFF;
-  border-color: #B8436A;
+  border-color: #D03050;
 }
 
 /* Scrapbook Treatments on Paper */
