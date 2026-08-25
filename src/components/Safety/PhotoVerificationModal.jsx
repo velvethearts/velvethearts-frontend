@@ -128,42 +128,68 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
     if (countdown !== null) return;
     setCountdown(3);
 
+    let current = 3;
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+
     countdownIntervalRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownIntervalRef.current);
-          captureSnapshot();
-          return null;
-        }
-        return prev - 1;
-      });
+      current -= 1;
+      if (current <= 0) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+        setCountdown(null);
+        captureSnapshot();
+      } else {
+        setCountdown(current);
+      }
     }, 1000);
   };
 
   const captureSnapshot = () => {
-    if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const size = Math.min(video.videoWidth || 480, video.videoHeight || 480);
+    if (!video) {
+      console.warn('captureSnapshot: video element missing');
+      return;
+    }
+
+    let canvas = canvasRef.current;
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+    }
+
+    const vw = video.videoWidth || video.clientWidth || 640;
+    const vh = video.videoHeight || video.clientHeight || 480;
+
+    const size = Math.min(vw, vh);
+    const sx = Math.max(0, (vw - size) / 2);
+    const sy = Math.max(0, (vh - size) / 2);
 
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Center crop to 1:1 square
-    const sx = ((video.videoWidth || size) - size) / 2;
-    const sy = ((video.videoHeight || size) - size) / 2;
+    try {
+      ctx.save();
+      // Mirror horizontally for natural selfie orientation (matching scaleX(-1))
+      ctx.translate(size, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+      ctx.restore();
 
-    // Mirror horizontally for natural selfie orientation
-    ctx.translate(size, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
-
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-    setCapturedImage(dataUrl);
-    stopCamera();
-    setStep('preview');
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      if (dataUrl && dataUrl.length > 200) {
+        setCapturedImage(dataUrl);
+        setStep('preview');
+      } else {
+        console.error('Failed to generate image dataUrl');
+      }
+    } catch (err) {
+      console.error('Error during canvas drawImage/toDataURL:', err);
+    } finally {
+      setTimeout(() => {
+        stopCamera();
+      }, 100);
+    }
   };
 
   const handleFileUploadFallback = (e) => {
@@ -441,6 +467,9 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
             </div>
           )}
         </div>
+
+        {/* Persistent Hidden Canvas for Frame Capture */}
+        <canvas ref={canvasRef} style={{ display: 'none' }} />
       </div>
     </div>
   );
