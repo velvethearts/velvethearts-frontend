@@ -9,9 +9,10 @@ import { Select } from '../../components/UI/Select';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { VoiceRecorder } from '../../components/UI/VoiceRecorder';
 import { getDefaultAvatar } from '../../utils/avatar';
+import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageFingerprint';
 
 export const OnboardingFlow = () => {
-    const { completeOnboarding, logout, showConfirm } = useApp();
+    const { completeOnboarding, logout, showConfirm, showAlert } = useApp();
 
     const DRAFT_KEY = 'vh-onboarding-draft';
 
@@ -172,18 +173,28 @@ export const OnboardingFlow = () => {
         setPhotoUploadError('');
         setUploadingCount(prev => prev + files.length);
 
+        let currentPreviews = [...photoPreviews];
+
         for (const file of files) {
             try {
-                // Upload to Cloudinary via the backend and store only the
-                // returned secure URL — never send raw/base64 image data
-                // in the profile save payload, it blows past the JSON
-                // body-size limit (especially full-resolution phone photos).
+                // 1. Check for duplicate image against existing photos and already processed files in current batch
+                const duplicateCheck = await checkPhotoDuplicate(file, currentPreviews);
+                if (duplicateCheck.isDuplicate) {
+                    setPhotoUploadError(DUPLICATE_PHOTO_MESSAGE);
+                    if (showAlert) {
+                        showAlert({
+                            title: 'Duplicate Photo',
+                            message: DUPLICATE_PHOTO_MESSAGE
+                        });
+                    }
+                    continue;
+                }
+
+                // 2. Upload to Cloudinary via the backend and store only the returned secure URL
                 const result = await api.uploadPhoto(file);
-                setPhotoPreviews(prev => {
-                    const next = [...prev, result.secureUrl].slice(0, 6);
-                    handleChange('photos', next);
-                    return next;
-                });
+                currentPreviews = [...currentPreviews, result.secureUrl].slice(0, 6);
+                setPhotoPreviews(currentPreviews);
+                handleChange('photos', currentPreviews);
             } catch (err) {
                 console.error('Photo upload failed:', err);
                 const isModerationErr = err?.message?.toLowerCase().includes('inappropriate') || err?.message?.toLowerCase().includes('explicit') || err?.message?.toLowerCase().includes('moderation');

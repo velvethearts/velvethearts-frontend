@@ -10,6 +10,7 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import { VoiceRecorder } from '../../components/UI/VoiceRecorder';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getProfilePhoto, extractPhotoUrls } from '../../utils/avatar';
+import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageFingerprint';
 
 export const EditProfile = ({ onBack }) => {
   const { userProfile, setUserProfile, updateUserProfile, showAlert } = useApp();
@@ -234,6 +235,22 @@ export const EditProfile = ({ onBack }) => {
   const handlePhotoUpload = async (e, index) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // 1. Check for duplicate image against existing photos in other slots
+    const otherPhotos = (localProfile.photos || []).filter((_, i) => i !== index);
+    const duplicateCheck = await checkPhotoDuplicate(file, otherPhotos);
+    if (duplicateCheck.isDuplicate) {
+      if (showAlert) {
+        showAlert({
+          title: 'Duplicate Photo',
+          message: DUPLICATE_PHOTO_MESSAGE,
+        });
+      } else {
+        alert(DUPLICATE_PHOTO_MESSAGE);
+      }
+      if (e.target) e.target.value = '';
+      return;
+    }
 
     setUploadProgress({ index, percent: 30 });
 
