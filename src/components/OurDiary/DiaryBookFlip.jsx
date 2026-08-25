@@ -199,24 +199,28 @@ export const DiaryBookFlip = forwardRef(({
           <div className="diary-cover-spine-edge" />
           <div className="diary-cover-inner-panel">
             <div className="diary-cover-gold-border">
-              <div className="diary-cover-emblem">
-                <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-cover-logo-img" />
+              <div className="diary-cover-center-content">
+                <div className="diary-cover-emblem">
+                  <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-cover-logo-img" />
+                </div>
+
+                <h2 className="diary-cover-main-title font-display">Our Diary</h2>
+
+                <p className="diary-cover-names font-display">
+                  {userName || 'You'} &amp; {partnerName || 'Partner'}
+                </p>
               </div>
 
-              <h2 className="diary-cover-main-title font-display">Our Diary</h2>
+              <div className="diary-cover-bottom-group font-ui">
+                <div className="diary-cover-count-badge font-ui">
+                  <Sparkle size={11} weight="fill" />
+                  <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
+                </div>
 
-              <p className="diary-cover-names font-display">
-                {userName || 'You'} &amp; {partnerName || 'Partner'}
-              </p>
-
-              <div className="diary-cover-count-badge font-ui">
-                <Sparkle size={11} weight="fill" />
-                <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
-              </div>
-
-              <div className="diary-cover-tap-prompt font-ui">
-                <span>Tap to open</span>
-                <CaretRight size={12} weight="bold" />
+                <div className="diary-cover-tap-prompt font-ui">
+                  <span>Tap to open</span>
+                  <CaretRight size={12} weight="bold" />
+                </div>
               </div>
             </div>
           </div>
