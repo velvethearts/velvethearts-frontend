@@ -626,7 +626,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                         <h3 className="match-card-name font-display">{conn.name}</h3>
                         <span className="match-card-age font-ui">, {conn.age}</span>
                         {conn.verified && (
-                          <VerifiedBadge variant="icon" size="sm" />
+                          <VerifiedBadge variant="icon" size="md" />
                         )}
                         {vibeScore > 0 && (
                           <span className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Match`}>
@@ -783,7 +783,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                         <h3 className="received-name font-display">{profile.name}</h3>
                         <span className="received-age font-ui">, {profile.age}</span>
                         {profile.verified && (
-                          <VerifiedBadge variant="icon" size="sm" />
+                          <VerifiedBadge variant="icon" size="md" />
                         )}
                         {vibeScore > 0 && (
                           <span className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Match`}>
@@ -880,7 +880,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
                         <span className="pending-name font-display">{profile.name}</span>
                         <span className="pending-age font-ui">, {profile.age}</span>
                         {profile.verified && (
-                          <VerifiedBadge variant="icon" size="sm" />
+                          <VerifiedBadge variant="icon" size="md" />
                         )}
                         {vibeScore > 0 && (
                           <span className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Match`}>

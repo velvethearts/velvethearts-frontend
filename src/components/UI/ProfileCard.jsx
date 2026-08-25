@@ -239,7 +239,7 @@ export const ProfileCard = ({
             <h3 className="card-name font-display">{profile.name}</h3>
             <span className="card-age font-ui">, {profile.age}</span>
             {profile.verified && (
-              <VerifiedBadge variant="icon" size="sm" />
+              <VerifiedBadge variant="icon" size="md" />
             )}
             {vibeScore > 0 && (
               <span className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Match`}>

@@ -59,7 +59,7 @@ export const VerifiedBadge = ({
   };
 
   if (variant === 'icon') {
-    const iconSize = size === 'sm' ? 16 : size === 'lg' ? 22 : 18;
+    const iconSize = size === 'sm' ? 19 : size === 'lg' ? 26 : 22;
     return (
       <span
         className={`vh-verified-icon-wrap vh-verified-size-${size} ${className}`}
@@ -94,7 +94,7 @@ export const VerifiedBadge = ({
       title="Photo Verified by Velvet Hearts"
       aria-label="Verified Profile"
     >
-      <VerifiedBadgeIcon size={size === 'sm' ? 13 : 15} />
+      <VerifiedBadgeIcon size={size === 'sm' ? 15 : 17} />
       <span className="vh-verified-text">Verified</span>
 
       {showTooltip && (
