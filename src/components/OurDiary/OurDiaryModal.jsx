@@ -303,11 +303,11 @@ export const OurDiaryModal = ({
   // Modal Close Transition
   const [isClosingModal, setIsClosingModal] = useState(false);
 
-  // Group entries by local calendar day (oldest to newest)
-  const pages = useMemo(() => {
-    if (!entries || !Array.isArray(entries) || entries.length === 0) return [];
+  // Helper function to group entries by local calendar day (oldest to newest)
+  const groupEntriesList = (entriesList) => {
+    if (!entriesList || !Array.isArray(entriesList) || entriesList.length === 0) return [];
 
-    const sorted = [...entries].sort((a, b) => {
+    const sorted = [...entriesList].sort((a, b) => {
       const timeA = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
       const timeB = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
       return timeA - timeB;
@@ -343,7 +343,10 @@ export const OurDiaryModal = ({
       items: dayGroup.items || [],
       pageNumber: index + 1
     }));
-  }, [entries]);
+  };
+
+  // Group entries by local calendar day (oldest to newest)
+  const pages = useMemo(() => groupEntriesList(entries), [entries]);
 
   const totalPages = Math.max(pages.length, 1);
 
@@ -353,26 +356,28 @@ export const OurDiaryModal = ({
     try {
       if (!isBackground) setLoading(true);
       const data = await api.getDiaryEntries(matchId);
-      const list = data?.entries || [];
-      setEntries(Array.isArray(list) ? list : []);
+      const list = Array.isArray(data?.entries) ? data.entries : [];
+      setEntries(list);
+
+      const computedPages = groupEntriesList(list);
 
       if (initialEntryId) {
-        const foundPageIdx = (pages || []).findIndex(p => (p?.items || []).some(it => it?.id === initialEntryId));
+        const foundPageIdx = computedPages.findIndex(p => (p?.items || []).some(it => it?.id === initialEntryId));
         if (foundPageIdx !== -1) {
           setCurrentPageIndex(foundPageIdx);
-          if (pages[foundPageIdx]?.rawDate) {
-            setViewDate(new Date(pages[foundPageIdx].rawDate));
+          if (computedPages[foundPageIdx]?.rawDate) {
+            setViewDate(new Date(computedPages[foundPageIdx].rawDate));
           }
           return;
         }
       }
 
       // Default to most recent day
-      if (pages.length > 0) {
-        const latestIdx = pages.length - 1;
+      if (computedPages.length > 0) {
+        const latestIdx = computedPages.length - 1;
         setCurrentPageIndex(latestIdx);
-        if (pages[latestIdx]?.rawDate) {
-          setViewDate(new Date(pages[latestIdx].rawDate));
+        if (computedPages[latestIdx]?.rawDate) {
+          setViewDate(new Date(computedPages[latestIdx].rawDate));
         }
       }
     } catch (err) {

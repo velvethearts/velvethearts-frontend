@@ -582,7 +582,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
       );
       setSavingToDiaryMsg(null);
       setDiarySaveCaption('');
-      if (showAlert) showAlert({ title: 'Saved to Our Diary ✨', message: 'This moment has been added to your shared scrapbook.' });
+      setShowOurDiary(true);
     } catch (err) {
       console.error('Error saving message to diary:', err);
       if (showAlert) showAlert({ title: 'Save Failed', message: err?.message || 'Failed to save moment to diary.' });
