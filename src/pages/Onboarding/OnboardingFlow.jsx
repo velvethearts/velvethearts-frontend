@@ -200,6 +200,8 @@ export const OnboardingFlow = () => {
                 currentPreviews = [...currentPreviews, result.secureUrl].slice(0, 6);
                 setPhotoPreviews(currentPreviews);
                 handleChange('photos', currentPreviews);
+                // Reset verified badge whenever photos are modified so it re-checks against the active primary photo
+                setFormData(prev => ({ ...prev, verified: false }));
             } catch (err) {
                 console.error('Photo upload failed:', err);
                 const isModerationErr = err?.message?.toLowerCase().includes('inappropriate') || err?.message?.toLowerCase().includes('explicit') || err?.message?.toLowerCase().includes('moderation');
@@ -217,6 +219,8 @@ export const OnboardingFlow = () => {
         setPhotoPreviews(prev => {
             const next = prev.filter((_, i) => i !== index);
             handleChange('photos', next);
+            // Reset verified status if primary photo was removed
+            setFormData(p => ({ ...p, verified: false }));
             return next;
         });
     };
