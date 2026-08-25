@@ -9880,52 +9880,64 @@ html {
 }
 
 .photo-verify-card {
+  position: relative;
   max-width: 440px;
-  width: 92%;
-  border-radius: var(--radius-lg);
+  width: 94%;
+  background: linear-gradient(165deg, rgba(32, 22, 26, 0.98) 0%, rgba(18, 14, 16, 0.98) 100%);
+  border: 1px solid rgba(212, 173, 106, 0.45);
+  border-radius: var(--radius-xl, 24px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(184, 67, 106, 0.2);
   overflow: hidden;
   padding: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: vhModalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .photo-verify-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4) var(--space-4) var(--space-3);
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.photo-verify-title-group {
+.photo-verify-title-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.photo-verify-title {
-  font-size: 1.15rem;
+.photo-verify-modal-title {
+  font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--text-primary, #FFFFFF);
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .photo-verify-close-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--duration-fast);
 }
 
 .photo-verify-close-btn:hover {
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  transform: scale(1.05);
 }
 
 .photo-verify-body {
-  padding: var(--space-4);
+  padding: 24px;
   display: flex;
   flex-direction: column;
 }
@@ -9941,77 +9953,62 @@ html {
   gap: var(--space-3);
 }
 
+.photo-verify-shield-badge-hero {
+  display: flex;
+  justify-content: center;
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+
+.photo-verify-rosette-glow {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-verify-sparkle-halo {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #D4AD6A, #B8436A);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
 .photo-verify-headline {
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .photo-verify-desc {
-  font-size: var(--text-body-sm);
+  font-size: 0.88rem;
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
-  max-width: 360px;
-}
-
-.photo-verify-pose-teaser {
-  width: 100%;
-  margin: var(--space-2) 0;
-}
-
-.photo-verify-pose-badge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--rose-100, #FFF5F7);
-  border: 1px dashed rgba(184, 67, 106, 0.35);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  text-align: left;
-}
-
-[data-theme="dark"] .photo-verify-pose-badge {
-  background: rgba(184, 67, 106, 0.1);
-  border-color: rgba(184, 67, 106, 0.3);
-}
-
-.photo-verify-pose-emoji {
-  font-size: 32px;
-  line-height: 1;
-}
-
-.photo-verify-pose-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.photo-verify-pose-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--burgundy-700, #8B263E);
-}
-
-[data-theme="dark"] .photo-verify-pose-label {
-  color: #F8B4C4;
-}
-
-.photo-verify-pose-name {
-  font-size: 13px;
-  color: var(--text-primary);
-  font-weight: 600;
+  max-width: 380px;
 }
 
 .photo-verify-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 10px;
   width: 100%;
-  margin-top: var(--space-2);
+  margin-top: 8px;
+}
+
+.photo-verify-actions .btn-primary {
+  background: linear-gradient(135deg, #B8436A 0%, #D4AD6A 100%) !important;
+  box-shadow: 0 6px 20px rgba(184, 67, 106, 0.4) !important;
+  border: none !important;
 }
 
 .photo-verify-btn-full {
