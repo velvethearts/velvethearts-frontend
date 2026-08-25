@@ -6884,7 +6884,8 @@ html {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 210px;
 }
 
 .diary-live-preview-tag {
@@ -6902,23 +6903,23 @@ html {
   color: #F5C6D3;
 }
 
-/* Live Preview Page: Spacious Warm Paper (Matches Profile Card Aesthetic) */
+/* Live Preview Page: Large, Spacious Warm Paper (Profile Prompt Card Quality) */
 .diary-live-preview-page-mock {
   background: #FFFDF9 !important;
-  border: 1.5px solid #E8E3E4;
-  border-radius: 14px;
-  padding: 14px 16px;
-  box-shadow: 0 4px 16px rgba(74, 30, 42, 0.08);
+  border: 1.5px solid #F0BDC8;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 6px 20px rgba(74, 30, 42, 0.1);
+  flex: 1;
   min-height: 190px;
-  max-height: 250px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
 [data-theme="dark"] .diary-live-preview-page-mock {
-  border-color: #4A2330;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  border-color: #5A2A3B;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
 .diary-day-page-top {
@@ -6926,22 +6927,22 @@ html {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .diary-live-preview-page-mock .diary-day-page-date {
   color: #3A0E1A !important;
-  font-size: 15.5px;
+  font-size: 16.5px;
   font-weight: 700;
   margin: 0;
 }
 
 .diary-live-preview-page-mock .diary-live-draft-badge {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   color: #7A2842;
   background: #FDF2F4;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 10px;
   border: 1px solid #F0BDC8;
 }
@@ -6949,7 +6950,7 @@ html {
 .diary-day-page-divider {
   height: 1px;
   background: linear-gradient(90deg, #F0BDC8 0%, transparent 85%);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   flex-shrink: 0;
 }
 
@@ -6957,7 +6958,7 @@ html {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   overflow-y: auto;
 }
 
@@ -6965,7 +6966,7 @@ html {
 .diary-scrapbook-entry {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   width: 100%;
 }
 
@@ -6979,7 +6980,7 @@ html {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   color: #8C7D80;
 }
@@ -7004,11 +7005,12 @@ html {
 .diary-scrapbook-quote {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  background: #FFF5F7;
-  border-left: 3.5px solid #B8436A;
-  border-radius: 4px 8px 8px 4px;
-  padding: 10px 12px;
+  gap: 10px;
+  background: #FFF7F9;
+  border-left: 4px solid #B8436A;
+  border-radius: 4px 12px 12px 4px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(184, 67, 106, 0.08);
 }
 
 .diary-quote-symbol {
@@ -7020,49 +7022,50 @@ html {
 .diary-quote-body {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .diary-quote-main {
-  font-size: 14px;
+  font-size: 15px;
   font-style: italic;
   color: #2C1820 !important;
-  line-height: 1.45;
+  line-height: 1.5;
   margin: 0;
 }
 
 .diary-quote-sub {
-  font-size: 11px;
+  font-size: 11.5px;
   color: #9B3456;
   font-weight: 600;
   margin: 0;
 }
 
 .diary-scrapbook-note {
-  background: #FFF9F2;
-  border: 1px dashed rgba(184, 67, 106, 0.28);
-  border-radius: 8px;
-  padding: 10px 12px;
+  background: #FFFAF5;
+  border: 1.5px dashed rgba(184, 67, 106, 0.35);
+  border-radius: 12px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(74, 30, 42, 0.05);
 }
 
 .diary-scrapbook-note.draft-box {
   border-color: #B8436A;
   background: #FFF5F8;
-  box-shadow: 0 2px 8px rgba(184, 67, 106, 0.12);
+  box-shadow: 0 3px 12px rgba(184, 67, 106, 0.16);
 }
 
 .diary-note-text {
-  font-size: 14.5px;
-  line-height: 1.5;
+  font-size: 15.5px;
+  line-height: 1.55;
   color: #2C1820 !important;
   margin: 0;
 }
 
 .diary-note-sub {
-  font-size: 11px;
+  font-size: 11.5px;
   color: #9B3456;
   font-weight: 600;
   margin: 0;
@@ -7075,7 +7078,7 @@ html {
 }
 
 .diary-voice-sub {
-  font-size: 11px;
+  font-size: 11.5px;
   color: #9B3456;
   font-weight: 600;
   margin: 0;
@@ -7085,24 +7088,24 @@ html {
   position: relative;
   background: #FFFFFF;
   border: 1px solid #E8E3E4;
-  border-radius: 4px;
-  padding: 7px 7px 10px 7px;
-  box-shadow: 0 3px 10px rgba(74, 30, 42, 0.1);
+  border-radius: 6px;
+  padding: 8px 8px 12px 8px;
+  box-shadow: 0 4px 14px rgba(74, 30, 42, 0.12);
   transform: rotate(-1.5deg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 4px auto;
-  max-width: 255px;
+  margin: 6px auto;
+  max-width: 270px;
   width: 100%;
 }
 
 .diary-polaroid-washi-tape {
   position: absolute;
-  top: -5px;
-  width: 42px;
-  height: 11px;
-  background: rgba(228, 200, 142, 0.75);
+  top: -6px;
+  width: 44px;
+  height: 12px;
+  background: rgba(228, 200, 142, 0.8);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   transform: rotate(1deg);
   border-radius: 2px;
@@ -7110,8 +7113,8 @@ html {
 
 .diary-polaroid-photo-frame {
   width: 100%;
-  height: 140px;
-  border-radius: 2px;
+  height: 155px;
+  border-radius: 3px;
   overflow: hidden;
   background: #F5F1F2;
 }
@@ -7124,10 +7127,10 @@ html {
 }
 
 .diary-polaroid-caption {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #5C1A2E;
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   text-align: center;
 }
 
@@ -7138,13 +7141,13 @@ html {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 24px 12px;
+  padding: 30px 14px;
   margin: auto;
-  gap: 6px;
+  gap: 8px;
 }
 
 .diary-empty-text {
-  font-size: 12px;
+  font-size: 13px;
   color: #5A4E50;
   margin: 0;
 }
@@ -7158,6 +7161,7 @@ html {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex-shrink: 0;
   box-shadow: 0 4px 16px rgba(74, 30, 42, 0.06);
 }
 
@@ -7168,7 +7172,8 @@ html {
 }
 
 .diary-composer-tabs-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
   border-bottom: 1px solid var(--border-subtle, #E8E3E4);
   padding-bottom: 8px;
@@ -7178,22 +7183,23 @@ html {
   border-bottom-color: #4A2330;
 }
 
-/* Polished Tab Selector Buttons */
+/* Polished Tab Selector Buttons (Single Line, No Awkward Wrap) */
 .diary-tab-btn {
-  flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  height: 32px;
+  gap: 4px;
+  height: 34px;
   border-radius: 8px;
   font-size: 11.5px;
   font-weight: 600;
+  white-space: nowrap;
   background: #FAF8F9;
   color: var(--charcoal-700, #5A4E50);
   border: 1px solid var(--border-subtle, #E8E3E4);
   cursor: pointer;
   transition: all 0.15s ease;
+  padding: 0 4px;
 }
 
 [data-theme="dark"] .diary-tab-btn {
@@ -7216,6 +7222,7 @@ html {
   background: var(--burgundy-600, #9B3456) !important;
   color: #FFFFFF !important;
   border-color: var(--burgundy-600, #9B3456) !important;
+  font-weight: 700;
   box-shadow: 0 2px 8px rgba(184, 67, 106, 0.35);
 }
 
@@ -7223,6 +7230,7 @@ html {
   background: #B8436A !important;
   color: #FFFFFF !important;
   border-color: #B8436A !important;
+  font-weight: 700;
   box-shadow: 0 2px 8px rgba(184, 67, 106, 0.45);
 }
 
@@ -7232,14 +7240,29 @@ html {
   gap: 8px;
 }
 
-.diary-form-textarea,
-.diary-form-caption {
+.diary-form-textarea {
   width: 100%;
+  min-height: 68px;
   background: var(--charcoal-50, #FAF8F9);
   border: 1.5px solid var(--border-subtle, #E8E3E4);
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 13px;
+  color: var(--text-primary, #2C2426);
+  outline: none;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.15s ease;
+}
+
+.diary-form-caption {
+  width: 100%;
+  height: 34px;
+  background: var(--charcoal-50, #FAF8F9);
+  border: 1.5px solid var(--border-subtle, #E8E3E4);
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 12px;
   color: var(--text-primary, #2C2426);
   outline: none;
   font-family: inherit;
@@ -7258,7 +7281,7 @@ html {
   border-color: var(--burgundy-500, #B8436A);
 }
 
-/* Vibrant Velvet Hearts Action Button */
+/* Vibrant Velvet Hearts Action Button with High Contrast & Clear Disabled State */
 .diary-form-submit-btn {
   display: inline-flex;
   align-items: center;
@@ -7285,10 +7308,22 @@ html {
 }
 
 .diary-form-submit-btn:disabled {
-  opacity: 0.5;
+  background: #2E1520 !important;
+  color: #A89098 !important;
+  border: 1px solid #4A2330;
+  box-shadow: none;
+  opacity: 0.85;
   cursor: not-allowed;
   transform: none;
-  box-shadow: none;
+}
+
+@keyframes pagePeelNextAnim {
+  0% {
+    transform: translateX(0) rotate(0deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(25deg);
+  }
 }
 
 @keyframes pagePeelNextAnim {
