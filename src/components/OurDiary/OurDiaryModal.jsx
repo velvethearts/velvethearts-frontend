@@ -799,7 +799,7 @@ export const OurDiaryModal = ({
         </div>
 
         {/* Main Stage */}
-        <div className="diary-modal-stage">
+        <div className={`diary-modal-stage ${viewState === 'add' ? 'add-mode' : ''}`}>
           {viewState === 'browse' ? (
             /* ==========================================================
                SCREEN 1: REALISTIC STPAGEFLIP BOOK ENGINE

@@ -6180,10 +6180,52 @@ html {
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--bg-surface-warm, #FFF8F0);
+  -webkit-overflow-scrolling: touch;
+}
+
+.diary-modal-stage.add-mode {
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 10px 12px;
+  overflow-y: auto;
 }
 
 [data-theme="dark"] .diary-modal-stage {
   background: #14090D;
+}
+
+/* Custom Scrollbars for Smooth & Obvious Scrolling */
+.diary-modal-stage::-webkit-scrollbar,
+.diary-add-composer-screen::-webkit-scrollbar,
+.diary-live-preview-page-mock::-webkit-scrollbar,
+.diary-day-page-entries-scroll::-webkit-scrollbar,
+.diary-leaf-scroll-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.diary-modal-stage::-webkit-scrollbar-track,
+.diary-add-composer-screen::-webkit-scrollbar-track,
+.diary-live-preview-page-mock::-webkit-scrollbar-track,
+.diary-day-page-entries-scroll::-webkit-scrollbar-track,
+.diary-leaf-scroll-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.diary-modal-stage::-webkit-scrollbar-thumb,
+.diary-add-composer-screen::-webkit-scrollbar-thumb,
+.diary-live-preview-page-mock::-webkit-scrollbar-thumb,
+.diary-day-page-entries-scroll::-webkit-scrollbar-thumb,
+.diary-leaf-scroll-content::-webkit-scrollbar-thumb {
+  background: rgba(184, 67, 106, 0.4);
+  border-radius: 4px;
+}
+
+[data-theme="dark"] .diary-modal-stage::-webkit-scrollbar-thumb,
+[data-theme="dark"] .diary-add-composer-screen::-webkit-scrollbar-thumb,
+[data-theme="dark"] .diary-live-preview-page-mock::-webkit-scrollbar-thumb,
+[data-theme="dark"] .diary-day-page-entries-scroll::-webkit-scrollbar-thumb,
+[data-theme="dark"] .diary-leaf-scroll-content::-webkit-scrollbar-thumb {
+  background: rgba(245, 198, 211, 0.35);
 }
 
 .diary-loading-state {
