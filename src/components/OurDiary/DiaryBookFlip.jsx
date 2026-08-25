@@ -69,6 +69,7 @@ export const DiaryBookFlip = forwardRef(({
 }, ref) => {
   const flipBookRef = useRef(null);
   const touchStartRef = useRef(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const coupleQuote = React.useMemo(() => {
     return getDeterministicQuote(userName, partnerName);
@@ -211,7 +212,7 @@ export const DiaryBookFlip = forwardRef(({
         maxShadowOpacity={0.5}
         showCover={true}
         mobileScrollSupport={false}
-        useMouseEvents={true}
+        useMouseEvents={false}
         swipeDistance={20}
         clickEventForward={true}
         usePortrait={true}
@@ -316,6 +317,69 @@ export const DiaryBookFlip = forwardRef(({
                       : '';
                     const sourceType = (entry.sourceType || 'MESSAGE').toUpperCase();
 
+                    const isConfirming = confirmDeleteId === entry.id;
+                    const cardFooter = (
+                      <div className="diary-leaf-card-footer font-ui">
+                        <span className="diary-leaf-card-meta">
+                          {isMine ? 'You' : (entry.savedByName || partnerName || 'Partner')} {timeStr ? `· ${timeStr}` : ''}
+                        </span>
+                        {isMine && entry.id && (
+                          <div className="diary-leaf-del-actions">
+                            {isConfirming ? (
+                              <div className="diary-leaf-del-confirm-group">
+                                <button
+                                  type="button"
+                                  className="diary-del-confirm-btn"
+                                  onPointerDown={(e) => e.stopPropagation()}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onTouchStart={(e) => e.stopPropagation()}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    onDeleteEntry?.(entry.id);
+                                    setConfirmDeleteId(null);
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                                <button
+                                  type="button"
+                                  className="diary-del-cancel-btn"
+                                  onPointerDown={(e) => e.stopPropagation()}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onTouchStart={(e) => e.stopPropagation()}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setConfirmDeleteId(null);
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className="diary-leaf-card-del-btn"
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onTouchStart={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  setConfirmDeleteId(entry.id);
+                                }}
+                                title="Delete memory"
+                                aria-label="Delete memory"
+                              >
+                                <Trash size={13} />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+
                     return (
                       <div key={entry.id || Math.random()} className={`diary-leaf-entry-item type-${sourceType.toLowerCase()}`}>
                         {/* 1. Quote Message */}
@@ -327,29 +391,7 @@ export const DiaryBookFlip = forwardRef(({
                               {entry.caption && (
                                 <p className="diary-leaf-caption font-ui">{entry.caption}</p>
                               )}
-                              <div className="diary-leaf-card-footer font-ui">
-                                <span className="diary-leaf-card-meta">
-                                  {isMine ? 'You' : (entry.savedByName || partnerName || 'Partner')} {timeStr ? `· ${timeStr}` : ''}
-                                </span>
-                                {isMine && entry.id && (
-                                  <button
-                                    type="button"
-                                    className="diary-leaf-card-del-btn"
-                                    onPointerDown={(e) => e.stopPropagation()}
-                                    onMouseDown={(e) => e.stopPropagation()}
-                                    onTouchStart={(e) => e.stopPropagation()}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      e.preventDefault();
-                                      onDeleteEntry?.(entry.id);
-                                    }}
-                                    title="Delete memory"
-                                    aria-label="Delete memory"
-                                  >
-                                    <Trash size={12} />
-                                  </button>
-                                )}
-                              </div>
+                              {cardFooter}
                             </div>
                           </div>
                         )}
@@ -361,29 +403,7 @@ export const DiaryBookFlip = forwardRef(({
                             {entry.caption && (
                               <p className="diary-leaf-caption font-ui">{entry.caption}</p>
                             )}
-                            <div className="diary-leaf-card-footer font-ui">
-                              <span className="diary-leaf-card-meta">
-                                {isMine ? 'You' : (entry.savedByName || partnerName || 'Partner')} {timeStr ? `· ${timeStr}` : ''}
-                              </span>
-                              {isMine && entry.id && (
-                                <button
-                                  type="button"
-                                  className="diary-leaf-card-del-btn"
-                                  onPointerDown={(e) => e.stopPropagation()}
-                                  onMouseDown={(e) => e.stopPropagation()}
-                                  onTouchStart={(e) => e.stopPropagation()}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    onDeleteEntry?.(entry.id);
-                                  }}
-                                  title="Delete memory"
-                                  aria-label="Delete memory"
-                                >
-                                  <Trash size={12} />
-                                </button>
-                              )}
-                            </div>
+                            {cardFooter}
                           </div>
                         )}
 
@@ -394,29 +414,7 @@ export const DiaryBookFlip = forwardRef(({
                             {entry.caption && (
                               <p className="diary-leaf-caption font-ui">{entry.caption}</p>
                             )}
-                            <div className="diary-leaf-card-footer font-ui">
-                              <span className="diary-leaf-card-meta">
-                                {isMine ? 'You' : (entry.savedByName || partnerName || 'Partner')} {timeStr ? `· ${timeStr}` : ''}
-                              </span>
-                              {isMine && entry.id && (
-                                <button
-                                  type="button"
-                                  className="diary-leaf-card-del-btn"
-                                  onPointerDown={(e) => e.stopPropagation()}
-                                  onMouseDown={(e) => e.stopPropagation()}
-                                  onTouchStart={(e) => e.stopPropagation()}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    onDeleteEntry?.(entry.id);
-                                  }}
-                                  title="Delete memory"
-                                  aria-label="Delete memory"
-                                >
-                                  <Trash size={12} />
-                                </button>
-                              )}
-                            </div>
+                            {cardFooter}
                           </div>
                         )}
 
@@ -435,29 +433,7 @@ export const DiaryBookFlip = forwardRef(({
                             {entry.caption && (
                               <p className="diary-leaf-polaroid-caption font-display">{entry.caption}</p>
                             )}
-                            <div className="diary-leaf-card-footer font-ui">
-                              <span className="diary-leaf-card-meta">
-                                {isMine ? 'You' : (entry.savedByName || partnerName || 'Partner')} {timeStr ? `· ${timeStr}` : ''}
-                              </span>
-                              {isMine && entry.id && (
-                                <button
-                                  type="button"
-                                  className="diary-leaf-card-del-btn"
-                                  onPointerDown={(e) => e.stopPropagation()}
-                                  onMouseDown={(e) => e.stopPropagation()}
-                                  onTouchStart={(e) => e.stopPropagation()}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    onDeleteEntry?.(entry.id);
-                                  }}
-                                  title="Delete memory"
-                                  aria-label="Delete memory"
-                                >
-                                  <Trash size={12} />
-                                </button>
-                              )}
-                            </div>
+                            {cardFooter}
                           </div>
                         )}
 
@@ -478,29 +454,7 @@ export const DiaryBookFlip = forwardRef(({
                             {entry.caption && (
                               <p className="diary-leaf-polaroid-caption font-display">{entry.caption}</p>
                             )}
-                            <div className="diary-leaf-card-footer font-ui">
-                              <span className="diary-leaf-card-meta">
-                                {isMine ? 'You' : (entry.savedByName || partnerName || 'Partner')} {timeStr ? `· ${timeStr}` : ''}
-                              </span>
-                              {isMine && entry.id && (
-                                <button
-                                  type="button"
-                                  className="diary-leaf-card-del-btn"
-                                  onPointerDown={(e) => e.stopPropagation()}
-                                  onMouseDown={(e) => e.stopPropagation()}
-                                  onTouchStart={(e) => e.stopPropagation()}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    onDeleteEntry?.(entry.id);
-                                  }}
-                                  title="Delete memory"
-                                  aria-label="Delete memory"
-                                >
-                                  <Trash size={12} />
-                                </button>
-                              )}
-                            </div>
+                            {cardFooter}
                           </div>
                         )}
                       </div>

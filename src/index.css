@@ -6753,6 +6753,62 @@ html {
   color: #9E888E;
 }
 
+.diary-leaf-del-actions {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.diary-leaf-del-confirm-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  animation: diaryFadeIn 0.15s ease-out;
+}
+
+.diary-del-confirm-btn {
+  background: #D03050;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  cursor: pointer;
+  pointer-events: auto;
+  position: relative;
+  z-index: 50;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+}
+
+.diary-del-confirm-btn:hover,
+.diary-del-confirm-btn:active {
+  background: #A8203B;
+  transform: scale(1.05);
+}
+
+.diary-del-cancel-btn {
+  background: rgba(184, 67, 106, 0.1);
+  color: #7A2842;
+  border: 1px solid rgba(184, 67, 106, 0.2);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 7px;
+  cursor: pointer;
+  pointer-events: auto;
+  position: relative;
+  z-index: 50;
+  touch-action: manipulation;
+  transition: all 0.15s ease;
+}
+
+.diary-del-cancel-btn:hover,
+.diary-del-cancel-btn:active {
+  background: rgba(184, 67, 106, 0.2);
+}
+
 .diary-leaf-card-del-btn {
   display: inline-flex;
   align-items: center;
