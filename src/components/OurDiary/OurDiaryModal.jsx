@@ -859,13 +859,13 @@ export const OurDiaryModal = ({
         </div>
 
         {/* ============================================================
-           MAIN STAGE: PHYSICAL 3D OPEN BOOK JOURNAL SPREAD
+           MAIN STAGE: CLEAN DAY-CARD JOURNAL WITH PAGE FLIP CONTROLS
            ============================================================ */}
         <div className="diary-modal-stage">
           <div className="diary-journal-stage-inner">
-            {/* 3D Open Book Spread with Left Cover/Page and Flippable Right Page */}
+            {/* Stacked Day-Card with Page Flip Controls & Swipe */}
             <div
-              className="diary-open-book-spread font-ui"
+              className="diary-card-stack-viewport font-ui"
               onTouchStart={(e) => {
                 cardTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
               }}
@@ -892,7 +892,7 @@ export const OurDiaryModal = ({
                   aria-label="Previous Page"
                   title="Previous Page"
                 >
-                  <CaretLeft size={20} weight="bold" />
+                  <CaretLeft size={22} weight="bold" />
                 </button>
               )}
 
@@ -905,44 +905,19 @@ export const OurDiaryModal = ({
                   aria-label="Next Page"
                   title="Next Page"
                 >
-                  <CaretRight size={20} weight="bold" />
+                  <CaretRight size={22} weight="bold" />
                 </button>
               )}
 
-              {/* LEFT WING: Open Hardcover Lining & Inscription */}
-              <div className="diary-book-left-wing font-display">
-                <div className="diary-left-wing-header">
-                  <span className="diary-left-wing-volume">VOLUME 1</span>
-                  <span className="diary-left-wing-couple">{userName || 'You'} &amp; {partnerName || 'Partner'}</span>
-                </div>
+              {/* Underlying stack shadow effect */}
+              <div className="diary-card-stack-underlay" />
 
-                <div className="diary-left-wing-center">
-                  <div className="diary-left-wing-watermark">
-                    <Heart size={38} weight="duotone" />
-                  </div>
-                  <p className="diary-left-wing-quote font-display">
-                    “Every shared laughter, whisper, and story kept close to heart.”
-                  </p>
-                </div>
-
-                <div className="diary-left-wing-footer font-ui">
-                  <span className="diary-left-wing-badge">
-                    <Sparkle size={12} weight="fill" />
-                    <span>{pages.length} {pages.length === 1 ? 'Day Captured' : 'Days Captured'}</span>
-                  </span>
-                  <div className="diary-left-bookmark-ribbon" />
-                </div>
-              </div>
-
-              {/* CENTER SPINE: Golden Metallic Divider */}
-              <div className="diary-book-center-spine" />
-
-              {/* RIGHT WING: Active Flippable Diary Page */}
+              {/* Active Day-Card */}
               <div
                 key={currentDayCard?.dayKey || currentPageIndex}
-                className={`diary-book-right-wing ${isPeeling ? `peeling-${peelDirection}` : ''}`}
+                className={`diary-day-card ${isPeeling ? `peeling-${peelDirection}` : ''}`}
               >
-                {/* Page Top Row: Date & Counter */}
+                {/* Top-Left Date Header & Counter */}
                 <div className="diary-card-top-row">
                   <h2 className="diary-card-date font-display">
                     {currentDayCard?.dateLabel || 'Today'}
@@ -960,7 +935,7 @@ export const OurDiaryModal = ({
 
                 <div className="diary-card-divider" />
 
-                {/* Page Content: Scrollable Moments or Empty State */}
+                {/* Day Entries List */}
                 <div className="diary-card-moments-scroll">
                   {loading ? (
                     <div className="diary-loading-state font-ui">
@@ -1082,11 +1057,6 @@ export const OurDiaryModal = ({
                       );
                     })
                   )}
-                </div>
-
-                {/* Page Footer */}
-                <div className="diary-right-page-footer font-ui">
-                  <span className="diary-right-page-num">Page {currentPageIndex + 1}</span>
                 </div>
               </div>
             </div>
