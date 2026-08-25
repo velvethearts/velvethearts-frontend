@@ -407,6 +407,7 @@ export const OurDiaryModal = ({
 
   // Modal Close Transition
   const [isClosingModal, setIsClosingModal] = useState(false);
+  const cardTouchStart = useRef(null);
 
   // Helper function to group entries by local calendar day (oldest to newest)
   const groupEntriesList = (entriesList) => {
@@ -807,7 +808,7 @@ export const OurDiaryModal = ({
 
           <div className="diary-header-center">
             {viewState === 'browse' ? (
-              <span className="diary-header-mode-title font-display">Browse our diary</span>
+              <span className="diary-header-mode-title font-display">Browse your diary</span>
             ) : (
               <span className="diary-header-mode-title font-display">Add a moment</span>
             )}
@@ -1216,7 +1217,50 @@ export const OurDiaryModal = ({
                 </div>
               ) : (
                 /* Stacked Day-Card with 3D Peel/Slide Transition */
-                <div className="diary-card-stack-viewport">
+                <div
+                  className="diary-card-stack-viewport"
+                  onTouchStart={(e) => {
+                    cardTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                  }}
+                  onTouchEnd={(e) => {
+                    if (!cardTouchStart.current) return;
+                    const deltaX = e.changedTouches[0].clientX - cardTouchStart.current.x;
+                    const deltaY = e.changedTouches[0].clientY - cardTouchStart.current.y;
+                    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 35) {
+                      if (deltaX < 0) {
+                        handleNextCard();
+                      } else {
+                        handlePrevCard();
+                      }
+                    }
+                    cardTouchStart.current = null;
+                  }}
+                >
+                  {/* Floating Page Flip Buttons (Left/Prev & Right/Next) */}
+                  {currentPageIndex > 0 && (
+                    <button
+                      type="button"
+                      className="diary-flip-nav-btn prev font-ui"
+                      onClick={handlePrevCard}
+                      aria-label="Previous Day"
+                      title="Previous Day"
+                    >
+                      <CaretLeft size={20} weight="bold" />
+                    </button>
+                  )}
+
+                  {currentPageIndex < totalPages - 1 && (
+                    <button
+                      type="button"
+                      className="diary-flip-nav-btn next font-ui"
+                      onClick={handleNextCard}
+                      aria-label="Next Day"
+                      title="Next Day"
+                    >
+                      <CaretRight size={20} weight="bold" />
+                    </button>
+                  )}
+
                   {/* Underlying stack shadow effect */}
                   <div className="diary-card-stack-underlay" />
 
@@ -1229,9 +1273,15 @@ export const OurDiaryModal = ({
                       <h2 className="diary-card-date font-display">
                         {currentDayCard?.dateLabel || 'Today'}
                       </h2>
-                      <span className="diary-card-counter font-ui">
-                        {currentPageIndex + 1} / {totalPages}
-                      </span>
+                      <button
+                        type="button"
+                        className="diary-card-counter font-ui"
+                        onClick={handleNextCard}
+                        title={currentPageIndex < totalPages - 1 ? 'Click to flip next page' : 'Last page'}
+                      >
+                        <span>{currentPageIndex + 1} / {totalPages}</span>
+                        {currentPageIndex < totalPages - 1 && <CaretRight size={10} weight="bold" />}
+                      </button>
                     </div>
 
                     <div className="diary-card-divider" />

@@ -6112,8 +6112,8 @@ html {
 
 .diary-3d-book {
   position: relative;
-  width: 175px;
-  height: 235px;
+  width: 235px;
+  height: 315px;
   transform-style: preserve-3d;
   /* Resting-state 3D dimensional tilt even before tapped */
   transform: rotateY(-12deg) rotateX(6deg) rotateZ(-1.5deg);
@@ -6371,36 +6371,37 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 10px 20px;
-  border-radius: var(--radius-full, 9999px);
-  font-size: 13px;
+  gap: 8px;
+  height: 48px;
+  padding: 0 24px;
+  border-radius: 24px;
+  font-size: 15px;
   font-weight: 600;
-  background: var(--bg-surface, #FFFFFF);
-  color: var(--text-primary, #1A1517);
-  border: 1px solid var(--border-subtle, #E8E3E4);
-  box-shadow: 0 2px 8px rgba(42, 8, 18, 0.05);
+  background: #2A1F23;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: all var(--duration-fast);
+  transition: all var(--duration-fast, 0.15s);
 }
 
 .diary-action-pill-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(184, 67, 106, 0.12);
-  border-color: var(--burgundy-300, #E08DA3);
-  color: var(--burgundy-600, #9B3456);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 20px rgba(184, 67, 106, 0.35);
+  border-color: #E08DA3;
+  background: #3A0E1A;
 }
 
 .diary-action-pill-btn.record-pill {
-  color: var(--burgundy-600, #9B3456);
+  color: #F0BDC8;
 }
 
 .diary-action-pill-btn.type-pill {
-  color: var(--charcoal-800, #3D3335);
+  color: #FFFFFF;
 }
 
 .diary-action-pill-btn.photo-pill {
-  color: var(--gold-500, #C4964A);
+  color: #E4C88E;
 }
 
 /* Inline Creator Card */
@@ -6815,14 +6816,60 @@ html {
 }
 
 .diary-card-counter {
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--text-muted, #998D8F);
-  background: var(--cream-100, #FFF8F0);
-  padding: 3px 8px;
+  color: var(--burgundy-700, #7A2842);
+  background: var(--burgundy-50, #FDF2F4);
+  padding: 4px 10px;
   border-radius: var(--radius-full, 9999px);
-  border: 1px solid var(--border-subtle, #E8E3E4);
+  border: 1px solid var(--burgundy-200, #F0BDC8);
   flex-shrink: 0;
+  cursor: pointer;
+  transition: all var(--duration-fast, 0.15s);
+}
+
+.diary-card-counter:hover {
+  background: var(--burgundy-100, #F9E0E6);
+  transform: scale(1.04);
+}
+
+/* Floating Flip Navigation Buttons */
+.diary-flip-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  color: #7A2842;
+  border: 1px solid #E8E3E4;
+  box-shadow: 0 4px 18px rgba(42, 8, 18, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 25;
+  transition: all 0.2s ease;
+}
+
+.diary-flip-nav-btn.prev {
+  left: -20px;
+}
+
+.diary-flip-nav-btn.next {
+  right: -20px;
+}
+
+.diary-flip-nav-btn:hover {
+  background: #B8436A;
+  color: #FFFFFF;
+  border-color: #B8436A;
+  transform: translateY(-50%) scale(1.12);
+  box-shadow: 0 8px 24px rgba(184, 67, 106, 0.35);
 }
 
 .diary-card-divider {
@@ -6940,15 +6987,17 @@ html {
 .diary-quote-box {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  background: var(--cream-100, #FFF8F0);
-  border-left: 3px solid var(--burgundy-500, #B8436A);
-  border-radius: 0 12px 12px 0;
-  padding: 12px 14px;
+  gap: 12px;
+  background: #FFF5F7 !important;
+  border: 1px solid #F0BDC8 !important;
+  border-left: 5px solid #B8436A !important;
+  border-radius: 6px 14px 14px 6px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(184, 67, 106, 0.06);
 }
 
 .diary-quote-mark {
-  color: var(--burgundy-400, #D0607F);
+  color: #B8436A !important;
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -6956,22 +7005,26 @@ html {
 .diary-quote-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
+  width: 100%;
 }
 
 .diary-quote-text {
-  font-size: 14px;
-  font-style: italic;
-  line-height: 1.45;
-  color: var(--text-primary, #1A1517);
+  font-size: 15px !important;
+  font-style: italic !important;
+  font-weight: 500 !important;
+  line-height: 1.55 !important;
+  color: #1A1517 !important;
   margin: 0;
+  word-break: break-word;
 }
 
 .diary-quote-caption {
-  font-size: 11px;
-  color: var(--burgundy-600, #9B3456);
+  font-size: 13px !important;
+  color: #7A2842 !important;
   margin: 0;
-  font-weight: 600;
+  font-weight: 700 !important;
+  font-style: normal;
 }
 
 /* 2. Written Note (Warm Display Font) */
