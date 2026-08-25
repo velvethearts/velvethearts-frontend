@@ -379,7 +379,26 @@ export const OurDiaryModal = ({
     }));
   };
 
-  const pages = useMemo(() => groupEntriesList(entries), [entries]);
+  const pages = useMemo(() => {
+    const grouped = groupEntriesList(entries);
+    if (grouped.length === 0) {
+      const today = new Date();
+      return [{
+        dayKey: `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`,
+        dateLabel: today.toLocaleDateString(undefined, {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }),
+        rawDate: today,
+        items: [],
+        pageNumber: 1
+      }];
+    }
+    return grouped;
+  }, [entries]);
+
   const totalPages = Math.max(pages.length, 1);
 
   // Fetch diary entries
@@ -774,44 +793,51 @@ export const OurDiaryModal = ({
             /* ==========================================================
                SCREEN 1: REALISTIC STPAGEFLIP BOOK ENGINE
                ========================================================== */
-            <div className="diary-bookflip-stage-wrapper font-ui">
-              {/* Floating Prev Arrow */}
-              {activeFlipPageIndex > 0 && (
-                <button
-                  type="button"
-                  className="diary-book-nav-arrow prev font-ui"
-                  onClick={() => bookFlipRef.current?.flipPrev()}
-                  title="Flip Previous Page"
-                  aria-label="Previous Page"
-                >
-                  <CaretLeft size={22} weight="bold" />
-                </button>
-              )}
+            loading ? (
+              <div className="diary-loading-state font-ui">
+                <Heart size={36} weight="duotone" className="diary-spin-heart text-burgundy" />
+                <span>Opening Our Diary...</span>
+              </div>
+            ) : (
+              <div className="diary-bookflip-stage-wrapper font-ui">
+                {/* Floating Prev Arrow */}
+                {activeFlipPageIndex > 0 && (
+                  <button
+                    type="button"
+                    className="diary-book-nav-arrow prev font-ui"
+                    onClick={() => bookFlipRef.current?.flipPrev()}
+                    title="Flip Previous Page"
+                    aria-label="Previous Page"
+                  >
+                    <CaretLeft size={22} weight="bold" />
+                  </button>
+                )}
 
-              {/* The StPageFlip Book (Cover + Day Pages) */}
-              <DiaryBookFlip
-                ref={bookFlipRef}
-                pages={pages}
-                userName={userName}
-                partnerName={partnerName}
-                onDeleteEntry={handleDeleteEntry}
-                onPageFlip={handlePageFlipEvent}
-                VoicePlayerComponent={DiaryVoiceNotePlayer}
-              />
+                {/* The StPageFlip Book (Cover + Day Pages) */}
+                <DiaryBookFlip
+                  ref={bookFlipRef}
+                  pages={pages}
+                  userName={userName}
+                  partnerName={partnerName}
+                  onDeleteEntry={handleDeleteEntry}
+                  onPageFlip={handlePageFlipEvent}
+                  VoicePlayerComponent={DiaryVoiceNotePlayer}
+                />
 
-              {/* Floating Next Arrow */}
-              {activeFlipPageIndex < pages.length && (
-                <button
-                  type="button"
-                  className="diary-book-nav-arrow next font-ui"
-                  onClick={() => bookFlipRef.current?.flipNext()}
-                  title="Flip Next Page"
-                  aria-label="Next Page"
-                >
-                  <CaretRight size={22} weight="bold" />
-                </button>
-              )}
-            </div>
+                {/* Floating Next Arrow */}
+                {activeFlipPageIndex < pages.length && (
+                  <button
+                    type="button"
+                    className="diary-book-nav-arrow next font-ui"
+                    onClick={() => bookFlipRef.current?.flipNext()}
+                    title="Flip Next Page"
+                    aria-label="Next Page"
+                  >
+                    <CaretRight size={22} weight="bold" />
+                  </button>
+                )}
+              </div>
+            )
           ) : (
             /* ==========================================================
                SCREEN 2: ADD PAGE — COMPOSING WITH LIVE PREVIEW

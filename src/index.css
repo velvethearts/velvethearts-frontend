@@ -5957,7 +5957,7 @@ html {
   max-height: 820px;
   display: flex;
   flex-direction: column;
-  background: var(--bg-surface-warm, #FFF8F0);
+  background: #FFF8F0 !important;
   border: 1.5px solid var(--border-subtle, #F0BDC8);
   border-radius: 24px;
   box-shadow: 0 24px 60px rgba(74, 30, 42, 0.16), 0 4px 16px rgba(184, 67, 106, 0.08);
@@ -5977,7 +5977,7 @@ html {
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  background: #FFFFFF;
+  background: #FFFFFF !important;
   border-bottom: 1px solid var(--border-subtle, #E8E3E4);
   flex-shrink: 0;
   gap: 12px;
@@ -6089,7 +6089,28 @@ html {
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  background: var(--bg-surface-warm, #FFF8F0);
+  background: #FFF8F0 !important;
+}
+
+.diary-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--burgundy-700, #7A2842);
+  font-size: 14px;
+  font-weight: 600;
+  margin: auto;
+}
+
+.diary-spin-heart {
+  animation: diaryHeartPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes diaryHeartPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
 }
 
 /* ==========================================================================
@@ -6102,6 +6123,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #FFF8F0 !important;
   margin: auto;
 }
 
