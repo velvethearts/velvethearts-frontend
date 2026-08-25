@@ -271,6 +271,7 @@ export const OurDiaryModal = ({
   // Dual State: 'browse' (Day card view) or 'add' (Create moment screen)
   const [viewState, setViewState] = useState('browse');
   const [addMode, setAddMode] = useState(null); // 'type' | 'record' | 'photo' | null
+  const [isBookOpen, setIsBookOpen] = useState(true);
 
   // Entries & Pages
   const [entries, setEntries] = useState([]);
@@ -753,21 +754,76 @@ export const OurDiaryModal = ({
                STATE A: "ADD AN ENTRY" DEDICATED SCREEN
                ========================================================== */
             <div className="diary-add-screen font-ui">
-              {/* Centered Cute Book Preview Object */}
-              <div className="diary-cover-preview-card">
-                <div className="diary-preview-spine" />
-                <div className="diary-preview-body">
-                  <div className="diary-preview-emblem">
-                    <BookBookmark size={34} weight="duotone" />
+              {/* 3D Hinged Hardcover Book Object with Resting-State Dimensional Tilt */}
+              <div className="diary-3d-scene">
+                <div
+                  className={`diary-3d-book ${isBookOpen ? 'book-open' : 'book-closed'}`}
+                  onClick={() => {
+                    if (!isBookOpen && !addMode) {
+                      setIsBookOpen(true);
+                      setTimeout(() => {
+                        setViewState('browse');
+                      }, 480);
+                    }
+                  }}
+                  title="Tap to open diary"
+                  role="button"
+                  tabIndex={0}
+                >
+                  {/* Underneath: The First Page revealed as cover swings open */}
+                  <div className="diary-book-base-page font-ui">
+                    <div className="diary-base-page-header">
+                      <span className="diary-base-page-tag font-ui">Volume 1</span>
+                      <span className="diary-base-page-date font-display">
+                        {pages?.[0]?.dateLabel || 'Today'}
+                      </span>
+                    </div>
+                    <div className="diary-base-page-content font-display">
+                      <p className="diary-base-page-quote">
+                        {pages?.[0]?.items?.[0]?.content
+                          ? `“${pages[0].items[0].content.slice(0, 70)}${pages[0].items[0].content.length > 70 ? '...' : ''}”`
+                          : '“A collection of our sweetest memories, shared thoughts, and voice notes.”'}
+                      </p>
+                    </div>
+                    <div className="diary-base-page-footer">
+                      <span className="diary-base-page-counter font-ui">Page 1</span>
+                    </div>
                   </div>
-                  <h3 className="diary-preview-title font-display">Our Diary</h3>
-                  <p className="diary-preview-subtitle font-display">
-                    {userName || 'You'} &amp; {partnerName || 'Partner'}
-                  </p>
-                  <span className="diary-preview-badge font-ui">
-                    <Sparkle size={12} weight="fill" />
-                    <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
-                  </span>
+
+                  {/* Front Cover: Hinged on the Left Spine Edge */}
+                  <div className="diary-book-cover-hinge">
+                    {/* Front Face (Closed Book Cover) */}
+                    <div className="diary-book-cover-front">
+                      <div className="diary-preview-spine" />
+                      <div className="diary-preview-body">
+                        <div className="diary-preview-emblem">
+                          <BookBookmark size={34} weight="duotone" />
+                        </div>
+                        <h3 className="diary-preview-title font-display">Our Diary</h3>
+                        <p className="diary-preview-subtitle font-display">
+                          {userName || 'You'} &amp; {partnerName || 'Partner'}
+                        </p>
+                        <span className="diary-preview-badge font-ui">
+                          <Sparkle size={12} weight="fill" />
+                          <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
+                        </span>
+                        {!addMode && (
+                          <span className="diary-cover-tap-hint font-ui">
+                            <span>Open diary</span>
+                            <CaretRight size={12} weight="bold" />
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Inside Face (Swung Open Lining) */}
+                    <div className="diary-book-cover-inside">
+                      <div className="diary-book-inside-crease" />
+                      <div className="diary-book-inside-emblem">
+                        <Heart size={24} weight="duotone" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
