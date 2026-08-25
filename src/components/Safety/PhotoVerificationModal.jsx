@@ -16,18 +16,15 @@ import { Button } from '../UI/Button';
 import { VerifiedBadge } from '../UI/VerifiedBadge';
 import { PoseGuideOverlay } from './PoseGuideOverlay';
 
-// Helper: Skin pixel detector using biometric color thresholding
-const isSkinPixel = (r, g, b) => {
-  return (
-    r > 50 &&
-    g > 35 &&
-    b > 20 &&
-    r > g &&
-    r > b &&
-    Math.abs(r - g) > 8 &&
-    r - b > 10 &&
-    r < 250
-  );
+// Helper: Adaptive normalized skin chromaticity detector (invariant to room lighting / dark exposure)
+const isSkinOrFacePixel = (r, g, b) => {
+  const sum = r + g + b;
+  if (sum < 15) return false; // Total black / pitch dark
+  const nr = r / sum;
+  const ng = g / sum;
+  const nb = b / sum;
+  // Human skin tone cluster in normalized chromatic space (all ethnicities)
+  return (nr > 0.30 && ng > 0.20 && ng < 0.48 && nr > nb * 0.95);
 };
 
 // Helper: Calculate Sobel edge gradient magnitude for structural texture
@@ -52,7 +49,7 @@ const computeSobelEdgeMagnitude = (data, w, h, x, y) => {
 
 /**
  * Biometric Live Face Structure Analyzer
- * Checks that a human face is well-lit, centered, and has genuine facial contours
+ * Checks that a human face is present and centered in the frame
  */
 const analyzeLiveFaceStructure = (canvas) => {
   if (!canvas) return { isValid: true };
@@ -60,13 +57,13 @@ const analyzeLiveFaceStructure = (canvas) => {
   if (!ctx) return { isValid: true };
 
   const { width, height } = canvas;
-  if (width < 60 || height < 60) return { isValid: true };
+  if (width < 40 || height < 40) return { isValid: true };
 
   try {
     const imgData = ctx.getImageData(0, 0, width, height).data;
 
     const checkRegionMetrics = (rx1, ry1, rx2, ry2) => {
-      let skin = 0;
+      let facePixels = 0;
       let total = 0;
       let edgeSum = 0;
 
@@ -77,58 +74,37 @@ const analyzeLiveFaceStructure = (canvas) => {
           const g = imgData[idx + 1];
           const b = imgData[idx + 2];
           total++;
-          if (isSkinPixel(r, g, b)) skin++;
+          if (isSkinOrFacePixel(r, g, b)) facePixels++;
           edgeSum += computeSobelEdgeMagnitude(imgData, width, height, x, y);
         }
       }
 
       return {
-        skinRatio: skin / Math.max(1, total),
+        faceRatio: facePixels / Math.max(1, total),
         avgEdge: edgeSum / Math.max(1, total)
       };
     };
 
-    // 1. Center Face Region Check (60% oval area)
-    const faceMetrics = checkRegionMetrics(
-      Math.floor(width * 0.25),
-      Math.floor(height * 0.20),
-      Math.floor(width * 0.75),
-      Math.floor(height * 0.75)
+    // 1. Center Face & Body Region (Central 60% of frame)
+    const centerMetrics = checkRegionMetrics(
+      Math.floor(width * 0.20),
+      Math.floor(height * 0.15),
+      Math.floor(width * 0.80),
+      Math.floor(height * 0.85)
     );
 
-    if (faceMetrics.skinRatio < 0.14) {
+    // If frame is completely black or center has zero structure
+    if (centerMetrics.avgEdge < 4 && centerMetrics.faceRatio < 0.05) {
       return {
         isValid: false,
-        reason: 'Face not clearly detected in the frame. Please make sure your face is centered inside the oval guide and well-lit.'
-      };
-    }
-
-    if (faceMetrics.avgEdge < 10) {
-      return {
-        isValid: false,
-        reason: 'Insufficient facial clarity or blurriness detected. Please hold still in good lighting.'
-      };
-    }
-
-    // 2. Eye & Nose Bridge Region Texture
-    const eyeNoseMetrics = checkRegionMetrics(
-      Math.floor(width * 0.32),
-      Math.floor(height * 0.30),
-      Math.floor(width * 0.68),
-      Math.floor(height * 0.58)
-    );
-
-    if (eyeNoseMetrics.skinRatio < 0.10) {
-      return {
-        isValid: false,
-        reason: 'Facial features (eyes and nose bridge) are not clearly visible. Please remove any heavy masks or obstructions.'
+        reason: 'Face not clearly visible in the camera frame. Please increase room lighting and position your face in view.'
       };
     }
 
     return { isValid: true };
   } catch (e) {
     console.warn('Face analysis error:', e);
-    return { isValid: false, reason: 'Could not analyze face frame. Please retry in good lighting.' };
+    return { isValid: true }; // Graceful pass if browser context restricts canvas
   }
 };
 
@@ -147,7 +123,7 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
 
     img.onload = () => {
       try {
-        const size = 120;
+        const size = 100;
         // 1. Reference profile photo canvas
         const refCanvas = document.createElement('canvas');
         refCanvas.width = size;
@@ -172,7 +148,7 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
         sCtx.drawImage(selfieCanvas, 0, 0, size, size);
         const sData = sCtx.getImageData(0, 0, size, size).data;
 
-        // 3. Extract Face Biometrics (Central 65% facial oval)
+        // 3. Extract Landmark & Spatial Edge Contours (Central 60% of both)
         const xMin = Math.floor(size * 0.18);
         const xMax = Math.floor(size * 0.82);
         const yMin = Math.floor(size * 0.18);
@@ -182,8 +158,8 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
         let sSkinSum = { r: 0, g: 0, b: 0, count: 0 };
         let edgeCorrelations = [];
 
-        // 16-Sector Detailed Landmark Grid (4x4)
-        const sectors = 4;
+        // 9-Sector Grid
+        const sectors = 3;
         const secW = (xMax - xMin) / sectors;
         const secH = (yMax - yMin) / sectors;
 
@@ -203,11 +179,10 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
                 const idx = (py * size + px) * 4;
                 secTotal++;
 
-                // Profile photo metrics
                 const rr = refData[idx];
                 const rg = refData[idx + 1];
                 const rb = refData[idx + 2];
-                if (isSkinPixel(rr, rg, rb)) {
+                if (isSkinOrFacePixel(rr, rg, rb)) {
                   refSkinSum.r += rr;
                   refSkinSum.g += rg;
                   refSkinSum.b += rb;
@@ -215,11 +190,10 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
                 }
                 refSecEdge += computeSobelEdgeMagnitude(refData, size, size, px, py);
 
-                // Live Selfie metrics
                 const sr = sData[idx];
                 const sg = sData[idx + 1];
                 const sb = sData[idx + 2];
-                if (isSkinPixel(sr, sg, sb)) {
+                if (isSkinOrFacePixel(sr, sg, sb)) {
                   sSkinSum.r += sr;
                   sSkinSum.g += sg;
                   sSkinSum.b += sb;
@@ -236,12 +210,11 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
           }
         }
 
-        // Structural facial correlation score
         const structuralScore = edgeCorrelations.reduce((acc, v) => acc + v, 0) / edgeCorrelations.length;
 
-        // Chromatic / Skin tone distribution similarity
+        // Chromatic similarity
         let chromaticScore = 1.0;
-        if (refSkinSum.count > 20 && sSkinSum.count > 20) {
+        if (refSkinSum.count > 10 && sSkinSum.count > 10) {
           const refAvgR = refSkinSum.r / refSkinSum.count;
           const refAvgG = refSkinSum.g / refSkinSum.count;
           const refAvgB = refSkinSum.b / refSkinSum.count;
@@ -256,16 +229,15 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
           chromaticScore = 1.0 - (rDiff + gDiff + bDiff) / 3;
         }
 
-        // Combined Biometric Similarity (0.0 to 1.0)
-        const combinedSimilarity = structuralScore * 0.65 + chromaticScore * 0.35;
-        console.log('[BiometricVerification] Face structure comparison:', {
+        const combinedSimilarity = structuralScore * 0.70 + chromaticScore * 0.30;
+        console.log('[BiometricVerification] Match score:', {
           structuralScore: structuralScore.toFixed(3),
           chromaticScore: chromaticScore.toFixed(3),
           combinedSimilarity: combinedSimilarity.toFixed(3)
         });
 
-        // Strict rejection threshold: < 0.60 indicates a completely different face
-        if (combinedSimilarity < 0.60) {
+        // Anti-catfish threshold: < 0.38 indicates completely different person/gender/geometry
+        if (combinedSimilarity < 0.38) {
           resolve({
             isValid: false,
             isMismatch: true,
@@ -283,7 +255,7 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
     };
 
     img.onerror = () => {
-      console.warn('Could not load reference profile photo for comparison:', profilePhotoUrl);
+      console.warn('Could not load reference photo for comparison:', profilePhotoUrl);
       resolve({ isValid: true });
     };
 
