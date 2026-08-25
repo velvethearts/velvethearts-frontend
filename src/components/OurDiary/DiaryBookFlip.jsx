@@ -1,12 +1,12 @@
 import React, { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import {
-  Heart,
   Sparkle,
   CaretRight,
   Quotes,
   Trash
 } from '@phosphor-icons/react';
+import velvetHeartLogo from '../../assets/velvet-heart-logo.png';
 
 /**
  * Individual Flippable Page Leaf with ref forwarding for StPageFlip
@@ -200,7 +200,7 @@ export const DiaryBookFlip = forwardRef(({
           <div className="diary-cover-inner-panel">
             <div className="diary-cover-gold-border">
               <div className="diary-cover-emblem">
-                <Heart size={34} weight="duotone" />
+                <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-cover-logo-img" />
               </div>
 
               <h2 className="diary-cover-main-title font-display">Our Diary</h2>
@@ -260,7 +260,7 @@ export const DiaryBookFlip = forwardRef(({
               <div className="diary-leaf-scroll-content">
                 {(!dayGroup.items || dayGroup.items.length === 0) ? (
                   <div className="diary-leaf-empty font-ui">
-                    <Heart size={24} weight="duotone" className="text-burgundy" />
+                    <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-empty-logo-img" />
                     <p className="diary-leaf-empty-text font-body">No memories recorded on this day.</p>
                   </div>
                 ) : (
@@ -392,7 +392,7 @@ export const DiaryBookFlip = forwardRef(({
         <DiaryPageLeaf density="hard" className="diary-back-cover-leaf">
           <div className="diary-back-cover-inner">
             <div className="diary-back-cover-emblem">
-              <Heart size={28} weight="duotone" />
+              <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-cover-logo-img" />
             </div>
             <p className="diary-back-cover-text font-display">
               “To all our cherished moments, big and small.”

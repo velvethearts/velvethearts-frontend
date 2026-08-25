@@ -13,12 +13,12 @@ import {
   Pause,
   CalendarCheck,
   Sparkle,
-  Heart,
   UploadSimple,
   Quotes,
   Stop,
   Check
 } from '@phosphor-icons/react';
+import velvetHeartLogo from '../../assets/velvet-heart-logo.png';
 import { api } from '../../lib/api';
 import { useApp } from '../../context/AppContext';
 import { getSocket } from '../../lib/socket';
@@ -759,7 +759,7 @@ export const OurDiaryModal = ({
         <div className="diary-modal-header">
           <div className="diary-header-left">
             <span className="diary-header-badge font-display">
-              <Heart size={16} weight="fill" className="diary-header-heart" />
+              <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-header-logo-img" />
               <span>Our Diary</span>
             </span>
           </div>
@@ -833,7 +833,7 @@ export const OurDiaryModal = ({
                ========================================================== */
             loading ? (
               <div className="diary-loading-state font-ui">
-                <Heart size={36} weight="duotone" className="diary-spin-heart text-burgundy" />
+                <img src={velvetHeartLogo} alt="Loading" className="diary-spin-heart diary-loading-logo-img" />
                 <span>Opening Our Diary...</span>
               </div>
             ) : (
@@ -900,7 +900,7 @@ export const OurDiaryModal = ({
                   <div className="diary-day-page-entries-scroll preview-scroll">
                     {todaySavedItems.length === 0 && !noteText.trim() && !recordedAudioUrl && !photoPreviewUrl ? (
                       <div className="diary-empty-state mini font-ui">
-                        <Heart size={22} weight="duotone" className="text-burgundy" />
+                        <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-empty-logo-img" />
                         <p className="diary-empty-text font-body">
                           Today's page is blank. Choose an option below to see it appear live!
                         </p>
