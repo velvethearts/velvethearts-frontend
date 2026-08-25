@@ -26,22 +26,22 @@ const DiaryPageLeaf = forwardRef(({ className = '', density = 'soft', children, 
 
 DiaryPageLeaf.displayName = 'DiaryPageLeaf';
 
-const COUPLE_COVER_QUOTES = [
-  "“Where you are, that is where home is.”",
-  "“Together is my favorite place to be.”",
-  "“You are my today and all of my tomorrows.”",
-  "“In you, I found my love and my safe haven.”",
-  "“Every moment with you is a memory I cherish.”",
-  "“You make the ordinary feel like magic.”",
-  "“Whatever our souls are made of, yours and mine are one.”",
-  "“With you, every day is another page in our story.”",
-  "“Loving you is the easiest thing I have ever done.”",
-  "“Two hearts, one story written in velvet.”",
-  "“In a sea of people, my eyes will always search for you.”",
-  "“Held close in thought, forever in my heart.”",
-  "“Every chapter with you only gets sweeter.”",
-  "“You are the melody in the quiet of my heart.”",
-  "“A lifetime of cherished moments, starting with you.”"
+const CONNECTION_COVER_QUOTES = [
+  "“Real connection begins when two people can simply be themselves.”",
+  "“A good conversation is a quiet sanctuary from the noisy world.”",
+  "“Shared stories, mutual understanding, and moments that matter.”",
+  "“The best connections happen naturally, one honest thought at a time.”",
+  "“Finding someone who truly listens is rare and grounding.”",
+  "“Two journeys crossing paths and sharing the view along the way.”",
+  "“Comfort is being around someone where silence is never awkward.”",
+  "“Every genuine conversation leaves a quiet mark on our story.”",
+  "“In a world of rush and noise, meaningful conversations linger.”",
+  "“Shared laughter and quiet moments make the best memories.”",
+  "“A space to share honest thoughts, small discoveries, and daily reflections.”",
+  "“The beauty of connection lies in discovering common ground.”",
+  "“Every shared chapter starts with a single honest conversation.”",
+  "“True rapport is built on mutual respect, curiosity, and warmth.”",
+  "“Small everyday moments turn out to be the ones that connect us most.”"
 ];
 
 function getDeterministicQuote(name1 = '', name2 = '') {
@@ -51,8 +51,8 @@ function getDeterministicQuote(name1 = '', name2 = '') {
     hash = (hash << 5) - hash + combined.charCodeAt(i);
     hash |= 0;
   }
-  const index = Math.abs(hash) % COUPLE_COVER_QUOTES.length;
-  return COUPLE_COVER_QUOTES[index];
+  const index = Math.abs(hash) % CONNECTION_COVER_QUOTES.length;
+  return CONNECTION_COVER_QUOTES[index];
 }
 
 /**
