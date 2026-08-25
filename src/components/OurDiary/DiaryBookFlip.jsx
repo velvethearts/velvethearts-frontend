@@ -42,17 +42,17 @@ export const DiaryBookFlip = forwardRef(({
   const touchStartRef = useRef(null);
   const [dimensions, setDimensions] = useState(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-    const w = isMobile ? Math.min(window.innerWidth - 32, 320) : 340;
-    const h = isMobile ? Math.min(window.innerHeight - 220, 460) : 490;
-    return { width: Math.max(w, 270), height: Math.max(h, 400) };
+    const w = isMobile ? Math.min(window.innerWidth - 48, 290) : 320;
+    const h = isMobile ? Math.min(window.innerHeight - 260, 420) : 460;
+    return { width: Math.max(w, 260), height: Math.max(h, 380) };
   });
 
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 640;
-      const w = isMobile ? Math.min(window.innerWidth - 32, 320) : 340;
-      const h = isMobile ? Math.min(window.innerHeight - 220, 460) : 490;
-      setDimensions({ width: Math.max(w, 270), height: Math.max(h, 400) });
+      const w = isMobile ? Math.min(window.innerWidth - 48, 290) : 320;
+      const h = isMobile ? Math.min(window.innerHeight - 260, 420) : 460;
+      setDimensions({ width: Math.max(w, 260), height: Math.max(h, 380) });
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
