@@ -10087,6 +10087,56 @@ html {
   object-fit: contain;
 }
 
+/* Biometric Face Scan Animation */
+@keyframes bioScanSweep {
+  0% {
+    transform: translateY(-70px);
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(70px);
+    opacity: 0.3;
+  }
+}
+
+.biometric-scan-beam {
+  animation: bioScanSweep 2.2s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+.photo-verify-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg, 16px);
+  padding: 14px 16px;
+  margin: 16px 0 20px;
+  text-align: left;
+}
+
+.photo-verify-check-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.photo-verify-check-item strong {
+  display: block;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+}
+
+.photo-verify-check-item span {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
 .photo-verify-countdown-overlay {
   position: absolute;
   font-size: 72px;

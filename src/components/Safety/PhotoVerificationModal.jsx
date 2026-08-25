@@ -9,45 +9,12 @@ import {
   ArrowsClockwise,
   Sparkle,
   WarningCircle,
-  HandWaving
+  UserFocus,
+  SunHorizon
 } from '@phosphor-icons/react';
 import { Button } from '../UI/Button';
 import { VerifiedBadge } from '../UI/VerifiedBadge';
 import { PoseGuideOverlay } from './PoseGuideOverlay';
-
-// Strictly one-handed selfie gesture challenges
-const ONE_HANDED_POSES = [
-  {
-    id: 'PEACE_SIGN',
-    emoji: '✌️',
-    title: 'Peace Sign',
-    instruction: 'Hold up a peace sign next to your cheek with one hand'
-  },
-  {
-    id: 'THUMBS_UP',
-    emoji: '👍',
-    title: 'Thumbs Up',
-    instruction: 'Give a thumbs up near your face with one hand'
-  },
-  {
-    id: 'SHAKA_SIGN',
-    emoji: '🤙',
-    title: 'Call Me / Shaka',
-    instruction: 'Make a shaka / call-me hand sign beside your face'
-  },
-  {
-    id: 'OPEN_PALM',
-    emoji: '🖐️',
-    title: 'Open Palm Wave',
-    instruction: 'Raise an open palm beside your cheek with a smile'
-  },
-  {
-    id: 'FINGER_CHIN',
-    emoji: '🤔',
-    title: 'Finger on Chin',
-    instruction: 'Rest your index finger lightly against your chin'
-  }
-];
 
 // Helper: Skin pixel detector using biometric color thresholding
 const isSkinPixel = (r, g, b) => {
@@ -83,8 +50,11 @@ const computeSobelEdgeMagnitude = (data, w, h, x, y) => {
   return Math.sqrt(gx * gx + gy * gy);
 };
 
-// Strict pose gesture presence analyzer
-const analyzePoseSelfie = (canvas, poseId) => {
+/**
+ * Biometric Live Face Structure Analyzer
+ * Checks that a human face is well-lit, centered, and has genuine facial contours
+ */
+const analyzeLiveFaceStructure = (canvas) => {
   if (!canvas) return { isValid: true };
   const ctx = canvas.getContext('2d');
   if (!ctx) return { isValid: true };
@@ -118,78 +88,47 @@ const analyzePoseSelfie = (canvas, poseId) => {
       };
     };
 
-    // 1. Center Face Region Check
+    // 1. Center Face Region Check (60% oval area)
     const faceMetrics = checkRegionMetrics(
-      Math.floor(width * 0.28),
-      Math.floor(height * 0.25),
-      Math.floor(width * 0.72),
-      Math.floor(height * 0.70)
+      Math.floor(width * 0.25),
+      Math.floor(height * 0.20),
+      Math.floor(width * 0.75),
+      Math.floor(height * 0.75)
     );
 
-    if (faceMetrics.skinRatio < 0.12) {
+    if (faceMetrics.skinRatio < 0.14) {
       return {
         isValid: false,
-        reason: 'Face not clearly detected. Please make sure your face is well-lit and centered inside the oval guide.'
+        reason: 'Face not clearly detected in the frame. Please make sure your face is centered inside the oval guide and well-lit.'
       };
     }
 
-    // 2. Background Corner Noise Baseline
-    const bgMetrics = checkRegionMetrics(
-      Math.floor(width * 0.02),
-      Math.floor(height * 0.02),
-      Math.floor(width * 0.18),
-      Math.floor(height * 0.18)
-    );
-
-    // 3. Pose Target Region Check
-    let handDetected = false;
-
-    if (poseId === 'FINGER_CHIN') {
-      const chinMetrics = checkRegionMetrics(
-        Math.floor(width * 0.35),
-        Math.floor(height * 0.62),
-        Math.floor(width * 0.65),
-        Math.floor(height * 0.88)
-      );
-      if (chinMetrics.skinRatio > 0.20 && chinMetrics.skinRatio > bgMetrics.skinRatio + 0.08 && chinMetrics.avgEdge > 25) {
-        handDetected = true;
-      }
-    } else {
-      // Right cheek gesture zone (primary) OR Left cheek gesture zone
-      const rightZone = checkRegionMetrics(
-        Math.floor(width * 0.66),
-        Math.floor(height * 0.25),
-        Math.floor(width * 0.98),
-        Math.floor(height * 0.72)
-      );
-
-      const leftZone = checkRegionMetrics(
-        Math.floor(width * 0.02),
-        Math.floor(height * 0.25),
-        Math.floor(width * 0.34),
-        Math.floor(height * 0.72)
-      );
-
-      const maxSkin = Math.max(rightZone.skinRatio, leftZone.skinRatio);
-      const maxEdge = Math.max(rightZone.avgEdge, leftZone.avgEdge);
-
-      // Require genuine skin presence AND finger/contour texture above background
-      if (maxSkin > 0.18 && maxSkin > bgMetrics.skinRatio + 0.08 && maxEdge > 20) {
-        handDetected = true;
-      }
-    }
-
-    if (!handDetected) {
+    if (faceMetrics.avgEdge < 10) {
       return {
         isValid: false,
-        reason: `Pose gesture not detected in the guide circle. Please raise your hand and make the requested pose clearly beside your face.`
+        reason: 'Insufficient facial clarity or blurriness detected. Please hold still in good lighting.'
+      };
+    }
+
+    // 2. Eye & Nose Bridge Region Texture
+    const eyeNoseMetrics = checkRegionMetrics(
+      Math.floor(width * 0.32),
+      Math.floor(height * 0.30),
+      Math.floor(width * 0.68),
+      Math.floor(height * 0.58)
+    );
+
+    if (eyeNoseMetrics.skinRatio < 0.10) {
+      return {
+        isValid: false,
+        reason: 'Facial features (eyes and nose bridge) are not clearly visible. Please remove any heavy masks or obstructions.'
       };
     }
 
     return { isValid: true };
   } catch (e) {
-    console.warn('Pose analysis error:', e);
-    return { isValid: false, reason: 'Could not process selfie frame. Please retry in good lighting.' };
+    console.warn('Face analysis error:', e);
+    return { isValid: false, reason: 'Could not analyze face frame. Please retry in good lighting.' };
   }
 };
 
@@ -199,7 +138,7 @@ const analyzePoseSelfie = (canvas, poseId) => {
  */
 const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
   if (!selfieCanvas || !profilePhotoUrl) {
-    return { isValid: true }; // No reference photo to compare against yet
+    return { isValid: true };
   }
 
   return new Promise((resolve) => {
@@ -209,7 +148,7 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
     img.onload = () => {
       try {
         const size = 120;
-        // 1. Create reference profile photo canvas
+        // 1. Reference profile photo canvas
         const refCanvas = document.createElement('canvas');
         refCanvas.width = size;
         refCanvas.height = size;
@@ -221,7 +160,7 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
         refCtx.drawImage(img, 0, 0, size, size);
         const refData = refCtx.getImageData(0, 0, size, size).data;
 
-        // 2. Create normalized selfie canvas
+        // 2. Normalized selfie canvas
         const sCanvas = document.createElement('canvas');
         sCanvas.width = size;
         sCanvas.height = size;
@@ -233,18 +172,18 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
         sCtx.drawImage(selfieCanvas, 0, 0, size, size);
         const sData = sCtx.getImageData(0, 0, size, size).data;
 
-        // 3. Extract Face Biometrics (Central 60% face box)
-        const xMin = Math.floor(size * 0.20);
-        const xMax = Math.floor(size * 0.80);
-        const yMin = Math.floor(size * 0.20);
-        const yMax = Math.floor(size * 0.80);
+        // 3. Extract Face Biometrics (Central 65% facial oval)
+        const xMin = Math.floor(size * 0.18);
+        const xMax = Math.floor(size * 0.82);
+        const yMin = Math.floor(size * 0.18);
+        const yMax = Math.floor(size * 0.82);
 
         let refSkinSum = { r: 0, g: 0, b: 0, count: 0 };
         let sSkinSum = { r: 0, g: 0, b: 0, count: 0 };
         let edgeCorrelations = [];
 
-        // 9-Sector Landmark Grid comparison
-        const sectors = 3;
+        // 16-Sector Detailed Landmark Grid (4x4)
+        const sectors = 4;
         const secW = (xMax - xMin) / sectors;
         const secH = (yMax - yMin) / sectors;
 
@@ -276,7 +215,7 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
                 }
                 refSecEdge += computeSobelEdgeMagnitude(refData, size, size, px, py);
 
-                // Selfie photo metrics
+                // Live Selfie metrics
                 const sr = sData[idx];
                 const sg = sData[idx + 1];
                 const sb = sData[idx + 2];
@@ -300,9 +239,9 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
         // Structural facial correlation score
         const structuralScore = edgeCorrelations.reduce((acc, v) => acc + v, 0) / edgeCorrelations.length;
 
-        // Chromatic / Skin Profile similarity
+        // Chromatic / Skin tone distribution similarity
         let chromaticScore = 1.0;
-        if (refSkinSum.count > 15 && sSkinSum.count > 15) {
+        if (refSkinSum.count > 20 && sSkinSum.count > 20) {
           const refAvgR = refSkinSum.r / refSkinSum.count;
           const refAvgG = refSkinSum.g / refSkinSum.count;
           const refAvgB = refSkinSum.b / refSkinSum.count;
@@ -319,13 +258,13 @@ const compareFaceBiometrics = async (selfieCanvas, profilePhotoUrl) => {
 
         // Combined Biometric Similarity (0.0 to 1.0)
         const combinedSimilarity = structuralScore * 0.65 + chromaticScore * 0.35;
-        console.log('[BiometricVerification] Face comparison score:', {
+        console.log('[BiometricVerification] Face structure comparison:', {
           structuralScore: structuralScore.toFixed(3),
           chromaticScore: chromaticScore.toFixed(3),
           combinedSimilarity: combinedSimilarity.toFixed(3)
         });
 
-        // If similarity is below 0.60, reject as face mismatch
+        // Strict rejection threshold: < 0.60 indicates a completely different face
         if (combinedSimilarity < 0.60) {
           resolve({
             isValid: false,
@@ -356,7 +295,6 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
   const { userProfile, setUserProfile, showAlert } = useApp();
 
   const [step, setStep] = useState('intro'); // 'intro' | 'camera' | 'preview' | 'failed' | 'success'
-  const [selectedPose, setSelectedPose] = useState(ONE_HANDED_POSES[0]);
   const [stream, setStream] = useState(null);
   const [cameraError, setCameraError] = useState('');
   const [capturedImage, setCapturedImage] = useState(null);
@@ -368,11 +306,8 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
   const canvasRef = useRef(null);
   const countdownIntervalRef = useRef(null);
 
-  // Pick random pose whenever modal opens
   useEffect(() => {
     if (isOpen) {
-      const randIndex = Math.floor(Math.random() * ONE_HANDED_POSES.length);
-      setSelectedPose(ONE_HANDED_POSES[randIndex]);
       setStep('intro');
       setCapturedImage(null);
       setCameraError('');
@@ -382,7 +317,6 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
     }
   }, [isOpen]);
 
-  // Clean up media streams on unmount
   useEffect(() => {
     return () => {
       stopCamera();
@@ -396,7 +330,6 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
     setCameraError('');
     setFailureReason('');
     try {
-      // Release any lingering tracks first
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
@@ -432,7 +365,6 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
     setCountdown(null);
   };
 
-  // Attach stream to video tag whenever stream changes or camera step activates
   useEffect(() => {
     if (videoRef.current && stream && step === 'camera') {
       videoRef.current.srcObject = stream;
@@ -486,7 +418,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
 
     try {
       ctx.save();
-      // Mirror horizontally for natural selfie orientation (matching scaleX(-1))
+      // Mirror horizontally for natural selfie orientation
       ctx.translate(size, 0);
       ctx.scale(-1, 1);
       ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
@@ -526,16 +458,16 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
     setFailureReason('');
 
     try {
-      // 1. Run computer-vision pose analysis
-      const poseAnalysis = analyzePoseSelfie(canvasRef.current, selectedPose.id);
-      if (!poseAnalysis.isValid) {
-        setFailureReason(poseAnalysis.reason || 'Pose not clearly detected.');
+      // 1. Run live face structure and framing verification
+      const faceStructure = analyzeLiveFaceStructure(canvasRef.current);
+      if (!faceStructure.isValid) {
+        setFailureReason(faceStructure.reason || 'Face structure not clearly detected.');
         setStep('failed');
         setIsSubmitting(false);
         return;
       }
 
-      // 2. Run anti-catfish face comparison against profile photo
+      // 2. Run anti-catfish face comparison against uploaded profile photo
       const referencePhoto = primaryPhotoUrl || userProfile?.photos?.[0];
       if (referencePhoto) {
         const faceAnalysis = await compareFaceBiometrics(canvasRef.current, referencePhoto);
@@ -551,7 +483,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       if (api.isConfigured && api.verifyPhoto) {
         const res = await api.verifyPhoto({
           selfie: capturedImage,
-          poseId: selectedPose.id
+          poseId: 'BIOMETRIC_FACE_ID'
         });
         if (res && res.success === false) {
           throw new Error(res.message || 'Verification rejected');
@@ -586,13 +518,13 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       aria-modal="true"
       aria-labelledby="photo-verify-title"
     >
-      <div className="vh-modal-card photo-verify-card font-ui">
-        {/* Header */}
+      <div className="photo-verify-card font-ui">
+        {/* Header Bar */}
         <div className="photo-verify-header">
-          <div className="photo-verify-title-group">
-            <ShieldCheck size={20} weight="fill" color="#B8436A" />
-            <h2 id="photo-verify-title" className="photo-verify-title font-display">
-              Photo Verification
+          <div className="photo-verify-title-wrap">
+            <ShieldCheck size={24} weight="fill" color="#D4AD6A" />
+            <h2 id="photo-verify-title" className="photo-verify-modal-title font-display">
+              Face ID Verification
             </h2>
           </div>
           <button
@@ -602,42 +534,58 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
               stopCamera();
               onClose();
             }}
-            aria-label="Close modal"
+            aria-label="Close photo verification"
           >
-            <X size={18} />
+            <X size={18} weight="bold" />
           </button>
         </div>
 
-        {/* Modal Body */}
+        {/* Dynamic Modal Content by Step */}
         <div className="photo-verify-body">
-          {/* STEP 1: INTRO */}
+          {/* STEP 1: INTRO EXPLANATION */}
           {step === 'intro' && (
             <div className="photo-verify-intro-step">
-              <div className="photo-verify-badge-preview">
-                <VerifiedBadge variant="pill" size="md" interactive={false} />
+              <div className="photo-verify-shield-badge-hero">
+                <div className="photo-verify-rosette-glow">
+                  <VerifiedBadge variant="rosette" size="lg" interactive={false} />
+                  <div className="photo-verify-sparkle-halo">
+                    <Sparkle size={16} weight="fill" color="#FFFFFF" />
+                  </div>
+                </div>
               </div>
 
               <h3 className="photo-verify-headline font-display">
-                Get Your Verified Badge
+                Verify Your Profile Authenticity
               </h3>
               <p className="photo-verify-desc font-body">
-                Confirm your identity with a quick one-handed selfie gesture. This proves you are the real person in your photos and helps keep our community authentic and free from catfishing.
+                Take a quick 5-second live face scan to confirm your identity against your profile photos. Verified profiles earn the official <strong>Verified Rosette</strong> and receive up to <strong>3x more matches</strong>.
               </p>
 
-              <div className="photo-verify-pose-teaser">
-                <div className="photo-verify-pose-badge font-ui">
-                  <span className="photo-verify-pose-emoji">{selectedPose.emoji}</span>
-                  <div className="photo-verify-pose-meta">
-                    <span className="photo-verify-pose-label">Your Quick Gesture:</span>
-                    <strong className="photo-verify-pose-name">{selectedPose.instruction}</strong>
+              <div className="photo-verify-checklist">
+                <div className="photo-verify-check-item">
+                  <UserFocus size={20} weight="fill" color="#D4AD6A" />
+                  <div>
+                    <strong>Face Centered</strong>
+                    <span>Position your face naturally in the oval frame</span>
+                  </div>
+                </div>
+                <div className="photo-verify-check-item">
+                  <SunHorizon size={20} weight="fill" color="#D4AD6A" />
+                  <div>
+                    <strong>Good Lighting</strong>
+                    <span>Make sure your facial features are clearly visible</span>
                   </div>
                 </div>
               </div>
 
               <div className="photo-verify-actions">
-                <Button variant="primary" onClick={startCamera} className="photo-verify-btn-full">
+                <Button
+                  variant="primary"
+                  onClick={startCamera}
+                  className="photo-verify-btn-full"
+                >
                   <Camera size={18} weight="bold" />
-                  <span>Start Verification</span>
+                  <span>Start Face Scan</span>
                 </Button>
                 <Button
                   variant="secondary"
@@ -650,33 +598,34 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
             </div>
           )}
 
-          {/* STEP 2: CAMERA CAPTURE */}
+          {/* STEP 2: LIVE CAMERA VIEW */}
           {step === 'camera' && (
             <div className="photo-verify-camera-step">
-              <div className="photo-verify-instruction-bar font-ui">
-                <span className="photo-verify-emoji-large">{selectedPose.emoji}</span>
-                <span>{selectedPose.instruction}</span>
+              <div className="photo-verify-camera-banner">
+                <span className="photo-verify-banner-title">
+                  Position your face in the oval and look at the camera
+                </span>
               </div>
 
+              {/* Viewfinder Container */}
               <div className="photo-verify-viewfinder-wrap">
                 <video
                   ref={videoRef}
                   playsInline
-                  autoPlay
                   muted
-                  className="photo-verify-video"
-                />
-                
-                {/* Dynamic Pose Outline Silhouette Overlay */}
-                <PoseGuideOverlay
-                  poseId={selectedPose.id}
-                  emoji={selectedPose.emoji}
-                  instruction={selectedPose.instruction}
+                  autoPlay
+                  className="photo-verify-video-element"
                 />
 
+                {/* Biometric Face Scan Overlay */}
+                <PoseGuideOverlay instruction="Center face in oval" />
+
+                {/* Countdown Overlay (3, 2, 1) */}
                 {countdown !== null && (
-                  <div className="photo-verify-countdown-overlay font-display">
-                    {countdown}
+                  <div className="photo-verify-countdown-overlay">
+                    <span className="photo-verify-countdown-number font-display">
+                      {countdown}
+                    </span>
                   </div>
                 )}
               </div>
@@ -710,7 +659,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                     <div className="photo-verify-shutter-inner" />
                   </button>
                   <span className="photo-verify-shutter-hint font-ui">
-                    Tap to take photo (3s timer)
+                    Tap shutter to scan face (3s timer)
                   </span>
                 </div>
               )}
@@ -720,17 +669,17 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
           {/* STEP 3: PREVIEW & CONFIRM */}
           {step === 'preview' && (
             <div className="photo-verify-preview-step">
-              <h3 className="photo-verify-headline font-display">Review Your Selfie</h3>
+              <h3 className="photo-verify-headline font-display">Confirm Your Face Scan</h3>
               <p className="photo-verify-desc font-body">
-                Make sure your face and the <strong>{selectedPose.title} ({selectedPose.emoji})</strong> are clearly visible.
+                Check your selfie below. Make sure your facial features are sharp and well-lit.
               </p>
 
               <div className="photo-verify-comparison-grid">
                 <div className="photo-verify-compare-card">
-                  <span className="photo-verify-compare-tag font-ui">Verification Pose</span>
+                  <span className="photo-verify-compare-tag font-ui">Live Face Scan</span>
                   <img
                     src={capturedImage}
-                    alt="Captured pose selfie"
+                    alt="Captured face scan"
                     className="photo-verify-compare-img"
                   />
                 </div>
@@ -754,7 +703,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                   className="photo-verify-btn-full"
                 >
                   <CheckCircle size={18} weight="bold" />
-                  <span>{isSubmitting ? 'Verifying...' : 'Confirm & Submit'}</span>
+                  <span>{isSubmitting ? 'Analyzing Facial Biometrics...' : 'Confirm & Verify'}</span>
                 </Button>
                 <Button
                   variant="secondary"
@@ -763,7 +712,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                   className="photo-verify-btn-full"
                 >
                   <ArrowsClockwise size={16} />
-                  <span>Retake Photo</span>
+                  <span>Retake Scan</span>
                 </Button>
               </div>
             </div>
@@ -779,10 +728,10 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                 {failureReason.includes('Face mismatch') ? 'Face Mismatch Detected' : 'Verification Incomplete'}
               </h3>
               <p className="photo-verify-desc font-body" style={{ color: 'var(--text-primary)' }}>
-                {failureReason || `We couldn't verify your live selfie. Please ensure you match the requested gesture and that your selfie matches your uploaded profile photos.`}
+                {failureReason || `We couldn't verify your live face scan. Please ensure your face is well-lit and matches your uploaded profile photos.`}
               </p>
 
-              {/* Side-by-side preview if face mismatch */}
+              {/* Side-by-side comparison on face mismatch */}
               {failureReason.includes('Face mismatch') && (primaryPhotoUrl || userProfile?.photos?.[0]) && capturedImage && (
                 <div className="photo-verify-comparison-grid" style={{ margin: '14px 0' }}>
                   <div className="photo-verify-compare-card">
@@ -805,31 +754,14 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                 </div>
               )}
 
-              {!failureReason.includes('Face mismatch') && (
-                <div className="photo-verify-pose-teaser">
-                  <div className="photo-verify-pose-badge font-ui" style={{ borderColor: 'rgba(208, 48, 80, 0.4)' }}>
-                    <span className="photo-verify-pose-emoji">{selectedPose.emoji}</span>
-                    <div className="photo-verify-pose-meta">
-                      <span className="photo-verify-pose-label" style={{ color: '#D03050' }}>Requested Gesture:</span>
-                      <strong className="photo-verify-pose-name">{selectedPose.instruction}</strong>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className="photo-verify-actions">
                 <Button
                   variant="primary"
-                  onClick={() => {
-                    const otherPoses = ONE_HANDED_POSES.filter((p) => p.id !== selectedPose.id);
-                    const nextPose = otherPoses[Math.floor(Math.random() * otherPoses.length)] || selectedPose;
-                    setSelectedPose(nextPose);
-                    startCamera();
-                  }}
+                  onClick={startCamera}
                   className="photo-verify-btn-full"
                 >
                   <ArrowsClockwise size={18} weight="bold" />
-                  <span>Retake Live Selfie</span>
+                  <span>Retake Face Scan</span>
                 </Button>
                 <Button
                   variant="secondary"
@@ -852,7 +784,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                 You’re Verified!
               </h3>
               <p className="photo-verify-desc font-body">
-                Your live pose selfie was confirmed. The <strong>Verified Badge</strong> is now active on your profile and visible to all your matches.
+                Your biometric face scan was confirmed. The <strong>Verified Rosette Badge</strong> is now active on your profile and visible to all your connections.
               </p>
 
               <div className="photo-verify-badge-celebrate">
@@ -875,7 +807,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
           )}
         </div>
 
-        {/* Persistent Hidden Canvas for Frame Capture */}
+        {/* Hidden Canvas for Frame Capture */}
         <canvas ref={canvasRef} style={{ display: 'none' }} />
       </div>
     </div>
