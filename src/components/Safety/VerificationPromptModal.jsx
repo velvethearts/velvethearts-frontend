@@ -157,6 +157,7 @@ export const VerificationPromptModal = () => {
       <PhotoVerificationModal
         isOpen={isPhotoVerifyOpen}
         onClose={() => setIsPhotoVerifyOpen(false)}
+        primaryPhotoUrl={userProfile?.photos?.[0] || null}
         onVerified={handleVerifiedSuccess}
       />
     </>

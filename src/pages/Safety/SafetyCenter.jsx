@@ -637,6 +637,7 @@ export const SafetyCenter = () => {
       <PhotoVerificationModal
         isOpen={isVerifyModalOpen}
         onClose={() => setIsVerifyModalOpen(false)}
+        primaryPhotoUrl={userProfile?.photos?.[0] || null}
         onVerified={() => setIsVerifyModalOpen(false)}
       />
     </div>
