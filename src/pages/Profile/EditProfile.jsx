@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { ArrowLeft, Camera, Trash, ArrowUp, ArrowDown, CheckCircle, FloppyDisk } from '@phosphor-icons/react';
+import { ArrowLeft, Camera, Trash, ArrowUp, ArrowDown, CheckCircle, FloppyDisk, ShieldCheck } from '@phosphor-icons/react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
 import { Textarea } from '../../components/UI/Textarea';
@@ -12,6 +12,7 @@ import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getProfilePhoto, extractPhotoUrls } from '../../utils/avatar';
 import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageFingerprint';
 import { StateSelectDropdown } from '../../components/UI/StateSelectDropdown';
+import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
 
 export const EditProfile = ({ onBack }) => {
   const { userProfile, setUserProfile, updateUserProfile, showAlert } = useApp();
@@ -26,11 +27,36 @@ export const EditProfile = ({ onBack }) => {
   const [uploadProgress, setUploadProgress] = useState(null); // null or { index, percent }
   const [isSaving, setIsSaving] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
   const autoSaveTimeoutRef = useRef(null);
   const savedPillTimeoutRef = useRef(null);
   const isInitialMount = useRef(true);
   const latestLocalProfile = useRef(localProfile);
+  const initialPrimaryPhotoRef = useRef(extractPhotoUrls(userProfile)?.[0] || userProfile?.photos?.[0] || null);
+  const hasAlertedPrimaryChangeRef = useRef(false);
+
+  const checkAndNotifyPrimaryPhotoChange = (newPrimaryPhoto) => {
+    if (newPrimaryPhoto !== initialPrimaryPhotoRef.current) {
+      if (userProfile?.verified || localProfile?.verified) {
+        setLocalProfile(prev => ({ ...prev, verified: false }));
+        setUserProfile(prev => ({ ...prev, verified: false }));
+
+        if (!hasAlertedPrimaryChangeRef.current) {
+          hasAlertedPrimaryChangeRef.current = true;
+          const msg = 'Your primary profile photo was updated. To maintain community authenticity and safety, your verified badge has been reset. Please complete a quick face scan to re-verify your new photo.';
+          if (showAlert) {
+            showAlert({
+              title: 'Primary Photo Changed',
+              message: msg,
+            });
+          } else {
+            alert(msg);
+          }
+        }
+      }
+    }
+  };
 
   const getNormalizedProfileString = (p) => {
     if (!p) return '';
@@ -38,65 +64,63 @@ export const EditProfile = ({ onBack }) => {
       name: (p.name || '').trim(),
       city: (p.city || '').trim(),
       gender: p.gender || 'Woman',
-      showGender: Boolean(p.showGender ?? true),
       orientation: p.orientation || 'Straight',
-      showOrientation: Boolean(p.showOrientation ?? true),
       relationshipIntent: p.relationshipIntent || 'Long-term Relationship',
       relationshipStatus: p.relationshipStatus || 'Single',
       story: (p.story || '').trim(),
-      interests: [...(p.interests || [])].sort(),
+      interests: (p.interests || []).filter(Boolean).sort(),
       photos: (p.photos || []).filter(Boolean),
-      voiceIntroUrl: p.voiceIntroUrl || null,
+      education: (p.education || '').trim(),
+      occupation: (p.occupation || '').trim(),
+      languages: (p.languages || []).filter(Boolean).sort(),
       hasDisability: Boolean(p.hasDisability),
       disabilityInfo: (p.disabilityInfo || '').trim(),
-      showDisability: Boolean(p.showDisability)
+      showDisability: Boolean(p.showDisability),
+      showGender: p.showGender !== false,
+      showOrientation: p.showOrientation !== false,
+      dobDay: Number(p.dobDay) || 1,
+      dobMonth: Number(p.dobMonth) || 1,
+      dobYear: Number(p.dobYear) || 1998,
+      voiceIntroUrl: (p.voiceIntroUrl || '').trim()
     });
   };
 
-  const lastSavedProfileRef = useRef(getNormalizedProfileString(userProfile));
+  const lastSavedProfileRef = useRef(getNormalizedProfileString(localProfile));
   latestLocalProfile.current = localProfile;
 
-  const interestOptions = [
-    'Books', 'Music', 'Art', 'Nature', 'Movies', 'Food',
-    'Fitness', 'Travel', 'Games', 'Photo', 'Wellness', 'Animals',
-    'Technology', 'Sports', 'Theater', 'Social Causes', 'Podcasts'
-  ];
-
-  // Sync loaded userProfile into localProfile if userProfile hydrates after mount
-  useEffect(() => {
-    if (userProfile && (userProfile.id || userProfile.name)) {
-      const normalizedLoaded = getNormalizedProfileString(userProfile);
-      setLocalProfile(prev => {
-        if (!prev.voiceIntroUrl && userProfile.voiceIntroUrl) {
-          return { ...prev, voiceIntroUrl: userProfile.voiceIntroUrl };
-        }
-        if (!prev.name && userProfile.name) {
-          return { ...prev, ...userProfile };
-        }
-        return prev;
-      });
-      lastSavedProfileRef.current = normalizedLoaded;
-    }
-  }, [userProfile]);
+  const handleFieldChange = (field, value) => {
+    setLocalProfile((prev) => ({ ...prev, [field]: value }));
+  };
 
   const getProfileValidationErrors = useCallback((p) => {
     const errors = {};
-    if (!p.name || p.name.trim().length < 2) {
-      errors.name = 'Name must be at least 2 characters.';
-    } else if (p.name.trim().length > 40) {
-      errors.name = 'Name must be 40 characters or fewer.';
+    if (!p.name || !p.name.trim()) errors.name = 'Name is required.';
+    if (!p.city || !p.city.trim()) errors.city = 'Please select your State / Union Territory.';
+    if (!p.story || !p.story.trim()) {
+      errors.story = 'Story is required.';
+    } else if (p.story.trim().length < 20) {
+      errors.story = 'Story must be at least 20 characters.';
     }
-
-    if (!p.city || p.city.trim().length < 2) {
-      errors.city = 'Please select a valid State / Union Territory.';
-    }
-
-    if (!p.story || p.story.trim().length < 20) {
-      errors.story = `Story must be at least 20 characters (current: ${(p.story || '').trim().length}).`;
-    }
-
     if (!p.interests || p.interests.length < 3) {
       errors.interests = 'Select at least 3 interests.';
+    }
+
+    const day = Number(p.dobDay);
+    const month = Number(p.dobMonth);
+    const year = Number(p.dobYear);
+    if (!day || day < 1 || day > 31 || !month || month < 1 || month > 12 || !year) {
+      errors.dob = 'Valid date of birth required.';
+    } else {
+      const today = new Date();
+      const birthDate = new Date(year, month - 1, day);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        errors.dob = 'You must be at least 18 years old.';
+      }
     }
 
     if (!p.photos || p.photos.filter(Boolean).length < 1) {
@@ -154,17 +178,12 @@ export const EditProfile = ({ onBack }) => {
     } catch (err) {
       console.error('Auto-save profile update failed:', err);
       setAutoSaveStatus('error');
-      // Even if network fails, ensure state and localStorage keep the edited values
       setUserProfile(prev => ({ ...prev, ...payload }));
-      try {
-        localStorage.setItem('vh-user-profile', JSON.stringify({ ...(userProfile || {}), ...payload }));
-      } catch (_) {}
     } finally {
       setIsSaving(false);
     }
   }, [updateUserProfile, setUserProfile, userProfile]);
 
-  // Debounced auto-save whenever fields change
   useEffect(() => {
     const errs = getProfileValidationErrors(localProfile);
     setValidationErrors(errs);
@@ -178,36 +197,31 @@ export const EditProfile = ({ onBack }) => {
       clearTimeout(autoSaveTimeoutRef.current);
     }
 
-    const currentStr = getNormalizedProfileString(localProfile);
-    const hasChanges = currentStr !== lastSavedProfileRef.current;
-    const isValid = Object.keys(errs).length === 0;
-
-    if (hasChanges && isValid) {
-      setAutoSaveStatus('saving');
-      autoSaveTimeoutRef.current = setTimeout(() => {
-        saveProfileData(localProfile);
-      }, 750);
-    }
-  }, [localProfile, getProfileValidationErrors, saveProfileData]);
-
-  const handleBack = async () => {
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
+    const currentNormalized = getNormalizedProfileString(localProfile);
+    if (currentNormalized === lastSavedProfileRef.current) {
+      return;
     }
 
-    const currentStr = getNormalizedProfileString(latestLocalProfile.current);
-    const hasChanges = currentStr !== lastSavedProfileRef.current;
-    const isValid = checkProfileValid(latestLocalProfile.current);
-
-    if (hasChanges && isValid && !isSaving) {
-      await saveProfileData(latestLocalProfile.current);
+    if (!checkProfileValid(localProfile)) {
+      setAutoSaveStatus('idle');
+      return;
     }
-    onBack();
-  };
 
-  const handleFieldChange = (field, value) => {
-    setLocalProfile(prev => ({ ...prev, [field]: value }));
-  };
+    setAutoSaveStatus('saving');
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      saveProfileData(localProfile);
+    }, 800);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+    };
+  }, [localProfile, checkProfileValid, getProfileValidationErrors, saveProfileData]);
+
+  const interestOptions = [
+    'Art', 'Music', 'Books', 'Nature', 'Cooking', 'Travel',
+    'Tech', 'Gaming', 'Fitness', 'Yoga', 'Writing', 'Cinema',
+    'Photography', 'Astronomy', 'Gardening', 'Dancing', 'History', 'Coffee'
+  ];
 
   const [customInterestInput, setCustomInterestInput] = useState('');
 
@@ -232,20 +246,15 @@ export const EditProfile = ({ onBack }) => {
     setCustomInterestInput('');
   };
 
-  // Real Cloudinary / DataURL Photo Manager Upload
   const handlePhotoUpload = async (e, index) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // 1. Check for duplicate image against existing photos in other slots
     const otherPhotos = (localProfile.photos || []).filter((_, i) => i !== index);
     const duplicateCheck = await checkPhotoDuplicate(file, otherPhotos);
     if (duplicateCheck.isDuplicate) {
       if (showAlert) {
-        showAlert({
-          title: 'Duplicate Photo',
-          message: DUPLICATE_PHOTO_MESSAGE,
-        });
+        showAlert({ title: 'Duplicate Photo', message: DUPLICATE_PHOTO_MESSAGE });
       } else {
         alert(DUPLICATE_PHOTO_MESSAGE);
       }
@@ -254,18 +263,15 @@ export const EditProfile = ({ onBack }) => {
     }
 
     setUploadProgress({ index, percent: 30 });
-
     try {
       let finalUrl = null;
       if (api.isConfigured) {
         setUploadProgress({ index, percent: 60 });
         try {
           const res = await api.uploadFile(file);
-          if (res?.secureUrl) {
-            finalUrl = res.secureUrl;
-          }
+          if (res?.secureUrl) finalUrl = res.secureUrl;
         } catch (uploadErr) {
-          console.error('File upload error, falling back to local data URL:', uploadErr);
+          console.error('File upload error:', uploadErr);
         }
       }
 
@@ -277,29 +283,22 @@ export const EditProfile = ({ onBack }) => {
         });
       }
 
-      if (!finalUrl) {
-        throw new Error('Image upload failed. Please try a different photo.');
-      }
-
       setUploadProgress({ index, percent: 100 });
       setLocalProfile(prev => {
         const nextPhotos = [...(prev.photos || [])];
         nextPhotos[index] = finalUrl;
         return { ...prev, photos: nextPhotos };
       });
+
+      if (index === 0) {
+        checkAndNotifyPrimaryPhotoChange(finalUrl);
+      }
     } catch (err) {
       console.error('Photo upload failed:', err);
       const isModerationErr = err?.message?.toLowerCase().includes('inappropriate') || err?.message?.toLowerCase().includes('explicit') || err?.message?.toLowerCase().includes('moderation');
-
-      const alertMsg = isModerationErr
-        ? '⚠️ Image Discarded: This photo was removed because it contains inappropriate or explicit content. Please choose a different photo.'
-        : (err?.message || 'Photo upload failed. Please try again.');
-
+      const alertMsg = isModerationErr ? '⚠️ Image Discarded: This photo was removed because it contains inappropriate or explicit content.' : 'Photo upload failed. Please try again.';
       if (showAlert) {
-        showAlert({
-          title: 'Image Discarded',
-          message: alertMsg,
-        });
+        showAlert({ title: 'Image Discarded', message: alertMsg });
       } else {
         alert(alertMsg);
       }
@@ -312,6 +311,9 @@ export const EditProfile = ({ onBack }) => {
   const handleDeletePhoto = (index) => {
     setLocalProfile(prev => {
       const nextPhotos = (prev.photos || []).filter((_, i) => i !== index);
+      if (index === 0) {
+        checkAndNotifyPrimaryPhotoChange(nextPhotos[0] || null);
+      }
       return { ...prev, photos: nextPhotos };
     });
   };
@@ -325,6 +327,9 @@ export const EditProfile = ({ onBack }) => {
       const temp = nextPhotos[index];
       nextPhotos[index] = nextPhotos[newIndex];
       nextPhotos[newIndex] = temp;
+      if (index === 0 || newIndex === 0) {
+        checkAndNotifyPrimaryPhotoChange(nextPhotos[0]);
+      }
       return { ...prev, photos: nextPhotos };
     });
   };
@@ -339,57 +344,38 @@ export const EditProfile = ({ onBack }) => {
     onBack();
   };
 
-  const getAge = () => {
-    if (!localProfile.dobYear) return 'Age';
-    return new Date().getFullYear() - parseInt(localProfile.dobYear, 10);
+  const handleBack = () => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+      if (isFormValid()) {
+        saveProfileData(localProfile);
+      }
+    }
+    onBack();
   };
 
   const renderAutoSavePill = () => {
-    if (autoSaveStatus === 'saving' || isSaving) {
-      return (
-        <span className="auto-save-status-pill saving font-ui">
-          <span className="auto-save-spinner" /> Saving changes...
-        </span>
-      );
+    switch (autoSaveStatus) {
+      case 'saving': return <span className="auto-save-status-pill saving font-ui"><span className="auto-save-spinner" /> Saving changes…</span>;
+      case 'saved': return <span className="auto-save-status-pill saved font-ui"><CheckCircle size={14} weight="bold" /> All changes saved</span>;
+      case 'error': return <span className="auto-save-status-pill error font-ui">Auto-save failed</span>;
+      default: return <span className="auto-save-status-pill idle font-ui"><FloppyDisk size={14} /> Auto-saving</span>;
     }
-    if (autoSaveStatus === 'saved') {
-      return (
-        <span className="auto-save-status-pill saved font-ui">
-          <CheckCircle size={14} weight="fill" /> Saved automatically
-        </span>
-      );
-    }
-    if (autoSaveStatus === 'error') {
-      return (
-        <span className="auto-save-status-pill error font-ui">
-          ⚠️ Save failed
-        </span>
-      );
-    }
-    return (
-      <span className="auto-save-status-pill idle font-ui">
-        🔄️ Auto-save active
-      </span>
-    );
   };
 
   return (
     <div className="edit-profile-page page-enter">
       <PageHeader
         title="Edit Profile"
-        subtitle="Changes to your photos and profile details are auto-saved automatically."
+        subtitle="Changes to your photos and profile details are auto-saved."
         onBack={handleBack}
         actions={renderAutoSavePill()}
       />
 
       <div className="edit-split-container">
-
-        {/* Left pane: Forms & Photos */}
         <form onSubmit={handleSubmit} className="edit-form-panel font-ui">
-
-          {/* Photo Management */}
           <div className="edit-form-section">
-            <span className="edit-section-label">Photos (Up to 6, drag-and-drop placeholder)</span>
+            <span className="edit-section-label">Photos (Up to 6)</span>
             <div className="photo-manager-grid">
               {Array.from({ length: 6 }).map((_, idx) => {
                 const img = localProfile.photos[idx];
@@ -398,53 +384,20 @@ export const EditProfile = ({ onBack }) => {
                 return (
                   <div key={idx} className="photo-manager-slot">
                     {isUploading ? (
-                      <div className="upload-progress-overlay">
-                        <div className="progress-spinner" />
-                        <span className="pct-txt">{uploadProgress.percent}%</span>
-                      </div>
+                      <div className="upload-progress-overlay"><div className="progress-spinner" /> <span className="pct-txt">{uploadProgress.percent}%</span></div>
                     ) : img ? (
                       <div className="photo-active-wrap">
                         <ProtectedImage src={img} alt={`Profile slot ${idx + 1}`} style={{ width: '100%', height: '100%' }} />
                         <div className="slot-actions">
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePhoto(idx)}
-                            className="slot-act-btn delete"
-                            title="Delete photo"
-                          >
-                            <Trash size={14} />
-                          </button>
-                          {idx > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => handleMovePhoto(idx, 'up')}
-                              className="slot-act-btn"
-                              title="Move up"
-                            >
-                              <ArrowUp size={14} />
-                            </button>
-                          )}
-                          {idx < localProfile.photos.length - 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleMovePhoto(idx, 'down')}
-                              className="slot-act-btn"
-                              title="Move down"
-                            >
-                              <ArrowDown size={14} />
-                            </button>
-                          )}
+                          <button type="button" onClick={() => handleDeletePhoto(idx)} className="slot-act-btn delete"><Trash size={14} /></button>
+                          {idx > 0 && <button type="button" onClick={() => handleMovePhoto(idx, 'up')} className="slot-act-btn"><ArrowUp size={14} /></button>}
+                          {idx < localProfile.photos.length - 1 && <button type="button" onClick={() => handleMovePhoto(idx, 'down')} className="slot-act-btn"><ArrowDown size={14} /></button>}
                         </div>
                         {idx === 0 && <span className="primary-photo-tag font-ui">Primary</span>}
                       </div>
                     ) : (
                       <label className="photo-upload-label">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handlePhotoUpload(e, idx)}
-                          className="sr-only"
-                        />
+                        <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, idx)} className="sr-only" />
                         <Camera size={20} className="camera-icon" />
                         <span className="upload-btn-text">Add</span>
                       </label>
@@ -452,6 +405,29 @@ export const EditProfile = ({ onBack }) => {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Photo Verification Status / Re-Verify Banner */}
+            <div className="edit-verify-box font-ui" style={{ marginTop: '16px', padding: '14px 16px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(212, 173, 106, 0.3)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <ShieldCheck size={26} weight="fill" color={localProfile.verified ? '#22C55E' : '#B8436A'} />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>
+                    {localProfile.verified ? 'Verified Profile Badge Active ✓' : 'Verification Required for Primary Photo'}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    {localProfile.verified ? 'Your primary photo matches your live biometric face scan.' : 'A live face scan is required to authenticate your primary photo.'}
+                  </div>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant={localProfile.verified ? 'secondary' : 'primary'}
+                size="sm"
+                onClick={() => setIsVerifyModalOpen(true)}
+              >
+                {localProfile.verified ? 'Re-verify' : 'Verify Now'}
+              </Button>
             </div>
           </div>
 
@@ -1153,6 +1129,17 @@ export const EditProfile = ({ onBack }) => {
           to { transform: rotate(360deg); }
         }
       `}</style>
+
+      <PhotoVerificationModal
+        isOpen={isVerifyModalOpen}
+        onClose={() => setIsVerifyModalOpen(false)}
+        primaryPhotoUrl={localProfile.photos?.[0] || null}
+        onVerified={() => {
+          setLocalProfile(prev => ({ ...prev, verified: true }));
+          setUserProfile(prev => ({ ...prev, verified: true }));
+          setIsVerifyModalOpen(false);
+        }}
+      />
     </div>
   );
 };
