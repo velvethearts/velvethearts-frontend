@@ -13,6 +13,7 @@ import {
 } from '@phosphor-icons/react';
 import { Button } from '../UI/Button';
 import { VerifiedBadge } from '../UI/VerifiedBadge';
+import { PoseGuideOverlay } from './PoseGuideOverlay';
 
 // Strictly one-handed selfie gesture challenges
 const ONE_HANDED_POSES = [
@@ -305,7 +306,13 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
                   muted
                   className="photo-verify-video"
                 />
-                <div className="photo-verify-oval-guide" />
+                
+                {/* Dynamic Pose Outline Silhouette Overlay */}
+                <PoseGuideOverlay
+                  poseId={selectedPose.id}
+                  emoji={selectedPose.emoji}
+                  instruction={selectedPose.instruction}
+                />
 
                 {countdown !== null && (
                   <div className="photo-verify-countdown-overlay font-display">
