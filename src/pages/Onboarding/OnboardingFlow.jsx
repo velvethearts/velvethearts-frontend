@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { Camera, Info, X } from '@phosphor-icons/react';
+import { Camera, Info, X, ShieldCheck } from '@phosphor-icons/react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
 import { Textarea } from '../../components/UI/Textarea';
@@ -10,6 +10,8 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import { VoiceRecorder } from '../../components/UI/VoiceRecorder';
 import { getDefaultAvatar } from '../../utils/avatar';
 import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageFingerprint';
+import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
+import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 
 export const OnboardingFlow = () => {
     const { completeOnboarding, logout, showConfirm, showAlert } = useApp();
@@ -46,7 +48,8 @@ export const OnboardingFlow = () => {
         disabilityInfo: '',
         showDisability: false,
         photos: [],
-        voiceIntroUrl: null
+        voiceIntroUrl: null,
+        verified: draft?.formData?.verified || false
     });
 
     const [photoPreviews, setPhotoPreviews] = useState(draft?.photoPreviews || []);
@@ -55,6 +58,7 @@ export const OnboardingFlow = () => {
     const [validationErrors, setValidationErrors] = useState({});
     const [showAllErrors, setShowAllErrors] = useState(false);
     const [showDraftBanner, setShowDraftBanner] = useState(!!draft);
+    const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
     const handleStartFresh = async () => {
         const confirmed = await showConfirm({
@@ -583,7 +587,8 @@ export const OnboardingFlow = () => {
                     ...formData,
                     gender: finalGender,
                     orientation: finalOrientation,
-                    photos: photoPreviews.length > 0 ? photoPreviews : [getDefaultAvatar(finalGender)]
+                    photos: photoPreviews.length > 0 ? photoPreviews : [getDefaultAvatar(finalGender)],
+                    verified: Boolean(formData.verified)
                 });
                 try {
                     localStorage.removeItem(DRAFT_KEY);
@@ -1098,6 +1103,34 @@ export const OnboardingFlow = () => {
                                 <div className="vh-input-error font-ui" role="alert" style={{ marginBottom: '16px' }}>{validationErrors.photos}</div>
                             )}
 
+                            {/* Optional Live Photo Verification Box */}
+                            {photoPreviews.length > 0 && (
+                                <div className="onboarding-verify-box font-ui">
+                                    <div className="onboarding-verify-left">
+                                        <ShieldCheck size={28} weight="fill" color="#B8436A" />
+                                        <div>
+                                            <div className="onboarding-verify-title">
+                                                {formData.verified ? 'Photo Verification Complete ✓' : 'Get Verified Badge (Recommended)'}
+                                            </div>
+                                            <p className="onboarding-verify-desc font-body">
+                                                {formData.verified
+                                                    ? 'Your live pose selfie was confirmed. You’ll launch with the official Verified Badge!'
+                                                    : 'Prove you are real with a quick 1-handed pose selfie to get 3x more meaningful connections.'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant={formData.verified ? 'secondary' : 'primary'}
+                                        size="sm"
+                                        onClick={() => setIsVerifyModalOpen(true)}
+                                        className="onboarding-verify-btn"
+                                    >
+                                        {formData.verified ? 'Re-verify' : 'Verify Now'}
+                                    </Button>
+                                </div>
+                            )}
+
                             <div className="photo-tips font-body">
                                 <h4 className="font-ui">Photo Tips:</h4>
                                 <ul>
@@ -1135,6 +1168,7 @@ export const OnboardingFlow = () => {
                                             <span className="profile-age font-ui">
                                                 , {formData.dobYear ? new Date().getFullYear() - parseInt(formData.dobYear) : 'Age'}
                                             </span>
+                                            {formData.verified && <VerifiedBadge variant="icon" size="sm" />}
                                         </div>
 
                                         <p className="profile-location font-ui">{formData.city || 'Your City'}</p>
@@ -1165,6 +1199,25 @@ export const OnboardingFlow = () => {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Preview Verification Nudge */}
+                            {!formData.verified && photoPreviews.length > 0 && (
+                                <div className="onboarding-preview-verify-nudge font-ui">
+                                    <ShieldCheck size={22} weight="fill" color="#B8436A" />
+                                    <div className="onboarding-preview-verify-text">
+                                        <strong>Want the Verified Badge on your profile?</strong>
+                                        <span>Confirm your identity with a quick 1-handed selfie gesture.</span>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => setIsVerifyModalOpen(true)}
+                                    >
+                                        Verify in 10s
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -1915,7 +1968,80 @@ export const OnboardingFlow = () => {
           transition: color var(--duration-fast);
         }
 
-        .onboarding-skip-btn:hover {
+        /* Onboarding Verification Box */
+        .onboarding-verify-box {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--space-3);
+          background-color: var(--rose-100, #FFF5F7);
+          border: 1px solid rgba(184, 67, 106, 0.25);
+          border-radius: var(--radius-md);
+          padding: 14px 16px;
+          margin-bottom: var(--space-4);
+        }
+
+        [data-theme="dark"] .onboarding-verify-box {
+          background-color: rgba(184, 67, 106, 0.12);
+          border-color: rgba(184, 67, 106, 0.3);
+        }
+
+        .onboarding-verify-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex: 1;
+        }
+
+        .onboarding-verify-title {
+          font-size: 13.5px;
+          font-weight: 700;
+          color: var(--text-primary);
+          margin-bottom: 2px;
+        }
+
+        .onboarding-verify-desc {
+          font-size: 12px;
+          color: var(--text-secondary);
+          line-height: 1.4;
+          margin: 0;
+        }
+
+        .onboarding-verify-btn {
+          flex-shrink: 0;
+        }
+
+        .onboarding-preview-verify-nudge {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          background: var(--bg-surface-warm, #F8F5F2);
+          border: 1px dashed var(--border-default);
+          border-radius: var(--radius-md);
+          padding: 12px 14px;
+          margin-top: 14px;
+        }
+
+        [data-theme="dark"] .onboarding-preview-verify-nudge {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .onboarding-preview-verify-text {
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+          font-size: 12px;
+          flex: 1;
+        }
+
+        .onboarding-preview-verify-text strong {
+          color: var(--text-primary);
+          font-size: 12.5px;
+        }
+
+        .onboarding-preview-verify-text span {
           color: var(--text-secondary);
         }
 
@@ -1925,8 +2051,29 @@ export const OnboardingFlow = () => {
           }
           .dob-input { width: 52px; }
           .dob-input.year { width: 74px; }
+          .onboarding-verify-box {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+          .onboarding-verify-btn {
+            width: 100%;
+          }
+          .onboarding-preview-verify-nudge {
+            flex-direction: column;
+            align-items: flex-start;
+          }
         }
       `}</style>
+
+            <PhotoVerificationModal
+                isOpen={isVerifyModalOpen}
+                onClose={() => setIsVerifyModalOpen(false)}
+                primaryPhotoUrl={photoPreviews[0] || null}
+                onVerified={() => {
+                    setFormData(prev => ({ ...prev, verified: true }));
+                    setIsVerifyModalOpen(false);
+                }}
+            />
         </div>
     );
 };

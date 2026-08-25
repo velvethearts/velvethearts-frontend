@@ -164,7 +164,7 @@ const analyzePoseSelfie = (canvas, poseId) => {
   }
 };
 
-export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
+export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPhotoUrl }) => {
   const { userProfile, setUserProfile, showAlert } = useApp();
 
   const [step, setStep] = useState('intro'); // 'intro' | 'camera' | 'preview' | 'failed' | 'success'
@@ -527,11 +527,11 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
                     className="photo-verify-compare-img"
                   />
                 </div>
-                {userProfile?.photos?.[0] && (
+                {(primaryPhotoUrl || userProfile?.photos?.[0]) && (
                   <div className="photo-verify-compare-card">
                     <span className="photo-verify-compare-tag font-ui">Profile Photo</span>
                     <img
-                      src={userProfile.photos[0]}
+                      src={primaryPhotoUrl || userProfile.photos[0]}
                       alt="Primary profile photo"
                       className="photo-verify-compare-img"
                     />
