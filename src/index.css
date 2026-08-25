@@ -10363,6 +10363,11 @@ html {
 .state-select-wrapper {
   position: relative;
   width: 100%;
+  z-index: 20;
+}
+
+.state-select-wrapper.is-dropdown-open {
+  z-index: 2500;
 }
 
 .state-select-trigger {
@@ -10436,10 +10441,10 @@ html {
   background: rgba(22, 16, 19, 0.98);
   border: 1px solid rgba(212, 173, 106, 0.35);
   border-radius: var(--radius-lg, 16px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(184, 67, 106, 0.15);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 20px rgba(184, 67, 106, 0.25);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  z-index: 1000;
+  z-index: 2501;
   display: flex;
   flex-direction: column;
   overflow: hidden;

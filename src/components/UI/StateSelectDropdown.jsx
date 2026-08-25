@@ -53,7 +53,7 @@ export const StateSelectDropdown = ({
   };
 
   return (
-    <div className="state-select-wrapper font-ui" ref={containerRef}>
+    <div className={`state-select-wrapper font-ui ${isOpen ? 'is-dropdown-open' : ''}`} ref={containerRef}>
       {/* Trigger Button */}
       <button
         type="button"
