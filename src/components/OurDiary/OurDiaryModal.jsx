@@ -46,7 +46,7 @@ const DiaryVoiceNotePlayer = ({ url }) => {
   const audioRef = useRef(null);
 
   const togglePlay = (e) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     if (!audioRef.current) return;
     if (isPlaying) {
       audioRef.current.pause();
@@ -59,13 +59,13 @@ const DiaryVoiceNotePlayer = ({ url }) => {
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
+      setCurrentTime(audioRef.current.currentTime || 0);
     }
   };
 
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
-      setDuration(audioRef.current.duration);
+      setDuration(audioRef.current.duration || 0);
     }
   };
 
@@ -75,7 +75,7 @@ const DiaryVoiceNotePlayer = ({ url }) => {
   };
 
   const formatTime = (secs) => {
-    if (!secs || isNaN(secs)) return '0:00';
+    if (!secs || isNaN(secs) || secs < 0) return '0:00';
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
@@ -127,45 +127,47 @@ const DiaryVoiceNotePlayer = ({ url }) => {
 
 // Bottom Date-Strip Navigator (Mon-Sun columns, Month Switcher, Jump to Today)
 const DiaryDateStrip = ({
-  pages,
-  currentPageIndex,
+  pages = [],
+  currentPageIndex = 0,
   onSelectDate,
   viewDate,
   setViewDate
 }) => {
-  const year = viewDate.getFullYear();
-  const month = viewDate.getMonth();
+  const safeViewDate = (viewDate && viewDate instanceof Date && !isNaN(viewDate.getTime())) ? viewDate : new Date();
+  const year = safeViewDate.getFullYear();
+  const month = safeViewDate.getMonth();
 
   const prevMonth = () => {
-    setViewDate(new Date(year, month - 1, 1));
+    setViewDate?.(new Date(year, month - 1, 1));
   };
 
   const nextMonth = () => {
-    setViewDate(new Date(year, month + 1, 1));
+    setViewDate?.(new Date(year, month + 1, 1));
   };
 
   const jumpToToday = () => {
     const today = new Date();
-    setViewDate(new Date(today.getFullYear(), today.getMonth(), 1));
+    setViewDate?.(new Date(today.getFullYear(), today.getMonth(), 1));
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    const targetPageIdx = pages.findIndex(p => {
-      if (!p.rawDate) return false;
+    const targetPageIdx = (pages || []).findIndex(p => {
+      if (!p?.rawDate || !(p.rawDate instanceof Date)) return false;
       const pd = p.rawDate;
       const key = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}-${String(pd.getDate()).padStart(2, '0')}`;
       return key === todayStr;
     });
     if (targetPageIdx !== -1) {
-      onSelectDate(targetPageIdx);
+      onSelectDate?.(targetPageIdx);
     }
   };
 
-  const monthName = viewDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const monthName = safeViewDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
   // Map entries by date key
   const dateToPageMap = useMemo(() => {
     const map = new Map();
+    if (!pages || !Array.isArray(pages)) return map;
     pages.forEach((p, idx) => {
-      if (p.rawDate) {
+      if (p?.rawDate && p.rawDate instanceof Date && !isNaN(p.rawDate.getTime())) {
         const pd = p.rawDate;
         const key = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}-${String(pd.getDate()).padStart(2, '0')}`;
         map.set(key, idx);
@@ -179,15 +181,14 @@ const DiaryDateStrip = ({
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   // Current page raw date for active highlight
-  const activePageDate = pages[currentPageIndex]?.rawDate;
-  const activeDateKey = activePageDate
+  const activePageDate = pages?.[currentPageIndex]?.rawDate;
+  const activeDateKey = (activePageDate && activePageDate instanceof Date && !isNaN(activePageDate.getTime()))
     ? `${activePageDate.getFullYear()}-${String(activePageDate.getMonth() + 1).padStart(2, '0')}-${String(activePageDate.getDate()).padStart(2, '0')}`
     : null;
 
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    // Auto-scroll active date into view
     if (scrollRef.current) {
       const activeEl = scrollRef.current.querySelector('.diary-strip-day.active');
       if (activeEl) {
@@ -239,8 +240,8 @@ const DiaryDateStrip = ({
               type="button"
               className={`diary-strip-day ${isActive ? 'active' : ''} ${hasEntries ? 'has-entry' : 'no-entry'}`}
               onClick={() => {
-                if (hasEntries) {
-                  onSelectDate(pageIndex);
+                if (hasEntries && pageIndex !== undefined) {
+                  onSelectDate?.(pageIndex);
                 }
               }}
               disabled={!hasEntries}
@@ -258,11 +259,11 @@ const DiaryDateStrip = ({
 };
 
 export const OurDiaryModal = ({
-  isOpen,
+  isOpen = false,
   onClose,
   matchId,
-  partnerName,
-  userName,
+  partnerName = 'Partner',
+  userName = 'You',
   initialEntryId,
 }) => {
   const { showAlert, showConfirm } = useApp();
@@ -302,20 +303,27 @@ export const OurDiaryModal = ({
   const [isClosingModal, setIsClosingModal] = useState(false);
 
   // Group entries by local calendar day (oldest to newest)
-  const groupEntriesIntoPages = () => {
-    if (!entries || entries.length === 0) return [];
+  const pages = useMemo(() => {
+    if (!entries || !Array.isArray(entries) || entries.length === 0) return [];
 
-    const sorted = [...entries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    const sorted = [...entries].sort((a, b) => {
+      const timeA = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeA - timeB;
+    });
+
     const dayMap = new Map();
 
     sorted.forEach((entry) => {
-      const date = new Date(entry.createdAt);
-      const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      if (!entry) return;
+      const date = entry.createdAt ? new Date(entry.createdAt) : new Date();
+      const validDate = isNaN(date.getTime()) ? new Date() : date;
+      const dayKey = `${validDate.getFullYear()}-${String(validDate.getMonth() + 1).padStart(2, '0')}-${String(validDate.getDate()).padStart(2, '0')}`;
 
       if (!dayMap.has(dayKey)) {
         dayMap.set(dayKey, {
-          rawDate: date,
-          dateLabel: date.toLocaleDateString(undefined, {
+          rawDate: validDate,
+          dateLabel: validDate.toLocaleDateString(undefined, {
             weekday: 'long',
             day: 'numeric',
             month: 'long',
@@ -331,12 +339,11 @@ export const OurDiaryModal = ({
       dayKey: `${dayGroup.rawDate.getFullYear()}-${dayGroup.rawDate.getMonth()}-${dayGroup.rawDate.getDate()}`,
       dateLabel: dayGroup.dateLabel,
       rawDate: dayGroup.rawDate,
-      items: dayGroup.items,
+      items: dayGroup.items || [],
       pageNumber: index + 1
     }));
-  };
+  }, [entries]);
 
-  const pages = groupEntriesIntoPages();
   const totalPages = Math.max(pages.length, 1);
 
   // Fetch diary entries
@@ -346,31 +353,30 @@ export const OurDiaryModal = ({
       if (!isBackground) setLoading(true);
       const data = await api.getDiaryEntries(matchId);
       const list = data?.entries || [];
-      setEntries(list);
+      setEntries(Array.isArray(list) ? list : []);
 
-      // Group & determine active page
-      const currentPages = groupEntriesIntoPages();
       if (initialEntryId) {
-        const foundPageIdx = currentPages.findIndex(p => p.items.some(it => it.id === initialEntryId));
+        const foundPageIdx = (pages || []).findIndex(p => (p?.items || []).some(it => it?.id === initialEntryId));
         if (foundPageIdx !== -1) {
           setCurrentPageIndex(foundPageIdx);
-          if (currentPages[foundPageIdx]?.rawDate) {
-            setViewDate(new Date(currentPages[foundPageIdx].rawDate));
+          if (pages[foundPageIdx]?.rawDate) {
+            setViewDate(new Date(pages[foundPageIdx].rawDate));
           }
           return;
         }
       }
 
       // Default to most recent day
-      if (currentPages.length > 0) {
-        const latestIdx = currentPages.length - 1;
+      if (pages.length > 0) {
+        const latestIdx = pages.length - 1;
         setCurrentPageIndex(latestIdx);
-        if (currentPages[latestIdx]?.rawDate) {
-          setViewDate(new Date(currentPages[latestIdx].rawDate));
+        if (pages[latestIdx]?.rawDate) {
+          setViewDate(new Date(pages[latestIdx].rawDate));
         }
       }
     } catch (err) {
       console.error('Failed to load diary entries:', err);
+      if (!isBackground) setEntries([]);
     } finally {
       if (!isBackground) setLoading(false);
     }
@@ -418,7 +424,7 @@ export const OurDiaryModal = ({
     setIsClosingModal(true);
     setTimeout(() => {
       setIsClosingModal(false);
-      onClose();
+      onClose?.();
     }, 220);
   };
 
@@ -451,7 +457,7 @@ export const OurDiaryModal = ({
       setTimeout(() => {
         setCurrentPageIndex(prev => {
           const nextIdx = prev + 1;
-          if (pages[nextIdx]?.rawDate) {
+          if (pages?.[nextIdx]?.rawDate) {
             setViewDate(new Date(pages[nextIdx].rawDate));
           }
           return nextIdx;
@@ -469,7 +475,7 @@ export const OurDiaryModal = ({
       setTimeout(() => {
         setCurrentPageIndex(prev => {
           const prevIdx = prev - 1;
-          if (pages[prevIdx]?.rawDate) {
+          if (pages?.[prevIdx]?.rawDate) {
             setViewDate(new Date(pages[prevIdx].rawDate));
           }
           return prevIdx;
@@ -486,7 +492,7 @@ export const OurDiaryModal = ({
       setIsPeeling(true);
       setTimeout(() => {
         setCurrentPageIndex(index);
-        if (pages[index]?.rawDate) {
+        if (pages?.[index]?.rawDate) {
           setViewDate(new Date(pages[index].rawDate));
         }
         setIsPeeling(false);
@@ -496,7 +502,7 @@ export const OurDiaryModal = ({
 
   // Photo & Video selection
   const handlePhotoSelect = (e) => {
-    const file = e.target.files?.[0];
+    const file = e?.target?.files?.[0];
     if (!file) return;
 
     const isImage = file.type.startsWith('image/');
@@ -649,7 +655,7 @@ export const OurDiaryModal = ({
 
   // Delete moment
   const handleDeleteEntry = async (entryId) => {
-    const confirmed = await showConfirm({
+    const confirmed = await showConfirm?.({
       title: 'Delete Moment?',
       message: 'This moment will be removed from your shared diary.',
       okText: 'Delete',
@@ -669,6 +675,8 @@ export const OurDiaryModal = ({
   };
 
   if (!isOpen) return null;
+
+  const currentDayCard = pages?.[currentPageIndex] || null;
 
   return (
     <div className={`diary-modal-overlay ${isClosingModal ? 'closing' : ''}`} role="dialog" aria-modal="true" aria-label="Our Diary">
@@ -1047,13 +1055,13 @@ export const OurDiaryModal = ({
                   <div className="diary-card-stack-underlay" />
 
                   <div
-                    key={pages[currentPageIndex]?.dayKey || currentPageIndex}
+                    key={currentDayCard?.dayKey || currentPageIndex}
                     className={`diary-day-card ${isPeeling ? `peeling-${peelDirection}` : ''}`}
                   >
                     {/* Top-Left Date Header using --font-display */}
                     <div className="diary-card-top-row">
                       <h2 className="diary-card-date font-display">
-                        {pages[currentPageIndex]?.dateLabel}
+                        {currentDayCard?.dateLabel || 'Today'}
                       </h2>
                       <span className="diary-card-counter font-ui">
                         {currentPageIndex + 1} / {totalPages}
@@ -1064,24 +1072,26 @@ export const OurDiaryModal = ({
 
                     {/* Day Entries List */}
                     <div className="diary-card-moments-scroll">
-                      {pages[currentPageIndex]?.items.map((entry) => {
-                        const isMine = entry.isMine;
-                        const timeStr = new Date(entry.createdAt).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        });
+                      {(currentDayCard?.items || []).map((entry) => {
+                        if (!entry) return null;
+                        const isMine = Boolean(entry.isMine);
+                        const timeStr = entry.createdAt
+                          ? new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : '';
+
+                        const sourceType = (entry.sourceType || 'MESSAGE').toUpperCase();
 
                         return (
-                          <div key={entry.id} className={`diary-moment-item type-${entry.sourceType.toLowerCase()}`}>
+                          <div key={entry.id || Math.random()} className={`diary-moment-item type-${sourceType.toLowerCase()}`}>
                             {/* Moment Header: Saved by & Delete icon */}
                             <div className="diary-moment-meta">
                               <span className="diary-moment-author font-ui">
                                 <span className="diary-author-dot" />
-                                <span>{isMine ? 'Saved by you' : `Saved by ${entry.savedByName || 'Partner'}`}</span>
-                                <span className="diary-moment-time">· {timeStr}</span>
+                                <span>{isMine ? 'Saved by you' : `Saved by ${entry.savedByName || partnerName || 'Partner'}`}</span>
+                                {timeStr && <span className="diary-moment-time">· {timeStr}</span>}
                               </span>
 
-                              {isMine && (
+                              {isMine && entry.id && (
                                 <button
                                   type="button"
                                   className="diary-moment-del-btn"
@@ -1095,7 +1105,7 @@ export const OurDiaryModal = ({
                             </div>
 
                             {/* 1. Saved Chat Message (Quote Box) */}
-                            {entry.sourceType === 'MESSAGE' && entry.content && (
+                            {sourceType === 'MESSAGE' && entry.content && (
                               <div className="diary-quote-box">
                                 <Quotes size={18} weight="fill" className="diary-quote-mark" />
                                 <div className="diary-quote-content">
@@ -1108,7 +1118,7 @@ export const OurDiaryModal = ({
                             )}
 
                             {/* 2. Written Note (Warm Display Font) */}
-                            {entry.sourceType === 'NOTE' && entry.content && (
+                            {sourceType === 'NOTE' && entry.content && (
                               <div className="diary-note-box">
                                 <p className="diary-note-body font-display">{entry.content}</p>
                                 {entry.caption && (
@@ -1118,7 +1128,7 @@ export const OurDiaryModal = ({
                             )}
 
                             {/* 3. Voice Note (Waveform Ribbon) */}
-                            {entry.sourceType === 'VOICE_NOTE' && entry.attachmentUrl && (
+                            {sourceType === 'VOICE_NOTE' && entry.attachmentUrl && (
                               <div className="diary-voice-moment-box">
                                 <DiaryVoiceNotePlayer url={entry.attachmentUrl} />
                                 {entry.caption && (
@@ -1128,7 +1138,7 @@ export const OurDiaryModal = ({
                             )}
 
                             {/* 4. Polaroid Photo (Rotated Print with Tape) */}
-                            {entry.sourceType === 'IMAGE' && entry.attachmentUrl && (
+                            {sourceType === 'IMAGE' && entry.attachmentUrl && (
                               <div className="diary-polaroid-moment">
                                 <div className="diary-polaroid-tape" />
                                 <div className="diary-polaroid-img-frame">
@@ -1145,7 +1155,7 @@ export const OurDiaryModal = ({
                             )}
 
                             {/* 5. HD Video Memory (Reel Print with Playable Video) */}
-                            {entry.sourceType === 'VIDEO' && entry.attachmentUrl && (
+                            {sourceType === 'VIDEO' && entry.attachmentUrl && (
                               <div className="diary-polaroid-moment diary-video-moment">
                                 <div className="diary-polaroid-tape" />
                                 <div className="diary-video-player-frame">
@@ -1176,7 +1186,7 @@ export const OurDiaryModal = ({
         {/* ============================================================
            PERSISTENT BOTTOM DATE-STRIP NAVIGATOR (In Browse State)
            ============================================================ */}
-        {viewState === 'browse' && (
+        {viewState === 'browse' && pages && pages.length > 0 && (
           <DiaryDateStrip
             pages={pages}
             currentPageIndex={currentPageIndex}
