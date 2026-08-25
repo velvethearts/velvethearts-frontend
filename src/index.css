@@ -9720,12 +9720,14 @@ html {
   gap: 5px;
 }
 
-.vh-verified-svg-icon {
+.vh-verified-svg-icon,
+.vh-verified-rosette-svg {
   color: var(--burgundy-600, #A02B4B);
   flex-shrink: 0;
 }
 
-[data-theme="dark"] .vh-verified-svg-icon {
+[data-theme="dark"] .vh-verified-svg-icon,
+[data-theme="dark"] .vh-verified-rosette-svg {
   color: #F8B4C4;
 }
 

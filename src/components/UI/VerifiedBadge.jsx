@@ -1,10 +1,39 @@
 import React, { useState } from 'react';
-import { ShieldCheck, CheckCircle } from '@phosphor-icons/react';
+import { ShieldCheck } from '@phosphor-icons/react';
+
+/**
+ * VerifiedBadgeIcon
+ * The authentic 8-point scalloped starburst rosette verified badge emblem.
+ */
+export const VerifiedBadgeIcon = ({ size = 18, className = '' }) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size}
+    height={size}
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+    className={`vh-verified-rosette-svg ${className}`}
+    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }}
+  >
+    {/* 8-pointed scalloped starburst badge */}
+    <path
+      d="M10.29 2.308a2.23 2.23 0 0 1 3.42 0l.66.762a2.23 2.23 0 0 0 1.8.745l1.005-.09a2.23 2.23 0 0 1 2.42 2.42l-.09 1.005a2.23 2.23 0 0 0 .745 1.8l.762.66a2.23 2.23 0 0 1 0 3.42l-.762.66a2.23 2.23 0 0 0-.745 1.8l.09 1.005a2.23 2.23 0 0 1-2.42 2.42l-1.005-.09a2.23 2.23 0 0 0-1.8.745l-.66.762a2.23 2.23 0 0 1-3.42 0l-.66-.762a2.23 2.23 0 0 0-1.8-.745l-1.005.09a2.23 2.23 0 0 1-2.42-2.42l.09-1.005a2.23 2.23 0 0 0-.745-1.8l-.762-.66a2.23 2.23 0 0 1 0-3.42l.762-.66a2.23 2.23 0 0 0 .745-1.8l-.09-1.005a2.23 2.23 0 0 1 2.42-2.42l1.005.09a2.23 2.23 0 0 0 1.8-.745l.66-.762Z"
+      fill="currentColor"
+    />
+    <path
+      d="m8.75 12 2.25 2.25 4.5-4.5"
+      stroke="#FFFFFF"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 /**
  * VerifiedBadge
  * Clean, native verification badge for Velvet Hearts.
- * Uses sharp SVG iconography, clean typography, and in-app color tokens (no tacky glowing AI seals).
+ * Uses authentic rosette SVG iconography, clean typography, and in-app color tokens.
  *
  * @param {string} variant - 'pill' | 'icon' | 'compact'
  * @param {string} size - 'sm' | 'md' | 'lg'
@@ -30,7 +59,7 @@ export const VerifiedBadge = ({
   };
 
   if (variant === 'icon') {
-    const iconSize = size === 'sm' ? 14 : size === 'lg' ? 20 : 16;
+    const iconSize = size === 'sm' ? 16 : size === 'lg' ? 22 : 18;
     return (
       <span
         className={`vh-verified-icon-wrap vh-verified-size-${size} ${className}`}
@@ -40,7 +69,7 @@ export const VerifiedBadge = ({
         title="Photo Verified by Velvet Hearts"
         aria-label="Verified Profile"
       >
-        <CheckCircle size={iconSize} weight="fill" className="vh-verified-svg-icon" />
+        <VerifiedBadgeIcon size={iconSize} />
         {showTooltip && (
           <div className="vh-verified-tooltip font-ui" role="tooltip">
             <div className="vh-verified-tooltip-header">
@@ -65,7 +94,7 @@ export const VerifiedBadge = ({
       title="Photo Verified by Velvet Hearts"
       aria-label="Verified Profile"
     >
-      <CheckCircle size={size === 'sm' ? 11 : 13} weight="fill" className="vh-verified-svg-icon" />
+      <VerifiedBadgeIcon size={size === 'sm' ? 13 : 15} />
       <span className="vh-verified-text">Verified</span>
 
       {showTooltip && (
