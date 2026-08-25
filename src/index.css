@@ -10177,3 +10177,182 @@ html {
     align-items: flex-start;
   }
 }
+
+/* ============================================================
+   VERIFICATION PROMPT MODAL (48HR SNOOZE / ONE-TIME ALERT)
+   ============================================================ */
+.verify-prompt-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(10, 8, 9, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999;
+  animation: vhFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.verify-prompt-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: linear-gradient(165deg, rgba(32, 22, 26, 0.98) 0%, rgba(18, 14, 16, 0.98) 100%);
+  border: 1px solid rgba(212, 173, 106, 0.35);
+  border-radius: var(--radius-xl, 24px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(184, 67, 106, 0.2);
+  padding: 32px 28px 28px;
+  overflow: hidden;
+  text-align: center;
+  animation: vhModalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.verify-prompt-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.verify-prompt-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  transform: scale(1.05);
+}
+
+.verify-prompt-hero {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.verify-prompt-shield-glow {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 173, 106, 0.25) 0%, rgba(184, 67, 106, 0.15) 70%, transparent 100%);
+  border: 1px solid rgba(212, 173, 106, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 24px rgba(212, 173, 106, 0.3);
+}
+
+.verify-prompt-sparkle-tag {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #D4AD6A, #B8436A);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.verify-prompt-badge-preview {
+  display: inline-flex;
+  margin-bottom: 12px;
+}
+
+.verify-prompt-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+
+.verify-prompt-subtitle {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0 0 20px;
+}
+
+.verify-prompt-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg, 16px);
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.verify-prompt-perk-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.verify-prompt-perk-item strong {
+  color: var(--text-primary);
+}
+
+.verify-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.verify-prompt-btn-primary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: var(--radius-full, 9999px);
+  background: linear-gradient(135deg, #B8436A 0%, #D4AD6A 100%);
+  color: #FFFFFF;
+  border: none;
+  box-shadow: 0 6px 20px rgba(184, 67, 106, 0.4);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.verify-prompt-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(184, 67, 106, 0.55);
+}
+
+.verify-prompt-btn-later {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: color var(--duration-fast);
+}
+
+.verify-prompt-btn-later:hover {
+  color: var(--text-secondary);
+  text-decoration: underline;
+}

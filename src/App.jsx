@@ -24,6 +24,7 @@ import { SavedProfilesPage } from './pages/Profile/SavedProfilesPage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
 import { SafetyCenter } from './pages/Safety/SafetyCenter';
 import { NotificationsPage } from './pages/Notifications/NotificationsPage';
+import { VerificationPromptModal } from './components/Safety/VerificationPromptModal';
 
 const AuthLoadingScreen = () => {
   return (
@@ -281,6 +282,7 @@ function AppContent() {
         {renderActivePage()}
       </Suspense>
       <FeatureTourGuide />
+      <VerificationPromptModal />
     </Navigation>
   );
 }
