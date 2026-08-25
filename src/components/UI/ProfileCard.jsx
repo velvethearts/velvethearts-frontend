@@ -142,8 +142,8 @@ export const ProfileCard = ({
           </div>
         )}
 
-        {/* Photo Navigation Arrows */}
-        {photosList.length > 1 && (
+        {/* Photo Navigation Arrows - hidden when dropdown is open to prevent overlapping */}
+        {photosList.length > 1 && !showDropdown && (
           <>
             {currentPhotoIndex > 0 && (
               <button
@@ -451,7 +451,7 @@ export const ProfileCard = ({
           position: absolute;
           top: var(--space-2);
           right: var(--space-2);
-          z-index: 10;
+          z-index: 60;
         }
 
         .profile-card-options-btn {
@@ -478,15 +478,15 @@ export const ProfileCard = ({
           right: 0;
           top: 100%;
           margin-top: var(--space-2);
-          background: rgba(18, 14, 16, 0.95);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          background: rgba(18, 14, 16, 0.98);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.18);
           border-radius: var(--radius-md);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75);
           min-width: 170px;
           overflow: hidden;
-          z-index: 50;
+          z-index: 70;
         }
 
         .dropdown-item {
