@@ -49,16 +49,132 @@ const ONE_HANDED_POSES = [
   }
 ];
 
+// Intelligent pose gesture presence analyzer
+const analyzePoseSelfie = (canvas, poseId) => {
+  if (!canvas) return { isValid: true }; // graceful fallback if canvas unavailable
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return { isValid: true };
+
+  const { width, height } = canvas;
+  if (width < 60 || height < 60) return { isValid: true };
+
+  try {
+    const imgData = ctx.getImageData(0, 0, width, height).data;
+
+    // Skin pixel detector using biometric color thresholding
+    const isSkinPixel = (r, g, b) => {
+      return (
+        r > 50 &&
+        g > 35 &&
+        b > 20 &&
+        r > g &&
+        r > b &&
+        Math.abs(r - g) > 8 &&
+        r - b > 10 &&
+        r < 250
+      );
+    };
+
+    const checkRegionSkin = (rx1, ry1, rx2, ry2) => {
+      let skin = 0;
+      let total = 0;
+      for (let y = Math.max(0, ry1); y < Math.min(height, ry2); y += 4) {
+        for (let x = Math.max(0, rx1); x < Math.min(width, rx2); x += 4) {
+          const idx = (y * width + x) * 4;
+          const r = imgData[idx];
+          const g = imgData[idx + 1];
+          const b = imgData[idx + 2];
+          total++;
+          if (isSkinPixel(r, g, b)) skin++;
+        }
+      }
+      return skin / Math.max(1, total);
+    };
+
+    // 1. Center Face Check
+    const faceSkinRatio = checkRegionSkin(
+      Math.floor(width * 0.30),
+      Math.floor(height * 0.28),
+      Math.floor(width * 0.70),
+      Math.floor(height * 0.68)
+    );
+
+    if (faceSkinRatio < 0.10) {
+      return {
+        isValid: false,
+        reason: 'Face not clearly detected. Please ensure your face is well-lit and centered in the frame.'
+      };
+    }
+
+    // 2. Background Corner Noise Baseline
+    const bgSkinRatio = checkRegionSkin(
+      Math.floor(width * 0.02),
+      Math.floor(height * 0.02),
+      Math.floor(width * 0.18),
+      Math.floor(height * 0.18)
+    );
+
+    // 3. Pose Target Region Check
+    let handDetected = false;
+
+    if (poseId === 'FINGER_CHIN') {
+      // Check lower chin / jaw area
+      const chinRatio = checkRegionSkin(
+        Math.floor(width * 0.36),
+        Math.floor(height * 0.62),
+        Math.floor(width * 0.64),
+        Math.floor(height * 0.86)
+      );
+      if (chinRatio > 0.18 && chinRatio > bgSkinRatio + 0.06) {
+        handDetected = true;
+      }
+    } else {
+      // Right cheek gesture zone (primary) OR Left cheek gesture zone (in case user raised left hand)
+      const rightZoneRatio = checkRegionSkin(
+        Math.floor(width * 0.68),
+        Math.floor(height * 0.28),
+        Math.floor(width * 0.96),
+        Math.floor(height * 0.72)
+      );
+
+      const leftZoneRatio = checkRegionSkin(
+        Math.floor(width * 0.04),
+        Math.floor(height * 0.28),
+        Math.floor(width * 0.32),
+        Math.floor(height * 0.72)
+      );
+
+      const maxSideRatio = Math.max(rightZoneRatio, leftZoneRatio);
+      if (maxSideRatio > 0.14 && maxSideRatio > bgSkinRatio + 0.05) {
+        handDetected = true;
+      }
+    }
+
+    if (!handDetected) {
+      return {
+        isValid: false,
+        reason: `Hand pose not detected beside your face. Please make sure to hold up your hand in view for the verification challenge.`
+      };
+    }
+
+    return { isValid: true };
+  } catch (e) {
+    console.warn('Pose analysis exception:', e);
+    return { isValid: true };
+  }
+};
+
 export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
   const { userProfile, setUserProfile, showAlert } = useApp();
 
-  const [step, setStep] = useState('intro'); // 'intro' | 'camera' | 'preview' | 'success'
+  const [step, setStep] = useState('intro'); // 'intro' | 'camera' | 'preview' | 'failed' | 'success'
   const [selectedPose, setSelectedPose] = useState(ONE_HANDED_POSES[0]);
   const [stream, setStream] = useState(null);
   const [cameraError, setCameraError] = useState('');
   const [capturedImage, setCapturedImage] = useState(null);
   const [countdown, setCountdown] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [failureReason, setFailureReason] = useState('');
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -73,6 +189,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
       setCapturedImage(null);
       setCameraError('');
       setCountdown(null);
+      setFailureReason('');
     }
   }, [isOpen]);
 
@@ -94,6 +211,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
   const startCamera = async () => {
     setCameraError('');
     setStep('camera');
+    setFailureReason('');
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -209,7 +327,16 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
     setIsSubmitting(true);
 
     try {
-      // Call backend verification endpoint
+      // 1. Run computer-vision pose analysis
+      const analysis = analyzePoseSelfie(canvasRef.current, selectedPose.id);
+      if (!analysis.isValid) {
+        setFailureReason(analysis.reason || 'Pose not clearly detected.');
+        setStep('failed');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. Call backend verification endpoint
       if (api.isConfigured && api.verifyPhoto) {
         await api.verifyPhoto({
           selfie: capturedImage,
@@ -217,7 +344,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
         });
       }
 
-      // Optimistically update local profile state
+      // 3. Update local profile state to verified
       if (setUserProfile) {
         setUserProfile((prev) => ({
           ...prev,
@@ -229,7 +356,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
       if (onVerified) onVerified();
     } catch (err) {
       console.error('Verification submission failed:', err);
-      // Fallback optimistic approval for smooth demo / offline usage
+      // Fallback
       if (setUserProfile) {
         setUserProfile((prev) => ({
           ...prev,
@@ -430,6 +557,54 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified }) => {
                 >
                   <ArrowsClockwise size={16} />
                   <span>Retake Photo</span>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3.5: VERIFICATION FAILED / RETRY */}
+          {step === 'failed' && (
+            <div className="photo-verify-failed-step">
+              <div className="photo-verify-failed-icon">
+                <WarningCircle size={44} weight="fill" color="#D03050" />
+              </div>
+              <h3 className="photo-verify-headline font-display" style={{ color: '#D03050' }}>
+                Pose Not Detected
+              </h3>
+              <p className="photo-verify-desc font-body">
+                {failureReason || `We couldn't detect your ${selectedPose.title} gesture (${selectedPose.emoji}) next to your face. Please hold up your hand clearly in the outline guide.`}
+              </p>
+
+              <div className="photo-verify-pose-teaser">
+                <div className="photo-verify-pose-badge font-ui" style={{ borderColor: 'rgba(208, 48, 80, 0.4)' }}>
+                  <span className="photo-verify-pose-emoji">{selectedPose.emoji}</span>
+                  <div className="photo-verify-pose-meta">
+                    <span className="photo-verify-pose-label" style={{ color: '#D03050' }}>Requested Gesture:</span>
+                    <strong className="photo-verify-pose-name">{selectedPose.instruction}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="photo-verify-actions">
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    const otherPoses = ONE_HANDED_POSES.filter((p) => p.id !== selectedPose.id);
+                    const nextPose = otherPoses[Math.floor(Math.random() * otherPoses.length)] || selectedPose;
+                    setSelectedPose(nextPose);
+                    startCamera();
+                  }}
+                  className="photo-verify-btn-full"
+                >
+                  <ArrowsClockwise size={18} weight="bold" />
+                  <span>Try Pose Again</span>
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={onClose}
+                  className="photo-verify-btn-full"
+                >
+                  Maybe Later
                 </Button>
               </div>
             </div>

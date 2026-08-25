@@ -9930,6 +9930,7 @@ html {
 
 .photo-verify-intro-step,
 .photo-verify-preview-step,
+.photo-verify-failed-step,
 .photo-verify-success-step {
   display: flex;
   flex-direction: column;
