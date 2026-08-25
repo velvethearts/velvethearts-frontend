@@ -341,12 +341,13 @@ export const DiaryBookFlip = forwardRef(({
                               className="diary-leaf-del-btn"
                               onClick={(e) => {
                                 e.stopPropagation();
+                                e.preventDefault();
                                 onDeleteEntry?.(entry.id);
                               }}
                               title="Delete this memory"
                               aria-label="Delete this memory"
                             >
-                              <Trash size={12} />
+                              <Trash size={12} weight="bold" />
                             </button>
                           )}
                         </div>

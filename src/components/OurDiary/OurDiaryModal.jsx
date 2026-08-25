@@ -498,6 +498,7 @@ export const OurDiaryModal = ({
     };
   }, [isOpen, matchId]);
 
+
   // Close handler
   const handleCloseDiary = () => {
     if (isClosingModal) return;
@@ -717,21 +718,32 @@ export const OurDiaryModal = ({
 
   // Delete moment
   const handleDeleteEntry = async (entryId) => {
-    const confirmed = await showConfirm?.({
-      title: 'Delete Moment?',
-      message: 'This moment will be removed from your shared diary.',
-      okText: 'Delete',
-      cancelText: 'Keep',
-      variant: 'danger'
-    });
+    if (!entryId || !matchId) return;
+
+    let confirmed = true;
+    if (typeof showConfirm === 'function') {
+      confirmed = await showConfirm({
+        title: 'Delete Moment?',
+        message: 'This moment will be removed from your shared diary.',
+        okText: 'Delete',
+        cancelText: 'Keep',
+        variant: 'danger'
+      });
+    } else if (typeof window !== 'undefined') {
+      confirmed = window.confirm('Delete this moment from your diary?');
+    }
 
     if (confirmed) {
       try {
-        await api.deleteDiaryEntry(matchId, entryId);
+        // Optimistic UI update
         setEntries(prev => prev.filter(e => e.id !== entryId));
+        await api.deleteDiaryEntry(matchId, entryId);
+        // Background sync
+        fetchEntries(true);
       } catch (err) {
         console.error('Failed to delete entry:', err);
         if (showAlert) showAlert({ title: 'Delete Failed', message: err?.message || 'Failed to delete entry' });
+        fetchEntries(true);
       }
     }
   };

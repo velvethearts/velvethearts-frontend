@@ -6350,23 +6350,23 @@ html {
   border-radius: 0 20px 20px 0;
 }
 
-/* Full-Height Side Click/Tap-to-Flip Zones */
+/* Full-Height Side Click/Tap-to-Flip Zones (Narrow margins only) */
 .diary-leaf-click-zone {
   position: absolute;
   top: 0;
   bottom: 0;
-  z-index: 5;
+  z-index: 2;
   cursor: pointer;
 }
 
 .diary-leaf-click-zone.right {
   right: 0;
-  width: 45%;
+  width: 22px;
 }
 
 .diary-leaf-click-zone.left {
   left: 0;
-  width: 25%;
+  width: 20px;
 }
 
 /* 1. FRONT HARDCOVER LEAF */
@@ -6749,19 +6749,41 @@ html {
 }
 
 .diary-leaf-del-btn {
-  background: transparent;
-  border: none;
-  color: #B5ABAD;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(184, 67, 106, 0.1);
+  color: #B8436A;
+  border: 1px solid rgba(184, 67, 106, 0.2);
   cursor: pointer;
-  padding: 2px;
-  border-radius: 4px;
+  padding: 0;
   pointer-events: auto;
   position: relative;
-  z-index: 15;
+  z-index: 30;
+  transition: all 0.15s ease;
+  margin-left: auto;
 }
 
 .diary-leaf-del-btn:hover {
-  color: #C45A5A;
+  background: #B8436A;
+  color: #FFFFFF;
+  border-color: #B8436A;
+  transform: scale(1.12);
+}
+
+[data-theme="dark"] .diary-leaf-del-btn {
+  background: rgba(245, 198, 211, 0.15);
+  color: #F5C6D3;
+  border-color: rgba(245, 198, 211, 0.3);
+}
+
+[data-theme="dark"] .diary-leaf-del-btn:hover {
+  background: #B8436A;
+  color: #FFFFFF;
+  border-color: #B8436A;
 }
 
 /* Scrapbook Treatments on Paper */
