@@ -473,15 +473,12 @@ export const StoryDeck = ({
             </>
           )}
 
-          {/* Vibe Match & Verification Badges */}
+          {/* Vibe Match Badge */}
           <div className="story-top-badges">
             <div className="badge-vibe-radar font-ui">
-              <Sparkle size={14} color="var(--gold-300)" weight="fill" />
+              <Sparkle size={13} color="var(--gold-300)" weight="fill" />
               <span>{vibeScore}% Vibe Match</span>
             </div>
-            {activeProfile.verified && (
-              <VerifiedBadge variant="pill" size="md" />
-            )}
           </div>
 
           {/* Photo Reaction Pin Launcher */}
@@ -513,7 +510,7 @@ export const StoryDeck = ({
             <span className="story-meta-intent">{activeProfile.relationshipIntent}</span>
           </p>
 
-          {/* Big editorial name + age + bookmark */}
+          {/* Big editorial name + age + verified badge + bookmark */}
           <div className="story-title-row">
             <h2
               className="story-card-name font-display"
@@ -524,6 +521,11 @@ export const StoryDeck = ({
               title="View full profile"
             >
               {activeProfile.name}<span className="story-card-age">, {activeProfile.age}</span>
+              {activeProfile.verified && (
+                <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: '6px' }}>
+                  <VerifiedBadge variant="icon" size="md" />
+                </span>
+              )}
             </h2>
             <button
               type="button"
@@ -819,12 +821,12 @@ export const StoryDeck = ({
 
         .story-photo-dots {
           position: absolute;
-          top: 8px;
-          left: 12px;
-          right: 12px;
+          top: 12px;
+          left: 16px;
+          right: 16px;
           display: flex;
-          gap: 4px;
-          width: calc(100% - 24px);
+          gap: 5px;
+          width: calc(100% - 32px);
           max-width: none;
           z-index: 12;
         }
@@ -835,11 +837,12 @@ export const StoryDeck = ({
           background-color: rgba(255, 255, 255, 0.35);
           border-radius: 999px;
           transition: background-color var(--duration-fast);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
         }
 
         .story-photo-dot.active {
           background-color: #FFFFFF;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
         }
 
         .story-photo-arrow {
@@ -872,8 +875,8 @@ export const StoryDeck = ({
 
         .story-top-badges {
           position: absolute;
-          top: 18px;
-          left: 12px;
+          top: 24px;
+          left: 16px;
           display: flex;
           align-items: center;
           gap: 6px;
@@ -883,15 +886,16 @@ export const StoryDeck = ({
         .badge-vibe-radar {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          background: rgba(26, 21, 23, 0.75);
-          border: 1px solid rgba(212, 173, 106, 0.4);
+          gap: 5px;
+          background: rgba(26, 21, 23, 0.8);
+          border: 1px solid rgba(212, 173, 106, 0.45);
           color: var(--cream-100);
-          font-size: 11px;
+          font-size: 11.5px;
           font-weight: 600;
-          padding: 3px var(--space-2);
+          padding: 4px 10px;
           border-radius: var(--radius-full);
-          backdrop-filter: blur(6px);
+          backdrop-filter: blur(8px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
         }
 
         .badge-verified {
