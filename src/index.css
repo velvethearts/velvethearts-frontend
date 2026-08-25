@@ -6413,23 +6413,29 @@ html {
 }
 
 .diary-cover-emblem {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
-  margin-top: 2px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+  margin: 6px 0 8px 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .diary-cover-logo-img {
-  width: 44px;
-  height: 44px;
+  width: 76px;
+  height: 76px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+  transition: transform 0.25s ease;
+}
+
+.diary-cover-leaf:hover .diary-cover-logo-img,
+.diary-back-cover-leaf:hover .diary-cover-logo-img {
+  transform: scale(1.06);
 }
 
 .diary-header-logo-img {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   object-fit: contain;
   display: inline-block;
   vertical-align: middle;
@@ -6437,16 +6443,16 @@ html {
 }
 
 .diary-empty-logo-img {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
-  opacity: 0.9;
-  margin-bottom: 4px;
+  opacity: 0.95;
+  margin-bottom: 6px;
 }
 
 .diary-loading-logo-img {
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
 }
 
@@ -6905,41 +6911,47 @@ html {
 
 /* 3. BACK COVER LEAF */
 .diary-back-cover-leaf {
-  background: #7A1D36 !important;
+  background: linear-gradient(145deg, #8B2240 0%, #6E162E 100%) !important;
   border-radius: 12px 6px 6px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100%;
+  width: 100%;
 }
 
 .diary-back-cover-inner {
+  margin: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 20px 16px;
-  gap: 8px;
+  padding: 30px 22px;
+  gap: 16px;
 }
 
 .diary-back-cover-emblem {
-  color: #F4E2B8;
-  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .diary-back-cover-text {
-  font-size: 14px;
+  font-size: 16.5px;
   font-style: italic;
-  color: #F0C4D0;
-  line-height: 1.4;
+  color: #FFF0F4;
+  line-height: 1.55;
   margin: 0;
+  max-width: 250px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 .diary-back-cover-brand {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   color: #F4E2B8;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 

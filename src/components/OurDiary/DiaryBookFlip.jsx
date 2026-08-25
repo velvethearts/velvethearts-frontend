@@ -395,7 +395,7 @@ export const DiaryBookFlip = forwardRef(({
               <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-cover-logo-img" />
             </div>
             <p className="diary-back-cover-text font-display">
-              “To all our cherished moments, big and small.”
+              “Every love story is beautiful, but ours is my favorite.”
             </p>
             <span className="diary-back-cover-brand font-ui">Velvet Hearts</span>
           </div>
