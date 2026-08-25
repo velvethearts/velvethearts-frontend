@@ -51,12 +51,31 @@ export const DiaryVoiceNotePlayer = ({ url }) => {
   const handleTimeUpdate = () => {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime || 0);
+      const d = audioRef.current.duration;
+      if (typeof d === 'number' && isFinite(d) && !isNaN(d) && d > 0) {
+        setDuration(d);
+      }
     }
   };
 
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
-      setDuration(audioRef.current.duration || 0);
+      const d = audioRef.current.duration;
+      if (typeof d === 'number' && isFinite(d) && !isNaN(d) && d > 0) {
+        setDuration(d);
+      } else {
+        // Chromium WebM Blob duration fix: seek to end then reset
+        const el = audioRef.current;
+        const fixDuration = () => {
+          if (typeof el.duration === 'number' && isFinite(el.duration) && !isNaN(el.duration) && el.duration > 0) {
+            setDuration(el.duration);
+          }
+          el.currentTime = 0;
+          el.removeEventListener('timeupdate', fixDuration);
+        };
+        el.addEventListener('timeupdate', fixDuration);
+        el.currentTime = 1e10;
+      }
     }
   };
 
@@ -66,13 +85,17 @@ export const DiaryVoiceNotePlayer = ({ url }) => {
   };
 
   const formatTime = (secs) => {
-    if (!secs || isNaN(secs) || secs < 0) return '0:00';
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
+    if (secs === null || secs === undefined || typeof secs !== 'number' || isNaN(secs) || !isFinite(secs) || secs < 0) {
+      return '0:00';
+    }
+    const safeSecs = Math.floor(secs);
+    const m = Math.floor(safeSecs / 60);
+    const s = Math.floor(safeSecs % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const safeDuration = typeof duration === 'number' && isFinite(duration) && !isNaN(duration) && duration > 0 ? duration : 0;
+  const progressPct = safeDuration > 0 ? Math.min(Math.max((currentTime / safeDuration) * 100, 0), 100) : 0;
 
   return (
     <div className="diary-voice-ribbon font-ui">
@@ -81,6 +104,7 @@ export const DiaryVoiceNotePlayer = ({ url }) => {
         src={url}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+        onDurationChange={handleTimeUpdate}
         onEnded={handleEnded}
         preload="metadata"
       />
@@ -110,7 +134,7 @@ export const DiaryVoiceNotePlayer = ({ url }) => {
       </div>
 
       <span className="diary-voice-time font-ui">
-        {isPlaying ? formatTime(currentTime) : formatTime(duration || 0)}
+        {isPlaying ? formatTime(currentTime) : formatTime(safeDuration)}
       </span>
     </div>
   );
