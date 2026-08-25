@@ -5639,155 +5639,256 @@ html {
 }
 
 /* ==========================================================================
-   BOTTOM PERSISTENT DATE-STRIP NAVIGATOR
+   SLIDE-UP BOTTOM DATE DRAWER NAVIGATOR (Pinterest-Styled)
    ========================================================================== */
-.diary-bottom-date-strip {
-  background: var(--bg-surface, #FFFFFF);
-  border-top: 1px solid var(--border-subtle, #E8E3E4);
-  padding: 10px 16px 14px;
+.diary-date-drawer {
+  background: #231B1E;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px 24px 0 0;
+  padding: 10px 18px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
+  box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.25);
+  transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  user-select: none;
+  touch-action: pan-y;
+  position: relative;
+  z-index: 20;
 }
 
-.diary-strip-header {
+:root:not([data-theme="dark"]) .diary-date-drawer {
+  background: #2A1F23;
+  color: #FFFFFF;
+}
+
+/* 1. Slide-Up Pull Handle */
+.diary-drawer-handle-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 0 4px;
+  cursor: pointer;
+}
+
+.diary-drawer-pill-handle {
+  width: 38px;
+  height: 4.5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.32);
+  transition: background var(--duration-fast, 0.15s), transform var(--duration-fast, 0.15s);
+}
+
+.diary-drawer-handle-bar:hover .diary-drawer-pill-handle {
+  background: rgba(255, 255, 255, 0.55);
+  transform: scaleY(1.2);
+}
+
+/* 2. Top Header Row: Month Switcher & Target Today */
+.diary-drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 0 2px;
 }
 
-.diary-strip-month-controls {
+.diary-drawer-month-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.diary-strip-arrow-btn {
-  width: 26px;
-  height: 26px;
+.diary-drawer-month-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 8px;
+  transition: opacity var(--duration-fast, 0.15s);
+}
+
+.diary-drawer-month-btn:hover {
+  opacity: 0.85;
+}
+
+.diary-drawer-caret {
+  color: rgba(255, 255, 255, 0.7);
+  transition: transform 0.25s ease;
+}
+
+.diary-drawer-caret.rotate-down {
+  transform: rotate(90deg);
+}
+
+.diary-drawer-month-arrows {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.diary-drawer-arrow {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: background var(--duration-fast, 0.15s);
+}
+
+.diary-drawer-arrow:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Target / Bullseye Today Button */
+.diary-drawer-today-target {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid var(--border-subtle, #E8E3E4);
-  color: var(--text-secondary, #5A4E50);
+  border: none;
   cursor: pointer;
-  transition: all var(--duration-fast);
+  padding: 0;
+  transition: transform var(--duration-fast, 0.15s);
 }
 
-.diary-strip-arrow-btn:hover {
-  background: var(--burgundy-50, #FDF2F4);
-  color: var(--burgundy-600, #9B3456);
-  border-color: var(--burgundy-200, #F0BDC8);
+.diary-drawer-today-target:hover {
+  transform: scale(1.1);
 }
 
-.diary-strip-month-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--charcoal-900, #2C2426);
-}
-
-.diary-strip-today-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: var(--radius-full, 9999px);
-  background: var(--cream-100, #FFF8F0);
-  border: 1px solid var(--border-subtle, #E8E3E4);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--burgundy-600, #9B3456);
-  cursor: pointer;
-  transition: all var(--duration-fast);
-}
-
-.diary-strip-today-btn:hover {
-  background: var(--burgundy-50, #FDF2F4);
-  border-color: var(--burgundy-300, #E08DA3);
-}
-
-/* Horizontal Day Strip Row */
-.diary-strip-days-row {
+.diary-target-ring {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
   display: flex;
   align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  padding: 2px 0 4px;
-  scrollbar-width: thin;
+  justify-content: center;
 }
 
-.diary-strip-day {
+.diary-target-center {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* 3. Weekday Labels (Mon - Sun) */
+.diary-drawer-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  padding: 0 2px;
+}
+
+.diary-drawer-weekday-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9C8E93;
+  letter-spacing: 0.2px;
+}
+
+/* 4. Days Grid / Row */
+.diary-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Hide native scrollbar */
+  -ms-overflow-style: none;
+  padding: 2px 2px 4px;
+  transition: max-height 0.35s ease;
+}
+
+.diary-drawer-grid::-webkit-scrollbar {
+  display: none; /* Hide Chrome/Safari scrollbars */
+}
+
+.diary-drawer-grid.grid-single-week {
+  max-height: 52px;
+  overflow: hidden;
+}
+
+.diary-drawer-day-cell {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 38px;
-  padding: 6px 4px;
+  height: 46px;
   border-radius: 12px;
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
   cursor: pointer;
-  transition: all var(--duration-fast);
-  flex-shrink: 0;
   position: relative;
+  transition: all var(--duration-fast, 0.15s);
+  padding: 2px 0;
 }
 
-.diary-strip-day.no-entry {
-  opacity: 0.45;
+.diary-drawer-day-cell.no-entry {
+  opacity: 0.32;
   cursor: default;
 }
 
-.diary-strip-day.has-entry {
-  opacity: 1;
+.diary-drawer-day-cell.has-entry {
+  opacity: 0.95;
 }
 
-.diary-strip-day.has-entry:hover:not(.active) {
-  background: var(--burgundy-50, #FDF2F4);
-  border-color: var(--burgundy-200, #F0BDC8);
+.diary-drawer-day-cell.has-entry:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.diary-strip-day.active {
-  background: var(--burgundy-500, #B8436A);
-  border-color: var(--burgundy-600, #9B3456);
-  box-shadow: 0 3px 10px rgba(184, 67, 106, 0.35);
+.diary-drawer-day-cell.other-month {
+  opacity: 0.2;
 }
 
-.diary-strip-dayname {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-muted, #998D8F);
+.diary-drawer-day-cell.active {
+  background: #B8436A !important;
+  opacity: 1 !important;
+  box-shadow: 0 3px 12px rgba(184, 67, 106, 0.45);
+}
+
+.diary-drawer-day-num {
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
   line-height: 1;
-  margin-bottom: 2px;
 }
 
-.diary-strip-day.active .diary-strip-dayname {
-  color: var(--burgundy-100, #F9E0E6);
-}
-
-.diary-strip-daynum {
-  font-size: 13px;
+.diary-drawer-day-cell.active .diary-drawer-day-num {
   font-weight: 700;
-  color: var(--text-primary, #1A1517);
-  line-height: 1;
 }
 
-.diary-strip-day.active .diary-strip-daynum {
-  color: #ffffff;
-}
-
-.diary-strip-indicator-dot {
+.diary-active-dot {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--rose-500, #E07A8A);
-  margin-top: 3px;
+  background: #FFFFFF;
+  margin-top: 4px;
 }
 
-.diary-strip-day.active .diary-strip-indicator-dot {
-  background: #ffffff;
+.diary-has-entry-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #E07A8A;
+  margin-top: 4px;
 }
 
 /* ==========================================================================
@@ -6056,8 +6157,10 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   border-bottom: 1px solid var(--border-subtle, #E8E3E4);
   padding-bottom: 6px;
+  width: 100%;
 }
 
 .diary-base-page-tag {
@@ -6066,11 +6169,16 @@ html {
   text-transform: uppercase;
   color: var(--burgundy-500, #B8436A);
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .diary-base-page-date {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted, #998D8F);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .diary-base-page-content {

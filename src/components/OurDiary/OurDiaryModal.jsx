@@ -125,27 +125,33 @@ const DiaryVoiceNotePlayer = ({ url }) => {
   );
 };
 
-// Bottom Date-Strip Navigator (Mon-Sun columns, Month Switcher, Jump to Today)
-const DiaryDateStrip = ({
+// Bottom Slide-Up Date Drawer Navigator (Pinterest-styled pull-up drawer)
+const DiaryDateDrawer = ({
   pages = [],
   currentPageIndex = 0,
   onSelectDate,
   viewDate,
   setViewDate
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const touchStartY = useRef(null);
+
   const safeViewDate = (viewDate && viewDate instanceof Date && !isNaN(viewDate.getTime())) ? viewDate : new Date();
   const year = safeViewDate.getFullYear();
   const month = safeViewDate.getMonth();
 
-  const prevMonth = () => {
+  const prevMonth = (e) => {
+    e?.stopPropagation?.();
     setViewDate?.(new Date(year, month - 1, 1));
   };
 
-  const nextMonth = () => {
+  const nextMonth = (e) => {
+    e?.stopPropagation?.();
     setViewDate?.(new Date(year, month + 1, 1));
   };
 
-  const jumpToToday = () => {
+  const jumpToToday = (e) => {
+    e?.stopPropagation?.();
     const today = new Date();
     setViewDate?.(new Date(today.getFullYear(), today.getMonth(), 1));
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -160,7 +166,7 @@ const DiaryDateStrip = ({
     }
   };
 
-  const monthName = safeViewDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const monthName = safeViewDate.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 
   // Map entries by date key
   const dateToPageMap = useMemo(() => {
@@ -176,9 +182,12 @@ const DiaryDateStrip = ({
     return map;
   }, [pages]);
 
-  // Days in month
+  // Days in month & First day of week (Monday as index 0)
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const firstDayOfMonth = (new Date(year, month, 1).getDay() + 6) % 7; // Mon=0, Sun=6
+  const prevMonthDaysCount = new Date(year, month, 0).getDate();
+
+  const weekdayHeaders = ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'];
 
   // Current page raw date for active highlight
   const activePageDate = pages?.[currentPageIndex]?.rawDate;
@@ -186,70 +195,166 @@ const DiaryDateStrip = ({
     ? `${activePageDate.getFullYear()}-${String(activePageDate.getMonth() + 1).padStart(2, '0')}-${String(activePageDate.getDate()).padStart(2, '0')}`
     : null;
 
-  const scrollRef = useRef(null);
+  // Touch swipe handling for slide-up/down
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      const activeEl = scrollRef.current.querySelector('.diary-strip-day.active');
-      if (activeEl) {
-        activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      }
+  const handleTouchEnd = (e) => {
+    if (touchStartY.current === null) return;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    if (deltaY < -35) {
+      // Swiped UP -> Expand
+      setIsExpanded(true);
+    } else if (deltaY > 35) {
+      // Swiped DOWN -> Collapse
+      setIsExpanded(false);
     }
-  }, [activeDateKey, month]);
+    touchStartY.current = null;
+  };
+
+  // Build calendar matrix (padded with previous and next month dates)
+  const calendarCells = useMemo(() => {
+    const cells = [];
+
+    // Leading days from previous month
+    for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+      const dayNum = prevMonthDaysCount - i;
+      const prevDate = new Date(year, month - 1, dayNum);
+      const dateKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+      const pageIndex = dateToPageMap.get(dateKey);
+      cells.push({
+        dayNum,
+        dateKey,
+        isOtherMonth: true,
+        pageIndex,
+        hasEntries: pageIndex !== undefined,
+        isActive: dateKey === activeDateKey,
+      });
+    }
+
+    // Days in current month
+    for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+      const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+      const pageIndex = dateToPageMap.get(dateKey);
+      cells.push({
+        dayNum,
+        dateKey,
+        isOtherMonth: false,
+        pageIndex,
+        hasEntries: pageIndex !== undefined,
+        isActive: dateKey === activeDateKey,
+      });
+    }
+
+    // Trailing days from next month to complete the row/grid
+    const remaining = (7 - (cells.length % 7)) % 7;
+    for (let i = 1; i <= remaining; i++) {
+      const nextDate = new Date(year, month + 1, i);
+      const dateKey = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+      const pageIndex = dateToPageMap.get(dateKey);
+      cells.push({
+        dayNum: i,
+        dateKey,
+        isOtherMonth: true,
+        pageIndex,
+        hasEntries: pageIndex !== undefined,
+        isActive: dateKey === activeDateKey,
+      });
+    }
+
+    return cells;
+  }, [year, month, daysInMonth, firstDayOfMonth, prevMonthDaysCount, dateToPageMap, activeDateKey]);
+
+  // Find active cell's week for collapsed view
+  const activeCellIndex = calendarCells.findIndex(c => c.isActive);
+  const activeWeekStart = activeCellIndex !== -1 ? Math.floor(activeCellIndex / 7) * 7 : 0;
+  const collapsedWeekCells = calendarCells.slice(activeWeekStart, activeWeekStart + 7);
+
+  const displayedCells = isExpanded ? calendarCells : collapsedWeekCells;
 
   return (
-    <div className="diary-bottom-date-strip font-ui">
-      {/* Month Bar with Controls */}
-      <div className="diary-strip-header">
-        <div className="diary-strip-month-controls">
-          <button type="button" className="diary-strip-arrow-btn" onClick={prevMonth} aria-label="Previous Month">
-            <CaretLeft size={14} weight="bold" />
+    <div
+      className={`diary-date-drawer ${isExpanded ? 'expanded' : 'collapsed'}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Slide-Up Pull Handle */}
+      <div
+        className="diary-drawer-handle-bar"
+        onClick={() => setIsExpanded(prev => !prev)}
+        title={isExpanded ? 'Slide down to minimize' : 'Slide up to select date'}
+      >
+        <div className="diary-drawer-pill-handle" />
+      </div>
+
+      {/* Top Header: Month Switcher & Target / Today Button */}
+      <div className="diary-drawer-header">
+        <div className="diary-drawer-month-row">
+          <button
+            type="button"
+            className="diary-drawer-month-btn font-display"
+            onClick={() => setIsExpanded(prev => !prev)}
+          >
+            <span>{monthName}</span>
+            <CaretRight size={14} weight="bold" className={`diary-drawer-caret ${isExpanded ? 'rotate-down' : ''}`} />
           </button>
-          <span className="diary-strip-month-title font-display">{monthName}</span>
-          <button type="button" className="diary-strip-arrow-btn" onClick={nextMonth} aria-label="Next Month">
-            <CaretRight size={14} weight="bold" />
-          </button>
+
+          {isExpanded && (
+            <div className="diary-drawer-month-arrows">
+              <button type="button" className="diary-drawer-arrow" onClick={prevMonth} aria-label="Previous Month">
+                <CaretLeft size={13} weight="bold" />
+              </button>
+              <button type="button" className="diary-drawer-arrow" onClick={nextMonth} aria-label="Next Month">
+                <CaretRight size={13} weight="bold" />
+              </button>
+            </div>
+          )}
         </div>
 
         <button
           type="button"
-          className="diary-strip-today-btn"
+          className="diary-drawer-today-target"
           onClick={jumpToToday}
           title="Jump to Today"
           aria-label="Jump to Today"
         >
-          <CalendarCheck size={16} weight="bold" />
-          <span className="diary-strip-today-text">Today</span>
+          <div className="diary-target-ring">
+            <div className="diary-target-center" />
+          </div>
         </button>
       </div>
 
-      {/* Days of Month Horizontal Row */}
-      <div className="diary-strip-days-row" ref={scrollRef}>
-        {Array.from({ length: daysInMonth }, (_, i) => {
-          const dayNum = i + 1;
-          const dateObj = new Date(year, month, dayNum);
-          const dayOfWeek = dayNames[dateObj.getDay()];
-          const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-          const pageIndex = dateToPageMap.get(dateKey);
-          const hasEntries = pageIndex !== undefined;
-          const isActive = dateKey === activeDateKey;
+      {/* Weekday Labels (Mon - Sun) */}
+      <div className="diary-drawer-weekdays font-ui">
+        {weekdayHeaders.map(day => (
+          <span key={day} className="diary-drawer-weekday-label">{day}</span>
+        ))}
+      </div>
+
+      {/* Days Grid / Row */}
+      <div className={`diary-drawer-grid ${isExpanded ? 'grid-expanded' : 'grid-single-week'}`}>
+        {displayedCells.map((cell) => {
+          const { dayNum, dateKey, isOtherMonth, pageIndex, hasEntries, isActive } = cell;
 
           return (
             <button
               key={dateKey}
               type="button"
-              className={`diary-strip-day ${isActive ? 'active' : ''} ${hasEntries ? 'has-entry' : 'no-entry'}`}
+              className={`diary-drawer-day-cell ${isActive ? 'active' : ''} ${hasEntries ? 'has-entry' : 'no-entry'} ${isOtherMonth ? 'other-month' : ''}`}
               onClick={() => {
                 if (hasEntries && pageIndex !== undefined) {
                   onSelectDate?.(pageIndex);
                 }
               }}
               disabled={!hasEntries}
-              title={hasEntries ? `View moments on ${dateObj.toLocaleDateString()}` : `No moments on ${dayNum} ${monthName}`}
             >
-              <span className="diary-strip-dayname">{dayOfWeek}</span>
-              <span className="diary-strip-daynum">{dayNum}</span>
-              {hasEntries && <span className="diary-strip-indicator-dot" />}
+              <span className="diary-drawer-day-num font-display">{dayNum}</span>
+              {isActive ? (
+                <span className="diary-active-dot" />
+              ) : hasEntries ? (
+                <span className="diary-has-entry-dot" />
+              ) : null}
             </button>
           );
         })}
@@ -1245,10 +1350,10 @@ export const OurDiaryModal = ({
         </div>
 
         {/* ============================================================
-           PERSISTENT BOTTOM DATE-STRIP NAVIGATOR (In Browse State)
+           PERSISTENT BOTTOM SLIDE-UP DATE DRAWER (In Browse State)
            ============================================================ */}
         {viewState === 'browse' && pages && pages.length > 0 && (
-          <DiaryDateStrip
+          <DiaryDateDrawer
             pages={pages}
             currentPageIndex={currentPageIndex}
             onSelectDate={(idx) => handleJumpToPageIndex(idx)}
