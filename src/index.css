@@ -7359,6 +7359,276 @@ html {
   transform: none;
 }
 
+/* ==========================================================================
+   VOICE RECORDER & PHOTO UPLOAD ZONES (THEME ADAPTIVE & HIGH CONTRAST)
+   ========================================================================== */
+
+/* 1. Mic Start Area */
+.diary-mic-start-area {
+  background: #FFFAF5;
+  border: 1.5px dashed rgba(184, 67, 106, 0.35);
+  border-radius: 12px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .diary-mic-start-area {
+  background: #180C11;
+  border-color: rgba(208, 96, 127, 0.4);
+}
+
+.diary-mic-record-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--burgundy-600, #9B3456);
+  color: #FFFFFF;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(184, 67, 106, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="dark"] .diary-mic-record-btn {
+  background: #B8436A;
+  box-shadow: 0 4px 14px rgba(184, 67, 106, 0.5);
+}
+
+.diary-mic-record-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(184, 67, 106, 0.45);
+}
+
+.diary-mic-prompt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--burgundy-800, #5C1A2E);
+}
+
+[data-theme="dark"] .diary-mic-prompt {
+  color: #F5C6D3;
+}
+
+/* Active Recording State */
+.diary-mic-recording-active {
+  background: #FFF0F3;
+  border: 1.5px solid #F0BDC8;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+[data-theme="dark"] .diary-mic-recording-active {
+  background: #24121A;
+  border-color: #5A2A3B;
+}
+
+.diary-mic-pulse-circle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #E53E3E;
+  animation: diaryMicPulseAnim 1s infinite ease-in-out;
+}
+
+@keyframes diaryMicPulseAnim {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+}
+
+.diary-mic-timer {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--burgundy-700, #7A2842);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-theme="dark"] .diary-mic-timer {
+  color: #F5C6D3;
+}
+
+.diary-mic-stop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #C45A5A;
+  color: #FFFFFF;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.diary-mic-stop-btn:hover {
+  background: #B04A4A;
+  transform: scale(1.03);
+}
+
+/* Mic Finished Preview */
+.diary-mic-finished-preview {
+  background: #FFFAF5;
+  border: 1.5px solid rgba(184, 67, 106, 0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+[data-theme="dark"] .diary-mic-finished-preview {
+  background: #180C11;
+  border-color: #4A2330;
+}
+
+.diary-mic-redo-btn {
+  background: transparent;
+  border: 1px solid var(--border-subtle, #E8E3E4);
+  color: var(--text-secondary, #5A4E50);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+[data-theme="dark"] .diary-mic-redo-btn {
+  border-color: #4A2330;
+  color: #D1C0C5;
+}
+
+/* 2. Photo Upload Dropzone */
+.diary-photo-upload-zone {
+  position: relative;
+  background: #FFFAF5;
+  border: 1.5px dashed rgba(184, 67, 106, 0.35);
+  border-radius: 12px;
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .diary-photo-upload-zone {
+  background: #180C11;
+  border-color: rgba(208, 96, 127, 0.4);
+}
+
+.diary-photo-upload-zone:hover {
+  border-color: var(--burgundy-500, #B8436A);
+  background: #FFF5F7;
+}
+
+[data-theme="dark"] .diary-photo-upload-zone:hover {
+  border-color: #F5C6D3;
+  background: #24121A;
+}
+
+.diary-photo-upload-zone svg {
+  color: var(--burgundy-600, #9B3456);
+}
+
+[data-theme="dark"] .diary-photo-upload-zone svg {
+  color: #F5C6D3;
+}
+
+.diary-photo-upload-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--burgundy-900, #3A0E1A);
+}
+
+[data-theme="dark"] .diary-photo-upload-title {
+  color: #F5E6EB;
+}
+
+.diary-photo-upload-sub {
+  font-size: 11.5px;
+  color: var(--text-muted, #8C7D80);
+}
+
+[data-theme="dark"] .diary-photo-upload-sub {
+  color: #C2AFB5;
+}
+
+.diary-hidden-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* Photo Thumbnail Selected State */
+.diary-photo-thumb-container {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  max-height: 180px;
+  background: #F5F1F2;
+  border: 1px solid var(--border-subtle, #E8E3E4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-theme="dark"] .diary-photo-thumb-container {
+  background: #180C11;
+  border-color: #4A2330;
+}
+
+.diary-photo-thumb-img {
+  width: 100%;
+  height: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+.diary-photo-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(18, 6, 10, 0.75);
+  color: #FFFFFF;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: transform 0.15s ease;
+}
+
+.diary-photo-remove-btn:hover {
+  transform: scale(1.1);
+  background: rgba(196, 90, 90, 0.9);
+}
+
 @keyframes pagePeelNextAnim {
   0% {
     transform: translateX(0) rotate(0deg);
