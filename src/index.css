@@ -6680,8 +6680,8 @@ html {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 11px;
-  padding-right: 2px;
+  gap: 16px;
+  padding: 2px 2px 12px 2px;
   position: relative;
   z-index: 10;
 }
@@ -6710,7 +6710,6 @@ html {
 .diary-leaf-entry-item {
   display: flex;
   flex-direction: column;
-  gap: 3px;
   width: 100%;
 }
 
@@ -6734,17 +6733,20 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 5px;
-  padding-top: 4px;
+  margin-top: 8px;
+  padding-top: 6px;
   border-top: 1px solid rgba(184, 67, 106, 0.1);
   width: 100%;
+  box-sizing: border-box;
+  gap: 12px;
 }
 
 .diary-leaf-card-meta {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 500;
   color: #9E888E;
   letter-spacing: 0.01em;
+  flex-shrink: 0;
 }
 
 [data-theme="dark"] .diary-leaf-card-meta {
@@ -6802,7 +6804,9 @@ html {
   background: #FFF5F7;
   border-left: 3.5px solid #B8436A;
   border-radius: 4px 8px 8px 4px;
-  padding: 9px 12px;
+  padding: 10px 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 [data-theme="dark"] .diary-leaf-quote-box {
@@ -6824,6 +6828,9 @@ html {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 .diary-leaf-quote-text {
