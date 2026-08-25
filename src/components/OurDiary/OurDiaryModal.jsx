@@ -22,7 +22,8 @@ import {
   Clock,
   Quotes,
   Stop,
-  Check
+  Check,
+  BookOpen
 } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
 import { useApp } from '../../context/AppContext';
