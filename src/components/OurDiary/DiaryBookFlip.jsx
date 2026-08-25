@@ -285,20 +285,6 @@ export const DiaryBookFlip = forwardRef(({
             className="diary-inner-white-leaf"
           >
             <div className="diary-leaf-paper-surface">
-              {/* Full-height Tap-to-Flip Zones along the sides of the page */}
-              <div
-                className="diary-leaf-click-zone right"
-                onClick={handleFlipNext}
-                title="Tap right edge to flip next"
-                aria-label="Next page"
-              />
-              <div
-                className="diary-leaf-click-zone left"
-                onClick={handleFlipPrev}
-                title="Tap left edge to flip previous"
-                aria-label="Previous page"
-              />
-
               {/* Day Header */}
               <div className="diary-leaf-header">
                 <h3 className="diary-leaf-date font-display">{dayGroup.dateLabel}</h3>
@@ -310,7 +296,12 @@ export const DiaryBookFlip = forwardRef(({
               <div className="diary-leaf-divider" />
 
               {/* Day Memories Scrapbook List */}
-              <div className="diary-leaf-scroll-content">
+              <div
+                className="diary-leaf-scroll-content"
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
                 {(!dayGroup.items || dayGroup.items.length === 0) ? (
                   <div className="diary-leaf-empty font-ui">
                     <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-empty-logo-img" />
@@ -339,6 +330,9 @@ export const DiaryBookFlip = forwardRef(({
                             <button
                               type="button"
                               className="diary-leaf-del-btn"
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onTouchStart={(e) => e.stopPropagation()}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
