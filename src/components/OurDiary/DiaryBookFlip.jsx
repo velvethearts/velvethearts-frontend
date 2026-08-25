@@ -26,6 +26,35 @@ const DiaryPageLeaf = forwardRef(({ className = '', density = 'soft', children, 
 
 DiaryPageLeaf.displayName = 'DiaryPageLeaf';
 
+const COUPLE_COVER_QUOTES = [
+  "“Where you are, that is where home is.”",
+  "“Together is my favorite place to be.”",
+  "“You are my today and all of my tomorrows.”",
+  "“In you, I found my love and my safe haven.”",
+  "“Every moment with you is a memory I cherish.”",
+  "“You make the ordinary feel like magic.”",
+  "“Whatever our souls are made of, yours and mine are one.”",
+  "“With you, every day is another page in our story.”",
+  "“Loving you is the easiest thing I have ever done.”",
+  "“Two hearts, one story written in velvet.”",
+  "“In a sea of people, my eyes will always search for you.”",
+  "“Held close in thought, forever in my heart.”",
+  "“Every chapter with you only gets sweeter.”",
+  "“You are the melody in the quiet of my heart.”",
+  "“A lifetime of cherished moments, starting with you.”"
+];
+
+function getDeterministicQuote(name1 = '', name2 = '') {
+  const combined = `${(name1 || '').toLowerCase().trim()}_${(name2 || '').toLowerCase().trim()}`;
+  let hash = 0;
+  for (let i = 0; i < combined.length; i++) {
+    hash = (hash << 5) - hash + combined.charCodeAt(i);
+    hash |= 0;
+  }
+  const index = Math.abs(hash) % COUPLE_COVER_QUOTES.length;
+  return COUPLE_COVER_QUOTES[index];
+}
+
 /**
  * Velvet Hearts — Realistic PageFlip Book Component
  * Supports full-height edge tapping, touch swipe gestures, and theme adaptive styling
@@ -40,6 +69,10 @@ export const DiaryBookFlip = forwardRef(({
 }, ref) => {
   const flipBookRef = useRef(null);
   const touchStartRef = useRef(null);
+
+  const coupleQuote = React.useMemo(() => {
+    return getDeterministicQuote(userName, partnerName);
+  }, [userName, partnerName]);
 
   const [dimensions, setDimensions] = useState(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
@@ -208,6 +241,10 @@ export const DiaryBookFlip = forwardRef(({
 
                 <p className="diary-cover-names font-display">
                   {userName || 'You'} &amp; {partnerName || 'Partner'}
+                </p>
+
+                <p className="diary-cover-quote-text font-display">
+                  {coupleQuote}
                 </p>
               </div>
 

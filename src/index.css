@@ -6485,6 +6485,18 @@ html {
   line-height: 1.3;
 }
 
+.diary-cover-quote-text {
+  font-size: 13px;
+  font-style: italic;
+  color: #F8E3EB;
+  line-height: 1.45;
+  margin: 8px auto 0;
+  max-width: 220px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  opacity: 0.92;
+  text-align: center;
+}
+
 .diary-cover-bottom-group {
   display: flex;
   flex-direction: column;
