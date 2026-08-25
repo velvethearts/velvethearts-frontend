@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   X,
   BookBookmark,
-  Books,
   BookOpen,
   CaretLeft,
   CaretRight,
@@ -13,28 +12,24 @@ import {
   Trash,
   Play,
   Pause,
-  CalendarBlank,
   CalendarCheck,
   Sparkle,
   Heart,
   UploadSimple,
-  WarningCircle,
   Quotes,
   Stop,
   Check
 } from '@phosphor-icons/react';
 import { api } from '../../lib/api';
 import { useApp } from '../../context/AppContext';
-import { ProtectedImage } from '../UI/ProtectedImage';
 import { getSocket } from '../../lib/socket';
 
 /**
- * Velvet Hearts — Our Diary Component (Full Spec Edition)
- * Screen 1: Book Page — Closed 3D book with resting tilt, spine-hinged open animation, flippable day-pages, date-strip drawer.
- * Screen 2: Add Page — Composing with real-time live preview of today's page, Record/Type/Photo actions, and multi-save support.
+ * Velvet Hearts — Our Diary Modal
+ * Light Theme Aesthetic with Physical 3D Book & Live Preview Composer
  */
 
-// Voice Note Player with distinct ribbon style and animated waveform
+// Voice Note Ribbon Player
 const DiaryVoiceNotePlayer = ({ url }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -95,12 +90,12 @@ const DiaryVoiceNotePlayer = ({ url }) => {
         onClick={togglePlay}
         aria-label={isPlaying ? 'Pause voice note' : 'Play voice note'}
       >
-        {isPlaying ? <Pause size={16} weight="fill" /> : <Play size={16} weight="fill" />}
+        {isPlaying ? <Pause size={15} weight="fill" /> : <Play size={15} weight="fill" />}
       </button>
 
       <div className="diary-voice-waveform-track">
         <div className="diary-voice-wave-bars">
-          {[40, 70, 30, 85, 60, 95, 45, 80, 55, 90, 35, 75, 50, 85, 65, 40].map((h, i) => {
+          {[35, 65, 30, 80, 55, 95, 40, 75, 50, 90, 35, 70, 45, 85, 60, 35].map((h, i) => {
             const barPct = (i / 16) * 100;
             const isFilled = progressPct >= barPct;
             return (
@@ -121,7 +116,7 @@ const DiaryVoiceNotePlayer = ({ url }) => {
   );
 };
 
-// Slide-Up Bottom Date Drawer Component
+// Bottom Date-Strip Navigation Drawer
 const DiaryDateDrawer = ({
   pages = [],
   currentPageIndex = 0,
@@ -129,14 +124,13 @@ const DiaryDateDrawer = ({
   viewDate,
   setViewDate
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const touchStartY = useRef(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
-  const dayNames = ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'];
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const curYear = viewDate.getFullYear();
   const curMonth = viewDate.getMonth();
@@ -197,44 +191,29 @@ const DiaryDateDrawer = ({
   const activeDate = activePage?.rawDate ? new Date(activePage.rawDate) : new Date();
 
   return (
-    <div className={`diary-date-drawer font-ui ${isOpen ? 'drawer-open' : 'drawer-collapsed'}`}>
-      <div
-        className="diary-drawer-pill-handle-area"
-        onClick={() => setIsOpen(prev => !prev)}
-        onTouchStart={(e) => {
-          touchStartY.current = e.touches[0].clientY;
-        }}
-        onTouchEnd={(e) => {
-          if (touchStartY.current === null) return;
-          const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-          if (deltaY < -25) setIsOpen(true);
-          if (deltaY > 25) setIsOpen(false);
-          touchStartY.current = null;
-        }}
-      >
-        <div className="diary-drawer-pill-bar" />
-      </div>
-
-      <div className="diary-drawer-collapsed-bar" onClick={() => setIsOpen(prev => !prev)}>
-        <div className="diary-drawer-collapsed-left">
-          <span className="diary-drawer-month-title font-display">
+    <div className={`diary-date-strip-drawer font-ui ${isExpanded ? 'expanded' : ''}`}>
+      {/* Month Bar & Jump to Today */}
+      <div className="diary-strip-header" onClick={() => setIsExpanded(prev => !prev)}>
+        <div className="diary-strip-header-left">
+          <span className="diary-strip-month-label font-display">
             {monthNames[curMonth]} {curYear}
           </span>
-          <CaretRight size={14} weight="bold" className="diary-month-caret" />
+          <CaretRight size={14} weight="bold" className={`diary-strip-caret ${isExpanded ? 'rotated' : ''}`} />
         </div>
 
         <button
           type="button"
-          className="diary-drawer-today-btn font-ui"
+          className="diary-strip-today-pill font-ui"
           onClick={handleJumpToToday}
-          title="Jump to Today"
-          aria-label="Jump to Today"
+          title="Jump to Today's Page"
         >
-          <CalendarCheck size={16} weight="bold" />
+          <CalendarCheck size={14} weight="bold" />
+          <span>Today</span>
         </button>
       </div>
 
-      <div className="diary-drawer-collapsed-strip">
+      {/* Weekday Strip (Always Visible) */}
+      <div className="diary-strip-week-row">
         {dayNames.map((dName, idx) => {
           const currentDayNum = activeDate.getDate();
           const targetDayNum = currentDayNum - ((activeDate.getDay() + 6) % 7) + idx;
@@ -248,61 +227,62 @@ const DiaryDateDrawer = ({
             <button
               key={idx}
               type="button"
-              className={`diary-strip-col ${isSelected ? 'active-col' : ''} ${hasEntries ? 'has-entries' : ''}`}
+              className={`diary-strip-day-col ${isSelected ? 'selected' : ''} ${hasEntries ? 'has-moments' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 if (hasEntries) onSelectDate(pageIdx);
               }}
               disabled={!isValidDay || !hasEntries}
             >
-              <span className="diary-strip-day-name font-ui">{dName}</span>
-              <span className="diary-strip-date-num font-display">{isValidDay ? targetDayNum : '·'}</span>
-              {hasEntries && <span className="diary-entry-dot" />}
+              <span className="diary-strip-col-day font-ui">{dName}</span>
+              <span className="diary-strip-col-num font-display">{isValidDay ? targetDayNum : '·'}</span>
+              {hasEntries && <span className="diary-strip-col-dot" />}
             </button>
           );
         })}
       </div>
 
-      {isOpen && (
-        <div className="diary-drawer-calendar-body font-ui">
-          <div className="diary-calendar-nav-row">
-            <button type="button" className="diary-month-arrow-btn" onClick={handlePrevMonth}>
+      {/* Full Month Calendar View (when expanded) */}
+      {isExpanded && (
+        <div className="diary-calendar-expanded-view">
+          <div className="diary-cal-month-nav">
+            <button type="button" className="diary-cal-nav-btn" onClick={handlePrevMonth}>
               <CaretLeft size={16} weight="bold" />
             </button>
-            <span className="diary-calendar-month-heading font-display">
+            <span className="diary-cal-nav-title font-display">
               {monthNames[curMonth]} {curYear}
             </span>
-            <button type="button" className="diary-month-arrow-btn" onClick={handleNextMonth}>
+            <button type="button" className="diary-cal-nav-btn" onClick={handleNextMonth}>
               <CaretRight size={16} weight="bold" />
             </button>
           </div>
 
-          <div className="diary-calendar-weekday-headers">
+          <div className="diary-cal-grid-headers">
             {dayNames.map((d, i) => (
-              <span key={i} className="diary-weekday-cell font-ui">{d}</span>
+              <span key={i} className="diary-cal-header-cell font-ui">{d}</span>
             ))}
           </div>
 
-          <div className="diary-calendar-grid">
+          <div className="diary-cal-grid-cells">
             {daysInMonth.map((dObj) => {
               if (dObj.isBlank) {
-                return <div key={dObj.key} className="diary-calendar-cell empty" />;
+                return <div key={dObj.key} className="diary-cal-cell empty" />;
               }
               return (
                 <button
                   key={dObj.key}
                   type="button"
-                  className={`diary-calendar-cell ${dObj.isSelected ? 'selected' : ''} ${dObj.hasEntries ? 'has-entry' : 'no-entry'}`}
+                  className={`diary-cal-cell ${dObj.isSelected ? 'active' : ''} ${dObj.hasEntries ? 'with-entry' : 'no-entry'}`}
                   onClick={() => {
                     if (dObj.hasEntries) {
                       onSelectDate(dObj.pageIndex);
-                      setIsOpen(false);
+                      setIsExpanded(false);
                     }
                   }}
                   disabled={!dObj.hasEntries}
                 >
-                  <span className="diary-cell-num font-display">{dObj.dayNumber}</span>
-                  {dObj.hasEntries && <span className="diary-cell-dot" />}
+                  <span className="diary-cal-cell-number font-display">{dObj.dayNumber}</span>
+                  {dObj.hasEntries && <span className="diary-cal-cell-dot" />}
                 </button>
               );
             })}
@@ -323,9 +303,10 @@ export const OurDiaryModal = ({
 }) => {
   const { showAlert, showConfirm } = useApp();
 
-  // Two Screens: 'browse' (3D Book Showcase & Flippable Pages) vs 'add' (Composing with Live Preview)
+  // Navigation: 'browse' (3D Book Cover & Flippable Day-Pages) vs 'add' (Live Preview & Composer)
   const [viewState, setViewState] = useState('browse');
   const [isBookOpen, setIsBookOpen] = useState(false);
+  const [isOpeningAnim, setIsOpeningAnim] = useState(false);
   const [addMode, setAddMode] = useState('type'); // 'type' | 'record' | 'photo'
 
   // Entries & Grouped Day Pages
@@ -354,11 +335,11 @@ export const OurDiaryModal = ({
   const mediaRecorderRef = useRef(null);
   const recordingIntervalRef = useRef(null);
 
-  // Modal Close Transition
+  // Close Transition
   const [isClosingModal, setIsClosingModal] = useState(false);
   const cardTouchStart = useRef(null);
 
-  // Group entries by local calendar day (oldest to newest)
+  // Group entries chronologically by local calendar day (oldest to newest)
   const groupEntriesList = (entriesList) => {
     if (!entriesList || !Array.isArray(entriesList) || entriesList.length === 0) return [];
 
@@ -448,6 +429,7 @@ export const OurDiaryModal = ({
       fetchEntries();
       setViewState('browse');
       setIsBookOpen(false);
+      setIsOpeningAnim(false);
       setAddMode('type');
     }
   }, [isOpen, matchId]);
@@ -479,6 +461,16 @@ export const OurDiaryModal = ({
     };
   }, [isOpen, matchId]);
 
+  // Open Book with spine hinge animation
+  const handleOpenBook = () => {
+    if (isOpeningAnim || isBookOpen) return;
+    setIsOpeningAnim(true);
+    setTimeout(() => {
+      setIsBookOpen(true);
+      setIsOpeningAnim(false);
+    }, 600);
+  };
+
   // Close handler
   const handleCloseDiary = () => {
     if (isClosingModal) return;
@@ -487,7 +479,7 @@ export const OurDiaryModal = ({
     setTimeout(() => {
       setIsClosingModal(false);
       onClose?.();
-    }, 220);
+    }, 200);
   };
 
   // Keyboard navigation
@@ -511,7 +503,7 @@ export const OurDiaryModal = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, viewState, isBookOpen, currentPageIndex, totalPages]);
 
-  // Peel/Slide transition to Next Card
+  // Page Turn / Peel Transitions
   const handleNextCard = () => {
     if (currentPageIndex < totalPages - 1 && !isPeeling) {
       setPeelDirection('next');
@@ -525,11 +517,10 @@ export const OurDiaryModal = ({
           return nextIdx;
         });
         setIsPeeling(false);
-      }, 360);
+      }, 350);
     }
   };
 
-  // Peel/Slide transition to Previous Card
   const handlePrevCard = () => {
     if (currentPageIndex > 0 && !isPeeling) {
       setPeelDirection('prev');
@@ -543,11 +534,10 @@ export const OurDiaryModal = ({
           return prevIdx;
         });
         setIsPeeling(false);
-      }, 360);
+      }, 350);
     }
   };
 
-  // Jump to specific page index
   const handleJumpToPageIndex = (index) => {
     if (index >= 0 && index < totalPages && index !== currentPageIndex && !isPeeling) {
       setPeelDirection(index > currentPageIndex ? 'next' : 'prev');
@@ -558,7 +548,7 @@ export const OurDiaryModal = ({
           setViewDate(new Date(pages[index].rawDate));
         }
         setIsPeeling(false);
-      }, 260);
+      }, 250);
     }
   };
 
@@ -639,7 +629,7 @@ export const OurDiaryModal = ({
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Save new entry directly from 'Add' state
+  // Save new entry
   const handleSaveEntry = async (e) => {
     e?.preventDefault?.();
     setComposerError(null);
@@ -735,10 +725,9 @@ export const OurDiaryModal = ({
 
   if (!isOpen) return null;
 
-  // Active page for browsing
   const currentDayCard = pages?.[currentPageIndex] || null;
 
-  // Compute Today's Page for Screen 2 (Add Page Live Preview)
+  // Compute Today's Page data for Add Page Live Preview
   const todayRaw = new Date();
   const todayKey = `${todayRaw.getFullYear()}-${todayRaw.getMonth()}-${todayRaw.getDate()}`;
   const todayDateLabel = todayRaw.toLocaleDateString(undefined, {
@@ -755,9 +744,7 @@ export const OurDiaryModal = ({
       <div className="diary-modal-backdrop" onClick={handleCloseDiary} />
 
       <div className="diary-modal-wrapper font-ui">
-        {/* ============================================================
-           HEADER BAR (Light Velvet Hearts Chrome)
-           ============================================================ */}
+        {/* Top Light Chrome Header Bar */}
         <div className="diary-modal-header">
           <div className="diary-header-left">
             <span className="diary-header-badge font-display">
@@ -769,30 +756,29 @@ export const OurDiaryModal = ({
           <div className="diary-header-center">
             <span className="diary-header-mode-title font-display">
               {viewState === 'browse'
-                ? (!isBookOpen ? 'Our Diary' : 'Browsing Memories')
+                ? (!isBookOpen ? 'Our Shared Memories' : 'Browsing Memories')
                 : 'Add a Moment'}
             </span>
           </div>
 
           <div className="diary-header-right">
-            {/* Toggle between Book/Browse and Add Screen */}
             {viewState === 'browse' ? (
               <>
                 {isBookOpen && (
                   <button
                     type="button"
-                    className="diary-header-toggle-btn secondary font-ui"
+                    className="diary-header-btn secondary font-ui"
                     onClick={() => setIsBookOpen(false)}
                     title="Close book to cover"
                   >
                     <BookBookmark size={14} weight="bold" />
-                    <span>Close Book</span>
+                    <span>Close Cover</span>
                   </button>
                 )}
 
                 <button
                   type="button"
-                  className="diary-header-toggle-btn primary font-ui"
+                  className="diary-header-btn primary font-ui"
                   onClick={() => {
                     setViewState('add');
                     setAddMode('type');
@@ -806,7 +792,7 @@ export const OurDiaryModal = ({
             ) : (
               <button
                 type="button"
-                className="diary-header-toggle-btn primary font-ui"
+                className="diary-header-btn primary font-ui"
                 onClick={() => {
                   setViewState('browse');
                   setIsBookOpen(true);
@@ -829,87 +815,61 @@ export const OurDiaryModal = ({
           </div>
         </div>
 
-        {/* ============================================================
-           MAIN STAGE: SCREEN 1 (BOOK PAGE) VS SCREEN 2 (ADD PAGE)
-           ============================================================ */}
+        {/* Main Stage */}
         <div className="diary-modal-stage">
           {viewState === 'browse' ? (
             /* ==========================================================
                SCREEN 1: BOOK PAGE — BROWSING
                ========================================================== */
             !isBookOpen ? (
-              /* Closed Book at rest with real visual depth & resting tilt */
-              <div className="diary-browse-cover-screen font-ui">
-                <div className="diary-3d-scene">
+              /* Self-Contained 3D Book Graphic at Rest */
+              <div className="diary-cover-container font-ui">
+                <div className="diary-book-3d-scene">
                   <div
-                    className="diary-3d-book"
-                    onClick={() => setIsBookOpen(true)}
-                    title="Tap to open your diary"
+                    className={`diary-physical-book ${isOpeningAnim ? 'opening' : ''}`}
+                    onClick={handleOpenBook}
+                    title="Click to open your diary"
                     role="button"
                     tabIndex={0}
                   >
-                    {/* Underneath: The First Page revealed as cover swings open */}
-                    <div className="diary-book-base-page font-ui">
-                      <div className="diary-base-page-header">
-                        <span className="diary-base-page-tag font-ui">VOLUME 1</span>
-                        <span className="diary-base-page-date font-display">
-                          {pages?.[pages.length - 1]?.dateLabel || 'Today'}
-                        </span>
-                      </div>
-                      <div className="diary-base-page-content font-display">
-                        <p className="diary-base-page-quote">
-                          {pages?.[pages.length - 1]?.items?.[0]?.content
-                            ? `“${pages[pages.length - 1].items[0].content.slice(0, 70)}...”`
-                            : '“A collection of our sweetest memories, shared thoughts, and voice notes.”'}
+                    {/* Spine Edge on the Left */}
+                    <div className="diary-book-spine-edge" />
+
+                    {/* Book Front Hardcover */}
+                    <div className="diary-book-front-cover">
+                      <div className="diary-book-cover-inner-border">
+                        <div className="diary-book-gold-emblem">
+                          <Heart size={36} weight="duotone" />
+                        </div>
+
+                        <h2 className="diary-book-title font-display">Our Diary</h2>
+
+                        <p className="diary-book-subtitle font-display">
+                          {userName || 'You'} &amp; {partnerName || 'Partner'}
                         </p>
-                      </div>
-                      <div className="diary-base-page-footer">
-                        <span className="diary-base-page-counter font-ui">Page {pages.length || 1}</span>
-                      </div>
-                    </div>
 
-                    {/* Front Cover: Hinged on the Left Spine Edge */}
-                    <div className="diary-book-cover-hinge">
-                      <div className="diary-book-cover-front">
-                        <div className="diary-preview-spine" />
-                        <div className="diary-preview-body">
-                          <div className="diary-preview-emblem">
-                            <BookBookmark size={36} weight="duotone" />
-                          </div>
-                          <h3 className="diary-preview-title font-display">Our Diary</h3>
-                          <p className="diary-preview-subtitle font-display">
-                            {userName || 'You'} &amp; {partnerName || 'Partner'}
-                          </p>
-                          <span className="diary-preview-badge font-ui">
-                            <Sparkle size={12} weight="fill" />
-                            <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
-                          </span>
-                          <span className="diary-cover-tap-hint font-ui">
-                            <span>Tap to open</span>
-                            <CaretRight size={12} weight="bold" />
-                          </span>
+                        <div className="diary-book-saved-badge font-ui">
+                          <Sparkle size={12} weight="fill" />
+                          <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
                         </div>
-                      </div>
 
-                      <div className="diary-book-cover-inside">
-                        <div className="diary-book-inside-crease" />
-                        <div className="diary-book-inside-emblem">
-                          <Heart size={24} weight="duotone" />
+                        <div className="diary-book-open-prompt font-ui">
+                          <span>Tap to Open</span>
+                          <CaretRight size={13} weight="bold" />
                         </div>
                       </div>
                     </div>
+
+                    {/* Physical Paper Pages Edge (Right & Bottom Depth) */}
+                    <div className="diary-book-pages-edge" />
                   </div>
                 </div>
-
-                <p className="diary-browse-hint-text font-display">
-                  Tap the book to open and browse your memories ✨
-                </p>
               </div>
             ) : (
-              /* Open Book: Flippable Day-Pages */
-              <div className="diary-journal-stage-inner">
+              /* Open Book: Single Flippable Day-Page Card */
+              <div className="diary-open-page-container font-ui">
                 <div
-                  className="diary-open-book-spread font-ui"
+                  className="diary-day-page-wrapper"
                   onTouchStart={(e) => {
                     cardTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
                   }}
@@ -927,11 +887,11 @@ export const OurDiaryModal = ({
                     cardTouchStart.current = null;
                   }}
                 >
-                  {/* Floating Page Flip Navigation (Left/Prev) */}
+                  {/* Floating Page Flip Nav (Prev) */}
                   {currentPageIndex > 0 && (
                     <button
                       type="button"
-                      className="diary-flip-nav-btn prev font-ui"
+                      className="diary-page-nav-arrow prev font-ui"
                       onClick={(e) => {
                         e.stopPropagation();
                         handlePrevCard();
@@ -939,15 +899,15 @@ export const OurDiaryModal = ({
                       aria-label="Previous Page"
                       title="Previous Page"
                     >
-                      <CaretLeft size={22} weight="bold" />
+                      <CaretLeft size={20} weight="bold" />
                     </button>
                   )}
 
-                  {/* Floating Page Flip Navigation (Right/Next) */}
+                  {/* Floating Page Flip Nav (Next) */}
                   {currentPageIndex < totalPages - 1 && (
                     <button
                       type="button"
-                      className="diary-flip-nav-btn next font-ui"
+                      className="diary-page-nav-arrow next font-ui"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleNextCard();
@@ -955,120 +915,50 @@ export const OurDiaryModal = ({
                       aria-label="Next Page"
                       title="Next Page"
                     >
-                      <CaretRight size={22} weight="bold" />
+                      <CaretRight size={20} weight="bold" />
                     </button>
                   )}
 
-                  {/* LEFT WING: Title Inscription or Previous Day Summary */}
-                  <div
-                    className="diary-book-left-wing font-display"
-                    onClick={() => {
-                      if (currentPageIndex > 0) handlePrevCard();
-                    }}
-                    title={currentPageIndex > 0 ? "Click left page to flip back" : undefined}
-                  >
-                    {currentPageIndex === 0 ? (
-                      <>
-                        <div className="diary-left-wing-header">
-                          <span className="diary-left-wing-volume">VOLUME 1</span>
-                          <span className="diary-left-wing-couple">{userName || 'You'} &amp; {partnerName || 'Partner'}</span>
-                        </div>
-
-                        <div className="diary-left-wing-center">
-                          <div className="diary-left-wing-watermark">
-                            <Heart size={38} weight="duotone" />
-                          </div>
-                          <p className="diary-left-wing-quote font-display">
-                            “Every shared laughter, whisper, and story kept close to heart.”
-                          </p>
-                        </div>
-
-                        <div className="diary-left-wing-footer font-ui">
-                          <span className="diary-left-wing-badge">
-                            <Sparkle size={12} weight="fill" />
-                            <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
-                          </span>
-                          <div className="diary-left-bookmark-ribbon" />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="diary-left-wing-header">
-                          <span className="diary-left-wing-volume">
-                            {pages[currentPageIndex - 1]?.dateLabel || 'Previous Day'}
-                          </span>
-                          <span className="diary-left-wing-page-num font-ui">Page {currentPageIndex}</span>
-                        </div>
-
-                        <div className="diary-left-wing-prev-content font-ui">
-                          <p className="diary-left-wing-prev-heading font-display">Previously Captured</p>
-                          <div className="diary-left-wing-prev-list">
-                            {pages[currentPageIndex - 1]?.items?.slice(0, 3)?.map((item, idx) => (
-                              <div key={idx} className="diary-left-prev-snippet">
-                                <span className="diary-prev-dot" />
-                                <span className="diary-prev-text font-body">
-                                  {item.content || item.caption || (item.sourceType === 'VOICE_NOTE' ? 'Voice note recorded' : 'Photo saved')}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="diary-left-wing-footer font-ui">
-                          <span className="diary-left-flip-hint">
-                            <CaretLeft size={12} weight="bold" />
-                            <span>Flip back</span>
-                          </span>
-                          <div className="diary-left-bookmark-ribbon" />
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* CENTER SPINE: Golden Metallic Divider */}
-                  <div className="diary-book-center-spine" />
-
-                  {/* RIGHT WING: Active Flippable Diary Day Page */}
+                  {/* Clean White Day-Page Card */}
                   <div
                     key={currentDayCard?.dayKey || currentPageIndex}
-                    className={`diary-book-right-wing ${isPeeling ? `peeling-${peelDirection}` : ''}`}
+                    className={`diary-white-day-card ${isPeeling ? `peeling-${peelDirection}` : ''}`}
                   >
-                    {/* Top Date Header & Counter */}
-                    <div className="diary-card-top-row">
-                      <h2 className="diary-card-date font-display">
+                    {/* Top Row: Date Header and Page Indicator */}
+                    <div className="diary-day-page-top">
+                      <h2 className="diary-day-page-date font-display">
                         {currentDayCard?.dateLabel || 'Today'}
                       </h2>
+
                       <button
                         type="button"
-                        className="diary-card-counter font-ui"
+                        className="diary-day-page-counter font-ui"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleNextCard();
+                          if (currentPageIndex < totalPages - 1) handleNextCard();
                         }}
-                        title={currentPageIndex < totalPages - 1 ? 'Click to flip next page' : 'Last page'}
+                        title={currentPageIndex < totalPages - 1 ? 'Flip to next day' : 'Last page'}
                       >
-                        <span>{currentPageIndex + 1} / {totalPages}</span>
-                        {currentPageIndex < totalPages - 1 && <CaretRight size={10} weight="bold" />}
+                        <span>Page {currentPageIndex + 1} of {totalPages}</span>
+                        {currentPageIndex < totalPages - 1 && <CaretRight size={11} weight="bold" />}
                       </button>
                     </div>
 
-                    <div className="diary-card-divider" />
+                    <div className="diary-day-page-divider" />
 
-                    {/* Scrapbook Moments List */}
-                    <div className="diary-card-moments-scroll">
+                    {/* Scrapbook Entries Area */}
+                    <div className="diary-day-page-entries-scroll">
                       {loading ? (
-                        <div className="diary-loading-state font-ui">
+                        <div className="diary-empty-state font-ui">
                           <Sparkle size={24} className="spin text-burgundy" />
-                          <span>Loading sweet moments...</span>
+                          <span>Loading moments...</span>
                         </div>
                       ) : (!currentDayCard?.items || currentDayCard.items.length === 0) ? (
-                        <div className="diary-page-empty-box font-ui">
-                          <div className="diary-empty-icon-wrap">
-                            <Heart size={28} weight="duotone" className="text-burgundy" />
-                          </div>
-                          <h4 className="diary-empty-title font-display">No moments on this day</h4>
-                          <p className="diary-empty-desc font-body">
-                            Tap "+ Add Moment" in the header to save a voice note, write a thought, or add a photo.
+                        <div className="diary-empty-state font-ui">
+                          <Heart size={32} weight="duotone" className="text-burgundy" />
+                          <h4 className="diary-empty-heading font-display">No moments on this day</h4>
+                          <p className="diary-empty-text font-body">
+                            Tap "+ Add Moment" above to write a note, record a voice clip, or save a photo.
                           </p>
                         </div>
                       ) : (
@@ -1078,22 +968,21 @@ export const OurDiaryModal = ({
                           const timeStr = entry.createdAt
                             ? new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                             : '';
-
                           const sourceType = (entry.sourceType || 'MESSAGE').toUpperCase();
 
                           return (
-                            <div key={entry.id || Math.random()} className={`diary-moment-item type-${sourceType.toLowerCase()}`}>
-                              <div className="diary-moment-meta">
-                                <span className="diary-moment-author font-ui">
-                                  <span className="diary-author-dot" />
+                            <div key={entry.id || Math.random()} className={`diary-scrapbook-entry type-${sourceType.toLowerCase()}`}>
+                              <div className="diary-entry-meta-row">
+                                <span className="diary-entry-author font-ui">
+                                  <span className="diary-entry-author-dot" />
                                   <span>{isMine ? 'Saved by you' : `Saved by ${entry.savedByName || partnerName || 'Partner'}`}</span>
-                                  {timeStr && <span className="diary-moment-time">· {timeStr}</span>}
+                                  {timeStr && <span className="diary-entry-time">· {timeStr}</span>}
                                 </span>
 
                                 {isMine && entry.id && (
                                   <button
                                     type="button"
-                                    className="diary-moment-del-btn"
+                                    className="diary-entry-del-btn"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handleDeleteEntry(entry.id);
@@ -1101,79 +990,64 @@ export const OurDiaryModal = ({
                                     title="Delete this moment"
                                     aria-label="Delete this moment"
                                   >
-                                    <Trash size={14} />
+                                    <Trash size={13} />
                                   </button>
                                 )}
                               </div>
 
-                              {/* 1. Saved Chat Message (Quote Box) */}
+                              {/* 1. Saved Chat Message (Handwritten Quote with Quotation mark) */}
                               {sourceType === 'MESSAGE' && entry.content && (
-                                <div className="diary-quote-box">
-                                  <Quotes size={18} weight="fill" className="diary-quote-mark" />
-                                  <div className="diary-quote-content">
-                                    <p className="diary-quote-text font-body">{entry.content}</p>
+                                <div className="diary-scrapbook-quote font-display">
+                                  <Quotes size={18} weight="fill" className="diary-quote-symbol" />
+                                  <div className="diary-quote-body">
+                                    <p className="diary-quote-main font-body">{entry.content}</p>
                                     {entry.caption && (
-                                      <p className="diary-quote-caption font-ui">{entry.caption}</p>
+                                      <p className="diary-quote-sub font-ui">{entry.caption}</p>
                                     )}
                                   </div>
                                 </div>
                               )}
 
-                              {/* 2. Written Note (Warm Display Font) */}
+                              {/* 2. Written Note (Warm Handwriting on Paper) */}
                               {sourceType === 'NOTE' && entry.content && (
-                                <div className="diary-note-box">
-                                  <p className="diary-note-body font-display">{entry.content}</p>
+                                <div className="diary-scrapbook-note">
+                                  <p className="diary-note-text font-display">{entry.content}</p>
                                   {entry.caption && (
-                                    <p className="diary-note-caption font-ui">{entry.caption}</p>
+                                    <p className="diary-note-sub font-ui">{entry.caption}</p>
                                   )}
                                 </div>
                               )}
 
-                              {/* 3. Voice Note (Waveform Ribbon) */}
+                              {/* 3. Voice Note (Blush Ribbon Waveform Player) */}
                               {sourceType === 'VOICE_NOTE' && entry.attachmentUrl && (
-                                <div className="diary-voice-moment-box">
+                                <div className="diary-scrapbook-voice">
                                   <DiaryVoiceNotePlayer url={entry.attachmentUrl} />
                                   {entry.caption && (
-                                    <p className="diary-voice-caption font-ui">{entry.caption}</p>
+                                    <p className="diary-voice-sub font-ui">{entry.caption}</p>
                                   )}
                                 </div>
                               )}
 
-                              {/* 4. Polaroid Photo (Rotated Print with Tape) */}
+                              {/* 4. Physical Polaroid Photo (No DRM wrapper, clean img) */}
                               {sourceType === 'IMAGE' && entry.attachmentUrl && (
-                                <div className="diary-polaroid-moment">
-                                  <div className="diary-polaroid-tape" />
-                                  <div className="diary-polaroid-img-frame">
-                                    <ProtectedImage
+                                <div className="diary-scrapbook-polaroid">
+                                  <div className="diary-polaroid-washi-tape" />
+                                  <div className="diary-polaroid-photo-frame">
+                                    <img
                                       src={entry.attachmentUrl}
                                       alt="Diary Memory"
-                                      className="diary-polaroid-photo"
+                                      className="diary-polaroid-img"
+                                      loading="lazy"
                                     />
                                   </div>
                                   {entry.caption && (
-                                    <p className="diary-polaroid-note font-display">{entry.caption}</p>
+                                    <p className="diary-polaroid-caption font-display">{entry.caption}</p>
                                   )}
                                 </div>
                               )}
                             </div>
                           );
                         })
-                      )}
-                    </div>
-
-                    <div className="diary-right-page-footer font-ui">
-                      <span className="diary-right-page-num">Page {currentPageIndex + 1}</span>
-                      {currentPageIndex < totalPages - 1 && (
-                        <span
-                          className="diary-right-flip-hint"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleNextCard();
-                          }}
-                        >
-                          <span>Flip next page</span>
-                          <CaretRight size={12} weight="bold" />
-                        </span>
                       )}
                     </div>
                   </div>
@@ -1184,135 +1058,132 @@ export const OurDiaryModal = ({
             /* ==========================================================
                SCREEN 2: ADD PAGE — COMPOSING WITH LIVE PREVIEW
                ========================================================== */
-            <div className="diary-add-screen font-ui">
-              {/* Top: Live Preview of Today's Page as it currently exists */}
-              <div className="diary-live-preview-container">
-                <div className="diary-live-preview-header">
-                  <span className="diary-live-preview-label font-ui">
-                    <Sparkle size={14} weight="fill" />
-                    <span>Live Page Preview</span>
-                  </span>
-                  <span className="diary-live-preview-today font-display">{todayDateLabel}</span>
+            <div className="diary-add-composer-screen font-ui">
+              {/* Top: Live Preview of Today's Page */}
+              <div className="diary-live-preview-box">
+                <div className="diary-live-preview-tag">
+                  <Sparkle size={13} weight="fill" className="text-burgundy" />
+                  <span>Live Preview: Today's Page</span>
                 </div>
 
-                <div className="diary-live-preview-page">
-                  <div className="diary-card-top-row">
-                    <h3 className="diary-card-date font-display">{todayDateLabel}</h3>
-                    <span className="diary-card-counter font-ui">Today's Page</span>
+                <div className="diary-live-preview-page-mock">
+                  <div className="diary-day-page-top">
+                    <h3 className="diary-day-page-date font-display">{todayDateLabel}</h3>
+                    <span className="diary-live-draft-badge font-ui">Today</span>
                   </div>
 
-                  <div className="diary-card-divider" />
+                  <div className="diary-day-page-divider" />
 
-                  {/* Pre-populated items for today + Real-time live draft */}
-                  <div className="diary-card-moments-scroll">
+                  {/* Pre-populated saved items for today + Live composing draft */}
+                  <div className="diary-day-page-entries-scroll preview-scroll">
                     {todaySavedItems.length === 0 && !noteText.trim() && !recordedAudioUrl && !photoPreviewUrl ? (
-                      <div className="diary-page-empty-box small font-ui">
-                        <Heart size={24} weight="duotone" className="text-burgundy" />
-                        <p className="diary-empty-desc font-body">
-                          Today's page is empty. Start composing below to see it take shape live!
+                      <div className="diary-empty-state mini font-ui">
+                        <Heart size={22} weight="duotone" className="text-burgundy" />
+                        <p className="diary-empty-text font-body">
+                          Today's page is blank. Choose an option below to see it appear live!
                         </p>
                       </div>
                     ) : (
                       <>
-                        {/* Saved items already on today's page */}
+                        {/* Saved items on today's page */}
                         {todaySavedItems.map((entry) => {
                           const sourceType = (entry.sourceType || 'MESSAGE').toUpperCase();
                           return (
-                            <div key={entry.id || Math.random()} className={`diary-moment-item type-${sourceType.toLowerCase()}`}>
-                              <div className="diary-moment-meta">
-                                <span className="diary-moment-author font-ui">
-                                  <span className="diary-author-dot" />
+                            <div key={entry.id || Math.random()} className={`diary-scrapbook-entry type-${sourceType.toLowerCase()}`}>
+                              <div className="diary-entry-meta-row">
+                                <span className="diary-entry-author font-ui">
+                                  <span className="diary-entry-author-dot" />
                                   <span>Saved on today's page</span>
                                 </span>
                               </div>
 
                               {sourceType === 'MESSAGE' && entry.content && (
-                                <div className="diary-quote-box">
-                                  <Quotes size={16} weight="fill" className="diary-quote-mark" />
-                                  <div className="diary-quote-content">
-                                    <p className="diary-quote-text font-body">{entry.content}</p>
-                                    {entry.caption && <p className="diary-quote-caption font-ui">{entry.caption}</p>}
+                                <div className="diary-scrapbook-quote font-display">
+                                  <Quotes size={16} weight="fill" className="diary-quote-symbol" />
+                                  <div className="diary-quote-body">
+                                    <p className="diary-quote-main font-body">{entry.content}</p>
+                                    {entry.caption && <p className="diary-quote-sub font-ui">{entry.caption}</p>}
                                   </div>
                                 </div>
                               )}
 
                               {sourceType === 'NOTE' && entry.content && (
-                                <div className="diary-note-box">
-                                  <p className="diary-note-body font-display">{entry.content}</p>
-                                  {entry.caption && <p className="diary-note-caption font-ui">{entry.caption}</p>}
+                                <div className="diary-scrapbook-note">
+                                  <p className="diary-note-text font-display">{entry.content}</p>
+                                  {entry.caption && <p className="diary-note-sub font-ui">{entry.caption}</p>}
                                 </div>
                               )}
 
                               {sourceType === 'VOICE_NOTE' && entry.attachmentUrl && (
-                                <div className="diary-voice-moment-box">
+                                <div className="diary-scrapbook-voice">
                                   <DiaryVoiceNotePlayer url={entry.attachmentUrl} />
-                                  {entry.caption && <p className="diary-voice-caption font-ui">{entry.caption}</p>}
+                                  {entry.caption && <p className="diary-voice-sub font-ui">{entry.caption}</p>}
                                 </div>
                               )}
 
                               {sourceType === 'IMAGE' && entry.attachmentUrl && (
-                                <div className="diary-polaroid-moment">
-                                  <div className="diary-polaroid-tape" />
-                                  <div className="diary-polaroid-img-frame">
-                                    <ProtectedImage src={entry.attachmentUrl} alt="Memory" className="diary-polaroid-photo" />
+                                <div className="diary-scrapbook-polaroid">
+                                  <div className="diary-polaroid-washi-tape" />
+                                  <div className="diary-polaroid-photo-frame">
+                                    <img src={entry.attachmentUrl} alt="Memory" className="diary-polaroid-img" />
                                   </div>
-                                  {entry.caption && <p className="diary-polaroid-note font-display">{entry.caption}</p>}
+                                  {entry.caption && <p className="diary-polaroid-caption font-display">{entry.caption}</p>}
                                 </div>
                               )}
                             </div>
                           );
                         })}
 
-                        {/* LIVE DRAFT PREVIEW (Renders immediately as user composes) */}
-                        {addMode === 'type' && noteText.trim() && (
-                          <div className="diary-moment-item type-note draft-preview">
-                            <div className="diary-moment-meta">
-                              <span className="diary-moment-author font-ui">
-                                <span className="diary-author-dot draft" />
-                                <span>Draft note · composing now</span>
+                        {/* LIVE DRAFT: Renders immediately as user composes */}
+                        {addMode === 'type' && noteText.trim().length > 0 && (
+                          <div className="diary-scrapbook-entry type-note live-draft">
+                            <div className="diary-entry-meta-row">
+                              <span className="diary-entry-author font-ui">
+                                <span className="diary-entry-author-dot draft-pulse" />
+                                <span>Composing note live...</span>
                               </span>
                             </div>
-                            <div className="diary-note-box draft">
-                              <p className="diary-note-body font-display">{noteText}</p>
+                            <div className="diary-scrapbook-note draft-box">
+                              <p className="diary-note-text font-display">{noteText.trim()}</p>
                               {captionText.trim() && (
-                                <p className="diary-note-caption font-ui">{captionText.trim()}</p>
+                                <p className="diary-note-sub font-ui">{captionText.trim()}</p>
                               )}
                             </div>
                           </div>
                         )}
 
                         {addMode === 'record' && recordedAudioUrl && (
-                          <div className="diary-moment-item type-voice_note draft-preview">
-                            <div className="diary-moment-meta">
-                              <span className="diary-moment-author font-ui">
-                                <span className="diary-author-dot draft" />
-                                <span>Draft voice note · recorded</span>
+                          <div className="diary-scrapbook-entry type-voice live-draft">
+                            <div className="diary-entry-meta-row">
+                              <span className="diary-entry-author font-ui">
+                                <span className="diary-entry-author-dot draft-pulse" />
+                                <span>Voice note recorded</span>
                               </span>
                             </div>
-                            <div className="diary-voice-moment-box draft">
+                            <div className="diary-scrapbook-voice draft-box">
                               <DiaryVoiceNotePlayer url={recordedAudioUrl} />
                               {captionText.trim() && (
-                                <p className="diary-voice-caption font-ui">{captionText.trim()}</p>
+                                <p className="diary-voice-sub font-ui">{captionText.trim()}</p>
                               )}
                             </div>
                           </div>
                         )}
 
                         {addMode === 'photo' && photoPreviewUrl && (
-                          <div className="diary-moment-item type-image draft-preview">
-                            <div className="diary-moment-meta">
-                              <span className="diary-moment-author font-ui">
-                                <span className="diary-author-dot draft" />
-                                <span>Draft photo · selected</span>
+                          <div className="diary-scrapbook-entry type-photo live-draft">
+                            <div className="diary-entry-meta-row">
+                              <span className="diary-entry-author font-ui">
+                                <span className="diary-entry-author-dot draft-pulse" />
+                                <span>Selected photo</span>
                               </span>
                             </div>
-                            <div className="diary-polaroid-moment draft">
-                              <div className="diary-polaroid-tape" />
-                              <div className="diary-polaroid-img-frame">
-                                <img src={photoPreviewUrl} alt="Draft preview" className="diary-polaroid-photo" />
+                            <div className="diary-scrapbook-polaroid draft-box">
+                              <div className="diary-polaroid-washi-tape" />
+                              <div className="diary-polaroid-photo-frame">
+                                <img src={photoPreviewUrl} alt="Draft" className="diary-polaroid-img" />
                               </div>
                               {captionText.trim() && (
-                                <p className="diary-polaroid-note font-display">{captionText.trim()}</p>
+                                <p className="diary-polaroid-caption font-display">{captionText.trim()}</p>
                               )}
                             </div>
                           </div>
@@ -1323,12 +1194,12 @@ export const OurDiaryModal = ({
                 </div>
               </div>
 
-              {/* Bottom: 3 Add Mode Selectors & Composer Area */}
-              <div className="diary-composer-panel">
-                <div className="diary-mode-pill-tabs">
+              {/* Bottom: 3 Mode Tabs & Active Composer Form */}
+              <div className="diary-composer-card font-ui">
+                <div className="diary-composer-tabs-row">
                   <button
                     type="button"
-                    className={`diary-mode-tab-btn ${addMode === 'type' ? 'active' : ''}`}
+                    className={`diary-tab-btn ${addMode === 'type' ? 'active' : ''}`}
                     onClick={() => {
                       setAddMode('type');
                       setComposerError(null);
@@ -1340,7 +1211,7 @@ export const OurDiaryModal = ({
 
                   <button
                     type="button"
-                    className={`diary-mode-tab-btn ${addMode === 'record' ? 'active' : ''}`}
+                    className={`diary-tab-btn ${addMode === 'record' ? 'active' : ''}`}
                     onClick={() => {
                       setAddMode('record');
                       setComposerError(null);
@@ -1352,7 +1223,7 @@ export const OurDiaryModal = ({
 
                   <button
                     type="button"
-                    className={`diary-mode-tab-btn ${addMode === 'photo' ? 'active' : ''}`}
+                    className={`diary-tab-btn ${addMode === 'photo' ? 'active' : ''}`}
                     onClick={() => {
                       setAddMode('photo');
                       setComposerError(null);
@@ -1363,11 +1234,11 @@ export const OurDiaryModal = ({
                   </button>
                 </div>
 
-                {/* 1. TYPE NOTE COMPOSER */}
+                {/* 1. TYPE NOTE */}
                 {addMode === 'type' && (
-                  <form className="diary-active-composer" onSubmit={handleSaveEntry}>
+                  <form className="diary-composer-form" onSubmit={handleSaveEntry}>
                     <textarea
-                      className="diary-note-input font-display"
+                      className="diary-form-textarea font-display"
                       placeholder="Write a sweet thought, memory, or love note..."
                       value={noteText}
                       onChange={(e) => setNoteText(e.target.value)}
@@ -1378,61 +1249,61 @@ export const OurDiaryModal = ({
 
                     <input
                       type="text"
-                      className="diary-caption-input font-ui"
-                      placeholder="Add an optional caption (e.g. 'Thinking of you...')"
+                      className="diary-form-caption font-ui"
+                      placeholder="Optional caption (e.g. 'Thinking of you...')"
                       value={captionText}
                       onChange={(e) => setCaptionText(e.target.value)}
                       maxLength={500}
                     />
 
-                    {composerError && <p className="diary-composer-error font-ui">{composerError}</p>}
+                    {composerError && <p className="diary-form-error font-ui">{composerError}</p>}
 
-                    <div className="diary-composer-actions">
+                    <div className="diary-form-actions">
                       <button
                         type="submit"
-                        className="diary-composer-submit-btn font-ui"
+                        className="diary-form-submit-btn font-ui"
                         disabled={isSubmitting || !noteText.trim()}
                       >
                         <Check size={16} weight="bold" />
-                        <span>{isSubmitting ? 'Saving...' : 'Save Note to Today'}</span>
+                        <span>{isSubmitting ? 'Saving...' : 'Save to Today’s Page'}</span>
                       </button>
                     </div>
                   </form>
                 )}
 
-                {/* 2. RECORD VOICE COMPOSER */}
+                {/* 2. RECORD VOICE */}
                 {addMode === 'record' && (
-                  <div className="diary-active-composer">
+                  <div className="diary-composer-form">
                     {!isRecording && !recordedAudioBlob ? (
-                      <div className="diary-record-start-box">
+                      <div className="diary-mic-start-area">
                         <button
                           type="button"
-                          className="diary-record-trigger-btn"
+                          className="diary-mic-record-btn"
                           onClick={startAudioRecording}
                         >
                           <Microphone size={24} weight="fill" />
                         </button>
-                        <span className="diary-record-prompt font-ui">Tap to record your voice note</span>
+                        <span className="diary-mic-prompt font-ui">Tap mic to record your voice note</span>
                       </div>
                     ) : isRecording ? (
-                      <div className="diary-recording-active-box">
-                        <div className="diary-recording-pulse-dot" />
-                        <span className="diary-recording-timer font-ui">{formatTimer(recordingSeconds)}</span>
+                      <div className="diary-mic-recording-active">
+                        <div className="diary-mic-pulse-circle" />
+                        <span className="diary-mic-timer font-ui">{formatTimer(recordingSeconds)}</span>
                         <button
                           type="button"
-                          className="diary-record-stop-btn font-ui"
+                          className="diary-mic-stop-btn font-ui"
                           onClick={stopAudioRecording}
                         >
-                          <Stop size={16} weight="fill" />
-                          <span>Stop</span>
+                          <Stop size={15} weight="fill" />
+                          <span>Stop Recording</span>
                         </button>
                       </div>
                     ) : (
-                      <div className="diary-record-preview-box">
+                      <div className="diary-mic-finished-preview">
                         <DiaryVoiceNotePlayer url={recordedAudioUrl} />
                         <button
                           type="button"
-                          className="diary-record-redo-btn font-ui"
+                          className="diary-mic-redo-btn font-ui"
                           onClick={cancelAudioRecording}
                         >
                           Redo Recording
@@ -1442,34 +1313,34 @@ export const OurDiaryModal = ({
 
                     <input
                       type="text"
-                      className="diary-caption-input font-ui"
-                      placeholder="Add an optional caption for this voice note..."
+                      className="diary-form-caption font-ui"
+                      placeholder="Optional caption for this voice note..."
                       value={captionText}
                       onChange={(e) => setCaptionText(e.target.value)}
                       maxLength={500}
                     />
 
-                    {composerError && <p className="diary-composer-error font-ui">{composerError}</p>}
+                    {composerError && <p className="diary-form-error font-ui">{composerError}</p>}
 
-                    <div className="diary-composer-actions">
+                    <div className="diary-form-actions">
                       <button
                         type="button"
-                        className="diary-composer-submit-btn font-ui"
+                        className="diary-form-submit-btn font-ui"
                         onClick={handleSaveEntry}
                         disabled={isSubmitting || !recordedAudioBlob}
                       >
                         <Check size={16} weight="bold" />
-                        <span>{isSubmitting ? 'Saving...' : 'Save Voice Note to Today'}</span>
+                        <span>{isSubmitting ? 'Saving...' : 'Save Voice Note'}</span>
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* 3. ADD PHOTO COMPOSER */}
+                {/* 3. ADD PHOTO */}
                 {addMode === 'photo' && (
-                  <div className="diary-active-composer">
+                  <div className="diary-composer-form">
                     {!selectedPhotoFile ? (
-                      <label className="diary-file-drop-zone">
+                      <label className="diary-photo-upload-zone">
                         <input
                           type="file"
                           accept="image/png,image/jpeg,image/webp"
@@ -1477,16 +1348,16 @@ export const OurDiaryModal = ({
                           onChange={handlePhotoSelect}
                         />
                         <UploadSimple size={26} weight="bold" className="text-burgundy" />
-                        <span className="diary-file-prompt font-ui">Choose a photo for today's page</span>
-                        <span className="diary-file-hint font-ui">JPG, PNG, WebP up to 15MB</span>
+                        <span className="diary-photo-upload-title font-ui">Choose a photo</span>
+                        <span className="diary-photo-upload-sub font-ui">JPG, PNG, WebP up to 15MB</span>
                       </label>
                     ) : (
-                      <div className="diary-photo-picked-box">
-                        <div className="diary-photo-thumb-wrap">
-                          <img src={photoPreviewUrl} alt="Selected" className="diary-photo-thumb" />
+                      <div className="diary-photo-thumb-container">
+                        <div className="diary-photo-thumb-frame">
+                          <img src={photoPreviewUrl} alt="Selected" className="diary-photo-thumb-img" />
                           <button
                             type="button"
-                            className="diary-photo-remove-btn"
+                            className="diary-photo-thumb-remove"
                             onClick={() => {
                               setSelectedPhotoFile(null);
                               setPhotoPreviewUrl(null);
@@ -1500,24 +1371,24 @@ export const OurDiaryModal = ({
 
                     <input
                       type="text"
-                      className="diary-caption-input font-ui"
-                      placeholder="Add an optional note or caption for this photo..."
+                      className="diary-form-caption font-ui"
+                      placeholder="Optional caption for this photo..."
                       value={captionText}
                       onChange={(e) => setCaptionText(e.target.value)}
                       maxLength={500}
                     />
 
-                    {composerError && <p className="diary-composer-error font-ui">{composerError}</p>}
+                    {composerError && <p className="diary-form-error font-ui">{composerError}</p>}
 
-                    <div className="diary-composer-actions">
+                    <div className="diary-form-actions">
                       <button
                         type="button"
-                        className="diary-composer-submit-btn font-ui"
+                        className="diary-form-submit-btn font-ui"
                         onClick={handleSaveEntry}
                         disabled={isSubmitting || !selectedPhotoFile}
                       >
                         <Check size={16} weight="bold" />
-                        <span>{isSubmitting ? 'Uploading...' : 'Save Photo to Today'}</span>
+                        <span>{isSubmitting ? 'Uploading...' : 'Save Photo'}</span>
                       </button>
                     </div>
                   </div>
@@ -1527,9 +1398,7 @@ export const OurDiaryModal = ({
           )}
         </div>
 
-        {/* ============================================================
-           BOTTOM DATE DRAWER (ON BOOK PAGE BROWSING)
-           ============================================================ */}
+        {/* Bottom Date-Strip Navigation (Browsing Mode & Book is Open) */}
         {viewState === 'browse' && isBookOpen && pages && pages.length > 0 && (
           <DiaryDateDrawer
             pages={pages}
