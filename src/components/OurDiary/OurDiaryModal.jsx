@@ -356,7 +356,7 @@ export const OurDiaryModal = ({
     try {
       if (!isBackground) setLoading(true);
       const data = await api.getDiaryEntries(matchId);
-      const list = Array.isArray(data?.entries) ? data.entries : [];
+      const list = Array.isArray(data) ? data : (Array.isArray(data?.entries) ? data.entries : []);
       setEntries(list);
 
       const computedPages = groupEntriesList(list);

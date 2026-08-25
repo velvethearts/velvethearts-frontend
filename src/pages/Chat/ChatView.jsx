@@ -459,7 +459,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     (activePartner && (c.partnerId === activePartner.userId || c.partnerId === activePartner.id))
   );
   const conversationId = conversation?.id;
-  const activeMatchId = activePartner?.matchId || conversation?.matchId || (connections.find(c => c.id === activeChatId || c.userId === activeChatId)?.matchId);
+  const activeMatchId = activePartner?.matchId || conversation?.matchId || (connections.find(c => c.id === activeChatId || c.userId === activeChatId)?.matchId) || activePartner?.id || conversationId || activeChatId;
 
   const [messageText, setMessageText] = useState('');
   const [editingMessageId, setEditingMessageId] = useState(null);
