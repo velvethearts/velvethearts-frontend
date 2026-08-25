@@ -809,18 +809,16 @@ export const OurDiaryModal = ({
           </div>
 
           <div className="diary-header-center">
-            {viewState === 'browse' ? (
-              <span className="diary-header-mode-title font-display">Browse your diary</span>
-            ) : (
-              <span className="diary-header-mode-title font-display">Add a moment</span>
-            )}
+            <span className="diary-header-mode-title font-display">
+              {viewState === 'browse' ? 'Our Diary' : 'Our Memories'}
+            </span>
           </div>
 
           <div className="diary-header-right">
-            {/* Toggle between Browse Book and Diary Page */}
+            {/* Toggle between Book Cover and Open Diary */}
             <button
               type="button"
-              className={`diary-header-toggle-btn font-ui ${viewState === 'browse' ? 'active' : ''}`}
+              className="diary-header-toggle-btn font-ui"
               onClick={() => {
                 if (viewState === 'add') {
                   setIsBookOpen(false);
@@ -834,13 +832,13 @@ export const OurDiaryModal = ({
                   }, 420);
                 }
               }}
-              title={viewState === 'add' ? "View 3D Book Cover" : "Open Diary Page"}
-              aria-label={viewState === 'add' ? "View 3D Book Cover" : "Open Diary Page"}
+              title={viewState === 'add' ? "Close to Book Cover" : "Open Diary"}
+              aria-label={viewState === 'add' ? "Close to Book Cover" : "Open Diary"}
             >
               {viewState === 'add' ? (
                 <>
-                  <Books size={14} weight="duotone" />
-                  <span>Browse Book</span>
+                  <BookBookmark size={14} weight="bold" />
+                  <span>Book Cover</span>
                 </>
               ) : (
                 <>
