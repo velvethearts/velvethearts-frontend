@@ -546,12 +546,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
           {step === 'intro' && (
             <div className="photo-verify-intro-step">
               <div className="photo-verify-shield-badge-hero">
-                <div className="photo-verify-rosette-glow">
-                  <VerifiedBadge variant="rosette" size="lg" interactive={false} />
-                  <div className="photo-verify-sparkle-halo">
-                    <Sparkle size={16} weight="fill" color="#FFFFFF" />
-                  </div>
-                </div>
+                <VerifiedBadge variant="pill" size="md" interactive={false} />
               </div>
 
               <h3 className="photo-verify-headline font-display">
