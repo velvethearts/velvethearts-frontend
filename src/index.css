@@ -6261,7 +6261,7 @@ html {
 
 .diary-st-pageflip-book {
   box-shadow: 0 14px 40px rgba(74, 30, 42, 0.18), 0 3px 8px rgba(0, 0, 0, 0.08);
-  border-radius: 6px 12px 12px 6px;
+  border-radius: 6px 22px 22px 6px;
   background: #FFFDF9;
 }
 
@@ -6278,6 +6278,7 @@ html {
   overflow: hidden;
   user-select: none;
   background: #FFFDF9;
+  border-radius: 0 20px 20px 0;
 }
 
 /* Full-Height Side Click/Tap-to-Flip Zones */
@@ -6302,7 +6303,7 @@ html {
 /* 1. FRONT HARDCOVER LEAF */
 .diary-cover-leaf {
   background: #7A1D36 !important;
-  border-radius: 6px 12px 12px 6px;
+  border-radius: 6px 22px 22px 6px !important;
   cursor: pointer;
 }
 
@@ -6323,7 +6324,7 @@ html {
   inset: 0;
   left: 16px;
   background: linear-gradient(145deg, #8B2240 0%, #6E162E 100%);
-  border-radius: 0 12px 12px 0;
+  border-radius: 0 20px 20px 0;
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
@@ -6335,7 +6336,7 @@ html {
   width: 100%;
   height: 100%;
   border: 1.5px solid rgba(228, 200, 142, 0.65);
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 16px 16px 0;
   padding: 12px 8px;
   display: flex;
   flex-direction: column;
@@ -6403,6 +6404,7 @@ html {
 /* 2. INNER DAY-PAGE LEAVES (SOOTHING WARM LIGHT PAPER IN ALL THEMES) */
 .diary-inner-white-leaf {
   background: #FFFDF9 !important;
+  border-radius: 0 20px 20px 0 !important;
   box-shadow: inset 16px 0 24px -12px rgba(74, 30, 42, 0.08);
 }
 
@@ -6414,6 +6416,7 @@ html {
   display: flex;
   flex-direction: column;
   background: #FFFDF9;
+  border-radius: 0 20px 20px 0;
   box-sizing: border-box;
 }
 
