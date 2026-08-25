@@ -6856,3 +6856,193 @@ html {
     font-size: 12px;
   }
 }
+
+/* ==========================================================================
+   Save Message to Our Diary Prompt Modal (ChatView)
+   ========================================================================== */
+.diary-save-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 21, 23, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 16px;
+  animation: diaryFadeIn 0.2s ease-out;
+}
+
+.diary-save-modal {
+  background: var(--bg-surface-warm, #FFF8F0);
+  border: 1px solid var(--border-subtle, rgba(184, 67, 106, 0.18));
+  border-radius: 20px;
+  box-shadow: 0 20px 48px rgba(26, 21, 23, 0.28), 0 4px 16px rgba(184, 67, 106, 0.12);
+  padding: 24px;
+  max-width: 440px;
+  width: 100%;
+  position: relative;
+  animation: diaryPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.diary-save-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.diary-save-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--burgundy-900, #4A1224);
+}
+
+.diary-save-modal-title svg {
+  color: var(--burgundy-500, #B8436A);
+}
+
+.diary-save-modal-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(184, 67, 106, 0.08);
+  color: var(--text-secondary, #5A4E50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--duration-fast, 0.15s);
+}
+
+.diary-save-modal-close:hover {
+  background: rgba(184, 67, 106, 0.18);
+  color: var(--burgundy-700, #7A2842);
+  transform: scale(1.05);
+}
+
+.diary-save-modal-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #5A4E50);
+  line-height: 1.45;
+  margin-bottom: 14px;
+}
+
+.diary-save-snippet-preview {
+  background: #ffffff;
+  border: 1px solid rgba(184, 67, 106, 0.12);
+  border-left: 3.5px solid var(--burgundy-500, #B8436A);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  color: var(--text-primary, #1A1517);
+  font-style: italic;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.diary-save-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.diary-save-input-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary, #5A4E50);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.diary-save-input {
+  background: #ffffff;
+  border: 1px solid rgba(184, 67, 106, 0.22);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  color: var(--text-primary, #1A1517);
+  outline: none;
+  transition: border-color var(--duration-fast, 0.15s), box-shadow var(--duration-fast, 0.15s);
+  width: 100%;
+}
+
+.diary-save-input:focus {
+  border-color: var(--burgundy-500, #B8436A);
+  box-shadow: 0 0 0 3px rgba(184, 67, 106, 0.15);
+}
+
+.diary-save-input::placeholder {
+  color: var(--text-muted, #998D8F);
+}
+
+.diary-save-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.diary-save-cancel-btn {
+  background: transparent;
+  border: 1px solid rgba(184, 67, 106, 0.2);
+  color: var(--text-secondary, #5A4E50);
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast, 0.15s);
+}
+
+.diary-save-cancel-btn:hover:not(:disabled) {
+  background: rgba(184, 67, 106, 0.08);
+  color: var(--burgundy-700, #7A2842);
+}
+
+.diary-save-confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--burgundy-500, #B8436A) 0%, var(--burgundy-700, #7A2842) 100%);
+  color: #ffffff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(184, 67, 106, 0.3);
+  transition: all var(--duration-fast, 0.15s);
+}
+
+.diary-save-confirm-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(184, 67, 106, 0.4);
+}
+
+.diary-save-confirm-btn:disabled,
+.diary-save-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes diaryPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
