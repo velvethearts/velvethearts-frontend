@@ -936,25 +936,25 @@ export const OurDiaryModal = ({
             >
               <div className="diary-cover-spine" />
               <div className="diary-cover-texture">
-                <div className="diary-cover-gold-border">
-                  <div className="diary-cover-corner tl" />
-                  <div className="diary-cover-corner tr" />
-                  <div className="diary-cover-corner bl" />
-                  <div className="diary-cover-corner br" />
-
+                <div className="diary-cover-cute-body">
                   <div className="diary-cover-emblem">
                     <BookBookmark size={36} weight="duotone" />
                   </div>
 
                   <h1 className="diary-cover-title font-display">Our Diary</h1>
-                  <div className="diary-cover-divider" />
+                  
+                  <div className="diary-cover-pages-pill font-ui">
+                    <NotePencil size={13} weight="bold" />
+                    <span>{pages.length} {pages.length === 1 ? 'Page' : 'Pages'}</span>
+                  </div>
+
                   <p className="diary-cover-subtitle font-display">
                     {userName || 'You'} &amp; {partnerName || 'Partner'}
                   </p>
 
-                  <div className="diary-cover-open-prompt">
+                  <div className="diary-cover-open-prompt font-ui">
                     <span>Tap to Open</span>
-                    <span className="diary-open-sparkle">🥰</span>
+                    <span className="diary-open-sparkle">✨</span>
                   </div>
                 </div>
               </div>
