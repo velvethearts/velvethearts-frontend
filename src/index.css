@@ -10356,3 +10356,206 @@ html {
   color: var(--text-secondary);
   text-decoration: underline;
 }
+
+/* ============================================================
+   STATE SELECT DROPDOWN (ALL 36 INDIAN STATES & UTs)
+   ============================================================ */
+.state-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.state-select-trigger {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-default, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius-md, 12px);
+  color: var(--text-primary, #FFFFFF);
+  font-size: var(--text-body, 0.95rem);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  text-align: left;
+}
+
+.state-select-trigger:hover,
+.state-select-trigger.is-active {
+  border-color: var(--burgundy-400, #D15B80);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(184, 67, 106, 0.2);
+}
+
+.state-select-trigger.has-error {
+  border-color: var(--danger, #EF4444);
+}
+
+.state-select-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.state-pin-icon {
+  color: var(--gold-500, #D4AD6A);
+  flex-shrink: 0;
+}
+
+.state-select-value {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.state-select-value.is-placeholder {
+  color: var(--text-muted, rgba(255, 255, 255, 0.4));
+  font-weight: 400;
+}
+
+.state-caret-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform var(--duration-fast);
+}
+
+.state-caret-icon.rotate {
+  transform: rotate(180deg);
+}
+
+.state-select-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  max-height: 280px;
+  background: rgba(22, 16, 19, 0.98);
+  border: 1px solid rgba(212, 173, 106, 0.35);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(184, 67, 106, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: vhFadeIn 0.2s ease-out;
+}
+
+.state-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.state-search-icon {
+  color: var(--gold-500, #D4AD6A);
+  flex-shrink: 0;
+}
+
+.state-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.state-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.state-search-clear {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+.state-options-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+  max-height: 220px;
+}
+
+.state-option-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm, 8px);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  text-align: left;
+}
+
+.state-option-item:hover,
+.state-option-item:focus-visible {
+  background: rgba(184, 67, 106, 0.2);
+  color: #FFFFFF;
+}
+
+.state-option-item.is-selected {
+  background: linear-gradient(90deg, rgba(184, 67, 106, 0.35) 0%, rgba(212, 173, 106, 0.2) 100%);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.state-option-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.state-option-name {
+  font-size: 0.88rem;
+}
+
+.state-option-region-chip {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.state-option-ut-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(212, 173, 106, 0.2);
+  color: #D4AD6A;
+  border: 1px solid rgba(212, 173, 106, 0.4);
+}
+
+.state-check-icon {
+  color: var(--gold-500, #D4AD6A);
+  flex-shrink: 0;
+}
+
+.state-no-results {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

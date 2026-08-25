@@ -167,26 +167,33 @@ export const DiscoverPreferences = ({ onClose }) => {
         <div className="pref-item-section border-top">
           <div className="label-slider-header">
             <span className="pref-item-label">Maximum Distance</span>
-            <span className="slider-value-display">{localFilters.distanceMax} km</span>
+            <span className="slider-value-display">
+              {localFilters.distanceMax >= 2500
+                ? 'All India (2500+ km)'
+                : localFilters.distanceMax <= 50
+                ? 'Within Same State (< 50 km)'
+                : `${localFilters.distanceMax} km`}
+            </span>
           </div>
           <input
             id="distance-slider"
             type="range"
-            min="5"
-            max="100"
-            value={localFilters.distanceMax}
+            min="50"
+            max="2500"
+            step="50"
+            value={localFilters.distanceMax || 2500}
             onChange={(e) => handleSliderChange('distanceMax', e.target.value)}
             className="pref-range-slider"
           />
         </div>
 
-        {/* City Input */}
+        {/* State / Location Filter */}
         <div className="pref-item-section border-top">
-          <label htmlFor="city-pref-input" className="pref-item-label">Location (City)</label>
+          <label htmlFor="city-pref-input" className="pref-item-label">State / Region in India</label>
           <input
             id="city-pref-input"
             type="text"
-            placeholder="Search by city (e.g. Mumbai, Bangalore)"
+            placeholder="Filter by State (e.g. Maharashtra, Karnataka)"
             value={localFilters.city}
             onChange={(e) => setLocalFilters(prev => ({ ...prev, city: e.target.value }))}
             className="pref-text-input font-ui"

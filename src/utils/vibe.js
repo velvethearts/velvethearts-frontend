@@ -1,9 +1,11 @@
+import { calculateStateDistance, normalizeStateName } from '../constants/indiaLocations';
+
 /**
  * Computes a dynamic Vibe Match percentage between two user profiles.
  * Baseline starts at 50%.
  * +8% per shared interest (preset or custom)
  * +12% for matching relationship seeking intent
- * +6% for matching city/location
+ * +8% for matching State/location (or +4% for nearby state < 400km)
  * +4% for verified status
  * Clamped between 50% and 98%.
  */
@@ -29,10 +31,13 @@ export function computeVibeMatch(userProfile, targetProfile) {
     }
   }
 
-  // City match
+  // State Proximity / Location Match
   if (userProfile?.city && targetProfile?.city) {
-    if (userProfile.city.trim().toLowerCase() === targetProfile.city.trim().toLowerCase()) {
-      score += 6;
+    const distInfo = calculateStateDistance(userProfile.city, targetProfile.city);
+    if (distInfo.isSameState) {
+      score += 8;
+    } else if (distInfo.distanceKm < 400) {
+      score += 4;
     }
   }
 

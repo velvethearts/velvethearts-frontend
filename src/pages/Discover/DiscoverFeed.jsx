@@ -6,6 +6,7 @@ import { ProfileCard } from '../../components/UI/ProfileCard';
 import { StoryDeck } from '../../components/UI/StoryDeck';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { calculateStateDistance } from '../../constants/indiaLocations';
 
 export const DiscoverFeed = ({ onSelectProfile }) => {
   const {
@@ -112,9 +113,11 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     }
 
     // Enforce Distance filter bounds
-    if (filters.distanceMax && profile.distance) {
-      const distNum = parseFloat(profile.distance);
-      if (!isNaN(distNum) && distNum > filters.distanceMax) return false;
+    if (filters.distanceMax) {
+      const distInfo = profile.distanceKm != null
+        ? { distanceKm: profile.distanceKm }
+        : calculateStateDistance(userProfile?.city, profile.city);
+      if (distInfo.distanceKm > filters.distanceMax) return false;
     }
 
     // Enforce Verified Only filter

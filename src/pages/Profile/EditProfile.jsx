@@ -11,6 +11,7 @@ import { VoiceRecorder } from '../../components/UI/VoiceRecorder';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getProfilePhoto, extractPhotoUrls } from '../../utils/avatar';
 import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageFingerprint';
+import { StateSelectDropdown } from '../../components/UI/StateSelectDropdown';
 
 export const EditProfile = ({ onBack }) => {
   const { userProfile, setUserProfile, updateUserProfile, showAlert } = useApp();
@@ -87,7 +88,7 @@ export const EditProfile = ({ onBack }) => {
     }
 
     if (!p.city || p.city.trim().length < 2) {
-      errors.city = 'City must be at least 2 characters.';
+      errors.city = 'Please select a valid State / Union Territory.';
     }
 
     if (!p.story || p.story.trim().length < 20) {
@@ -463,14 +464,18 @@ export const EditProfile = ({ onBack }) => {
             required
           />
 
-          <Input
-            id="edit-city"
-            label="City"
-            value={localProfile.city}
-            onChange={(e) => handleFieldChange('city', e.target.value)}
-            error={validationErrors.city}
-            required
-          />
+          <div className="form-group">
+            <label className="input-label font-ui" htmlFor="edit-state">
+              State / Location in India <span className="required-star">*</span>
+            </label>
+            <StateSelectDropdown
+              id="edit-state"
+              placeholder="Select your State / Union Territory"
+              value={localProfile.city}
+              onChange={(val) => handleFieldChange('city', val)}
+              error={validationErrors.city}
+            />
+          </div>
 
           <Select
             id="edit-gender"

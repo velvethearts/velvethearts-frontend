@@ -12,6 +12,7 @@ import { getDefaultAvatar } from '../../utils/avatar';
 import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageFingerprint';
 import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
 import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
+import { StateSelectDropdown } from '../../components/UI/StateSelectDropdown';
 
 export const OnboardingFlow = () => {
     const { completeOnboarding, logout, showConfirm, showAlert } = useApp();
@@ -471,9 +472,9 @@ export const OnboardingFlow = () => {
 
             if (force || formData.city) {
                 if (!formData.city || !formData.city.trim()) {
-                    errors.city = 'City is required.';
+                    errors.city = 'Please select your State / Union Territory.';
                 } else if (formData.city.trim().length < 2) {
-                    errors.city = 'City must be at least 2 characters.';
+                    errors.city = 'Please select a valid State / Union Territory.';
                 }
             }
         }
@@ -714,15 +715,18 @@ export const OnboardingFlow = () => {
                                 )}
                             </div>
 
-                            <Input
-                                id="city"
-                                label="Where are you based?"
-                                placeholder="City Name (e.g. Mumbai, Bangalore)"
-                                value={formData.city}
-                                onChange={(e) => handleChange('city', e.target.value)}
-                                error={validationErrors.city}
-                                required
-                            />
+                            <div className="form-group">
+                                <label className="input-label font-ui" htmlFor="state">
+                                    Where are you based in India? <span className="required-star">*</span>
+                                </label>
+                                <StateSelectDropdown
+                                    id="state"
+                                    placeholder="Select your State / Union Territory"
+                                    value={formData.city}
+                                    onChange={(val) => handleChange('city', val)}
+                                    error={validationErrors.city}
+                                />
+                            </div>
                         </div>
                     )}
 
