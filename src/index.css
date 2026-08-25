@@ -6355,11 +6355,11 @@ html {
 }
 
 /* ==========================================================================
-   STATE B: CLEAN JOURNAL DAY-CARD (Single Focused Page with Page Flip & Actions)
+   PHYSICAL 3D OPEN BOOK SPREAD (Interactive Flippable Pages)
    ========================================================================== */
 .diary-journal-stage-inner {
   width: 100%;
-  max-width: 520px;
+  max-width: 660px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -6367,45 +6367,289 @@ html {
   margin: auto;
 }
 
-.diary-card-stack-viewport {
+.diary-open-book-spread {
   position: relative;
   width: 100%;
-  height: 440px;
+  height: 450px;
   min-height: 380px;
   max-height: 480px;
   display: flex;
-  flex-direction: column;
-  perspective: 1200px;
+  flex-direction: row;
+  border-radius: 16px;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 
+    0 20px 50px rgba(42, 8, 18, 0.18),
+    0 4px 14px rgba(42, 8, 18, 0.06);
+  perspective: 1400px;
 }
 
-.diary-card-stack-underlay {
-  position: absolute;
-  inset: 4px;
-  top: 8px;
-  background: #ffffff;
-  border-radius: 20px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 16px 40px rgba(42, 8, 18, 0.08);
-  transform: rotate(0.8deg);
-  opacity: 0.7;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.diary-day-card {
-  position: relative;
-  width: 100%;
+/* LEFT WING: Title Inscription or Previous Day Summary */
+.diary-book-left-wing {
+  flex: 0.95;
+  min-width: 0;
+  min-height: 0;
   height: 100%;
-  background: #ffffff;
-  border: 1px solid var(--border-subtle, #E8E3E4);
-  border-radius: 20px;
-  padding: 20px 22px;
-  box-shadow: 0 12px 35px rgba(42, 8, 18, 0.09), 0 2px 8px rgba(42, 8, 18, 0.03);
+  background: linear-gradient(145deg, #FFF9F2 0%, #F5EDE4 100%);
+  border-radius: 16px 0 0 16px;
+  border-right: none;
+  padding: 18px 16px;
   display: flex;
   flex-direction: column;
-  z-index: 2;
-  transform-style: preserve-3d;
+  justify-content: space-between;
+  box-shadow: inset -8px 0 16px rgba(0, 0, 0, 0.04);
+  position: relative;
   overflow: hidden;
+  user-select: none;
+  cursor: pointer;
+}
+
+.diary-left-wing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(184, 67, 106, 0.14);
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.diary-left-wing-volume {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--burgundy-500, #B8436A);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diary-left-wing-couple {
+  font-size: 12px;
+  color: var(--text-secondary, #5A4E50);
+  font-style: italic;
+}
+
+.diary-left-wing-page-num {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted, #998D8F);
+}
+
+.diary-left-wing-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 14px 6px;
+  gap: 12px;
+  margin: auto 0;
+}
+
+.diary-left-wing-watermark {
+  color: var(--burgundy-400, #D0607F);
+  opacity: 0.28;
+}
+
+.diary-left-wing-quote {
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--charcoal-800, #3D3335);
+  margin: 0;
+  max-width: 220px;
+}
+
+/* Previous Day Snippet List on Left Page */
+.diary-left-wing-prev-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 4px;
+  overflow-y: auto;
+}
+
+.diary-left-wing-prev-heading {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--burgundy-700, #7A2842);
+  margin: 0 0 4px;
+}
+
+.diary-left-wing-prev-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.diary-left-prev-snippet {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--charcoal-700, #4A4042);
+  line-height: 1.4;
+}
+
+.diary-prev-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--burgundy-400, #D0607F);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.diary-prev-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.diary-left-wing-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(184, 67, 106, 0.12);
+  padding-top: 8px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.diary-left-wing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--burgundy-700, #7A2842);
+  background: var(--burgundy-50, #FDF2F4);
+  padding: 3px 8px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--burgundy-200, #F0BDC8);
+}
+
+.diary-left-flip-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--burgundy-600, #9B3456);
+  font-weight: 600;
+}
+
+.diary-left-bookmark-ribbon {
+  width: 12px;
+  height: 28px;
+  background: linear-gradient(180deg, var(--burgundy-600, #9B3456) 0%, var(--burgundy-800, #5C1A2E) 100%);
+  position: absolute;
+  right: 14px;
+  bottom: -16px;
+  border-radius: 0 0 2px 2px;
+  box-shadow: 0 4px 8px rgba(92, 26, 46, 0.35);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+}
+
+/* CENTER SPINE: Golden Metallic Divider */
+.diary-book-center-spine {
+  width: 14px;
+  height: 100%;
+  background: linear-gradient(90deg, #A3752C 0%, #D4AD6A 50%, #A3752C 100%);
+  box-shadow: 
+    inset 0 0 4px rgba(0, 0, 0, 0.35),
+    -2px 0 6px rgba(0, 0, 0, 0.08),
+    2px 0 6px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+}
+
+/* RIGHT WING: Active Flippable Diary Page */
+.diary-book-right-wing {
+  flex: 1.25;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  background: #FFFFFF;
+  border-radius: 0 16px 16px 0;
+  border-left: none;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: inset 8px 0 16px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+
+/* 3D Page Turn Peel Transitions */
+.diary-book-right-wing.peeling-next {
+  animation: diaryBookPageTurnNext 0.48s cubic-bezier(0.25, 1, 0.35, 1) forwards;
+  transform-origin: 0% 50%;
+}
+
+.diary-book-right-wing.peeling-prev {
+  animation: diaryBookPageTurnPrev 0.48s cubic-bezier(0.25, 1, 0.35, 1) forwards;
+  transform-origin: 0% 50%;
+}
+
+@keyframes diaryBookPageTurnNext {
+  0% {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: rotateY(-35deg) scale(0.97);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes diaryBookPageTurnPrev {
+  0% {
+    transform: rotateY(-35deg) scale(0.97);
+    opacity: 0.8;
+  }
+  100% {
+    transform: rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.diary-right-page-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-subtle, #E8E3E4);
+  padding-top: 6px;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.diary-right-page-num {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted, #998D8F);
+}
+
+.diary-right-flip-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--burgundy-600, #9B3456);
+  cursor: pointer;
+}
+
+.diary-right-flip-hint:hover {
+  color: var(--burgundy-800, #5C1A2E);
 }
 
 /* Empty Box on Book Page */

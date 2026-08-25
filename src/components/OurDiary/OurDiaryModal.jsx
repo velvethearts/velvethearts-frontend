@@ -860,97 +860,13 @@ export const OurDiaryModal = ({
         </div>
 
         {/* ============================================================
-           MAIN STAGE: BROWSE 3D BOOK COVER VS ACTIVE DIARY DAY-CARD
+           MAIN STAGE: PHYSICAL 3D OPEN BOOK SPREAD WITH FLIPPABLE PAGES
            ============================================================ */}
         <div className="diary-modal-stage">
-          {viewState === 'browse' ? (
-            /* ==========================================================
-               STATE A: "BROWSE" 3D HARDCOVER BOOK SHOWCASE
-               ========================================================== */
-            <div className="diary-browse-cover-screen font-ui">
-              {/* 3D Hinged Hardcover Book Object with Resting-State Dimensional Tilt */}
-              <div className="diary-3d-scene">
-                <div
-                  className={`diary-3d-book ${isBookOpen ? 'book-open' : 'book-closed'}`}
-                  onClick={() => {
-                    if (!isBookOpen) {
-                      setIsBookOpen(true);
-                      setTimeout(() => {
-                        setViewState('add');
-                      }, 440);
-                    }
-                  }}
-                  title="Tap the book to open your diary"
-                  role="button"
-                  tabIndex={0}
-                >
-                  {/* Underneath: The First Page revealed as cover swings open */}
-                  <div className="diary-book-base-page font-ui">
-                    <div className="diary-base-page-header">
-                      <span className="diary-base-page-tag font-ui">VOLUME 1</span>
-                      <span className="diary-base-page-date font-display">
-                        {pages?.[0]?.dateLabel || 'Today'}
-                      </span>
-                    </div>
-                    <div className="diary-base-page-content font-display">
-                      <p className="diary-base-page-quote">
-                        {pages?.[0]?.items?.[0]?.content
-                          ? `“${pages[0].items[0].content.slice(0, 70)}${pages[0].items[0].content.length > 70 ? '...' : ''}”`
-                          : '“A collection of our sweetest memories, shared thoughts, and voice notes.”'}
-                      </p>
-                    </div>
-                    <div className="diary-base-page-footer">
-                      <span className="diary-base-page-counter font-ui">Page 1</span>
-                    </div>
-                  </div>
-
-                  {/* Front Cover: Hinged on the Left Spine Edge */}
-                  <div className="diary-book-cover-hinge">
-                    {/* Front Face (Closed Book Cover) */}
-                    <div className="diary-book-cover-front">
-                      <div className="diary-preview-spine" />
-                      <div className="diary-preview-body">
-                        <div className="diary-preview-emblem">
-                          <BookBookmark size={36} weight="duotone" />
-                        </div>
-                        <h3 className="diary-preview-title font-display">Our Diary</h3>
-                        <p className="diary-preview-subtitle font-display">
-                          {userName || 'You'} &amp; {partnerName || 'Partner'}
-                        </p>
-                        <span className="diary-preview-badge font-ui">
-                          <Sparkle size={12} weight="fill" />
-                          <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
-                        </span>
-                        <span className="diary-cover-tap-hint font-ui">
-                          <span>Tap to open</span>
-                          <CaretRight size={12} weight="bold" />
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Inside Face (Swung Open Lining) */}
-                    <div className="diary-book-cover-inside">
-                      <div className="diary-book-inside-crease" />
-                      <div className="diary-book-inside-emblem">
-                        <Heart size={24} weight="duotone" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <p className="diary-browse-hint-text font-display">
-                Tap the book to open and browse your memories ✨
-              </p>
-            </div>
-          ) : (
-            /* ==========================================================
-               STATE B: ACTIVE DIARY DAY-CARD (WITH MOMENTS, ACTIONS & CREATORS)
-               ========================================================== */
-            <div className="diary-journal-stage-inner">
-              {/* Stacked Day-Card with Page Flip Controls & Swipe */}
-              <div
-                className="diary-card-stack-viewport font-ui"
+          <div className="diary-journal-stage-inner">
+            {/* 3D Open Book Spread with Left Page, Central Golden Spine, and Flippable Right Page */}
+            <div
+              className="diary-open-book-spread font-ui"
               onTouchStart={(e) => {
                 cardTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
               }}
@@ -968,41 +884,119 @@ export const OurDiaryModal = ({
                 cardTouchStart.current = null;
               }}
             >
-              {/* Floating Page Flip Navigation (Left/Prev) */}
+              {/* Floating Page Flip Navigation (Left / Previous Page) */}
               {currentPageIndex > 0 && (
                 <button
                   type="button"
                   className="diary-flip-nav-btn prev font-ui"
-                  onClick={handlePrevCard}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePrevCard();
+                  }}
                   aria-label="Previous Page"
-                  title="Previous Page"
+                  title="Flip to previous page"
                 >
                   <CaretLeft size={22} weight="bold" />
                 </button>
               )}
 
-              {/* Floating Page Flip Navigation (Right/Next) */}
+              {/* Floating Page Flip Navigation (Right / Next Page) */}
               {currentPageIndex < totalPages - 1 && (
                 <button
                   type="button"
                   className="diary-flip-nav-btn next font-ui"
-                  onClick={handleNextCard}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNextCard();
+                  }}
                   aria-label="Next Page"
-                  title="Next Page"
+                  title="Flip to next page"
                 >
                   <CaretRight size={22} weight="bold" />
                 </button>
               )}
 
-              {/* Underlying stack shadow effect */}
-              <div className="diary-card-stack-underlay" />
+              {/* ======================================================
+                 LEFT PAGE: Book Cover Lining / Previous Page Summary
+                 ====================================================== */}
+              <div
+                className="diary-book-left-wing font-display"
+                onClick={() => {
+                  if (currentPageIndex > 0) handlePrevCard();
+                }}
+                title={currentPageIndex > 0 ? "Click left page to flip back" : undefined}
+              >
+                {currentPageIndex === 0 ? (
+                  /* Cover Inscription / Title Page */
+                  <>
+                    <div className="diary-left-wing-header">
+                      <span className="diary-left-wing-volume">VOLUME 1</span>
+                      <span className="diary-left-wing-couple">{userName || 'You'} &amp; {partnerName || 'Partner'}</span>
+                    </div>
 
-              {/* Active Day-Card */}
+                    <div className="diary-left-wing-center">
+                      <div className="diary-left-wing-watermark">
+                        <Heart size={38} weight="duotone" />
+                      </div>
+                      <p className="diary-left-wing-quote font-display">
+                        “Every shared laughter, whisper, and story kept close to heart.”
+                      </p>
+                    </div>
+
+                    <div className="diary-left-wing-footer font-ui">
+                      <span className="diary-left-wing-badge">
+                        <Sparkle size={12} weight="fill" />
+                        <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
+                      </span>
+                      <div className="diary-left-bookmark-ribbon" />
+                    </div>
+                  </>
+                ) : (
+                  /* Previous Day Page Summary */
+                  <>
+                    <div className="diary-left-wing-header">
+                      <span className="diary-left-wing-volume">
+                        {pages[currentPageIndex - 1]?.dateLabel || 'Previous Day'}
+                      </span>
+                      <span className="diary-left-wing-page-num font-ui">Page {currentPageIndex}</span>
+                    </div>
+
+                    <div className="diary-left-wing-prev-content font-ui">
+                      <p className="diary-left-wing-prev-heading font-display">Previously Captured</p>
+                      <div className="diary-left-wing-prev-list">
+                        {pages[currentPageIndex - 1]?.items?.slice(0, 3)?.map((item, idx) => (
+                          <div key={idx} className="diary-left-prev-snippet">
+                            <span className="diary-prev-dot" />
+                            <span className="diary-prev-text font-body">
+                              {item.content || item.caption || (item.sourceType === 'VOICE_NOTE' ? 'Voice note recorded' : 'Photo saved')}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="diary-left-wing-footer font-ui">
+                      <span className="diary-left-flip-hint">
+                        <CaretLeft size={12} weight="bold" />
+                        <span>Flip back</span>
+                      </span>
+                      <div className="diary-left-bookmark-ribbon" />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* CENTER SPINE: Metallic Golden Stitching */}
+              <div className="diary-book-center-spine" />
+
+              {/* ======================================================
+                 RIGHT PAGE: Active Flippable Diary Day Page
+                 ====================================================== */}
               <div
                 key={currentDayCard?.dayKey || currentPageIndex}
-                className={`diary-day-card ${isPeeling ? `peeling-${peelDirection}` : ''}`}
+                className={`diary-book-right-wing ${isPeeling ? `peeling-${peelDirection}` : ''}`}
               >
-                {/* Top-Left Date Header & Counter */}
+                {/* Page Top Row: Date & Clickable Counter */}
                 <div className="diary-card-top-row">
                   <h2 className="diary-card-date font-display">
                     {currentDayCard?.dateLabel || 'Today'}
@@ -1010,7 +1004,10 @@ export const OurDiaryModal = ({
                   <button
                     type="button"
                     className="diary-card-counter font-ui"
-                    onClick={handleNextCard}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNextCard();
+                    }}
                     title={currentPageIndex < totalPages - 1 ? 'Click to flip next page' : 'Last page'}
                   >
                     <span>{currentPageIndex + 1} / {totalPages}</span>
@@ -1020,7 +1017,7 @@ export const OurDiaryModal = ({
 
                 <div className="diary-card-divider" />
 
-                {/* Day Entries List */}
+                {/* Day Entries List (Scrollable inside the right page) */}
                 <div className="diary-card-moments-scroll">
                   {loading ? (
                     <div className="diary-loading-state font-ui">
@@ -1061,7 +1058,10 @@ export const OurDiaryModal = ({
                               <button
                                 type="button"
                                 className="diary-moment-del-btn"
-                                onClick={() => handleDeleteEntry(entry.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteEntry(entry.id);
+                                }}
                                 title="Delete this moment"
                                 aria-label="Delete this moment"
                               >
@@ -1141,6 +1141,23 @@ export const OurDiaryModal = ({
                         </div>
                       );
                     })
+                  )}
+                </div>
+
+                {/* Page Bottom: Page indicator */}
+                <div className="diary-right-page-footer font-ui">
+                  <span className="diary-right-page-num">Page {currentPageIndex + 1}</span>
+                  {currentPageIndex < totalPages - 1 && (
+                    <span
+                      className="diary-right-flip-hint"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleNextCard();
+                      }}
+                    >
+                      <span>Flip next page</span>
+                      <CaretRight size={12} weight="bold" />
+                    </span>
                   )}
                 </div>
               </div>
@@ -1394,8 +1411,7 @@ export const OurDiaryModal = ({
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
 
         {/* ============================================================
            PERSISTENT BOTTOM SLIDE-UP DATE DRAWER
