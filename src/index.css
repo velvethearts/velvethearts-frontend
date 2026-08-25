@@ -5959,7 +5959,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px 12px calc(72px + env(safe-area-inset-bottom, 12px)) 12px;
+  padding: 16px 12px calc(92px + env(safe-area-inset-bottom, 16px)) 12px;
   box-sizing: border-box;
 }
 
@@ -5983,18 +5983,18 @@ html {
   to { opacity: 1; }
 }
 
-/* Modal Wrapper — Spacious & Balanced */
+/* Modal Wrapper — Spacious & Balanced with Clear Separation from Bottom Nav */
 .diary-modal-wrapper {
   position: relative;
   width: 100%;
   max-width: min(94vw, 440px);
-  height: min(74vh, 590px);
-  max-height: calc(100dvh - 100px);
+  height: min(70vh, 550px);
+  max-height: calc(100dvh - 160px);
   display: flex;
   flex-direction: column;
   background: var(--bg-surface-warm, #FFF8F0);
   border: 1.5px solid var(--border-subtle, #F0BDC8);
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: 0 18px 45px rgba(74, 30, 42, 0.22), 0 4px 14px rgba(184, 67, 106, 0.1);
   overflow: hidden;
   z-index: 2;
@@ -6006,7 +6006,7 @@ html {
   .diary-modal-wrapper {
     max-width: 480px;
     height: min(80vh, 640px);
-    max-height: calc(100dvh - 70px);
+    max-height: calc(100dvh - 80px);
   }
 }
 
@@ -6978,11 +6978,12 @@ html {
 .diary-date-strip-drawer {
   background: #FFFFFF;
   border-top: 1px solid var(--border-subtle, #E8E3E4);
-  padding: 6px 12px;
+  padding: 8px 12px 10px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
+  border-radius: 0 0 18px 18px;
 }
 
 [data-theme="dark"] .diary-date-strip-drawer {
