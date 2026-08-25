@@ -232,7 +232,8 @@ export const DiaryBookFlip = forwardRef(({
           <div className="diary-cover-spine-edge" />
           <div className="diary-cover-inner-panel">
             <div className="diary-cover-gold-border">
-              <div className="diary-cover-center-content">
+              {/* 1. Top Section: Logo, Title, Couple Names */}
+              <div className="diary-cover-top-group">
                 <div className="diary-cover-emblem">
                   <img src={velvetHeartLogo} alt="Velvet Hearts" className="diary-cover-logo-img" />
                 </div>
@@ -242,12 +243,16 @@ export const DiaryBookFlip = forwardRef(({
                 <p className="diary-cover-names font-display">
                   {userName || 'You'} &amp; {partnerName || 'Partner'}
                 </p>
+              </div>
 
+              {/* 2. Middle Centerpiece: Personalized Couple Quote */}
+              <div className="diary-cover-quote-wrapper">
                 <p className="diary-cover-quote-text font-display">
                   {coupleQuote}
                 </p>
               </div>
 
+              {/* 3. Bottom Section: Counter Badge & Tap prompt */}
               <div className="diary-cover-bottom-group font-ui">
                 <div className="diary-cover-count-badge font-ui">
                   <Sparkle size={11} weight="fill" />
