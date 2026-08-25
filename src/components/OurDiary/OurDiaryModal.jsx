@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   X,
   BookBookmark,
+  Books,
+  SquaresFour,
   CaretLeft,
   CaretRight,
   Plus,
@@ -667,42 +669,64 @@ export const OurDiaryModal = ({
       <div className="our-diary-backdrop" onClick={handleCloseDiary} />
 
       <div className="our-diary-container">
-        {/* Header Controls */}
+        {/* Header Controls (Pinterest Journal layout) */}
         <div className="our-diary-top-bar">
           <div className="our-diary-top-left">
-            <span className="our-diary-header-badge font-display">
-              <Heart size={16} weight="fill" className="our-diary-heart-icon" />
-              <span>Sweet Moments</span>
+            <button
+              type="button"
+              className="diary-header-icon-btn"
+              title="Bookshelf"
+              aria-label="Bookshelf"
+              onClick={() => {
+                if (isBookOpen) {
+                  setIsClosingToCover(true);
+                  setTimeout(() => {
+                    setIsBookOpen(false);
+                    setIsClosingToCover(false);
+                  }, 420);
+                }
+              }}
+            >
+              <Books size={18} weight="duotone" />
+            </button>
+
+            {isBookOpen && (
+              <button
+                type="button"
+                className={`diary-header-icon-btn ${showDateJump ? 'active' : ''}`}
+                onClick={() => setShowDateJump(prev => !prev)}
+                title="Calendar Dates"
+                aria-label="Calendar Dates"
+              >
+                <SquaresFour size={17} weight="bold" />
+              </button>
+            )}
+          </div>
+
+          <div className="our-diary-top-center">
+            <h2 className="diary-header-title font-display">
+              <span>Our Diary</span>
+            </h2>
+            <span className="diary-header-pages-sub font-ui">
+              <NotePencil size={11} weight="bold" />
+              <span>{pages.length} {pages.length === 1 ? 'Page' : 'Pages'}</span>
             </span>
           </div>
 
           <div className="our-diary-top-right">
             {isBookOpen && (
-              <>
-                <button
-                  type="button"
-                  className={`diary-top-action-btn font-ui ${showDateJump ? 'active' : ''}`}
-                  onClick={() => setShowDateJump(prev => !prev)}
-                  title="Open Calendar"
-                  aria-label="Open Calendar"
-                >
-                  <CalendarBlank size={15} />
-                  <span>Dates</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="diary-top-action-btn primary font-ui"
-                  onClick={() => {
-                    setShowComposer(true);
-                    setComposerError(null);
-                  }}
-                  title="Add Memory"
-                >
-                  <Plus size={15} weight="bold" />
-                  <span className="diary-add-btn-text">Add Moment</span>
-                </button>
-              </>
+              <button
+                type="button"
+                className="diary-top-action-btn primary font-ui"
+                onClick={() => {
+                  setShowComposer(true);
+                  setComposerError(null);
+                }}
+                title="Add Memory"
+              >
+                <Plus size={14} weight="bold" />
+                <span className="diary-add-btn-text">Add</span>
+              </button>
             )}
 
             <button
@@ -925,6 +949,13 @@ export const OurDiaryModal = ({
             </div>
           )}
 
+          {/* Peeking adjacent book on left for bookshelf feel */}
+          {(!isBookOpen || isOpeningCover || isClosingToCover) && (
+            <div className="diary-peeking-book left" aria-hidden="true">
+              <div className="diary-peeking-spine" />
+            </div>
+          )}
+
           {/* Render the Book Cover when closed, opening, or closing */}
           {(!isBookOpen || isOpeningCover || isClosingToCover) && (
             <div
@@ -961,6 +992,56 @@ export const OurDiaryModal = ({
             </div>
           )}
         </div>
+
+        {/* Floating Action Dock (Pinterest video style) when book is open */}
+        {isBookOpen && !isClosingToCover && (
+          <div className="diary-floating-dock font-ui">
+            <button
+              type="button"
+              className={`diary-dock-btn ${showDateJump ? 'active' : ''}`}
+              onClick={() => setShowDateJump(prev => !prev)}
+              title="Jump by Dates"
+              aria-label="Jump by Dates"
+            >
+              <CalendarBlank size={17} weight="bold" />
+            </button>
+
+            <button
+              type="button"
+              className="diary-dock-btn"
+              onClick={handlePrevPage}
+              disabled={isFlipping}
+              title={currentPageIndex === 0 ? "Close to Cover" : "Previous Page"}
+              aria-label={currentPageIndex === 0 ? "Close to Cover" : "Previous Page"}
+            >
+              <CaretLeft size={17} weight="bold" />
+            </button>
+
+            <button
+              type="button"
+              className="diary-dock-btn"
+              onClick={handleNextPage}
+              disabled={currentPageIndex >= totalPages - 1 || isFlipping}
+              title="Next Page"
+              aria-label="Next Page"
+            >
+              <CaretRight size={17} weight="bold" />
+            </button>
+
+            <button
+              type="button"
+              className="diary-dock-btn primary-add"
+              onClick={() => {
+                setShowComposer(true);
+                setComposerError(null);
+              }}
+              title="Add Moment (Photo, Video, Note)"
+              aria-label="Add Moment"
+            >
+              <Plus size={19} weight="bold" />
+            </button>
+          </div>
+        )}
 
         {/* --- IN-DIARY COMPOSER MODAL --- */}
         {showComposer && (
