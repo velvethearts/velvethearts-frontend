@@ -40,19 +40,20 @@ export const DiaryBookFlip = forwardRef(({
 }, ref) => {
   const flipBookRef = useRef(null);
   const touchStartRef = useRef(null);
+
   const [dimensions, setDimensions] = useState(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-    const w = isMobile ? Math.min(window.innerWidth - 48, 290) : 320;
-    const h = isMobile ? Math.min(window.innerHeight - 260, 420) : 460;
-    return { width: Math.max(w, 260), height: Math.max(h, 380) };
+    const w = isMobile ? Math.min(window.innerWidth - 64, 270) : 295;
+    const h = isMobile ? Math.min(window.innerHeight - 300, 380) : 410;
+    return { width: Math.max(w, 250), height: Math.max(h, 350) };
   });
 
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 640;
-      const w = isMobile ? Math.min(window.innerWidth - 48, 290) : 320;
-      const h = isMobile ? Math.min(window.innerHeight - 260, 420) : 460;
-      setDimensions({ width: Math.max(w, 260), height: Math.max(h, 380) });
+      const w = isMobile ? Math.min(window.innerWidth - 64, 270) : 295;
+      const h = isMobile ? Math.min(window.innerHeight - 300, 380) : 410;
+      setDimensions({ width: Math.max(w, 250), height: Math.max(h, 350) });
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -76,11 +77,25 @@ export const DiaryBookFlip = forwardRef(({
         console.warn('flipPrev error:', e);
       }
     },
+    goToCover: () => {
+      try {
+        const pf = flipBookRef.current?.pageFlip();
+        if (pf) {
+          pf.turnToPage(0);
+        }
+      } catch (e) {
+        console.warn('goToCover error:', e);
+      }
+    },
     turnToPage: (pageIndex) => {
       try {
         const pf = flipBookRef.current?.pageFlip();
         if (pf) {
-          pf.turnToPage(pageIndex + 1);
+          if (pageIndex === 0) {
+            pf.turnToPage(0); // Cover
+          } else {
+            pf.turnToPage(pageIndex + 1); // Day page
+          }
         }
       } catch (e) {
         console.warn('turnToPage error:', e);
@@ -134,7 +149,7 @@ export const DiaryBookFlip = forwardRef(({
     const deltaTime = Date.now() - touchStartRef.current.time;
 
     // Horizontal swipe detected
-    if (Math.abs(deltaX) > 30 && Math.abs(deltaX) > Math.abs(deltaY) && deltaTime < 500) {
+    if (Math.abs(deltaX) > 25 && Math.abs(deltaX) > Math.abs(deltaY) && deltaTime < 500) {
       if (deltaX < 0) {
         handleFlipNext();
       } else {
@@ -154,10 +169,10 @@ export const DiaryBookFlip = forwardRef(({
         width={dimensions.width}
         height={dimensions.height}
         size="fixed"
-        minWidth={260}
-        maxWidth={380}
-        minHeight={390}
-        maxHeight={560}
+        minWidth={250}
+        maxWidth={360}
+        minHeight={340}
+        maxHeight={500}
         maxShadowOpacity={0.5}
         showCover={true}
         mobileScrollSupport={false}
@@ -183,7 +198,7 @@ export const DiaryBookFlip = forwardRef(({
           <div className="diary-cover-inner-panel">
             <div className="diary-cover-gold-border">
               <div className="diary-cover-emblem">
-                <Heart size={38} weight="duotone" />
+                <Heart size={34} weight="duotone" />
               </div>
 
               <h2 className="diary-cover-main-title font-display">Our Diary</h2>
@@ -193,13 +208,13 @@ export const DiaryBookFlip = forwardRef(({
               </p>
 
               <div className="diary-cover-count-badge font-ui">
-                <Sparkle size={12} weight="fill" />
-                <span>{pages.length} {pages.length === 1 ? 'Day of Memories' : 'Days of Memories'}</span>
+                <Sparkle size={11} weight="fill" />
+                <span>{pages.length} {pages.length === 1 ? 'Day Saved' : 'Days Saved'}</span>
               </div>
 
               <div className="diary-cover-tap-prompt font-ui">
-                <span>Tap anywhere to open</span>
-                <CaretRight size={13} weight="bold" />
+                <span>Tap to open</span>
+                <CaretRight size={12} weight="bold" />
               </div>
             </div>
           </div>
@@ -243,7 +258,7 @@ export const DiaryBookFlip = forwardRef(({
               <div className="diary-leaf-scroll-content">
                 {(!dayGroup.items || dayGroup.items.length === 0) ? (
                   <div className="diary-leaf-empty font-ui">
-                    <Heart size={26} weight="duotone" className="text-burgundy" />
+                    <Heart size={24} weight="duotone" className="text-burgundy" />
                     <p className="diary-leaf-empty-text font-body">No memories recorded on this day.</p>
                   </div>
                 ) : (
@@ -276,7 +291,7 @@ export const DiaryBookFlip = forwardRef(({
                               title="Delete this memory"
                               aria-label="Delete this memory"
                             >
-                              <Trash size={13} />
+                              <Trash size={12} />
                             </button>
                           )}
                         </div>
@@ -284,7 +299,7 @@ export const DiaryBookFlip = forwardRef(({
                         {/* 1. Quote Message */}
                         {sourceType === 'MESSAGE' && entry.content && (
                           <div className="diary-leaf-quote-box font-display">
-                            <Quotes size={15} weight="fill" className="diary-leaf-quote-mark" />
+                            <Quotes size={14} weight="fill" className="diary-leaf-quote-mark" />
                             <div className="diary-leaf-quote-body">
                               <p className="diary-leaf-quote-text font-body">{entry.content}</p>
                               {entry.caption && (
@@ -355,7 +370,7 @@ export const DiaryBookFlip = forwardRef(({
         <DiaryPageLeaf density="hard" className="diary-back-cover-leaf">
           <div className="diary-back-cover-inner">
             <div className="diary-back-cover-emblem">
-              <Heart size={30} weight="duotone" />
+              <Heart size={28} weight="duotone" />
             </div>
             <p className="diary-back-cover-text font-display">
               “To all our cherished moments, big and small.”

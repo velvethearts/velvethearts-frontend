@@ -5959,7 +5959,7 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px;
+  padding: 24px 16px;
 }
 
 .diary-modal-backdrop {
@@ -5976,12 +5976,12 @@ html {
   to { opacity: 1; }
 }
 
-/* Modal Wrapper */
+/* Modal Wrapper — Compact & Well-Spaced */
 .diary-modal-wrapper {
   position: relative;
   width: 100%;
-  max-width: 480px;
-  height: min(86vh, 690px);
+  max-width: 430px;
+  height: min(78vh, 580px);
   display: flex;
   flex-direction: column;
   background: var(--bg-surface-warm, #FFF8F0);
@@ -6009,12 +6009,12 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 8px 12px;
   background: #FFFFFF;
   border-bottom: 1px solid var(--border-subtle, #E8E3E4);
   flex-shrink: 0;
   gap: 8px;
-  min-height: 48px;
+  min-height: 44px;
 }
 
 [data-theme="dark"] .diary-modal-header {
@@ -6081,7 +6081,7 @@ html {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  height: 30px;
+  height: 28px;
   padding: 0 10px;
   border-radius: var(--radius-full, 9999px);
   font-size: 11px;
@@ -6124,8 +6124,8 @@ html {
 }
 
 .diary-modal-close-btn {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -6154,7 +6154,7 @@ html {
 .diary-modal-stage {
   flex: 1;
   min-height: 0;
-  padding: 10px 12px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -6207,47 +6207,53 @@ html {
   margin: auto;
 }
 
-/* Resized Harmonious Navigation Arrow Buttons */
+/* Sleek Minimalist Side Navigation Arrows (No Heavy Circled Background) */
 .diary-book-nav-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #FFFFFF;
-  color: var(--burgundy-700, #7A2842);
-  border: 1px solid var(--border-subtle, #E8E3E4);
-  box-shadow: 0 4px 12px rgba(74, 30, 42, 0.16);
+  width: 26px;
+  height: 26px;
+  background: transparent;
+  color: var(--burgundy-500, #B8436A);
+  border: none;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 40;
+  opacity: 0.65;
   transition: all 0.2s ease;
+  padding: 0;
 }
 
 [data-theme="dark"] .diary-book-nav-arrow {
-  background: #24141A;
-  color: #F5C6D3;
-  border-color: #4A2330;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  background: transparent;
+  color: #F0A0AD;
+  border: none;
+  box-shadow: none;
 }
 
 .diary-book-nav-arrow.prev {
-  left: 2px;
+  left: -2px;
 }
 
 .diary-book-nav-arrow.next {
-  right: 2px;
+  right: -2px;
 }
 
 .diary-book-nav-arrow:hover {
-  background: var(--burgundy-600, #9B3456);
+  background: transparent;
+  color: var(--burgundy-700, #7A2842);
+  border: none;
+  box-shadow: none;
+  opacity: 1;
+  transform: translateY(-50%) scale(1.2);
+}
+
+[data-theme="dark"] .diary-book-nav-arrow:hover {
   color: #FFFFFF;
-  border-color: var(--burgundy-600, #9B3456);
-  transform: translateY(-50%) scale(1.08);
-  box-shadow: 0 6px 16px rgba(184, 67, 106, 0.35);
 }
 
 /* StPageFlip Viewport & Book */

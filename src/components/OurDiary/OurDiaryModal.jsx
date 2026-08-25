@@ -478,11 +478,22 @@ export const OurDiaryModal = ({
   const handleCloseDiary = () => {
     if (isClosingModal) return;
     stopAudioRecording();
-    setIsClosingModal(true);
-    setTimeout(() => {
-      setIsClosingModal(false);
-      onClose?.();
-    }, 200);
+
+    // If book is open in browse mode, close book to cover first
+    if (viewState === 'browse' && activeFlipPageIndex > 0) {
+      bookFlipRef.current?.goToCover();
+      setIsClosingModal(true);
+      setTimeout(() => {
+        setIsClosingModal(false);
+        onClose?.();
+      }, 320);
+    } else {
+      setIsClosingModal(true);
+      setTimeout(() => {
+        setIsClosingModal(false);
+        onClose?.();
+      }, 180);
+    }
   };
 
   // Keyboard navigation
@@ -741,7 +752,7 @@ export const OurDiaryModal = ({
                   <button
                     type="button"
                     className="diary-header-btn secondary font-ui"
-                    onClick={() => bookFlipRef.current?.turnToPage(0)}
+                    onClick={() => bookFlipRef.current?.goToCover()}
                     title="Close book to cover"
                   >
                     <BookBookmark size={14} weight="bold" />
