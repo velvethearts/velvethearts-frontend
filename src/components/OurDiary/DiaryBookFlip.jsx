@@ -1,4 +1,4 @@
-import React, { useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useImperativeHandle, forwardRef, useState, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import {
   Heart,
@@ -28,7 +28,7 @@ DiaryPageLeaf.displayName = 'DiaryPageLeaf';
 
 /**
  * Velvet Hearts — Realistic PageFlip Book Component
- * Powered by react-pageflip (StPageFlip)
+ * Supports full-height edge tapping, touch swipe gestures, and theme adaptive styling
  */
 export const DiaryBookFlip = forwardRef(({
   pages = [],
@@ -39,6 +39,24 @@ export const DiaryBookFlip = forwardRef(({
   VoicePlayerComponent
 }, ref) => {
   const flipBookRef = useRef(null);
+  const touchStartRef = useRef(null);
+  const [dimensions, setDimensions] = useState(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const w = isMobile ? Math.min(window.innerWidth - 32, 320) : 340;
+    const h = isMobile ? Math.min(window.innerHeight - 220, 460) : 490;
+    return { width: Math.max(w, 270), height: Math.max(h, 400) };
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 640;
+      const w = isMobile ? Math.min(window.innerWidth - 32, 320) : 340;
+      const h = isMobile ? Math.min(window.innerHeight - 220, 460) : 490;
+      setDimensions({ width: Math.max(w, 270), height: Math.max(h, 400) });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Expose flip methods to parent
   useImperativeHandle(ref, () => ({
@@ -62,7 +80,6 @@ export const DiaryBookFlip = forwardRef(({
       try {
         const pf = flipBookRef.current?.pageFlip();
         if (pf) {
-          // page 0 = cover, page 1 = day 1
           pf.turnToPage(pageIndex + 1);
         }
       } catch (e) {
@@ -79,34 +96,73 @@ export const DiaryBookFlip = forwardRef(({
     }
   }));
 
-  const handleCoverClick = () => {
+  const handleFlipNext = (e) => {
+    e?.stopPropagation?.();
     try {
       const pf = flipBookRef.current?.pageFlip();
       if (pf) pf.flipNext('top');
-    } catch (e) {
-      console.warn('cover click error:', e);
+    } catch (err) {
+      console.warn('flipNext error:', err);
     }
   };
 
-  const isMobile = window.innerWidth < 640;
-  const bookWidth = isMobile ? Math.min(window.innerWidth - 48, 320) : 340;
-  const bookHeight = isMobile ? 460 : 490;
+  const handleFlipPrev = (e) => {
+    e?.stopPropagation?.();
+    try {
+      const pf = flipBookRef.current?.pageFlip();
+      if (pf) pf.flipPrev('top');
+    } catch (err) {
+      console.warn('flipPrev error:', err);
+    }
+  };
+
+  // Touch Swipe Handlers for mobile responsiveness
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches[0]) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now()
+      };
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartRef.current || !e.changedTouches || !e.changedTouches[0]) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const deltaY = e.changedTouches[0].clientY - touchStartRef.current.y;
+    const deltaTime = Date.now() - touchStartRef.current.time;
+
+    // Horizontal swipe detected
+    if (Math.abs(deltaX) > 30 && Math.abs(deltaX) > Math.abs(deltaY) && deltaTime < 500) {
+      if (deltaX < 0) {
+        handleFlipNext();
+      } else {
+        handleFlipPrev();
+      }
+    }
+    touchStartRef.current = null;
+  };
 
   return (
-    <div className="diary-st-pageflip-viewport font-ui">
+    <div
+      className="diary-st-pageflip-viewport font-ui"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <HTMLFlipBook
-        width={bookWidth}
-        height={bookHeight}
+        width={dimensions.width}
+        height={dimensions.height}
         size="fixed"
         minWidth={260}
         maxWidth={380}
-        minHeight={400}
+        minHeight={390}
         maxHeight={560}
-        maxShadowOpacity={0.6}
+        maxShadowOpacity={0.5}
         showCover={true}
         mobileScrollSupport={false}
         useMouseEvents={true}
-        swipeDistance={25}
+        swipeDistance={20}
         clickEventForward={true}
         usePortrait={true}
         startPage={0}
@@ -121,13 +177,13 @@ export const DiaryBookFlip = forwardRef(({
         <DiaryPageLeaf
           density="hard"
           className="diary-cover-leaf"
-          onClick={handleCoverClick}
+          onClick={handleFlipNext}
         >
           <div className="diary-cover-spine-edge" />
           <div className="diary-cover-inner-panel">
             <div className="diary-cover-gold-border">
               <div className="diary-cover-emblem">
-                <Heart size={42} weight="duotone" />
+                <Heart size={38} weight="duotone" />
               </div>
 
               <h2 className="diary-cover-main-title font-display">Our Diary</h2>
@@ -142,15 +198,15 @@ export const DiaryBookFlip = forwardRef(({
               </div>
 
               <div className="diary-cover-tap-prompt font-ui">
-                <span>Tap to Open</span>
-                <CaretRight size={14} weight="bold" />
+                <span>Tap anywhere to open</span>
+                <CaretRight size={13} weight="bold" />
               </div>
             </div>
           </div>
         </DiaryPageLeaf>
 
         {/* =========================================================
-            LEAF 1..N: INDIVIDUAL DAY-PAGES (CRISP WHITE PAPER)
+            LEAF 1..N: INDIVIDUAL DAY-PAGES (CRISP THEMED PAPER)
             ========================================================= */}
         {pages.map((dayGroup, pageIndex) => (
           <DiaryPageLeaf
@@ -159,11 +215,25 @@ export const DiaryBookFlip = forwardRef(({
             className="diary-inner-white-leaf"
           >
             <div className="diary-leaf-paper-surface">
+              {/* Full-height Tap-to-Flip Zones along the sides of the page */}
+              <div
+                className="diary-leaf-click-zone right"
+                onClick={handleFlipNext}
+                title="Tap right edge to flip next"
+                aria-label="Next page"
+              />
+              <div
+                className="diary-leaf-click-zone left"
+                onClick={handleFlipPrev}
+                title="Tap left edge to flip previous"
+                aria-label="Previous page"
+              />
+
               {/* Day Header */}
               <div className="diary-leaf-header">
                 <h3 className="diary-leaf-date font-display">{dayGroup.dateLabel}</h3>
                 <span className="diary-leaf-counter font-ui">
-                  {pageIndex + 1} / {pages.length}
+                  {pageIndex + 1}/{pages.length}
                 </span>
               </div>
 
@@ -173,7 +243,7 @@ export const DiaryBookFlip = forwardRef(({
               <div className="diary-leaf-scroll-content">
                 {(!dayGroup.items || dayGroup.items.length === 0) ? (
                   <div className="diary-leaf-empty font-ui">
-                    <Heart size={28} weight="duotone" className="text-burgundy" />
+                    <Heart size={26} weight="duotone" className="text-burgundy" />
                     <p className="diary-leaf-empty-text font-body">No memories recorded on this day.</p>
                   </div>
                 ) : (
@@ -214,7 +284,7 @@ export const DiaryBookFlip = forwardRef(({
                         {/* 1. Quote Message */}
                         {sourceType === 'MESSAGE' && entry.content && (
                           <div className="diary-leaf-quote-box font-display">
-                            <Quotes size={16} weight="fill" className="diary-leaf-quote-mark" />
+                            <Quotes size={15} weight="fill" className="diary-leaf-quote-mark" />
                             <div className="diary-leaf-quote-body">
                               <p className="diary-leaf-quote-text font-body">{entry.content}</p>
                               {entry.caption && (
@@ -268,10 +338,10 @@ export const DiaryBookFlip = forwardRef(({
               </div>
 
               {/* Page Footer Curl / Turn Hint */}
-              <div className="diary-leaf-footer font-ui">
+              <div className="diary-leaf-footer font-ui" onClick={handleFlipNext}>
                 <span className="diary-leaf-footer-num">Page {pageIndex + 1}</span>
                 <span className="diary-leaf-curl-hint">
-                  <span>Drag or click corner to flip</span>
+                  <span>Tap anywhere to flip</span>
                   <CaretRight size={11} weight="bold" />
                 </span>
               </div>
@@ -285,7 +355,7 @@ export const DiaryBookFlip = forwardRef(({
         <DiaryPageLeaf density="hard" className="diary-back-cover-leaf">
           <div className="diary-back-cover-inner">
             <div className="diary-back-cover-emblem">
-              <Heart size={32} weight="duotone" />
+              <Heart size={30} weight="duotone" />
             </div>
             <p className="diary-back-cover-text font-display">
               “To all our cherished moments, big and small.”
