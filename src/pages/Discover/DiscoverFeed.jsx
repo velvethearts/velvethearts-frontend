@@ -101,19 +101,6 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       return str;
     };
 
-    if (activeQuickFilter === 'Women') {
-      if (normalizeGender(profile.gender) !== 'woman') return false;
-    }
-
-    if (activeQuickFilter === 'Men') {
-      if (normalizeGender(profile.gender) !== 'man') return false;
-    }
-
-    if (activeQuickFilter === 'Non-Binary') {
-      const g = normalizeGender(profile.gender);
-      if (g === 'woman' || g === 'man') return false;
-    }
-
     if (activeQuickFilter === 'Verified Only') {
       if (!profile.verified) return false;
     }
@@ -291,7 +278,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
       {/* Quick Filters Horizontal Row */}
       <div className="quick-filters-row" role="tablist" aria-label="Quick discovery filters">
-        {['All', 'Near Me', 'New', 'Women', 'Men', 'Non-Binary', 'Verified Only'].map(f => (
+        {['All', 'Near Me', 'New', 'Verified Only'].map(f => (
           <button
             key={f}
             role="tab"
