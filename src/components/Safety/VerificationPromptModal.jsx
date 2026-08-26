@@ -9,13 +9,13 @@ const SNOOZE_KEY = 'vh_verification_snoozed_until';
 const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
 
 export const VerificationPromptModal = () => {
-  const { userProfile, isLoggedIn, isOnboarded, setUserProfile } = useApp();
+  const { userProfile, isLoggedIn, isOnboarded, activeTab, setUserProfile } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [isPhotoVerifyOpen, setIsPhotoVerifyOpen] = useState(false);
 
   useEffect(() => {
-    // Only check for logged-in, onboarded users
-    if (!isLoggedIn || !isOnboarded || !userProfile) {
+    // Only check for logged-in, onboarded users on general browsing tabs (never while viewing/editing profile)
+    if (!isLoggedIn || !isOnboarded || !userProfile || activeTab === 'profile') {
       setIsOpen(false);
       return;
     }
@@ -48,7 +48,12 @@ export const VerificationPromptModal = () => {
 
     // Gentle delay after loading so it feels natural and smooth
     const timer = setTimeout(() => {
-      // Re-verify immediately before opening in case status changed
+      // Re-verify immediately before opening in case status or tab changed
+      if (activeTab === 'profile') {
+        setIsOpen(false);
+        return;
+      }
+
       const checkVerifiedAgain = Boolean(
         userProfile?.verified === true ||
         userProfile?.verified === 'true' ||
@@ -61,7 +66,7 @@ export const VerificationPromptModal = () => {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [isLoggedIn, isOnboarded, userProfile?.verified]);
+  }, [isLoggedIn, isOnboarded, userProfile?.verified, activeTab]);
 
   const handleMaybeLater = () => {
     try {

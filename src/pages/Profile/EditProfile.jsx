@@ -65,6 +65,7 @@ export const EditProfile = ({ onBack }) => {
     try {
       localStorage.setItem('vh-user-verified', 'false');
       localStorage.removeItem('vh-verification-completed');
+      localStorage.setItem('vh_verification_snoozed_until', String(Date.now() + 48 * 60 * 60 * 1000));
     } catch (_) {}
 
     if (!hasAlertedPrimaryChangeRef.current) {
