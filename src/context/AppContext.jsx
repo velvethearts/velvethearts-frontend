@@ -1322,11 +1322,30 @@ export const AppProvider = ({ children }) => {
     };
 
     const completeOnboarding = async (profileData) => {
+        const isVerified = Boolean(
+            profileData?.verified === true ||
+            profileData?.verified === 'true' ||
+            localStorage.getItem('vh-user-verified') === 'true' ||
+            localStorage.getItem('vh-verification-completed') === 'true'
+        );
+        const finalProfileData = {
+            ...profileData,
+            verified: isVerified
+        };
+
         if (!api.isConfigured) {
-            setUserProfile(profileData);
+            setUserProfile(finalProfileData);
+            try {
+                localStorage.setItem('vh-user-profile', JSON.stringify(finalProfileData));
+                if (isVerified) {
+                    localStorage.setItem('vh-user-verified', 'true');
+                    localStorage.setItem('vh-verification-completed', 'true');
+                    localStorage.removeItem('vh_verification_snoozed_until');
+                }
+            } catch (_) {}
             setIsOnboarded(true);
             setActiveTab('discover');
-            const uid = profileData?.id || profileData?.uid || auth.currentUser?.uid;
+            const uid = finalProfileData?.id || finalProfileData?.uid || auth.currentUser?.uid;
             if (uid) {
                 try {
                     localStorage.removeItem(`vh-tour-completed-${uid}`);
@@ -1337,8 +1356,17 @@ export const AppProvider = ({ children }) => {
         }
 
         try {
-            const saved = await api.saveProfile(profileData);
-            setUserProfile(profileData);
+            const saved = await api.saveProfile(finalProfileData);
+            const merged = { ...finalProfileData, ...(saved || {}), verified: isVerified || Boolean(saved?.verified) };
+            setUserProfile(merged);
+            try {
+                localStorage.setItem('vh-user-profile', JSON.stringify(merged));
+                if (merged.verified) {
+                    localStorage.setItem('vh-user-verified', 'true');
+                    localStorage.setItem('vh-verification-completed', 'true');
+                    localStorage.removeItem('vh_verification_snoozed_until');
+                }
+            } catch (_) {}
             setIsOnboarded(true);
             setActiveTab('discover');
 

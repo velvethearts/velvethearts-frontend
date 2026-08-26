@@ -408,7 +408,7 @@ export const EditProfile = ({ onBack }) => {
             </div>
 
             {/* Photo Verification Status / Re-Verify Banner */}
-            <div className="edit-verify-box font-ui" style={{ marginTop: '16px', padding: '14px 16px', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(212, 173, 106, 0.3)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div className="edit-verify-box font-ui">
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <ShieldCheck size={26} weight="fill" color={localProfile.verified ? '#22C55E' : '#B8436A'} />
                 <div>

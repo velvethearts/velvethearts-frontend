@@ -2085,6 +2085,11 @@ export const OnboardingFlow = () => {
                 primaryPhotoUrl={photoPreviews[0] || null}
                 onVerified={() => {
                     setFormData(prev => ({ ...prev, verified: true }));
+                    try {
+                        localStorage.setItem('vh-user-verified', 'true');
+                        localStorage.setItem('vh-verification-completed', 'true');
+                        localStorage.removeItem('vh_verification_snoozed_until');
+                    } catch (_) {}
                     setIsVerifyModalOpen(false);
                 }}
             />

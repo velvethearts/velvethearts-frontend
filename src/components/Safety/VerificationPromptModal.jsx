@@ -20,8 +20,16 @@ export const VerificationPromptModal = () => {
       return;
     }
 
+    // Check if verified across state, profile properties, or persistent storage
+    const isVerified = Boolean(
+      userProfile.verified === true ||
+      userProfile.verified === 'true' ||
+      localStorage.getItem('vh-user-verified') === 'true' ||
+      localStorage.getItem('vh-verification-completed') === 'true'
+    );
+
     // If already verified, never show again
-    if (userProfile.verified) {
+    if (isVerified) {
       setIsOpen(false);
       try {
         localStorage.removeItem(SNOOZE_KEY);
@@ -40,7 +48,16 @@ export const VerificationPromptModal = () => {
 
     // Gentle delay after loading so it feels natural and smooth
     const timer = setTimeout(() => {
-      setIsOpen(true);
+      // Re-verify immediately before opening in case status changed
+      const checkVerifiedAgain = Boolean(
+        userProfile?.verified === true ||
+        userProfile?.verified === 'true' ||
+        localStorage.getItem('vh-user-verified') === 'true' ||
+        localStorage.getItem('vh-verification-completed') === 'true'
+      );
+      if (!checkVerifiedAgain) {
+        setIsOpen(true);
+      }
     }, 1500);
 
     return () => clearTimeout(timer);
@@ -61,6 +78,8 @@ export const VerificationPromptModal = () => {
 
   const handleVerifiedSuccess = () => {
     try {
+      localStorage.setItem('vh-user-verified', 'true');
+      localStorage.setItem('vh-verification-completed', 'true');
       localStorage.removeItem(SNOOZE_KEY);
     } catch (_) {}
     setIsPhotoVerifyOpen(false);

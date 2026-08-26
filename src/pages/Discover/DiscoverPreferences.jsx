@@ -483,13 +483,10 @@ export const DiscoverPreferences = ({ onClose }) => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
-          padding-top: var(--space-4);
-          margin-top: var(--space-3);
-          position: sticky;
-          bottom: 0;
-          background: var(--bg-surface);
-          z-index: 10;
+          border-top: 1px solid var(--border-subtle);
+          padding-top: var(--space-5);
+          margin-top: var(--space-4);
+          padding-bottom: var(--space-2);
         }
 
         .pref-clear-all {

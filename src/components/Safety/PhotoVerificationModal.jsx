@@ -710,7 +710,13 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
         console.warn('[PhotoVerification] Backend verification endpoint skipped or deferred:', backendErr);
       }
 
-      // 5. Update local profile state to verified
+      // 5. Update local profile state and persistent storage to verified
+      try {
+        localStorage.setItem('vh-user-verified', 'true');
+        localStorage.setItem('vh-verification-completed', 'true');
+        localStorage.removeItem('vh_verification_snoozed_until');
+      } catch (_) {}
+
       if (setUserProfile) {
         setUserProfile((prev) => {
           const updated = {
