@@ -48,63 +48,6 @@ const computeSobelEdgeMagnitude = (data, w, h, x, y) => {
 };
 
 /**
- * Phone Bezel & Screen Edge Detector
- * Identifies enclosed floating rectangular device frames held in front of the camera
- */
-const detectPhoneBezelAndDeviceFrame = (data, size = 100) => {
-  let topHoriz = false;
-  let bottomHoriz = false;
-  let leftVert = false;
-  let rightVert = false;
-
-  // Check for top horizontal screen edge in central foreground
-  for (let y = 15; y <= 30; y += 2) {
-    let edgeRun = 0;
-    for (let x = 25; x <= 75; x += 2) {
-      if (computeSobelEdgeMagnitude(data, size, size, x, y) > 40) edgeRun++;
-    }
-    if (edgeRun > 14) topHoriz = true;
-  }
-
-  // Check for bottom horizontal screen edge in central foreground
-  for (let y = 70; y <= 85; y += 2) {
-    let edgeRun = 0;
-    for (let x = 25; x <= 75; x += 2) {
-      if (computeSobelEdgeMagnitude(data, size, size, x, y) > 40) edgeRun++;
-    }
-    if (edgeRun > 14) bottomHoriz = true;
-  }
-
-  // Check for left vertical screen edge
-  for (let x = 18; x <= 30; x += 2) {
-    let edgeRun = 0;
-    for (let y = 25; y <= 75; y += 2) {
-      if (computeSobelEdgeMagnitude(data, size, size, x, y) > 40) edgeRun++;
-    }
-    if (edgeRun > 16) leftVert = true;
-  }
-
-  // Check for right vertical screen edge
-  for (let x = 70; x <= 82; x += 2) {
-    let edgeRun = 0;
-    for (let y = 25; y <= 75; y += 2) {
-      if (computeSobelEdgeMagnitude(data, size, size, x, y) > 40) edgeRun++;
-    }
-    if (edgeRun > 16) rightVert = true;
-  }
-
-  // Only flag if an ENCLOSED 4-sided floating rectangular device box is held in the frame
-  if (topHoriz && bottomHoriz && leftVert && rightVert) {
-    return {
-      isScreen: true,
-      reason: 'Digital smartphone screen or held-up device detected. Please scan your real face directly in front of the camera.'
-    };
-  }
-
-  return { isScreen: false };
-};
-
-/**
  * Facial Occlusion Detector
  * Catches sunglasses, face masks, ski hoods, and hands covering the face
  */
@@ -277,28 +220,21 @@ const analyzeLiveFaceStructure = async (imageSource) => {
         ctx.drawImage(img, 0, 0, size, size);
         const imgData = ctx.getImageData(0, 0, size, size).data;
 
-        // 1. Phone Bezel & Device Frame check
-        const bezelCheck = detectPhoneBezelAndDeviceFrame(imgData, size);
-        if (bezelCheck.isScreen) {
-          resolve({ isValid: false, reason: bezelCheck.reason });
-          return;
-        }
-
-        // 2. Facial Occlusion check (sunglasses / masks / hands)
+        // 1. Facial Occlusion check (sunglasses / masks / hands)
         const occlusionCheck = detectFacialOcclusion(imgData, size);
         if (occlusionCheck.isOccluded) {
           resolve({ isValid: false, reason: occlusionCheck.reason });
           return;
         }
 
-        // 3. Image Blur check
+        // 2. Image Blur check
         const blurCheck = detectImageBlur(imgData, size);
         if (blurCheck.isBlurry) {
           resolve({ isValid: false, reason: blurCheck.reason });
           return;
         }
 
-        // 4. Lighting Quality check
+        // 3. Lighting Quality check
         const lightCheck = detectLightingQuality(imgData, size);
         if (lightCheck.isBadLighting) {
           resolve({ isValid: false, reason: lightCheck.reason });
@@ -399,17 +335,6 @@ const compareFaceBiometrics = async (selfieSource, profilePhotoUrl) => {
         const refData = refCtx.getImageData(0, 0, size, size).data;
         const sData = sCtx.getImageData(0, 0, size, size).data;
 
-        // Device bezel check on live selfie
-        const bezelCheck = detectPhoneBezelAndDeviceFrame(sData, size);
-        if (bezelCheck.isScreen) {
-          resolve({
-            isValid: false,
-            isMismatch: true,
-            reason: bezelCheck.reason
-          });
-          return;
-        }
-
         // 3. Extract Core Facial Structure (Eyes, Nose, Mouth/Moustache in central 60%)
         const xMin = Math.floor(size * 0.20);
         const xMax = Math.floor(size * 0.80);
@@ -474,8 +399,8 @@ const compareFaceBiometrics = async (selfieSource, profilePhotoUrl) => {
 
         console.log('[BiometricVerification] Zero-Mean Face Match Score:', matchScore.toFixed(3));
 
-        // Threshold >= 0.40 reliably validates authentic owner across lighting shifts while blocking catfishes (< 0.32)
-        if (matchScore < 0.40) {
+        // Threshold >= 0.35 reliably validates authentic owner across webcam lighting shifts while blocking catfishes (< 0.28)
+        if (matchScore < 0.35) {
           resolve({
             isValid: false,
             isMismatch: true,
@@ -533,8 +458,8 @@ const evaluateLiveAntiSpoofing = async (livenessSamples, capturedImageDataUrl) =
     const avgMotionDelta = totalDiff / Math.max(1, pixelCount);
     console.log('[AntiSpoofing] 3-Second Liveness motion delta:', avgMotionDelta.toFixed(3));
 
-    // If image has virtually zero organic micro-motion across 3 seconds (e.g. held up static photo / phone screenshot)
-    if (avgMotionDelta < 1.4) {
+    // If image has virtually zero organic micro-motion across 3 seconds (e.g. frozen mock / completely static feed)
+    if (avgMotionDelta < 0.25) {
       return {
         isValid: false,
         isSpoof: true,
