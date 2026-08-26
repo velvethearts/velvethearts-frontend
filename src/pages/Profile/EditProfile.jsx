@@ -13,6 +13,7 @@ import { getProfilePhoto, extractPhotoUrls } from '../../utils/avatar';
 import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageFingerprint';
 import { StateSelectDropdown } from '../../components/UI/StateSelectDropdown';
 import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
+import { compareFaceBiometrics, analyzeLiveFaceStructure } from '../../utils/faceBiometrics';
 
 export const EditProfile = ({ onBack }) => {
   const { userProfile, setUserProfile, updateUserProfile, showAlert } = useApp();
@@ -36,23 +37,94 @@ export const EditProfile = ({ onBack }) => {
   const initialPrimaryPhotoRef = useRef(extractPhotoUrls(userProfile)?.[0] || userProfile?.photos?.[0] || null);
   const hasAlertedPrimaryChangeRef = useRef(false);
 
-  const checkAndNotifyPrimaryPhotoChange = (newPrimaryPhoto) => {
-    if (newPrimaryPhoto !== initialPrimaryPhotoRef.current) {
-      if (userProfile?.verified || localProfile?.verified) {
-        setLocalProfile(prev => ({ ...prev, verified: false }));
-        setUserProfile(prev => ({ ...prev, verified: false }));
+  const checkAndNotifyPrimaryPhotoChange = async (newPrimaryPhoto) => {
+    const referencePhoto = initialPrimaryPhotoRef.current;
 
-        if (!hasAlertedPrimaryChangeRef.current) {
-          hasAlertedPrimaryChangeRef.current = true;
-          const msg = 'Your primary profile photo was updated. To maintain community authenticity and safety, your verified badge has been reset. Please complete a quick face scan to re-verify your new photo.';
-          if (showAlert) {
-            showAlert({
-              title: 'Primary Photo Changed',
-              message: msg,
-            });
-          } else {
-            alert(msg);
+    // Case 1: No photo in slot 0 (all photos removed)
+    if (!newPrimaryPhoto) {
+      if (localProfile?.verified || userProfile?.verified) {
+        setLocalProfile(prev => ({ ...prev, verified: false }));
+        if (setUserProfile) setUserProfile(prev => ({ ...prev, verified: false }));
+        try {
+          localStorage.setItem('vh-user-verified', 'false');
+          localStorage.removeItem('vh-verification-completed');
+        } catch (_) {}
+      }
+      return;
+    }
+
+    // Case 2: Primary photo is unchanged
+    if (newPrimaryPhoto === referencePhoto) {
+      return;
+    }
+
+    // Case 3: Check if account was previously verified
+    const wasVerified = Boolean(
+      localProfile?.verified ||
+      userProfile?.verified ||
+      localStorage.getItem('vh-user-verified') === 'true'
+    );
+
+    if (wasVerified) {
+      if (referencePhoto) {
+        try {
+          // Check face structure in new photo (clarity, occlusion, lighting)
+          const structureCheck = await analyzeLiveFaceStructure(newPrimaryPhoto);
+          if (!structureCheck.isValid) {
+            setLocalProfile(prev => ({ ...prev, verified: false }));
+            if (setUserProfile) setUserProfile(prev => ({ ...prev, verified: false }));
+            try {
+              localStorage.setItem('vh-user-verified', 'false');
+              localStorage.removeItem('vh-verification-completed');
+            } catch (_) {}
+
+            if (!hasAlertedPrimaryChangeRef.current) {
+              hasAlertedPrimaryChangeRef.current = true;
+              const msg = structureCheck.reason || 'Your new primary photo does not show your face clearly.';
+              if (showAlert) {
+                showAlert({
+                  title: 'Photo Verification Needed',
+                  message: `${msg} Tap below to re-verify in 10 seconds.`,
+                  okText: 'Re-Verify (10s)',
+                  cancelText: 'Later',
+                  onConfirm: () => setIsVerifyModalOpen(true)
+                });
+              }
+            }
+            return;
           }
+
+          // Compare facial geometry with verified reference photo
+          const biometricMatch = await compareFaceBiometrics(newPrimaryPhoto, referencePhoto);
+          if (biometricMatch.isValid && !biometricMatch.isMismatch) {
+            console.log('[EditProfile] Biometric check passed: Face matched reference. Retaining verified badge.');
+            initialPrimaryPhotoRef.current = newPrimaryPhoto;
+            return;
+          }
+        } catch (bioErr) {
+          console.warn('[EditProfile] Biometric check fallback:', bioErr);
+        }
+      }
+
+      // Face mismatch or distinct person detected: pause verified badge and offer instant re-verification
+      setLocalProfile(prev => ({ ...prev, verified: false }));
+      if (setUserProfile) setUserProfile(prev => ({ ...prev, verified: false }));
+      try {
+        localStorage.setItem('vh-user-verified', 'false');
+        localStorage.removeItem('vh-verification-completed');
+      } catch (_) {}
+
+      if (!hasAlertedPrimaryChangeRef.current) {
+        hasAlertedPrimaryChangeRef.current = true;
+        const msg = 'Your primary profile photo was updated. To maintain community authenticity, your Verified Rosette is paused. Re-verify your new photo with a quick 10-second live scan to reactivate your badge.';
+        if (showAlert) {
+          showAlert({
+            title: 'Re-Verify Your New Photo',
+            message: msg,
+            okText: 'Re-Verify Now (10s)',
+            cancelText: 'Maybe Later',
+            onConfirm: () => setIsVerifyModalOpen(true)
+          });
         }
       }
     }
@@ -1136,7 +1208,14 @@ export const EditProfile = ({ onBack }) => {
         primaryPhotoUrl={localProfile.photos?.[0] || null}
         onVerified={() => {
           setLocalProfile(prev => ({ ...prev, verified: true }));
-          setUserProfile(prev => ({ ...prev, verified: true }));
+          if (setUserProfile) setUserProfile(prev => ({ ...prev, verified: true }));
+          initialPrimaryPhotoRef.current = localProfile.photos?.[0] || null;
+          hasAlertedPrimaryChangeRef.current = false;
+          try {
+            localStorage.setItem('vh-user-verified', 'true');
+            localStorage.setItem('vh-verification-completed', 'true');
+            localStorage.removeItem('vh_verification_snoozed_until');
+          } catch (_) {}
           setIsVerifyModalOpen(false);
         }}
       />
