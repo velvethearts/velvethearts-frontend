@@ -234,7 +234,8 @@ export const AppProvider = ({ children }) => {
             disabilityInfo: '',
             showDisability: false,
             photos: [],
-            isPaused: false
+            isPaused: false,
+            verified: false
         };
     });
 
@@ -462,7 +463,8 @@ export const AppProvider = ({ children }) => {
                     showDisability: profile.showDisability || false,
                     photos: profile.photos || [],
                     voiceIntroUrl: profile.voiceIntroUrl || null,
-                    sparkNote: profile.sparkNote || null
+                    sparkNote: profile.sparkNote || null,
+                    verified: Boolean(profile.verified ?? user.verified ?? data.verified ?? prev.verified ?? false)
                 };
                 try {
                     localStorage.setItem('vh-user-profile', JSON.stringify(next));

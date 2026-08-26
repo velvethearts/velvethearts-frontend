@@ -787,10 +787,16 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
 
       // 5. Update local profile state to verified
       if (setUserProfile) {
-        setUserProfile((prev) => ({
-          ...prev,
-          verified: true
-        }));
+        setUserProfile((prev) => {
+          const updated = {
+            ...prev,
+            verified: true
+          };
+          try {
+            localStorage.setItem('vh-user-profile', JSON.stringify(updated));
+          } catch (_) {}
+          return updated;
+        });
       }
 
       setStep('success');
