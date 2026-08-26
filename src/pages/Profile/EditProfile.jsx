@@ -13,6 +13,7 @@ import { getProfilePhoto, extractPhotoUrls } from '../../utils/avatar';
 import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageFingerprint';
 import { StateSelectDropdown } from '../../components/UI/StateSelectDropdown';
 import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
+import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 import { compareFaceBiometrics, analyzeLiveFaceStructure } from '../../utils/faceBiometrics';
 
 export const EditProfile = ({ onBack }) => {
@@ -503,18 +504,39 @@ export const EditProfile = ({ onBack }) => {
                     {localProfile.verified ? 'Verified Profile Badge Active ✓' : 'Verification Required for Primary Photo'}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                    {localProfile.verified ? 'Your primary photo matches your live biometric face scan.' : 'A live face scan is required to authenticate your primary photo.'}
+                    {localProfile.verified
+                      ? 'Your primary photo is authenticated against your live biometric face scan.'
+                      : 'A quick 10-second live face scan is required to earn your Verified Rosette badge.'}
                   </div>
                 </div>
               </div>
-              <Button
-                type="button"
-                variant={localProfile.verified ? 'secondary' : 'primary'}
-                size="sm"
-                onClick={() => setIsVerifyModalOpen(true)}
-              >
-                {localProfile.verified ? 'Re-verify' : 'Verify Now'}
-              </Button>
+              {!localProfile.verified ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setIsVerifyModalOpen(true)}
+                >
+                  Verify Now (10s)
+                </Button>
+              ) : (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: '#22C55E',
+                    background: 'rgba(34, 197, 94, 0.12)',
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <CheckCircle size={14} weight="bold" /> Active
+                </span>
+              )}
             </div>
           </div>
 
@@ -732,9 +754,10 @@ export const EditProfile = ({ onBack }) => {
               </div>
 
               <div className="preview-card-details">
-                <div className="preview-name-row">
+                <div className="preview-name-row" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                   <h2 className="preview-name font-display">{localProfile.name || 'Your Name'}</h2>
                   {getAge() ? <span className="preview-age font-ui">, {getAge()}</span> : null}
+                  {localProfile.verified && <VerifiedBadge variant="icon" size="md" />}
                 </div>
                 <p className="preview-location font-ui">{localProfile.city || 'Your City'}</p>
                 <div className="preview-intent-badge font-ui">{localProfile.relationshipIntent}</div>
