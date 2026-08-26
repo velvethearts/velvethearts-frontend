@@ -61,7 +61,7 @@ class ErrorBoundary extends Component {
             onClick={() => window.location.reload()}
             style={{ padding: '12px 28px', background: '#b8436a', color: '#ffffff', border: 'none', borderRadius: '24px', fontWeight: 'bold', fontSize: '0.95rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(184,67,106,0.3)' }}
           >
-            Reload Page ✨
+            Reload Page 🔄️
           </button>
         </div>
       );
@@ -127,19 +127,19 @@ function AppContent() {
     const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety'];
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
-    
+
     if (tabParam && validTabs.includes(tabParam)) {
       setActiveTab(tabParam);
       try {
         window.history.replaceState({}, '', '/');
-      } catch (_) {}
+      } catch (_) { }
     } else {
       const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
       if (cleanPath && validTabs.includes(cleanPath)) {
         setActiveTab(cleanPath);
         try {
           window.history.replaceState({}, '', '/');
-        } catch (_) {}
+        } catch (_) { }
       }
     }
   }, [setActiveTab]);
