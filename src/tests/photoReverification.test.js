@@ -2,16 +2,39 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   isSkinOrFacePixel,
+  rgbToYCbCr,
   computeSobelEdgeMagnitude,
   detectFacialOcclusion,
   detectImageBlur,
   detectLightingQuality,
-  detectHeadPoseAngle
+  detectHeadPoseAngle,
+  extractFaceBiometricDescriptor
 } from '../utils/faceBiometrics.js';
 
 describe('Photo Biometrics & Re-Verification Suite', () => {
 
   describe('1. Pixel & Edge Gradient Analysis', () => {
+    test('rgbToYCbCr converts RGB to skin-sensitive chrominance channels', () => {
+      const { y, cb, cr } = rgbToYCbCr(180, 130, 110);
+      assert.ok(y > 0 && y < 255);
+      assert.ok(cb > 0 && cb < 255);
+      assert.ok(cr > 0 && cr < 255);
+    });
+
+    test('extractFaceBiometricDescriptor creates 16 anatomical zone descriptors', () => {
+      const size = 100;
+      const faceData = new Uint8ClampedArray(size * size * 4);
+      // Fill simulated face data
+      for (let i = 0; i < faceData.length; i += 4) {
+        faceData[i] = 180;
+        faceData[i + 1] = 130;
+        faceData[i + 2] = 110;
+        faceData[i + 3] = 255;
+      }
+      const descriptors = extractFaceBiometricDescriptor(faceData, size);
+      assert.strictEqual(descriptors.length, 16);
+      assert.ok(typeof descriptors[0].avgCb === 'number');
+    });
     test('isSkinOrFacePixel accurately detects skin tone and rejects darkness', () => {
       // Dark/black pixel
       assert.strictEqual(isSkinOrFacePixel(5, 5, 5), false);
