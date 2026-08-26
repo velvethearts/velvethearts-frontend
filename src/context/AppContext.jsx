@@ -194,7 +194,17 @@ export const AppProvider = ({ children }) => {
 
 
     // --- Auth & Onboarding ---
-    const [authLoading, setAuthLoading] = useState(true); // true until session restoration completes
+    // Fast-path: Only show splash loader if a previous session exists in local storage
+    const [authLoading, setAuthLoading] = useState(() => {
+        try {
+            return Boolean(
+                localStorage.getItem('vh-firebase-token') ||
+                localStorage.getItem('vh-user-profile')
+            );
+        } catch {
+            return false;
+        }
+    });
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [phone, setPhone] = useState('');
     const [approvalStatus, setApprovalStatus] = useState('pending');
