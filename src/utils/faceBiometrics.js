@@ -55,38 +55,40 @@ export const computeSobelEdgeMagnitude = (data, w, h, x, y) => {
  * Facial Occlusion Detector (catches sunglasses, masks, covering hands)
  */
 export const detectFacialOcclusion = (data, size = 100) => {
-  let eyeSkin = 0;
-  let eyeTotal = 0;
-  let mouthSkin = 0;
-  let mouthTotal = 0;
+  let midFaceSkin = 0;
+  let midFaceTotal = 0;
+  let lowerFaceSkin = 0;
+  let lowerFaceTotal = 0;
 
-  for (let y = 20; y < 42; y += 2) {
-    for (let x = 24; x < 76; x += 2) {
+  // Mid-face / Eye sockets & cheekbones zone (y: 36..56) - avoids forehead hairline/bangs
+  for (let y = 36; y < 56; y += 2) {
+    for (let x = 26; x < 74; x += 2) {
       const idx = (y * size + x) * 4;
-      if (isSkinOrFacePixel(data[idx], data[idx + 1], data[idx + 2])) eyeSkin++;
-      eyeTotal++;
+      if (isSkinOrFacePixel(data[idx], data[idx + 1], data[idx + 2])) midFaceSkin++;
+      midFaceTotal++;
     }
   }
 
-  for (let y = 58; y < 86; y += 2) {
+  // Lower-face / Mouth & chin zone (y: 64..86)
+  for (let y = 64; y < 86; y += 2) {
     for (let x = 28; x < 72; x += 2) {
       const idx = (y * size + x) * 4;
-      if (isSkinOrFacePixel(data[idx], data[idx + 1], data[idx + 2])) mouthSkin++;
-      mouthTotal++;
+      if (isSkinOrFacePixel(data[idx], data[idx + 1], data[idx + 2])) lowerFaceSkin++;
+      lowerFaceTotal++;
     }
   }
 
-  const eyeRatio = eyeSkin / Math.max(1, eyeTotal);
-  const mouthRatio = mouthSkin / Math.max(1, mouthTotal);
+  const midFaceRatio = midFaceSkin / Math.max(1, midFaceTotal);
+  const lowerFaceRatio = lowerFaceSkin / Math.max(1, lowerFaceTotal);
 
-  if (eyeRatio < 0.08) {
+  if (midFaceRatio < 0.02) {
     return {
       isOccluded: true,
-      reason: 'Eyes are covered or obscured. Please remove sunglasses, tinted eyewear, or hats covering your eyes.'
+      reason: 'Eyes or mid-face are covered or obscured. Please remove sunglasses, tinted eyewear, or masks covering your eyes.'
     };
   }
 
-  if (mouthRatio < 0.06) {
+  if (lowerFaceRatio < 0.02) {
     return {
       isOccluded: true,
       reason: 'Lower face is covered or obscured. Please remove face masks and keep hands away from your face.'
