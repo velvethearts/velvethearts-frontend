@@ -363,6 +363,57 @@ export const extractFaceBiometricDescriptor = (imgData, size = 100) => {
 };
 
 /**
+ * Extracts 1D Horizontal & Vertical Gradient Projection Profiles
+ * Captures relative vertical positions of eyes, nose, mouth and jaw
+ */
+export const extractProjectionProfiles = (imgData, size = 100) => {
+  const vProj = new Float32Array(size);
+  const hProj = new Float32Array(size);
+  let vSum = 0;
+  let hSum = 0;
+
+  for (let y = 15; y < 85; y++) {
+    for (let x = 15; x < 85; x++) {
+      const mag = computeSobelEdgeMagnitude(imgData, size, size, x, y);
+      vProj[y] += mag;
+      hProj[x] += mag;
+      vSum += mag;
+      hSum += mag;
+    }
+  }
+
+  // Normalize projection distributions
+  if (vSum > 0) {
+    for (let i = 0; i < size; i++) vProj[i] /= vSum;
+  }
+  if (hSum > 0) {
+    for (let i = 0; i < size; i++) hProj[i] /= hSum;
+  }
+
+  return { vProj, hProj };
+};
+
+/**
+ * Computes Cosine Discrepancy between two normalized projection vectors
+ */
+export const computeVectorDiscrepancy = (vec1, vec2, start = 15, end = 85) => {
+  let dot = 0;
+  let norm1 = 0;
+  let norm2 = 0;
+
+  for (let i = start; i < end; i++) {
+    dot += vec1[i] * vec2[i];
+    norm1 += vec1[i] * vec1[i];
+    norm2 += vec2[i] * vec2[i];
+  }
+
+  const denom = Math.sqrt(norm1 * norm2);
+  if (denom === 0) return 0.5;
+  const cosineSim = dot / denom;
+  return Math.max(0, Math.min(1, 1 - cosineSim));
+};
+
+/**
  * High-Precision Biometric Anti-Catfish Face Comparison
  * Compares multi-zone descriptors, facial geometry, and structural cross-correlation
  */
@@ -417,7 +468,15 @@ export const compareFaceBiometrics = async (newPhotoSource, referencePhotoUrl) =
         const desc1 = extractFaceBiometricDescriptor(data1, size);
         const desc2 = extractFaceBiometricDescriptor(data2, size);
 
-        // 2. Compute Euclidean Zonal Discrepancy & Chrominance Difference
+        // 2. Extract Vertical and Horizontal Projection Morphometry
+        const prof1 = extractProjectionProfiles(data1, size);
+        const prof2 = extractProjectionProfiles(data2, size);
+
+        const vDiscrepancy = computeVectorDiscrepancy(prof1.vProj, prof2.vProj);
+        const hDiscrepancy = computeVectorDiscrepancy(prof1.hProj, prof2.hProj);
+        const morphometricDiscrepancy = (vDiscrepancy + hDiscrepancy) / 2;
+
+        // 3. Compute Euclidean Zonal Discrepancy & Chrominance Difference
         let totalZonalDiff = 0;
         let totalChrominanceDiff = 0;
         let totalStructuralAngleDiff = 0;
@@ -427,7 +486,7 @@ export const compareFaceBiometrics = async (newPhotoSource, referencePhotoUrl) =
           const d2 = desc2[i];
 
           // Texture magnitude difference (normalized)
-          const magDiff = Math.abs(d1.avgMag - d2.avgMag) / Math.max(20, d1.avgMag + d2.avgMag);
+          const magDiff = Math.abs(d1.avgMag - d2.avgMag) / Math.max(15, d1.avgMag + d2.avgMag);
           // Chrominance (Cb, Cr) distance in human skin spectrum
           const cbDiff = Math.abs(d1.avgCb - d2.avgCb) / 128;
           const crDiff = Math.abs(d1.avgCr - d2.avgCr) / 128;
@@ -444,21 +503,34 @@ export const compareFaceBiometrics = async (newPhotoSource, referencePhotoUrl) =
         const avgChromDiff = totalChrominanceDiff / desc1.length;
         const avgAngleDiff = totalStructuralAngleDiff / desc1.length;
 
-        // 3. Combined Facial Difference Metric [0 = identical, 1 = completely different]
+        // 4. Combined Facial Difference Metric [0 = identical, 1 = completely different]
         const compositeFaceDifference = (
-          avgZonalDiff * 0.45 +
-          avgChromDiff * 0.35 +
-          avgAngleDiff * 0.20
+          avgZonalDiff * 0.40 +
+          morphometricDiscrepancy * 0.35 +
+          avgAngleDiff * 0.15 +
+          avgChromDiff * 0.10
         );
 
         const similarityScore = Math.max(0, Math.min(1, 1.0 - compositeFaceDifference));
 
-        console.log('[BiometricVerification] Composite Face Difference:', compositeFaceDifference.toFixed(3), 'Similarity:', similarityScore.toFixed(3));
+        console.log(
+          '[BiometricVerification] Composite Face Difference:', compositeFaceDifference.toFixed(3),
+          'Zonal:', avgZonalDiff.toFixed(3),
+          'Morphometric:', morphometricDiscrepancy.toFixed(3),
+          'Similarity:', similarityScore.toFixed(3)
+        );
 
         // Strict Anti-Catfish Threshold:
-        // Different individuals typically exhibit composite difference > 0.35 (similarity < 0.65)
-        // Same person under varying lighting exhibits composite difference < 0.30 (similarity > 0.70)
-        if (compositeFaceDifference > 0.34 || similarityScore < 0.66) {
+        // Different individuals exhibit composite difference > 0.19 or morphometric shift > 0.12
+        // Same person under varying lighting exhibits composite difference <= 0.18
+        const isDifferentPerson = (
+          compositeFaceDifference > 0.19 ||
+          morphometricDiscrepancy > 0.13 ||
+          avgZonalDiff > 0.22 ||
+          similarityScore < 0.81
+        );
+
+        if (isDifferentPerson) {
           resolve({
             isValid: false,
             isMismatch: true,
