@@ -74,10 +74,25 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     }
 
     // 2. Quick Filters
-    if (activeQuickFilter === 'Near Me' && profile.city !== 'Mumbai') return false; // Mumbai is 'Near Me'
-    if (activeQuickFilter === 'New' && !profile.verified) return false; // Verified acts as new
+    if (activeQuickFilter === 'Near Me') {
+      const userCity = userProfile?.city;
+      if (userCity) {
+        const distInfo = profile.distanceKm != null
+          ? { distanceKm: profile.distanceKm }
+          : calculateStateDistance(userCity, profile.city);
+        if (distInfo.distanceKm > 450 && profile.city?.toLowerCase() !== userCity.toLowerCase()) {
+          return false;
+        }
+      }
+    }
 
-    // 3. Panel Filters
+    if (activeQuickFilter === 'New') {
+      if (profile.createdAt) {
+        const daysOld = (Date.now() - new Date(profile.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+        if (daysOld > 60) return false;
+      }
+    }
+
     const normalizeGender = (g) => {
       if (!g) return '';
       const str = g.toLowerCase().trim();
@@ -86,6 +101,24 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       return str;
     };
 
+    if (activeQuickFilter === 'Women') {
+      if (normalizeGender(profile.gender) !== 'woman') return false;
+    }
+
+    if (activeQuickFilter === 'Men') {
+      if (normalizeGender(profile.gender) !== 'man') return false;
+    }
+
+    if (activeQuickFilter === 'Non-Binary') {
+      const g = normalizeGender(profile.gender);
+      if (g === 'woman' || g === 'man') return false;
+    }
+
+    if (activeQuickFilter === 'Verified Only') {
+      if (!profile.verified) return false;
+    }
+
+    // 3. Panel Filters
     if (filters.gender && filters.gender !== 'All') {
       const targetG = normalizeGender(filters.gender);
       const profG = normalizeGender(profile.gender);
@@ -113,7 +146,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     }
 
     // Enforce Distance filter bounds
-    if (filters.distanceMax) {
+    if (filters.distanceMax && filters.distanceMax < 2500) {
       const distInfo = profile.distanceKm != null
         ? { distanceKm: profile.distanceKm }
         : calculateStateDistance(userProfile?.city, profile.city);
@@ -140,7 +173,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
   // Apply sorting to filtered profiles
   const sortedProfiles = [...filteredProfiles].sort((a, b) => {
-    const currentSort = filters.sortBy || 'default';
+    const currentSort = activeQuickFilter === 'New' ? 'newest' : (filters.sortBy || 'default');
     if (currentSort === 'newest') {
       const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -166,8 +199,9 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       city: '',
       ageMin: 18,
       ageMax: 60,
-      distanceMax: 50,
-      sortBy: 'default'
+      distanceMax: 2500,
+      sortBy: 'default',
+      verifiedOnly: false
     });
   };
 
@@ -177,7 +211,8 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     Boolean(filters.city) ||
     (filters.ageMin && filters.ageMin > 18) ||
     (filters.ageMax && filters.ageMax < 60) ||
-    (filters.distanceMax && filters.distanceMax < 50) ||
+    (filters.distanceMax && filters.distanceMax < 2500) ||
+    Boolean(filters.verifiedOnly);
     (filters.sortBy && filters.sortBy !== 'default');
 
   return (
@@ -256,7 +291,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
       {/* Quick Filters Horizontal Row */}
       <div className="quick-filters-row" role="tablist" aria-label="Quick discovery filters">
-        {['All', 'Near Me', 'New'].map(f => (
+        {['All', 'Near Me', 'New', 'Women', 'Men', 'Non-Binary', 'Verified Only'].map(f => (
           <button
             key={f}
             role="tab"
