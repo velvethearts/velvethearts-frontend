@@ -160,6 +160,21 @@ export const EditProfile = ({ onBack }) => {
   const lastSavedProfileRef = useRef(getNormalizedProfileString(localProfile));
   latestLocalProfile.current = localProfile;
 
+  const getAge = () => {
+    const year = Number(localProfile.dobYear) || Number(userProfile?.dobYear);
+    if (!year) return '';
+    const day = Number(localProfile.dobDay) || Number(userProfile?.dobDay) || 1;
+    const month = Number(localProfile.dobMonth) || Number(userProfile?.dobMonth) || 1;
+    const today = new Date();
+    const birthDate = new Date(year, month - 1, day);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age > 0 ? age : (new Date().getFullYear() - year);
+  };
+
   const handleFieldChange = (field, value) => {
     setLocalProfile((prev) => ({ ...prev, [field]: value }));
   };
@@ -719,7 +734,7 @@ export const EditProfile = ({ onBack }) => {
               <div className="preview-card-details">
                 <div className="preview-name-row">
                   <h2 className="preview-name font-display">{localProfile.name || 'Your Name'}</h2>
-                  <span className="preview-age font-ui">, {getAge()}</span>
+                  {getAge() ? <span className="preview-age font-ui">, {getAge()}</span> : null}
                 </div>
                 <p className="preview-location font-ui">{localProfile.city || 'Your City'}</p>
                 <div className="preview-intent-badge font-ui">{localProfile.relationshipIntent}</div>
