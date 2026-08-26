@@ -38,7 +38,7 @@ export const EditProfile = ({ onBack }) => {
   const initialPrimaryPhotoRef = useRef(extractPhotoUrls(userProfile)?.[0] || userProfile?.photos?.[0] || null);
   const hasAlertedPrimaryChangeRef = useRef(false);
 
-  const checkAndNotifyPrimaryPhotoChange = async (newPrimaryPhoto) => {
+  const checkAndNotifyPrimaryPhotoChange = (newPrimaryPhoto) => {
     const referencePhoto = initialPrimaryPhotoRef.current;
 
     // Case 1: No photo in slot 0 (all photos removed)
@@ -59,74 +59,25 @@ export const EditProfile = ({ onBack }) => {
       return;
     }
 
-    // Case 3: Check if account was previously verified
-    const wasVerified = Boolean(
-      localProfile?.verified ||
-      userProfile?.verified ||
-      localStorage.getItem('vh-user-verified') === 'true'
-    );
+    // Case 3: Primary photo has changed to a new image -> reset verified status to protect against catfishing
+    setLocalProfile(prev => ({ ...prev, verified: false }));
+    if (setUserProfile) setUserProfile(prev => ({ ...prev, verified: false }));
+    try {
+      localStorage.setItem('vh-user-verified', 'false');
+      localStorage.removeItem('vh-verification-completed');
+    } catch (_) {}
 
-    if (wasVerified) {
-      if (referencePhoto) {
-        try {
-          // Check face structure in new photo (clarity, occlusion, lighting)
-          const structureCheck = await analyzeLiveFaceStructure(newPrimaryPhoto);
-          if (!structureCheck.isValid) {
-            setLocalProfile(prev => ({ ...prev, verified: false }));
-            if (setUserProfile) setUserProfile(prev => ({ ...prev, verified: false }));
-            try {
-              localStorage.setItem('vh-user-verified', 'false');
-              localStorage.removeItem('vh-verification-completed');
-            } catch (_) {}
-
-            if (!hasAlertedPrimaryChangeRef.current) {
-              hasAlertedPrimaryChangeRef.current = true;
-              const msg = structureCheck.reason || 'Your new primary photo does not show your face clearly.';
-              if (showAlert) {
-                showAlert({
-                  title: 'Photo Verification Needed',
-                  message: `${msg} Tap below to re-verify in 10 seconds.`,
-                  okText: 'Re-Verify (10s)',
-                  cancelText: 'Later',
-                  onConfirm: () => setIsVerifyModalOpen(true)
-                });
-              }
-            }
-            return;
-          }
-
-          // Compare facial geometry with verified reference photo
-          const biometricMatch = await compareFaceBiometrics(newPrimaryPhoto, referencePhoto);
-          if (biometricMatch.isValid && !biometricMatch.isMismatch) {
-            console.log('[EditProfile] Biometric check passed: Face matched reference. Retaining verified badge.');
-            initialPrimaryPhotoRef.current = newPrimaryPhoto;
-            return;
-          }
-        } catch (bioErr) {
-          console.warn('[EditProfile] Biometric check fallback:', bioErr);
-        }
-      }
-
-      // Face mismatch or distinct person detected: pause verified badge and offer instant re-verification
-      setLocalProfile(prev => ({ ...prev, verified: false }));
-      if (setUserProfile) setUserProfile(prev => ({ ...prev, verified: false }));
-      try {
-        localStorage.setItem('vh-user-verified', 'false');
-        localStorage.removeItem('vh-verification-completed');
-      } catch (_) {}
-
-      if (!hasAlertedPrimaryChangeRef.current) {
-        hasAlertedPrimaryChangeRef.current = true;
-        const msg = 'Your primary profile photo was updated. To maintain community authenticity, your Verified Rosette is paused. Re-verify your new photo with a quick 10-second live scan to reactivate your badge.';
-        if (showAlert) {
-          showAlert({
-            title: 'Re-Verify Your New Photo',
-            message: msg,
-            okText: 'Re-Verify Now (10s)',
-            cancelText: 'Maybe Later',
-            onConfirm: () => setIsVerifyModalOpen(true)
-          });
-        }
+    if (!hasAlertedPrimaryChangeRef.current) {
+      hasAlertedPrimaryChangeRef.current = true;
+      const msg = 'Your primary profile photo was updated. To maintain profile authenticity, your Verified Badge is paused. Please complete a quick 10-second live face scan to authenticate your new photo.';
+      if (showAlert) {
+        showAlert({
+          title: 'Primary Photo Changed',
+          message: msg,
+          okText: 'Verify Now (10s)',
+          cancelText: 'Maybe Later',
+          onConfirm: () => setIsVerifyModalOpen(true)
+        });
       }
     }
   };
@@ -372,10 +323,15 @@ export const EditProfile = ({ onBack }) => {
       }
 
       setUploadProgress({ index, percent: 100 });
+      const isPrimaryUpload = (index === 0 && finalUrl !== initialPrimaryPhotoRef.current);
       setLocalProfile(prev => {
         const nextPhotos = [...(prev.photos || [])];
         nextPhotos[index] = finalUrl;
-        return { ...prev, photos: nextPhotos };
+        return {
+          ...prev,
+          photos: nextPhotos,
+          verified: isPrimaryUpload ? false : prev.verified
+        };
       });
 
       if (index === 0) {
@@ -399,10 +355,15 @@ export const EditProfile = ({ onBack }) => {
   const handleDeletePhoto = (index) => {
     setLocalProfile(prev => {
       const nextPhotos = (prev.photos || []).filter((_, i) => i !== index);
+      const isPrimaryChange = (index === 0 && nextPhotos[0] !== initialPrimaryPhotoRef.current);
       if (index === 0) {
         checkAndNotifyPrimaryPhotoChange(nextPhotos[0] || null);
       }
-      return { ...prev, photos: nextPhotos };
+      return {
+        ...prev,
+        photos: nextPhotos,
+        verified: isPrimaryChange ? false : prev.verified
+      };
     });
   };
 
@@ -415,10 +376,15 @@ export const EditProfile = ({ onBack }) => {
       const temp = nextPhotos[index];
       nextPhotos[index] = nextPhotos[newIndex];
       nextPhotos[newIndex] = temp;
+      const isPrimaryChange = (index === 0 || newIndex === 0) && (nextPhotos[0] !== initialPrimaryPhotoRef.current);
       if (index === 0 || newIndex === 0) {
         checkAndNotifyPrimaryPhotoChange(nextPhotos[0]);
       }
-      return { ...prev, photos: nextPhotos };
+      return {
+        ...prev,
+        photos: nextPhotos,
+        verified: isPrimaryChange ? false : prev.verified
+      };
     });
   };
 

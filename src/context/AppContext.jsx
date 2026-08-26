@@ -1394,6 +1394,13 @@ export const AppProvider = ({ children }) => {
             const next = { ...prev, ...profileData };
             try {
                 localStorage.setItem('vh-user-profile', JSON.stringify(next));
+                if (next.verified === false) {
+                    localStorage.setItem('vh-user-verified', 'false');
+                    localStorage.removeItem('vh-verification-completed');
+                } else if (next.verified === true) {
+                    localStorage.setItem('vh-user-verified', 'true');
+                    localStorage.setItem('vh-verification-completed', 'true');
+                }
             } catch (_) { }
             return next;
         });
@@ -1402,7 +1409,13 @@ export const AppProvider = ({ children }) => {
             try {
                 const saved = await api.saveProfile(profileData);
                 if (saved) {
-                    hydrateFromProfile(saved);
+                    setUserProfile(prev => {
+                        const merged = { ...prev, ...saved };
+                        try {
+                            localStorage.setItem('vh-user-profile', JSON.stringify(merged));
+                        } catch (_) {}
+                        return merged;
+                    });
                 }
             } catch (err) {
                 console.error('Failed to save profile updates to backend:', err);
