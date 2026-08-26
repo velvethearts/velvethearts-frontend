@@ -341,7 +341,14 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
       {/* Story Ring Carousel with Instagram-style Spark Notes */}
       {activeConnections.length > 0 && (
         <div className="recent-matches-carousel-wrap">
-          <div className="recent-matches-row">
+          <div
+            className="recent-matches-row"
+            onWheel={(e) => {
+              if (e.deltaY !== 0 && Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
+                e.currentTarget.scrollLeft += e.deltaY;
+              }
+            }}
+          >
             {/* User's Own Spark Note Tile */}
             <div className="spark-card-item-wrap own-spark-note-card">
               <button
@@ -1252,6 +1259,8 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         /* Recent Sparks Story Carousel */
         .recent-matches-carousel-wrap {
+          position: relative;
+          width: 100%;
           margin-bottom: var(--space-6);
         }
 
@@ -1266,19 +1275,31 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
 
         .recent-matches-row {
           display: flex;
+          align-items: flex-start;
           gap: var(--space-5);
           overflow-x: auto;
-          padding: 38px 16px 12px 16px;
+          overflow-y: visible;
+          padding: 38px 16px 14px 16px;
           margin: 0 -16px;
-          scrollbar-width: none;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE and Edge */
+          -webkit-overflow-scrolling: touch; /* iOS Safari smooth inertia */
+          scroll-behavior: smooth;
         }
 
         .recent-matches-row::-webkit-scrollbar {
-          display: none;
+          display: none; /* Chrome, Safari, Opera */
+          width: 0;
+          height: 0;
         }
 
         .spark-card-item-wrap {
           position: relative;
+          flex: 0 0 auto;
+          flex-shrink: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .story-highlight-circle {
