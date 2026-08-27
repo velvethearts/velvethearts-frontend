@@ -6,8 +6,24 @@ Allow: /
 Disallow: /api/
 Disallow: /assets/
 
-# Crawl politely
-Crawl-delay: 1
+# Allow major search engines and AI grounding crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
 
 # Canonical host
 Host: https://www.velvethearts.in
