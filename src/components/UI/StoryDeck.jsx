@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useApp } from '../../context/AppContext';
 import { computeVibeMatch } from '../../utils/vibe';
 import {
   Heart,
@@ -18,7 +19,6 @@ import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 import { PromptReactionModal } from './PromptReactionModal';
 import { ProtectedImage } from './ProtectedImage';
 import { VerifiedBadge } from './VerifiedBadge';
-import { useApp } from '../../context/AppContext';
 
 export const StoryDeck = ({
   profiles = [],
@@ -33,16 +33,6 @@ export const StoryDeck = ({
   onSaveProfile,
   onSelectProfile,
 }) => {
-  const { onlineUserIds } = useApp?.() || {};
-
-  const isProfileOnline = (p) => Boolean(
-    p && onlineUserIds && (
-      onlineUserIds.has(p.userId) || 
-      onlineUserIds.has(p.id) || 
-      p.isOnline === true
-    )
-  );
-
   const currentIndex = 0;
   const [swipeHistory, setSwipeHistory] = useState([]); // Undo stack
   const [photoIndices, setPhotoIndices] = useState({}); // photo index per profile id
@@ -62,6 +52,21 @@ export const StoryDeck = ({
   const dragStartRef = useRef({ x: 0, y: 0 });
 
   const activeProfile = profiles[currentIndex] || null;
+
+  const { onlineUserIds } = useApp?.() || {};
+
+  const isProfileOnline = (p) => {
+    if (!p) return false;
+    if (p.isOnline === true) return true;
+    if (!onlineUserIds) return false;
+    return Boolean(
+      (p.userId && (onlineUserIds.has(p.userId) || onlineUserIds.has(String(p.userId)))) ||
+      (p.id && (onlineUserIds.has(p.id) || onlineUserIds.has(String(p.id)))) ||
+      (p._id && (onlineUserIds.has(p._id) || onlineUserIds.has(String(p._id))))
+    );
+  };
+
+  const isOnline = isProfileOnline(activeProfile);
 
   const vibeScore = computeVibeMatch(userProfile, activeProfile);
 
@@ -435,7 +440,7 @@ export const StoryDeck = ({
 
         {/* Bottom Content Overlay */}
         <div className="story-card-overlay-content">
-          {/* Status Pill (Likes You, Active Now, Distance/Location, or New Face) */}
+          {/* Status Pill with Smart Fallback: Likes You -> Near Me -> New Face -> Active (if actually online) -> City/Location -> Clean/None */}
           {activeProfile.likesYou ? (
             <div
               className="story-status-pill pill-likes-you font-ui"
@@ -454,12 +459,7 @@ export const StoryDeck = ({
               <span>🫶 Likes You</span>
               <CaretRight size={12} weight="bold" />
             </div>
-          ) : isProfileOnline(activeProfile) ? (
-            <div className="story-status-pill pill-active font-ui" title="Online right now">
-              <span className="pulsing-green-dot" />
-              <span>Active Now</span>
-            </div>
-          ) : feedMode === 'near_me' || activeProfile._computedDistanceText ? (
+          ) : feedMode === 'near_me' ? (
             <div className="story-status-pill pill-near-me font-ui">
               <span className="pulsing-location-dot" />
               <span>{activeProfile._computedDistanceText || activeProfile.distance || (activeProfile.city ? `📍 ${activeProfile.city}` : '📍 Nearby')}</span>
@@ -469,9 +469,15 @@ export const StoryDeck = ({
               <Sparkle size={12} weight="fill" color="#B8436A" />
               <span>New Face</span>
             </div>
-          ) : activeProfile.city ? (
+          ) : isOnline ? (
+            <div className="story-status-pill pill-active font-ui">
+              <span className="pulsing-green-dot" />
+              <span>Active</span>
+            </div>
+          ) : (activeProfile._computedDistanceText || activeProfile.city || activeProfile.location) ? (
             <div className="story-status-pill pill-near-me font-ui">
-              <span>📍 {activeProfile.city}</span>
+              <span className="pulsing-location-dot" />
+              <span>{activeProfile._computedDistanceText || (activeProfile.city ? `📍 ${activeProfile.city}` : `📍 ${activeProfile.location}`)}</span>
             </div>
           ) : null}
 

@@ -20,16 +20,20 @@ export const ProfileCard = ({
   className = ''
 }) => {
   const { userProfile, onlineUserIds } = useApp();
-  const isOnline = Boolean(
-    onlineUserIds && (
-      onlineUserIds.has(profile.userId) ||
-      onlineUserIds.has(profile.id) ||
-      profile.isOnline === true
-    )
-  );
   const [showDropdown, setShowDropdown] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const dropdownRef = useRef(null);
+
+  const isOnline = Boolean(
+    profile && (
+      profile.isOnline === true ||
+      (onlineUserIds && (
+        (profile.userId && (onlineUserIds.has(profile.userId) || onlineUserIds.has(String(profile.userId)))) ||
+        (profile.id && (onlineUserIds.has(profile.id) || onlineUserIds.has(String(profile.id)))) ||
+        (profile._id && (onlineUserIds.has(profile._id) || onlineUserIds.has(String(profile._id))))
+      ))
+    )
+  );
 
   const vibeScore = computeVibeMatch(userProfile, profile);
 
@@ -107,8 +111,8 @@ export const ProfileCard = ({
   };
 
   return (
-    <div 
-      className={`vh-profile-card ${className}`} 
+    <div
+      className={`vh-profile-card ${className}`}
       onClick={onClick}
       role="article"
       tabIndex={0}
@@ -119,7 +123,7 @@ export const ProfileCard = ({
         }
       }}
     >
-      <div 
+      <div
         className="profile-img-wrap"
         onTouchStart={handlePhotoTouchStart}
         onTouchEnd={handlePhotoTouchEnd}
@@ -128,14 +132,14 @@ export const ProfileCard = ({
         onClick={handlePhotoClick}
       >
         <ProtectedImage
-            src={photosList[currentPhotoIndex] || getDefaultAvatar(profile?.gender)}
-            alt={`Photo ${currentPhotoIndex + 1} of ${profile.name}`}
-            className="profile-card-image-protected"
-            imgClassName="profile-card-image"
-            style={{ width: '100%', height: '100%' }}
-            fetchpriority={currentPhotoIndex === 0 ? "high" : "auto"}
-            decoding="async"
-            fallbackSrc={getDefaultAvatar(profile?.gender)}
+          src={photosList[currentPhotoIndex] || getDefaultAvatar(profile?.gender)}
+          alt={`Photo ${currentPhotoIndex + 1} of ${profile.name}`}
+          className="profile-card-image-protected"
+          imgClassName="profile-card-image"
+          style={{ width: '100%', height: '100%' }}
+          fetchpriority={currentPhotoIndex === 0 ? "high" : "auto"}
+          decoding="async"
+          fallbackSrc={getDefaultAvatar(profile?.gender)}
         />
 
         {/* Photo Navigation Indicators */}
@@ -178,7 +182,7 @@ export const ProfileCard = ({
             )}
           </>
         )}
-        
+
         {/* Badges: Near Me distance, New Face, or Premium */}
         {feedMode === 'near_me' ? (
           <div className="profile-badge-row font-ui">
@@ -200,7 +204,7 @@ export const ProfileCard = ({
 
         {/* Dropdown Options */}
         <div className="profile-card-options-wrap" ref={dropdownRef}>
-          <button 
+          <button
             type="button"
             onClick={toggleDropdown}
             className="profile-card-options-btn"
@@ -212,7 +216,7 @@ export const ProfileCard = ({
           </button>
           {showDropdown && (
             <div className="profile-card-dropdown" role="menu">
-              <button 
+              <button
                 role="menuitem"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -224,7 +228,7 @@ export const ProfileCard = ({
                 <Bookmark size={16} weight={isSaved ? 'fill' : 'regular'} />
                 <span>{isSaved ? 'Saved Profile' : 'Save Profile'}</span>
               </button>
-              <button 
+              <button
                 role="menuitem"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -236,7 +240,7 @@ export const ProfileCard = ({
                 <Prohibit size={16} />
                 <span>Remove Profile</span>
               </button>
-              <button 
+              <button
                 role="menuitem"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -254,35 +258,42 @@ export const ProfileCard = ({
       </div>
 
       <div className="profile-card-details">
-        {/* Status pill (Likes You, Active Now, Distance/Location, or New Face) */}
-        {(profile.likesYou || isOnline || feedMode === 'near_me' || feedMode === 'new_faces' || profile.city) && (
+        {/* Status pill with Smart Fallback: Likes You -> Near Me -> New Face -> Active (if online) -> City/Location -> Clean/None */}
+        {profile?.likesYou ? (
           <div className="card-status-row">
-            {profile.likesYou ? (
-              <span className="card-status-pill pill-likes-you font-ui">
-                <span>🫶 Likes You</span>
-              </span>
-            ) : isOnline ? (
-              <span className="card-status-pill pill-active font-ui">
-                <span className="pulsing-green-dot" />
-                <span>Active Now</span>
-              </span>
-            ) : feedMode === 'near_me' ? (
-              <span className="card-status-pill pill-near-me font-ui">
-                <span className="pulsing-location-dot" />
-                <span>{profile._computedDistanceText || profile.distance || (profile.city ? `📍 ${profile.city}` : '📍 Nearby')}</span>
-              </span>
-            ) : feedMode === 'new_faces' ? (
-              <span className="card-status-pill pill-new-face font-ui">
-                <Sparkle size={11} weight="fill" color="#B8436A" />
-                <span>New Face</span>
-              </span>
-            ) : profile.city ? (
-              <span className="card-status-pill pill-near-me font-ui">
-                <span>📍 {profile.city}</span>
-              </span>
-            ) : null}
+            <span className="card-status-pill pill-likes-you font-ui">
+              <span>🫶 Likes You</span>
+            </span>
           </div>
-        )}
+        ) : feedMode === 'near_me' ? (
+          <div className="card-status-row">
+            <span className="card-status-pill pill-near-me font-ui">
+              <span className="pulsing-location-dot" />
+              <span>{profile._computedDistanceText || profile.distance || (profile.city ? `📍 ${profile.city}` : '📍 Nearby')}</span>
+            </span>
+          </div>
+        ) : feedMode === 'new_faces' ? (
+          <div className="card-status-row">
+            <span className="card-status-pill pill-new-face font-ui">
+              <Sparkle size={11} weight="fill" color="#B8436A" />
+              <span>New Face</span>
+            </span>
+          </div>
+        ) : isOnline ? (
+          <div className="card-status-row">
+            <span className="card-status-pill pill-active font-ui">
+              <span className="pulsing-green-dot" />
+              <span>Active</span>
+            </span>
+          </div>
+        ) : (profile?._computedDistanceText || profile?.city || profile?.location) ? (
+          <div className="card-status-row">
+            <span className="card-status-pill pill-near-me font-ui">
+              <span className="pulsing-location-dot" />
+              <span>{profile._computedDistanceText || (profile.city ? `📍 ${profile.city}` : `📍 ${profile.location}`)}</span>
+            </span>
+          </div>
+        ) : null}
 
         <div className="card-name-row">
           <div className="card-name-left">
@@ -345,7 +356,7 @@ export const ProfileCard = ({
         )}
 
         <div className="card-footer-action">
-          <button 
+          <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
@@ -647,18 +658,39 @@ export const ProfileCard = ({
           margin-bottom: 2px;
         }
 
-        .card-status-pill.pill-active {
+        .card-status-pill {
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          background: rgba(255, 255, 255, 0.95);
-          color: #111827;
-          padding: 2.5px 8px;
           border-radius: 999px;
           font-size: 11px;
           font-weight: 700;
           letter-spacing: 0.02em;
+        }
+
+        .card-status-pill.pill-active,
+        .card-status-pill.pill-near-me,
+        .card-status-pill.pill-new-face {
+          background: rgba(255, 255, 255, 0.95);
+          color: #111827;
+          padding: 2.5px 8px;
           box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-status-pill.pill-likes-you {
+          background: #F59E0B;
+          color: #181102;
+          padding: 2.5px 8px;
+          box-shadow: 0 1px 4px rgba(245, 158, 11, 0.3);
+        }
+
+        .pulsing-location-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #B8436A;
+          box-shadow: 0 0 6px #B8436A;
+          animation: pulseEmerald 1.8s infinite;
         }
 
         .pulsing-green-dot {
