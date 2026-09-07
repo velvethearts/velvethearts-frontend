@@ -15,6 +15,7 @@ import { connectSocket, disconnectSocket, emitMarkSeen, getSocket } from '../lib
 import { registerPushNotifications } from '../lib/pushManager';
 import { ConfirmModal } from '../components/UI/ConfirmModal';
 import { Clock } from '@phosphor-icons/react';
+import { findNearestStateOrCity } from '../constants/indiaLocations';
 const AppContext = createContext();
 const CHAT_CLEARS_STORAGE_KEY = 'vh-cleared-chats';
 const BOOST_STORAGE_KEY = 'vh_profile_boost_state';
@@ -411,6 +412,97 @@ export const AppProvider = ({ children }) => {
     const removeToast = useCallback((id) => {
         setToastNotifications(prev => prev.filter(t => t.id !== id));
     }, []);
+
+    // ─── Live User Geolocation ──────────────────────────────────────────
+    const [userLocation, setUserLocation] = useState(() => {
+        try {
+            const saved = localStorage.getItem('vh-user-location');
+            return saved ? JSON.parse(saved) : null;
+        } catch {
+            return null;
+        }
+    });
+    const [isLocationLoading, setIsLocationLoading] = useState(false);
+    const [locationPermission, setLocationPermission] = useState(() => {
+        try {
+            return localStorage.getItem('vh-location-permission') || 'prompt';
+        } catch {
+            return 'prompt';
+        }
+    });
+
+    const requestUserLocation = useCallback(async ({ silent = false } = {}) => {
+        if (!navigator.geolocation) {
+            if (!silent) {
+                addToast({
+                    title: 'Location Unsupported',
+                    message: 'Geolocation is not supported by your current browser.',
+                    type: 'warning'
+                });
+            }
+            return null;
+        }
+
+        setIsLocationLoading(true);
+        return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const coords = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                    };
+                    const nearest = findNearestStateOrCity(coords.lat, coords.lng);
+                    const locationData = {
+                        coords,
+                        detectedCity: nearest?.name || null,
+                        timestamp: Date.now()
+                    };
+                    setUserLocation(locationData);
+                    setLocationPermission('granted');
+                    setIsLocationLoading(false);
+
+                    try {
+                        localStorage.setItem('vh-user-location', JSON.stringify(locationData));
+                        localStorage.setItem('vh-location-permission', 'granted');
+                    } catch (e) {}
+
+                    if (!silent) {
+                        addToast({
+                            title: '📍 Live GPS Enabled',
+                            message: `Showing matches near ${nearest?.name || 'your location'}!`,
+                            type: 'success'
+                        });
+                    }
+                    resolve(locationData);
+                },
+                (error) => {
+                    setIsLocationLoading(false);
+                    setLocationPermission('denied');
+                    try {
+                        localStorage.setItem('vh-location-permission', 'denied');
+                    } catch (e) {}
+
+                    if (!silent) {
+                        const isPermissionDenied = error.code === error.PERMISSION_DENIED;
+                        addToast({
+                            title: isPermissionDenied ? 'Location Permission Denied' : 'Location Unavailable',
+                            message: isPermissionDenied
+                                ? 'Please allow location in browser settings to calculate exact distance.'
+                                : 'Could not acquire GPS position. Using your profile city instead.',
+                            type: 'info'
+                        });
+                    }
+                    resolve(null);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        });
+    }, [addToast]);
 
     // ─── Global Spotlight Boost Background Watcher ─────────────────────
     useEffect(() => {
@@ -2353,7 +2445,13 @@ export const AppProvider = ({ children }) => {
             showConfirm,
             showAlert,
             isPaused,
-            pauseProfile
+            pauseProfile,
+            // Live Geolocation
+            userLocation,
+            setUserLocation,
+            isLocationLoading,
+            locationPermission,
+            requestUserLocation
         }}>
             {children}
             <ConfirmModal

@@ -130,7 +130,7 @@ export function getStateInfo(stateName) {
 /**
  * Calculates Haversine distance in kilometers between two geo-coordinates
  */
-function haversineDistance(lat1, lon1, lat2, lon2) {
+export function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -141,7 +141,85 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c);
+  return R * c;
+}
+
+/**
+ * Finds the closest Indian state or city from dataset to a given GPS coordinate
+ */
+export function findNearestStateOrCity(lat, lng) {
+  if (lat == null || lng == null) return null;
+  let minDistance = Infinity;
+  let nearest = null;
+
+  for (const state of INDIAN_STATES) {
+    const d = haversineDistance(lat, lng, state.lat, state.lng);
+    if (d < minDistance) {
+      minDistance = d;
+      nearest = state;
+    }
+  }
+
+  return nearest;
+}
+
+/**
+ * Calculates distance from user's live GPS coordinates to target profile or city
+ * @param {{ lat: number, lng: number }} userGps
+ * @param {{ lat?: number, lng?: number, coordinates?: { lat: number, lng: number }, city?: string, location?: string } | string} target
+ * @returns {{ distanceKm: number, formatted: string, isLiveGps: boolean } | null}
+ */
+export function calculateGpsDistance(userGps, target) {
+  if (!userGps || userGps.lat == null || userGps.lng == null || !target) {
+    return null;
+  }
+
+  let targetLat = null;
+  let targetLng = null;
+
+  if (typeof target === 'string') {
+    const info = getStateInfo(target);
+    if (info) {
+      targetLat = info.lat;
+      targetLng = info.lng;
+    }
+  } else if (typeof target === 'object') {
+    if (target.lat != null && target.lng != null) {
+      targetLat = target.lat;
+      targetLng = target.lng;
+    } else if (target.coordinates?.lat != null && target.coordinates?.lng != null) {
+      targetLat = target.coordinates.lat;
+      targetLng = target.coordinates.lng;
+    } else if (target.city || target.location) {
+      const info = getStateInfo(target.city || target.location);
+      if (info) {
+        targetLat = info.lat;
+        targetLng = info.lng;
+      }
+    }
+  }
+
+  if (targetLat == null || targetLng == null) {
+    return null;
+  }
+
+  const rawKm = haversineDistance(userGps.lat, userGps.lng, targetLat, targetLng);
+  const distanceKm = Math.round(rawKm * 10) / 10;
+
+  let formatted = '';
+  if (distanceKm < 1) {
+    formatted = '< 1 km away';
+  } else if (distanceKm < 10) {
+    formatted = `${distanceKm.toFixed(1)} km away`;
+  } else {
+    formatted = `${Math.round(distanceKm)} km away`;
+  }
+
+  return {
+    distanceKm,
+    formatted,
+    isLiveGps: true
+  };
 }
 
 /**
@@ -172,7 +250,7 @@ export function calculateStateDistance(stateA, stateB) {
   }
 
   // Different States: Calculate Haversine geodesic distance
-  const km = haversineDistance(sA.lat, sA.lng, sB.lat, sB.lng);
+  const km = Math.round(haversineDistance(sA.lat, sA.lng, sB.lat, sB.lng));
   return {
     distanceKm: km,
     formatted: `${km} km away`,

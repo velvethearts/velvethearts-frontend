@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sliders, MagnifyingGlass, X, HeartBreak, Cards, SquaresFour, Lightning, Sparkle, Clock } from '@phosphor-icons/react';
+import { Sliders, MagnifyingGlass, X, HeartBreak, Cards, SquaresFour, Lightning, Sparkle, Clock, NavigationArrow } from '@phosphor-icons/react';
 import { DiscoverPreferences } from './DiscoverPreferences';
 import { ProfileCard } from '../../components/UI/ProfileCard';
 import { StoryDeck } from '../../components/UI/StoryDeck';
@@ -8,7 +8,7 @@ import { SpotlightBoostModal } from '../../components/UI/SpotlightBoostModal';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { StoryDeckSkeleton, GridCardSkeleton } from '../../components/UI/Skeleton';
-import { calculateStateDistance } from '../../constants/indiaLocations';
+import { calculateStateDistance, calculateGpsDistance } from '../../constants/indiaLocations';
 import { triggerHaptic } from '../../utils/haptics';
 
 const BOOST_STORAGE_KEY = 'vh_profile_boost_state';
@@ -50,7 +50,10 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     setPassedProfileIds,
     passProfile,
     unpassProfile,
-    showAlert
+    showAlert,
+    userLocation,
+    requestUserLocation,
+    isLocationLoading
   } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -338,45 +341,64 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     return (b.profileCompletion || 80) - (a.profileCompletion || 80);
   });
 
-  // Apply Feed Mode Filtering (For You, Near Me, New Faces)
-  let feedProfiles = [...sortedProfiles];
-  if (feedMode === 'near_me') {
-    const userCity = userProfile?.city || '';
-    const withDistance = sortedProfiles.map(p => {
-      const isExactCity = Boolean(userCity && p.city && p.city.trim().toLowerCase() === userCity.trim().toLowerCase());
-      let distKm = p.distanceKm;
-      let distText = p.distance;
+  // Apply Live GPS & Feed Mode Filtering (For You, Near Me, New Faces)
+  const userCity = userProfile?.city || '';
+  const userGps = userLocation?.coords || null;
 
-      if (distKm == null) {
-        if (userCity && p.city) {
-          const calc = calculateStateDistance(userCity, p.city);
-          distKm = calc.distanceKm;
-          distText = calc.formatted;
-        } else {
-          distKm = isExactCity ? 0 : 50;
-          distText = isExactCity ? 'Same City' : 'Nearby';
+  // Enrich all profiles with real proximity data (using Live GPS or City Geodesic)
+  const profilesWithDistance = sortedProfiles.map(p => {
+    const isExactCity = Boolean(userCity && p.city && p.city.trim().toLowerCase() === userCity.trim().toLowerCase());
+    let distKm = p.distanceKm;
+    let distText = p.distance;
+
+    // 1. High-precision live GPS calculation if device coordinates are available
+    if (userGps) {
+      const gpsCalc = calculateGpsDistance(userGps, p);
+      if (gpsCalc) {
+        distKm = gpsCalc.distanceKm;
+        distText = gpsCalc.formatted;
+      }
+    }
+
+    // 2. City-to-City geodesic fallback if live GPS is not available or candidate is remote
+    if (distKm == null) {
+      if (userCity && p.city) {
+        const calc = calculateStateDistance(userCity, p.city);
+        distKm = calc.distanceKm;
+        distText = calc.formatted;
+      } else {
+        distKm = isExactCity ? 0 : 50;
+        distText = isExactCity ? 'Same City' : 'Nearby';
+      }
+    }
+
+    return {
+      ...p,
+      _isExactCity: isExactCity,
+      _computedDistanceKm: distKm,
+      _computedDistanceText: distText || (isExactCity ? `Same City • ${p.city}` : `${distKm} km away`)
+    };
+  });
+
+  let feedProfiles = [...profilesWithDistance];
+
+  if (feedMode === 'near_me') {
+    feedProfiles = [...profilesWithDistance].sort((a, b) => {
+      // 1. If Live GPS is active, sort strictly by physical proximity (closest km first)
+      if (userGps) {
+        if (a._computedDistanceKm !== b._computedDistanceKm) {
+          return a._computedDistanceKm - b._computedDistanceKm;
+        }
+      } else {
+        // Fallback: Same City matches first, then ascending distance
+        if (a._isExactCity && !b._isExactCity) return -1;
+        if (!a._isExactCity && b._isExactCity) return 1;
+        if (a._computedDistanceKm !== b._computedDistanceKm) {
+          return a._computedDistanceKm - b._computedDistanceKm;
         }
       }
 
-      return {
-        ...p,
-        _isExactCity: isExactCity,
-        _computedDistanceKm: distKm,
-        _computedDistanceText: distText || (isExactCity ? `Same City • ${p.city}` : `${distKm} km away`)
-      };
-    });
-
-    feedProfiles = withDistance.sort((a, b) => {
-      // 1. Same City matches come first
-      if (a._isExactCity && !b._isExactCity) return -1;
-      if (!a._isExactCity && b._isExactCity) return 1;
-
-      // 2. Ascending order of physical distance (closest first)
-      if (a._computedDistanceKm !== b._computedDistanceKm) {
-        return a._computedDistanceKm - b._computedDistanceKm;
-      }
-
-      // 3. Secondary: profile completion
+      // 2. Secondary: profile completion
       return (b.profileCompletion || 0) - (a.profileCompletion || 0);
     });
   } else if (feedMode === 'new_faces') {
@@ -519,6 +541,54 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           </button>
         </div>
       </div>
+
+      {/* Live GPS Status & Activation Banner in Near Me Mode */}
+      {feedMode === 'near_me' && (
+        <div className="discover-gps-banner page-enter font-ui">
+          {userLocation?.coords ? (
+            <div className="gps-banner-content active">
+              <div className="gps-banner-left">
+                <span className="gps-live-dot" />
+                <span className="gps-banner-text">
+                  <strong>Live GPS:</strong> Sorting by exact distance {userLocation.detectedCity ? `near ${userLocation.detectedCity}` : ''}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="gps-action-btn refresh font-ui"
+                onClick={() => {
+                  triggerHaptic?.('light');
+                  requestUserLocation();
+                }}
+                disabled={isLocationLoading}
+                title="Update your current GPS location"
+              >
+                {isLocationLoading ? 'Locating...' : 'Refresh GPS'}
+              </button>
+            </div>
+          ) : (
+            <div className="gps-banner-content prompt">
+              <div className="gps-banner-left">
+                <NavigationArrow size={15} weight="fill" className="gps-icon-nav" />
+                <span className="gps-banner-text">
+                  Enable device GPS for exact real-time distance to nearby matches
+                </span>
+              </div>
+              <button
+                type="button"
+                className="gps-action-btn enable font-ui"
+                onClick={() => {
+                  triggerHaptic?.('light');
+                  requestUserLocation();
+                }}
+                disabled={isLocationLoading}
+              >
+                {isLocationLoading ? 'Locating...' : '📍 Enable Live GPS'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Collapsible Search Input Container */}
       {(showSearch || searchTerm) && (
@@ -1098,6 +1168,134 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
         [data-theme="light"] .boost-cooldown-chip {
           color: #8A6D3B;
+        }
+
+        /* Live GPS Proximity Banner */
+        .discover-gps-banner {
+          max-width: 680px;
+          margin: 0 auto var(--space-3) auto;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .gps-banner-content {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 8px 14px;
+          border-radius: var(--radius-full, 999px);
+          font-size: 12px;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          transition: all 0.25s ease;
+        }
+
+        .gps-banner-content.active {
+          background: rgba(16, 185, 129, 0.08);
+          border: 1px solid rgba(16, 185, 129, 0.25);
+          color: var(--text-primary, #FFFFFF);
+        }
+
+        [data-theme="light"] .gps-banner-content.active {
+          background: rgba(16, 185, 129, 0.1);
+          border-color: rgba(16, 185, 129, 0.35);
+          color: #065F46;
+        }
+
+        .gps-banner-content.prompt {
+          background: rgba(184, 67, 106, 0.08);
+          border: 1px solid rgba(184, 67, 106, 0.25);
+          color: var(--text-primary, #FFFFFF);
+        }
+
+        [data-theme="light"] .gps-banner-content.prompt {
+          background: rgba(184, 67, 106, 0.07);
+          border-color: rgba(184, 67, 106, 0.25);
+          color: var(--charcoal-900, #1A1517);
+        }
+
+        .gps-banner-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 0;
+        }
+
+        .gps-live-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #10B981;
+          box-shadow: 0 0 8px #10B981;
+          animation: pulseEmerald 1.8s infinite;
+          flex-shrink: 0;
+        }
+
+        .gps-icon-nav {
+          color: var(--burgundy-400, #E27B9B);
+          flex-shrink: 0;
+        }
+
+        [data-theme="light"] .gps-icon-nav {
+          color: var(--burgundy-500, #B8436A);
+        }
+
+        .gps-banner-text {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .gps-action-btn {
+          padding: 4px 12px;
+          border-radius: 999px;
+          font-size: 11.5px;
+          font-weight: 700;
+          cursor: pointer;
+          border: none;
+          white-space: nowrap;
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+        }
+
+        .gps-action-btn.enable {
+          background: linear-gradient(135deg, var(--burgundy-500, #8A1538), var(--burgundy-600, #5C0E24));
+          color: #FFFFFF;
+          box-shadow: 0 2px 8px rgba(138, 21, 56, 0.35);
+        }
+
+        .gps-action-btn.enable:hover {
+          transform: scale(1.03);
+          box-shadow: 0 4px 12px rgba(138, 21, 56, 0.5);
+        }
+
+        .gps-action-btn.refresh {
+          background: rgba(255, 255, 255, 0.12);
+          color: var(--text-primary, #FFFFFF);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        [data-theme="light"] .gps-action-btn.refresh {
+          background: rgba(0, 0, 0, 0.06);
+          color: var(--charcoal-900, #1A1517);
+          border-color: rgba(0, 0, 0, 0.12);
+        }
+
+        .gps-action-btn.refresh:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 600px) {
+          .gps-banner-content {
+            padding: 6px 10px;
+            font-size: 11px;
+            gap: 6px;
+          }
+          .gps-action-btn {
+            padding: 3px 9px;
+            font-size: 10.5px;
+          }
         }
 
         @media (max-width: 420px) {
