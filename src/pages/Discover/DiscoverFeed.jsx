@@ -430,6 +430,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
             type="button"
             onClick={() => setShowPreferences(true)}
             className={`discover-nav-icon-btn ${hasActiveFilters ? 'has-active' : ''}`}
+            data-tour="discover-filters"
             aria-label="Filter preferences"
             title="Filter Preferences"
           >
@@ -452,7 +453,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         </div>
 
         {/* Center: Curated Feed Pills (For You | Near Me | New Faces) */}
-        <div className="discover-mode-pills" role="tablist" aria-label="Discover Modes">
+        <div className="discover-mode-pills" data-tour="discover-modes" role="tablist" aria-label="Discover Modes">
           {[
             { id: 'for_you', label: 'For You' },
             { id: 'near_me', label: 'Near Me' },
@@ -478,6 +479,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           <button
             type="button"
             className="discover-nav-icon-btn mode-switch-btn"
+            data-tour="discover-view-switch"
             onClick={() => setViewMode(viewMode === 'deck' ? 'grid' : 'deck')}
             aria-label={`Switch to ${viewMode === 'deck' ? 'Grid' : 'Deck'} view`}
             title={`Switch to ${viewMode === 'deck' ? 'Grid' : 'Deck'} view`}
@@ -491,6 +493,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
               triggerHaptic?.('light');
               setShowBoostModal(true);
             }}
+            data-tour="discover-boost"
             className={`discover-nav-icon-btn boost-btn ${boostState.isBoosting ? 'is-boosted' : boostState.isOnCooldown ? 'is-cooldown' : 'is-ready'}`}
             aria-label="Spotlight Boost"
             title={

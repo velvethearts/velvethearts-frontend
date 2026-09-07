@@ -341,6 +341,7 @@ export const StoryDeck = ({
       {/* Main Full-Bleed Card Container */}
       <div
         className={`story-card-container ${swipeDirection ? `swiping-${swipeDirection}` : ''}`}
+        data-tour="story-card"
         style={{
           transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${rotateDeg}deg)`,
           transition: isDragging ? 'none' : 'transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
@@ -481,6 +482,7 @@ export const StoryDeck = ({
             <button
               type="button"
               className="story-expand-btn"
+              data-tour="story-expand"
               onClick={(e) => {
                 e.stopPropagation();
                 triggerHaptic('light');
@@ -540,7 +542,7 @@ export const StoryDeck = ({
       </div>
 
       {/* Floating 5-Button Circular Console */}
-      <div className="story-floating-console" aria-label="Profile actions">
+      <div className="story-floating-console" data-tour="story-console" aria-label="Profile actions">
         {/* 1. Rewind / Undo */}
         <button
           type="button"

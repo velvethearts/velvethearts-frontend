@@ -19,7 +19,8 @@ import {
   Microphone,
   PaperPlaneTilt,
   EnvelopeSimple,
-  BookBookmark
+  BookBookmark,
+  Sliders
 } from '@phosphor-icons/react';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 
@@ -45,7 +46,7 @@ export const FeatureTourGuide = () => {
   const dialogRef = useRef(null);
   const previouslyFocusedElementRef = useRef(null);
 
-  // 14-step multi-page tour sequence covering Discover, Matches suite, Chat, Rewind Letters, Our Diary, Notifications, Profile, and Safety
+  // Multi-page tour sequence covering Discover, Spotlight Boost, Matches suite, Chat, Rewind Letters, Our Diary, Notifications, Profile, and Safety
   const tourSteps = [
     {
       id: 'welcome',
@@ -54,10 +55,34 @@ export const FeatureTourGuide = () => {
       badgeIcon: Heart,
       badgeColor: '#D4AD6A',
       title: 'A Different Kind of Dating Space',
-      subtitle: `Welcome, ${userProfile?.name || 'there'}. Velvet Hearts focuses on intentional connections rather than superficial swiping. Here is a quick guide to each core feature.`,
-      targetSelector: '.story-card-hero, .story-card-container',
+      subtitle: `Welcome, ${userProfile?.name || 'there'}. Velvet Hearts focuses on intentional connections rather than superficial swiping. Here is a quick guide to your updated discovery experience.`,
+      targetSelector: '[data-tour="story-card"], .story-card-hero, .story-card-container',
       fallbackSelector: '.story-card-container',
       preferredPlacement: 'right'
+    },
+    {
+      id: 'discover-modes',
+      tab: 'discover',
+      badge: 'Curated Discovery Modes',
+      badgeIcon: Sliders,
+      badgeColor: '#D4AD6A',
+      title: 'Explore Your Way',
+      subtitle: 'Switch seamlessly between "For You", "Near Me", and "New Faces" to discover local or freshly joined members. Tap the filter sliders on the top left anytime to fine-tune your age, distance, and preferences.',
+      targetSelector: '[data-tour="discover-modes"], .discover-mode-pills',
+      fallbackSelector: '.discover-top-nav-bar',
+      preferredPlacement: 'bottom'
+    },
+    {
+      id: 'discover-boost',
+      tab: 'discover',
+      badge: 'Spotlight Boost',
+      badgeIcon: Lightning,
+      badgeColor: '#D4AD6A',
+      title: 'Multiply Your Visibility',
+      subtitle: 'Want more eyes on your story? Activate Spotlight Boost for 10x visibility in your area for 30 minutes with a live countdown timer. Your boost replenishes every 48 hours.',
+      targetSelector: '[data-tour="discover-boost"], .boost-btn',
+      fallbackSelector: '.discover-top-right-actions',
+      preferredPlacement: 'bottom'
     },
     {
       id: 'stories',
@@ -65,9 +90,9 @@ export const FeatureTourGuide = () => {
       badge: 'Story Deck',
       badgeIcon: Compass,
       badgeColor: '#B8436A',
-      title: 'Browse Intentional Stories',
-      subtitle: 'Profiles are presented as editorial stories. Tap photo sides to flip through pictures, read life stories, and check your real-time Vibe Match percentage.',
-      targetSelector: '.story-card-hero, .story-card-photo-wrap',
+      title: 'Editorial Stories & Upward Expander',
+      subtitle: 'Profiles are presented as magazine editorial covers. Tap the left/right sides to flip photos, or tap the upward arrow (⬆) to expand full bios, lifestyle details, and passions.',
+      targetSelector: '[data-tour="story-card"], .story-card-container, .story-deck-magazine',
       fallbackSelector: '.story-card-container',
       preferredPlacement: 'right'
     },
@@ -77,10 +102,10 @@ export const FeatureTourGuide = () => {
       badge: 'Meaningful Actions',
       badgeIcon: Heart,
       badgeColor: '#B8436A',
-      title: 'Spark, Pass, or Super Spark',
-      subtitle: 'Send a Spark to express interest, a Super Spark to stand out, or Pass Softly without negative pressure.',
-      targetSelector: '.story-actions-bar, .story-actions-primary',
-      fallbackSelector: '.story-actions-bar',
+      title: 'Floating Action Console',
+      subtitle: 'Use the 5-button circular console: Rewind an accidental pass, Pass smoothly, send a golden Super Spark, tap Spark to like, or send an instant Direct Rewind Letter.',
+      targetSelector: '[data-tour="story-console"], .story-floating-console',
+      fallbackSelector: '.story-floating-console',
       preferredPlacement: 'top'
     },
     {
@@ -211,7 +236,7 @@ export const FeatureTourGuide = () => {
       badgeColor: '#D4AD6A',
       title: "You're Ready to Connect",
       subtitle: 'You are ready to begin discovering authentic people. You can replay this tour anytime from your Settings.',
-      targetSelector: '.story-actions-bar, .story-card-hero',
+      targetSelector: '[data-tour="story-console"], [data-tour="story-card"], .story-card-container',
       fallbackSelector: '.story-card-container',
       preferredPlacement: 'top'
     }
