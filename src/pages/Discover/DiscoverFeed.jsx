@@ -80,6 +80,18 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     }
   }, [feedMode, userLocation]);
 
+  // Manage body class for deck mode layout on mobile
+  useEffect(() => {
+    if (viewMode === 'deck') {
+      document.body.classList.add('deck-mode-active');
+    } else {
+      document.body.classList.remove('deck-mode-active');
+    }
+    return () => {
+      document.body.classList.remove('deck-mode-active');
+    };
+  }, [viewMode]);
+
   // Close search when clicking outside
   React.useEffect(() => {
     if (!showSearch && !searchTerm) return;
@@ -734,8 +746,23 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         @media (max-width: 640px) {
           .discover-feed-page.is-deck-view {
             max-width: 100%;
-            padding-left: 8px;
-            padding-right: 8px;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 4px 10px 4px 10px;
+            box-sizing: border-box;
+            overflow: hidden;
+            margin: 0 auto;
+          }
+
+          .discover-feed-page.is-deck-view .discover-top-nav-bar,
+          .discover-feed-page.is-deck-view .discover-gps-banner {
+            flex-shrink: 0;
+            margin-bottom: 4px;
           }
         }
 

@@ -283,6 +283,22 @@ export const Navigation = ({ children, isChatViewActive }) => {
           overflow: hidden;
         }
 
+        @media (max-width: 767px) {
+          body.deck-mode-active .main-content-layout,
+          .main-content-layout:has(.is-deck-view) {
+            height: 100vh;
+            height: 100dvh;
+            min-height: 100vh;
+            min-height: 100dvh;
+            max-height: 100vh;
+            max-height: 100dvh;
+            padding-bottom: var(--bottom-nav-height);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+          }
+        }
+
         .mobile-bottom-nav {
           position: fixed;
           bottom: 0;
