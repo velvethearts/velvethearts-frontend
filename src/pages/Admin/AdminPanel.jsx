@@ -1145,7 +1145,7 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
           <MagnifyingGlass size={18} className="admin-search-icon" />
           <input
             type="text"
-            placeholder="Search by name, email, or phone…"
+            placeholder="Search by name, User ID, email, or phone…"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -1266,7 +1266,7 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
               : approvalFilter === 'REJECTED'
               ? 'There are currently 0 rejected user registrations.'
               : search
-              ? `No user accounts matched "${search}". Try searching by a different name, email, or phone number.`
+              ? `No user accounts matched "${search}". Try searching by a different name, User ID, email, or phone number.`
               : 'No accounts matched the selected filter criteria.'
           }
           action={
