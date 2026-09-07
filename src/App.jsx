@@ -1,4 +1,4 @@
-import React, { useState, Component, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Component, Suspense, lazy } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navigation } from './components/Navigation';
 import { Celebration } from './components/Celebration';
@@ -9,6 +9,8 @@ import velvetHeartLogo from './assets/velvet-heart-logo.png';
 import { LoadingScreen } from './components/UI/LoadingScreen';
 import { LandingPage } from './pages/Landing/LandingPage';
 import { ToastContainer } from './components/UI/ToastContainer';
+import { CookieConsentBanner } from './components/UI/CookieConsentBanner';
+import { initGA } from './lib/analytics';
 
 // Route-based Code Splitting: Lazy-load authenticated & secondary sub-pages
 const AuthFlow = lazy(() => import('./pages/Auth/AuthFlow').then(m => ({ default: m.AuthFlow })));
@@ -296,12 +298,17 @@ function AppContent() {
 }
 
 function App() {
+  useEffect(() => {
+    initGA();
+  }, []);
+
   return (
     <ErrorBoundary>
       <AppProvider>
         <AppContent />
         <Celebration />
         <ToastContainer />
+        <CookieConsentBanner />
         <Analytics />
         <SpeedInsights />
       </AppProvider>

@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Heart, ShieldCheck, Users, Bookmark, Sparkle } from '@phosphor-icons/react';
 import logo from "../../assets/velvet-heart-logo.png";
 import { ThemeToggle } from '../../components/UI/ThemeToggle';
+import { triggerCookieBanner } from '../../lib/analytics';
 
 export const LandingPage = ({ onGetStarted, onSignIn }) => {
   const { showAlert = () => {} } = useApp?.() || {};
@@ -243,6 +244,7 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
           <a href="#guidelines" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Community Guidelines', message: 'Be respectful, genuine, and kind.' }); }}>Community Guidelines</a>
           <a href="#safety" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Safety Center', message: 'Report tools are available directly inside chat and profiles.' }); }}>Safety Center</a>
           <a href="#privacy" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Privacy Policy', message: 'Your data is secure and never sold.' }); }}>Privacy Policy</a>
+          <a href="#cookies" onClick={(e) => { e.preventDefault(); triggerCookieBanner(); }}>Cookie Preferences</a>
           <a href="#terms" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Terms of Service', message: 'Agree to engage with care.' }); }}>Terms of Service</a>
         </nav>
         <div className="footer-copy">

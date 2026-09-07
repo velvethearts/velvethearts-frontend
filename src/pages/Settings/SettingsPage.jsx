@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle, Compass, EnvelopeSimple } from '@phosphor-icons/react';
+import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle, Compass, EnvelopeSimple, ShieldCheck } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
 import { ThemeToggle } from '../../components/UI/ThemeToggle';
 import { DeleteAccountModal } from '../../components/UI/DeleteAccountModal';
+import { triggerCookieBanner, getStoredConsent } from '../../lib/analytics';
 
 export const SettingsPage = () => {
   const { 
@@ -362,6 +363,31 @@ export const SettingsPage = () => {
                 />
                 <span className="toggle-slider" />
               </label>
+            </div>
+          </div>
+        </section>
+
+        {/* Privacy & Cookie Preferences */}
+        <section className="settings-section border-top" aria-labelledby="privacy-heading">
+          <h2 id="privacy-heading" className="section-title">
+            <ShieldCheck size={20} className="section-title-icon" />
+            <span>Privacy &amp; Cookies</span>
+          </h2>
+          <div className="settings-options-list">
+            <div className="option-item" style={{ cursor: 'pointer' }} onClick={triggerCookieBanner}>
+              <div className="option-text">
+                <span className="option-label">Cookie &amp; Tracking Preferences</span>
+                <span className="option-desc font-body">
+                  Status: {getStoredConsent() === 'accepted' ? 'Analytics Accepted 🟢' : getStoredConsent() === 'rejected' ? 'Strictly Necessary Only (Analytics Blocked) 🛡️' : 'Not Configured (Strict Mode) 🛡️'}. Tap to modify consent.
+                </span>
+              </div>
+              <Button 
+                variant="secondary"
+                className="font-ui"
+                onClick={(e) => { e.stopPropagation(); triggerCookieBanner(); }}
+              >
+                Manage
+              </Button>
             </div>
           </div>
         </section>

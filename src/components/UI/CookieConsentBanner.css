@@ -1,0 +1,249 @@
+/* Velvet Hearts Luxury Cookie & Consent Banner */
+
+.vh-cookie-banner-overlay {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  left: 24px;
+  max-width: 640px;
+  margin: 0 auto;
+  z-index: 99999;
+  animation: vhCookieSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: auto;
+}
+
+@keyframes vhCookieSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.vh-cookie-banner-card {
+  background: rgba(26, 17, 21, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 179, 184, 0.28);
+  border-radius: 20px;
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.65), 0 0 24px rgba(184, 67, 106, 0.18);
+  padding: 22px 24px;
+  color: #fce7f3;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vh-cookie-banner-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.vh-cookie-icon-wrapper {
+  font-size: 28px;
+  line-height: 1;
+  background: rgba(184, 67, 106, 0.2);
+  border: 1px solid rgba(226, 179, 184, 0.3);
+  padding: 10px;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+
+.vh-cookie-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vh-cookie-title {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.2px;
+}
+
+.vh-cookie-subtitle {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #e2b3b8;
+}
+
+/* Expanded details panel */
+.vh-cookie-details-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(226, 179, 184, 0.15);
+  border-radius: 14px;
+  animation: vhFadeIn 0.25s ease forwards;
+}
+
+@keyframes vhFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.vh-cookie-category {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.vh-cookie-category-info strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+.vh-cookie-category-info p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #c9a0a6;
+}
+
+.vh-cookie-badge-active {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  padding: 3px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.vh-cookie-badge-optional {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: rgba(184, 67, 106, 0.2);
+  color: #f472b6;
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  padding: 3px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+/* Actions footer */
+.vh-cookie-banner-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.vh-cookie-link-btn {
+  background: none;
+  border: none;
+  color: #e2b3b8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  transition: color 0.2s;
+  font-family: inherit;
+}
+
+.vh-cookie-link-btn:hover {
+  color: #ffffff;
+}
+
+.vh-cookie-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.vh-cookie-btn {
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.vh-cookie-btn-reject {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(226, 179, 184, 0.3);
+  color: #fce7f3;
+}
+
+.vh-cookie-btn-reject:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(226, 179, 184, 0.5);
+  color: #ffffff;
+}
+
+.vh-cookie-btn-accept {
+  background: linear-gradient(135deg, #b8436a 0%, #800020 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(184, 67, 106, 0.35);
+}
+
+.vh-cookie-btn-accept:hover {
+  background: linear-gradient(135deg, #cc4e78 0%, #940026 100%);
+  box-shadow: 0 6px 18px rgba(184, 67, 106, 0.5);
+  transform: translateY(-1px);
+}
+
+.vh-cookie-btn:active {
+  transform: translateY(1px);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .vh-cookie-banner-overlay {
+    bottom: 16px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .vh-cookie-banner-card {
+    padding: 18px;
+  }
+
+  .vh-cookie-banner-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .vh-cookie-link-btn {
+    text-align: center;
+  }
+
+  .vh-cookie-btn-group {
+    width: 100%;
+    margin-left: 0;
+    flex-direction: column-reverse;
+  }
+
+  .vh-cookie-btn {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+  }
+}
