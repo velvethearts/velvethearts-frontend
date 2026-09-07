@@ -6,6 +6,7 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
+import { ProfileDetail } from '../ProfileDetail/ProfileDetail';
 import {
   ShieldCheck,
   CheckCircle,
@@ -29,6 +30,8 @@ import {
   Prohibit,
   ArrowCounterClockwise,
   Trash,
+  Copy,
+  ArrowLeft,
 } from '@phosphor-icons/react';
 
 // ─── REUSABLE LUXURY PAGINATION COMPONENT ───
@@ -74,6 +77,233 @@ const AdminPagination = ({ page, totalPages, totalItems, pageSize, onPageChange 
   );
 };
 
+// ─── ADMIN PROFILE INSPECTOR VIEW ───
+const AdminProfileInspector = ({ user, onBack, showAlert }) => {
+  const [currentUser, setCurrentUser] = useState(user);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const handleToggleVerif = async () => {
+    setActionLoading(true);
+    try {
+      const nextVerified = !currentUser.verified;
+      await api.admin.toggleUserVerification(currentUser.id, nextVerified);
+      setCurrentUser(prev => ({
+        ...prev,
+        verified: nextVerified,
+        profile: prev.profile ? { ...prev.profile, verified: nextVerified } : null,
+      }));
+      showAlert?.(`User verification status changed to ${nextVerified ? 'VERIFIED' : 'UNVERIFIED'}.`, 'success');
+    } catch (err) {
+      showAlert?.(err?.response?.data?.message || 'Failed to update verification status.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleSusp = async () => {
+    setActionLoading(true);
+    try {
+      const isCurrentlySuspended = currentUser.status === 'SUSPENDED' || currentUser.status === 'DELETED';
+      if (isCurrentlySuspended) {
+        await api.admin.restoreUser(currentUser.id);
+        setCurrentUser(prev => ({ ...prev, status: 'ACTIVE' }));
+        showAlert?.('User account restored to ACTIVE.', 'success');
+      } else {
+        await api.admin.suspendUser(currentUser.id);
+        setCurrentUser(prev => ({ ...prev, status: 'SUSPENDED' }));
+        showAlert?.('User account SUSPENDED.', 'info');
+      }
+    } catch (err) {
+      showAlert?.('Failed to update account status.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Are you sure you want to mark account "${currentUser.name || 'this user'}" as DELETED?`)) return;
+    setActionLoading(true);
+    try {
+      await api.admin.deleteUser(currentUser.id);
+      setCurrentUser(prev => ({ ...prev, status: 'DELETED' }));
+      showAlert?.('User account marked as DELETED.', 'info');
+    } catch (err) {
+      showAlert?.(err?.message || 'Failed to delete user.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const copyId = (id) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(id);
+      showAlert?.(`Copied User ID: ${id}`, 'info');
+    }
+  };
+
+  const resolvedProfile = currentUser.hasProfile ? {
+    ...(currentUser.profile || {}),
+    id: currentUser.profile?.id || currentUser.id,
+    userId: currentUser.id,
+    name: currentUser.profile?.name || currentUser.name || 'Member',
+    age: currentUser.profile?.age || 25,
+    gender: currentUser.profile?.gender || 'Not specified',
+    city: currentUser.profile?.city || currentUser.city || 'India',
+    story: currentUser.profile?.story || 'No story provided yet.',
+    interests: currentUser.profile?.interests || [],
+    photos: currentUser.photos?.length > 0 ? currentUser.photos : (currentUser.profile?.photos || []),
+    verified: currentUser.verified,
+    email: currentUser.email,
+    phoneNumber: currentUser.phoneNumber,
+  } : null;
+
+  return (
+    <div className="admin-profile-inspector-wrapper page-enter">
+      {/* Top Administrative Bar */}
+      <div className="admin-inspector-topbar">
+        <button
+          type="button"
+          onClick={onBack}
+          className="admin-inspector-back-btn font-ui"
+          title="Back to Directory"
+        >
+          <ArrowLeft size={18} weight="bold" />
+          <span>Back to Directory</span>
+        </button>
+
+        {/* User Full ID Chip */}
+        <div 
+          className="admin-user-id-chip inspector-chip"
+          onClick={() => copyId(currentUser.id)}
+          title="Click to copy full User ID"
+        >
+          <span className="admin-id-tag">User ID:</span>
+          <code className="admin-id-full">{currentUser.id}</code>
+          <Copy size={13} className="admin-id-copy-icon" />
+        </div>
+
+        {/* Badges */}
+        <div className="admin-inspector-badges">
+          <span className={`admin-role-badge ${currentUser.role === 'ADMIN' ? 'role-admin' : 'role-user'}`}>
+            {currentUser.role}
+          </span>
+          <span className={`admin-status-pill status-${currentUser.status?.toLowerCase()}`}>
+            {currentUser.status}
+          </span>
+          {currentUser.approvalStatus && (
+            <span className={`admin-approval-pill status-${currentUser.approvalStatus?.toLowerCase()}`}>
+              {currentUser.approvalStatus}
+            </span>
+          )}
+        </div>
+
+        {/* Quick Admin Actions in Header */}
+        <div className="admin-inspector-actions">
+          <button
+            type="button"
+            onClick={handleToggleVerif}
+            disabled={actionLoading}
+            className={`admin-verify-toggle-btn ${currentUser.verified ? 'is-verified' : ''}`}
+            title={currentUser.verified ? 'Revoke verification badge' : 'Grant verified badge'}
+          >
+            <SealCheck size={16} weight="fill" />
+            <span>{actionLoading ? 'Saving…' : currentUser.verified ? 'Verified' : 'Verify'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleToggleSusp}
+            disabled={actionLoading || currentUser.role === 'ADMIN'}
+            className={`admin-suspend-toggle-btn ${currentUser.status === 'SUSPENDED' || currentUser.status === 'DELETED' ? 'is-suspended' : ''}`}
+            title={currentUser.status === 'SUSPENDED' ? 'Restore account' : 'Suspend account'}
+          >
+            {currentUser.status === 'SUSPENDED' || currentUser.status === 'DELETED' ? (
+              <>
+                <ArrowCounterClockwise size={15} weight="bold" />
+                <span>Restore</span>
+              </>
+            ) : (
+              <>
+                <Prohibit size={15} weight="bold" />
+                <span>Suspend</span>
+              </>
+            )}
+          </button>
+
+          {currentUser.status !== 'DELETED' && currentUser.role !== 'ADMIN' && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={actionLoading}
+              className="admin-delete-toggle-btn"
+              title="Mark account as Deleted"
+            >
+              <Trash size={15} weight="bold" />
+              <span>Delete</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      {currentUser.hasProfile && resolvedProfile ? (
+        <div className="admin-profile-content-wrap">
+          <ProfileDetail profile={resolvedProfile} onBack={onBack} />
+        </div>
+      ) : (
+        <div className="admin-incomplete-profile-card">
+          <div className="admin-incomplete-header">
+            <UserCircle size={64} weight="fill" className="admin-incomplete-avatar" />
+            <div>
+              <h3 className="admin-incomplete-name font-display">{currentUser.name || 'Anonymous Member'}</h3>
+              <p className="admin-incomplete-meta font-ui">
+                Registered on {new Date(currentUser.createdAt).toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="admin-incomplete-notice">
+            <Warning size={20} weight="fill" className="notice-icon" />
+            <div>
+              <strong>Profile Onboarding Incomplete</strong>
+              <p>
+                This member has registered and authenticated via Firebase, but has not completed their dating profile onboarding (photos, story bio, passions, prompts) yet.
+              </p>
+            </div>
+          </div>
+
+          <div className="admin-incomplete-details-grid font-ui">
+            <div className="admin-detail-cell">
+              <span className="cell-label">Full User ID</span>
+              <code className="cell-value">{currentUser.id}</code>
+            </div>
+            <div className="admin-detail-cell">
+              <span className="cell-label">Email Address</span>
+              <span className="cell-value">{currentUser.email || 'None on file'}</span>
+            </div>
+            <div className="admin-detail-cell">
+              <span className="cell-label">Phone Number</span>
+              <span className="cell-value">{currentUser.phoneNumber || 'None on file'}</span>
+            </div>
+            <div className="admin-detail-cell">
+              <span className="cell-label">Location / City</span>
+              <span className="cell-value">{currentUser.city || 'Not provided'}</span>
+            </div>
+            <div className="admin-detail-cell">
+              <span className="cell-label">Account Status</span>
+              <span className="cell-value">{currentUser.status}</span>
+            </div>
+            <div className="admin-detail-cell">
+              <span className="cell-label">Verification Status</span>
+              <span className="cell-value">{currentUser.verified ? 'Pre-Approved / Verified' : 'Unverified'}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Admin Panel Tabs ───
 const TABS = [
   { id: 'stats', label: 'Dashboard', icon: ChartBar },
@@ -85,6 +315,7 @@ const TABS = [
 export const AdminPanel = () => {
   const { showAlert, userRole } = useApp();
   const [activeTab, setActiveTab] = useState('stats');
+  const [inspectingUser, setInspectingUser] = useState(null);
 
   const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
@@ -95,6 +326,19 @@ export const AdminPanel = () => {
         title="Access Denied"
         desc="You don't have permission to access the Velvet Hearts Admin Panel."
       />
+    );
+  }
+
+  if (inspectingUser) {
+    return (
+      <div className="admin-panel">
+        <AdminProfileInspector
+          user={inspectingUser}
+          onBack={() => setInspectingUser(null)}
+          showAlert={showAlert}
+        />
+        <style>{adminStyles}</style>
+      </div>
     );
   }
 
@@ -129,10 +373,10 @@ export const AdminPanel = () => {
 
       {/* Tab Content */}
       <div className="admin-tab-content">
-        {activeTab === 'stats' && <DashboardStatsTab onNavigateTab={setActiveTab} />}
-        {activeTab === 'verifications' && <VerificationRequestsTab showAlert={showAlert} />}
-        {activeTab === 'users' && <UsersDirectoryTab showAlert={showAlert} />}
-        {activeTab === 'pending' && <PendingUsersTab showAlert={showAlert} />}
+        {activeTab === 'stats' && <DashboardStatsTab onNavigateTab={setActiveTab} onViewUser={setInspectingUser} showAlert={showAlert} />}
+        {activeTab === 'verifications' && <VerificationRequestsTab showAlert={showAlert} onViewUser={setInspectingUser} />}
+        {activeTab === 'users' && <UsersDirectoryTab showAlert={showAlert} onViewUser={setInspectingUser} />}
+        {activeTab === 'pending' && <PendingUsersTab showAlert={showAlert} onViewUser={setInspectingUser} />}
       </div>
 
       <style>{adminStyles}</style>
@@ -141,11 +385,18 @@ export const AdminPanel = () => {
 };
 
 // ─── 1. DASHBOARD STATS TAB ───
-const DashboardStatsTab = ({ onNavigateTab }) => {
+const DashboardStatsTab = ({ onNavigateTab, onViewUser, showAlert }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [recentPage, setRecentPage] = useState(1);
   const recentPageSize = 5;
+
+  const copyId = (id) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(id);
+      showAlert?.(`Copied User ID: ${id}`, 'info');
+    }
+  };
 
   const fetchStats = useCallback(async () => {
     setLoading(true);
@@ -343,20 +594,42 @@ const DashboardStatsTab = ({ onNavigateTab }) => {
                 </thead>
                 <tbody>
                   {displayedRegistrations.map((u) => (
-                    <tr key={u.id}>
+                    <tr 
+                      key={u.id}
+                      className="admin-table-row is-clickable"
+                      onClick={() => onViewUser?.(u)}
+                      title="Click row to inspect member profile"
+                    >
                       <td>
                         <div className="admin-table-user">
-                          {u.avatarUrl ? (
-                            <img src={u.avatarUrl} alt="" className="admin-table-avatar" />
-                          ) : (
-                            <UserCircle size={32} weight="fill" className="admin-table-avatar-icon" />
-                          )}
+                          <div className="admin-table-avatar-wrap">
+                            {u.avatarUrl ? (
+                              <img src={u.avatarUrl} alt="" className="admin-table-avatar" />
+                            ) : (
+                              <UserCircle size={32} weight="fill" className="admin-table-avatar-icon" />
+                            )}
+                            <span className="admin-avatar-hover-hint">
+                              <Eye size={12} weight="bold" />
+                            </span>
+                          </div>
                           <div>
                             <div className="admin-table-name">
-                              {u.name || 'Anonymous User'}
+                              <span>{u.name || 'Anonymous User'}</span>
                               {u.verified && <VerifiedBadge variant="icon" size="sm" />}
+                              <Eye size={13} className="admin-name-view-hint" />
                             </div>
-                            <span className="admin-table-id">ID: {u.id.substring(0, 8)}…</span>
+                            <div 
+                              className="admin-user-id-chip table-id"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyId(u.id);
+                              }}
+                              title="Click to copy full User ID"
+                            >
+                              <span className="admin-id-tag">ID:</span>
+                              <code className="admin-id-full">{u.id}</code>
+                              <Copy size={11} className="admin-id-copy-icon" />
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -398,7 +671,7 @@ const DashboardStatsTab = ({ onNavigateTab }) => {
 };
 
 // ─── 2. VERIFICATION REQUESTS TAB ───
-const VerificationRequestsTab = ({ showAlert }) => {
+const VerificationRequestsTab = ({ showAlert, onViewUser }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('PENDING');
@@ -407,6 +680,13 @@ const VerificationRequestsTab = ({ showAlert }) => {
   const [expandedCard, setExpandedCard] = useState(null);
   const [page, setPage] = useState(1);
   const pageSize = 6;
+
+  const copyId = (id) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(id);
+      showAlert?.(`Copied User ID: ${id}`, 'info');
+    }
+  };
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
@@ -504,11 +784,37 @@ const VerificationRequestsTab = ({ showAlert }) => {
               <div key={req.id} className={`admin-verification-card status-${req.status?.toLowerCase()}`}>
                 {/* Card Header */}
                 <div className="admin-card-header">
-                  <div className="admin-card-user-info">
-                    <UserCircle size={36} weight="fill" className="admin-card-avatar" />
+                  <div 
+                    className={`admin-card-user-info ${req.user ? 'is-clickable' : ''}`}
+                    onClick={() => req.user && onViewUser?.(req.user)}
+                    title={req.user ? 'Click to inspect member profile' : undefined}
+                  >
+                    <div className="admin-card-avatar-wrap">
+                      <UserCircle size={36} weight="fill" className="admin-card-avatar" />
+                      {req.user && (
+                        <span className="admin-avatar-hover-hint">
+                          <Eye size={12} weight="bold" />
+                        </span>
+                      )}
+                    </div>
                     <div>
-                      <h4 className="admin-card-name font-display">{req.userName}</h4>
+                      <div className="admin-card-name-row">
+                        <h4 className="admin-card-name font-display">{req.userName}</h4>
+                        {req.user && <Eye size={13} className="admin-name-view-hint" />}
+                      </div>
                       <span className="admin-card-meta">{req.userPhone || 'No phone'} • {req.userCity || 'City not set'}</span>
+                      <div 
+                        className="admin-user-id-chip inline-chip"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyId(req.userId);
+                        }}
+                        title="Click to copy full User ID"
+                      >
+                        <span className="admin-id-tag">ID:</span>
+                        <code className="admin-id-full">{req.userId}</code>
+                        <Copy size={11} className="admin-id-copy-icon" />
+                      </div>
                     </div>
                   </div>
                   <span className={`admin-status-badge status-${req.status?.toLowerCase()}`}>
@@ -643,7 +949,7 @@ const VerificationRequestsTab = ({ showAlert }) => {
 };
 
 // ─── 3. USERS DIRECTORY TAB ───
-const UsersDirectoryTab = ({ showAlert }) => {
+const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -657,6 +963,13 @@ const UsersDirectoryTab = ({ showAlert }) => {
   const [dirStats, setDirStats] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
   const pageSize = 10;
+
+  const copyId = (id) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(id);
+      showAlert?.(`Copied User ID: ${id}`, 'info');
+    }
+  };
 
   const fetchDirStats = useCallback(async () => {
     try {
@@ -958,15 +1271,25 @@ const UsersDirectoryTab = ({ showAlert }) => {
           <div className="admin-users-list">
             {users.map(u => (
               <div key={u.id} className="admin-user-row">
-                <div className="admin-user-row-main">
-                  {u.photos?.[0] ? (
-                    <img src={u.photos[0]} alt="" className="admin-user-avatar" />
-                  ) : (
-                    <UserCircle size={44} weight="fill" className="admin-user-avatar-icon" />
-                  )}
+                <div 
+                  className="admin-user-row-main is-clickable"
+                  onClick={() => onViewUser?.(u)}
+                  title="Click to inspect full member profile"
+                >
+                  <div className="admin-user-avatar-wrap">
+                    {u.photos?.[0] ? (
+                      <img src={u.photos[0]} alt="" className="admin-user-avatar" />
+                    ) : (
+                      <UserCircle size={44} weight="fill" className="admin-user-avatar-icon" />
+                    )}
+                    <span className="admin-avatar-hover-hint">
+                      <Eye size={14} weight="bold" />
+                    </span>
+                  </div>
                   <div>
                     <div className="admin-user-name-line">
                       <span className="admin-user-name font-display">{u.name || 'Anonymous Member'}</span>
+                      <Eye size={14} className="admin-name-view-hint" />
                       {u.verified && <VerifiedBadge variant="pill" size="sm" />}
                       {!u.hasProfile && (
                         <span 
@@ -992,7 +1315,18 @@ const UsersDirectoryTab = ({ showAlert }) => {
                       <span>{u.email || u.phoneNumber || 'No contact on file'}</span>
                       <span> • {u.city || 'Location not set'}</span>
                       <span> • Joined {new Date(u.createdAt).toLocaleDateString()}</span>
-                      <span className="admin-user-id-sub"> • ID: {u.id.substring(0, 8)}…</span>
+                      <span 
+                        className="admin-user-id-chip inline-chip"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyId(u.id);
+                        }}
+                        title="Click to copy full User ID"
+                      >
+                        <span className="admin-id-tag">ID:</span>
+                        <code className="admin-id-full">{u.id}</code>
+                        <Copy size={12} className="admin-id-copy-icon" />
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1058,7 +1392,7 @@ const UsersDirectoryTab = ({ showAlert }) => {
 };
 
 // ─── 4. PENDING APPROVALS TAB ───
-const PendingUsersTab = ({ showAlert }) => {
+const PendingUsersTab = ({ showAlert, onViewUser }) => {
   const [subTab, setSubTab] = useState('verifications'); // 'verifications' | 'registrations'
   const [queue, setQueue] = useState([]);
   const [verificationsQueue, setVerificationsQueue] = useState([]);
@@ -1066,6 +1400,13 @@ const PendingUsersTab = ({ showAlert }) => {
   const [actionLoading, setActionLoading] = useState(null);
   const [notesMap, setNotesMap] = useState({});
   const [expandedCard, setExpandedCard] = useState(null);
+
+  const copyId = (id) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(id);
+      showAlert?.(`Copied User ID: ${id}`, 'info');
+    }
+  };
 
   // Pagination for both sub-queues
   const [verifPage, setVerifPage] = useState(1);
@@ -1223,11 +1564,37 @@ const PendingUsersTab = ({ showAlert }) => {
                 {displayedVerifications.map(req => (
                   <div key={req.id} className="admin-verification-card status-pending">
                     <div className="admin-card-header">
-                      <div className="admin-card-user-info">
-                        <UserCircle size={36} weight="fill" className="admin-card-avatar" />
+                      <div 
+                        className={`admin-card-user-info ${req.user ? 'is-clickable' : ''}`}
+                        onClick={() => req.user && onViewUser?.(req.user)}
+                        title={req.user ? 'Click to inspect member profile' : undefined}
+                      >
+                        <div className="admin-card-avatar-wrap">
+                          <UserCircle size={36} weight="fill" className="admin-card-avatar" />
+                          {req.user && (
+                            <span className="admin-avatar-hover-hint">
+                              <Eye size={12} weight="bold" />
+                            </span>
+                          )}
+                        </div>
                         <div>
-                          <h4 className="admin-card-name font-display">{req.userName}</h4>
+                          <div className="admin-card-name-row">
+                            <h4 className="admin-card-name font-display">{req.userName}</h4>
+                            {req.user && <Eye size={13} className="admin-name-view-hint" />}
+                          </div>
                           <span className="admin-card-meta">{req.userPhone || 'No phone'} • {req.userCity || 'City not set'}</span>
+                          <div 
+                            className="admin-user-id-chip inline-chip"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyId(req.userId);
+                            }}
+                            title="Click to copy full User ID"
+                          >
+                            <span className="admin-id-tag">ID:</span>
+                            <code className="admin-id-full">{req.userId}</code>
+                            <Copy size={11} className="admin-id-copy-icon" />
+                          </div>
                         </div>
                       </div>
                       <span className="admin-status-badge status-pending">PENDING</span>
@@ -1343,17 +1710,41 @@ const PendingUsersTab = ({ showAlert }) => {
             <>
               <div className="admin-cards-grid">
                 {displayedRegistrations.map(user => (
-                  <div key={user.userId} className="admin-user-card">
+                  <div key={user.userId || user.id} className="admin-user-card">
                     <div className="admin-card-header">
-                      <div className="admin-card-user-info">
-                        {user.photos?.[0] ? (
-                          <img src={user.photos[0]} alt="" className="admin-user-avatar" />
-                        ) : (
-                          <UserCircle size={36} weight="fill" className="admin-card-avatar" />
-                        )}
+                      <div 
+                        className="admin-card-user-info is-clickable"
+                        onClick={() => onViewUser?.(user)}
+                        title="Click to inspect member profile"
+                      >
+                        <div className="admin-card-avatar-wrap">
+                          {user.photos?.[0] ? (
+                            <img src={user.photos[0]} alt="" className="admin-user-avatar" />
+                          ) : (
+                            <UserCircle size={36} weight="fill" className="admin-card-avatar" />
+                          )}
+                          <span className="admin-avatar-hover-hint">
+                            <Eye size={12} weight="bold" />
+                          </span>
+                        </div>
                         <div>
-                          <h4 className="admin-card-name font-display">{user.name || 'Unnamed'}</h4>
+                          <div className="admin-card-name-row">
+                            <h4 className="admin-card-name font-display">{user.name || 'Unnamed'}</h4>
+                            <Eye size={13} className="admin-name-view-hint" />
+                          </div>
                           <span className="admin-card-meta">{user.phoneNumber || user.email || 'No contact'} • {user.city || 'Unknown'}</span>
+                          <div 
+                            className="admin-user-id-chip inline-chip"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyId(user.userId || user.id);
+                            }}
+                            title="Click to copy full User ID"
+                          >
+                            <span className="admin-id-tag">ID:</span>
+                            <code className="admin-id-full">{user.userId || user.id}</code>
+                            <Copy size={11} className="admin-id-copy-icon" />
+                          </div>
                         </div>
                       </div>
                       <span className="admin-completion-badge">{user.profileCompletion}%</span>
@@ -2715,5 +3106,367 @@ const adminStyles = `
     background: linear-gradient(135deg, #B8436A 0%, #7A1D3A 100%);
     border-color: rgba(212, 173, 106, 0.35);
     box-shadow: 0 4px 16px rgba(184, 67, 106, 0.5);
+  }
+
+  /* ── Interactive Profile Click Affordances ── */
+  .admin-table-row.is-clickable {
+    cursor: pointer;
+    transition: background-color var(--duration-fast, 0.15s) ease;
+  }
+
+  .admin-table-row.is-clickable:hover td {
+    background-color: rgba(184, 67, 106, 0.05);
+  }
+
+  [data-theme="dark"] .admin-table-row.is-clickable:hover td {
+    background-color: rgba(184, 67, 106, 0.1);
+  }
+
+  .admin-user-row-main.is-clickable {
+    cursor: pointer;
+    border-radius: var(--radius-md, 12px);
+    padding: 6px 8px;
+    margin: -6px -8px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-user-row-main.is-clickable:hover {
+    background: rgba(184, 67, 106, 0.06);
+  }
+
+  [data-theme="dark"] .admin-user-row-main.is-clickable:hover {
+    background: rgba(184, 67, 106, 0.12);
+  }
+
+  .admin-card-user-info.is-clickable {
+    cursor: pointer;
+    border-radius: var(--radius-md, 10px);
+    padding: 4px 6px;
+    margin: -4px -6px;
+    transition: all 0.2s ease;
+  }
+
+  .admin-card-user-info.is-clickable:hover {
+    background: rgba(184, 67, 106, 0.06);
+  }
+
+  [data-theme="dark"] .admin-card-user-info.is-clickable:hover {
+    background: rgba(184, 67, 106, 0.12);
+  }
+
+  /* ── Avatar Wrap & Hover Eye Overlay ── */
+  .admin-table-avatar-wrap,
+  .admin-user-avatar-wrap,
+  .admin-card-avatar-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .admin-avatar-hover-hint {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(184, 67, 106, 0.75);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.85);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .admin-table-row.is-clickable:hover .admin-avatar-hover-hint,
+  .admin-user-row-main.is-clickable:hover .admin-avatar-hover-hint,
+  .admin-card-user-info.is-clickable:hover .admin-avatar-hover-hint {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .admin-name-view-hint {
+    opacity: 0;
+    color: var(--burgundy-500, #B8436A);
+    transition: all 0.2s ease;
+    transform: translateX(-3px);
+  }
+
+  .admin-table-row.is-clickable:hover .admin-name-view-hint,
+  .admin-user-row-main.is-clickable:hover .admin-name-view-hint,
+  .admin-card-user-info.is-clickable:hover .admin-name-view-hint {
+    opacity: 0.9;
+    transform: translateX(0);
+  }
+
+  .admin-card-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Full User ID Chip & Copy ── */
+  .admin-user-id-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+    color: var(--text-secondary);
+    font-family: var(--font-mono, 'JetBrains Mono', 'Fira Code', 'Courier New', monospace);
+    font-size: 11px;
+    line-height: 1.2;
+    cursor: copy;
+    transition: all 0.15s ease;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  [data-theme="dark"] .admin-user-id-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .admin-user-id-chip:hover {
+    border-color: var(--burgundy-400, #c8527a);
+    color: var(--burgundy-500, #B8436A);
+    background: rgba(184, 67, 106, 0.08);
+  }
+
+  .admin-user-id-chip.table-id {
+    margin-top: 4px;
+  }
+
+  .admin-user-id-chip.inline-chip {
+    margin-left: 4px;
+  }
+
+  .admin-id-tag {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.75;
+  }
+
+  .admin-id-full {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    user-select: all;
+    word-break: break-all;
+  }
+
+  .admin-id-copy-icon {
+    flex-shrink: 0;
+    opacity: 0.6;
+    transition: opacity 0.15s ease;
+  }
+
+  .admin-user-id-chip:hover .admin-id-copy-icon {
+    opacity: 1;
+  }
+
+  /* ── In-Panel Profile Inspector Header & Canvas ── */
+  .admin-profile-inspector-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-bottom: var(--space-8);
+  }
+
+  .admin-inspector-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 16px 22px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg, 16px);
+    margin-bottom: var(--space-6);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  }
+
+  [data-theme="dark"] .admin-inspector-topbar {
+    background: rgba(26, 26, 26, 0.85);
+    backdrop-filter: blur(12px);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .admin-inspector-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: var(--radius-full, 9999px);
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-inspector-back-btn:hover {
+    border-color: var(--burgundy-500, #B8436A);
+    color: var(--burgundy-500, #B8436A);
+    background: rgba(184, 67, 106, 0.06);
+    transform: translateX(-2px);
+  }
+
+  .admin-user-id-chip.inspector-chip {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    gap: 8px;
+    background: var(--bg-elevated, rgba(0, 0, 0, 0.04));
+    border: 1px solid var(--border-subtle);
+  }
+
+  [data-theme="dark"] .admin-user-id-chip.inspector-chip {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .admin-user-id-chip.inspector-chip .admin-id-full {
+    font-size: 12px;
+  }
+
+  .admin-inspector-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .admin-inspector-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .admin-profile-content-wrap {
+    width: 100%;
+  }
+
+  /* ── Incomplete Profile Fallback Inspector ── */
+  .admin-incomplete-profile-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg, 16px);
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  }
+
+  [data-theme="dark"] .admin-incomplete-profile-card {
+    background: rgba(26, 26, 26, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .admin-incomplete-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .admin-incomplete-avatar {
+    color: var(--text-muted);
+  }
+
+  .admin-incomplete-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+  }
+
+  .admin-incomplete-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .admin-incomplete-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: rgba(251, 146, 60, 0.1);
+    border: 1px solid rgba(251, 146, 60, 0.3);
+    color: #ea580c;
+    margin-bottom: 28px;
+  }
+
+  [data-theme="dark"] .admin-incomplete-notice {
+    color: #fb923c;
+  }
+
+  .admin-incomplete-notice .notice-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .admin-incomplete-notice strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .admin-incomplete-notice p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .admin-incomplete-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .admin-detail-cell {
+    background: var(--bg-subtle, rgba(0, 0, 0, 0.02));
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  [data-theme="dark"] .admin-detail-cell {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .admin-detail-cell .cell-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .admin-detail-cell .cell-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    word-break: break-all;
   }
 `;

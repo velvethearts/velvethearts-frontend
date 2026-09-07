@@ -241,7 +241,15 @@ function AppContent() {
         return <SafetyCenter />;
 
       case 'admin':
-        return <AdminPanel />;
+        if (selectedProfile) {
+          return (
+            <ProfileDetail
+              profile={selectedProfile}
+              onBack={() => setSelectedProfile(null)}
+            />
+          );
+        }
+        return <AdminPanel onSelectProfile={setSelectedProfile} />;
 
       default:
         return <DiscoverFeed onSelectProfile={setSelectedProfile} />;
