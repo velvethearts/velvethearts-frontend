@@ -24,6 +24,7 @@ export const StoryDeck = ({
   interestsSent = [],
   savedProfiles = [],
   userProfile = {},
+  feedMode = 'for_you',
   onSendInterest,
   onUnsendInterest,
   onPassProfile,
@@ -422,7 +423,7 @@ export const StoryDeck = ({
 
         {/* Bottom Content Overlay */}
         <div className="story-card-overlay-content">
-          {/* Status Pill (Active or Likes You) directly above the name */}
+          {/* Status Pill (Active, Near Me, New Face, or Likes You) */}
           {activeProfile.likesYou ? (
             <div
               className="story-status-pill pill-likes-you font-ui"
@@ -440,6 +441,16 @@ export const StoryDeck = ({
             >
               <span>🫶 Likes You</span>
               <CaretRight size={12} weight="bold" />
+            </div>
+          ) : feedMode === 'near_me' ? (
+            <div className="story-status-pill pill-near-me font-ui">
+              <span className="pulsing-location-dot" />
+              <span>{activeProfile._computedDistanceText || activeProfile.distance || (activeProfile.city ? `📍 ${activeProfile.city}` : '📍 Nearby')}</span>
+            </div>
+          ) : feedMode === 'new_faces' ? (
+            <div className="story-status-pill pill-new-face font-ui">
+              <Sparkle size={12} weight="fill" color="#B8436A" />
+              <span>New Face</span>
             </div>
           ) : (
             <div className="story-status-pill pill-active font-ui">
@@ -768,7 +779,9 @@ export const StoryDeck = ({
           transform: scale(1.04);
         }
 
-        .story-status-pill.pill-active {
+        .story-status-pill.pill-active,
+        .story-status-pill.pill-near-me,
+        .story-status-pill.pill-new-face {
           background: #FFFFFF;
           color: #111827;
           padding: 3px 10px;
@@ -785,6 +798,15 @@ export const StoryDeck = ({
           font-size: 12px;
           font-weight: 700;
           box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+        }
+
+        .pulsing-location-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #B8436A;
+          box-shadow: 0 0 8px #B8436A;
+          animation: pulseEmerald 1.8s infinite;
         }
 
         .pulsing-green-dot {

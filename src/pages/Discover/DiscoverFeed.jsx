@@ -1,14 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sliders, MagnifyingGlass, X, HeartBreak, Cards, SquaresFour, Lightning, Sparkle } from '@phosphor-icons/react';
+import { Sliders, MagnifyingGlass, X, HeartBreak, Cards, SquaresFour, Lightning, Sparkle, Clock } from '@phosphor-icons/react';
 import { DiscoverPreferences } from './DiscoverPreferences';
 import { ProfileCard } from '../../components/UI/ProfileCard';
 import { StoryDeck } from '../../components/UI/StoryDeck';
+import { SpotlightBoostModal } from '../../components/UI/SpotlightBoostModal';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { StoryDeckSkeleton, GridCardSkeleton } from '../../components/UI/Skeleton';
 import { calculateStateDistance } from '../../constants/indiaLocations';
 import { triggerHaptic } from '../../utils/haptics';
+
+const BOOST_STORAGE_KEY = 'vh_profile_boost_state';
+const BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+const BOOST_COOLDOWN_MS = 2 * 24 * 60 * 60 * 1000; // 2 days (48 hours)
+
+const formatBoostTime = (sec) => {
+  const m = Math.floor(Math.max(0, sec) / 60);
+  const s = Math.max(0, sec) % 60;
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+};
+
+const formatCooldownTime = (sec) => {
+  const days = Math.floor(Math.max(0, sec) / 86400);
+  const hours = Math.floor((Math.max(0, sec) % 86400) / 3600);
+  const minutes = Math.floor((Math.max(0, sec) % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+};
 
 export const DiscoverFeed = ({ onSelectProfile }) => {
   const {
@@ -36,10 +56,122 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeQuickFilter, setActiveQuickFilter] = useState('All');
   const [feedMode, setFeedMode] = useState('for_you'); // 'for_you' | 'near_me' | 'new_faces'
-  const [boostActive, setBoostActive] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
+  const [showBoostModal, setShowBoostModal] = useState(false);
   const [viewMode, setViewMode] = useState('deck'); // 'deck' | 'grid'
+
+  // Boost Profile State with 30-min timer and 2-day cooldown
+  const [boostState, setBoostState] = useState(() => {
+    try {
+      const saved = localStorage.getItem(BOOST_STORAGE_KEY);
+      if (saved) {
+        const { boostExpiresAt, cooldownExpiresAt } = JSON.parse(saved);
+        const now = Date.now();
+        if (now < boostExpiresAt) {
+          return {
+            isBoosting: true,
+            isOnCooldown: false,
+            boostSecondsLeft: Math.max(0, Math.floor((boostExpiresAt - now) / 1000)),
+            cooldownSecondsLeft: Math.max(0, Math.floor((cooldownExpiresAt - now) / 1000)),
+            boostExpiresAt,
+            cooldownExpiresAt
+          };
+        } else if (now < cooldownExpiresAt) {
+          return {
+            isBoosting: false,
+            isOnCooldown: true,
+            boostSecondsLeft: 0,
+            cooldownSecondsLeft: Math.max(0, Math.floor((cooldownExpiresAt - now) / 1000)),
+            boostExpiresAt,
+            cooldownExpiresAt
+          };
+        }
+      }
+    } catch (_) {}
+    return {
+      isBoosting: false,
+      isOnCooldown: false,
+      boostSecondsLeft: 0,
+      cooldownSecondsLeft: 0,
+      boostExpiresAt: null,
+      cooldownExpiresAt: null
+    };
+  });
+
+  // Background interval timer ticking every second
+  useEffect(() => {
+    const checkBoostTimer = () => {
+      try {
+        const saved = localStorage.getItem(BOOST_STORAGE_KEY);
+        if (!saved) return;
+        const { boostExpiresAt, cooldownExpiresAt } = JSON.parse(saved);
+        const now = Date.now();
+
+        if (now < boostExpiresAt) {
+          setBoostState({
+            isBoosting: true,
+            isOnCooldown: false,
+            boostSecondsLeft: Math.max(0, Math.floor((boostExpiresAt - now) / 1000)),
+            cooldownSecondsLeft: Math.max(0, Math.floor((cooldownExpiresAt - now) / 1000)),
+            boostExpiresAt,
+            cooldownExpiresAt
+          });
+        } else if (now < cooldownExpiresAt) {
+          setBoostState(prev => {
+            if (prev.isBoosting) {
+              showAlert?.('⚡ Your 30-minute Spotlight Boost has finished! Cooldown is active for 2 days.', 'info');
+            }
+            return {
+              isBoosting: false,
+              isOnCooldown: true,
+              boostSecondsLeft: 0,
+              cooldownSecondsLeft: Math.max(0, Math.floor((cooldownExpiresAt - now) / 1000)),
+              boostExpiresAt,
+              cooldownExpiresAt
+            };
+          });
+        } else {
+          localStorage.removeItem(BOOST_STORAGE_KEY);
+          setBoostState({
+            isBoosting: false,
+            isOnCooldown: false,
+            boostSecondsLeft: 0,
+            cooldownSecondsLeft: 0,
+            boostExpiresAt: null,
+            cooldownExpiresAt: null
+          });
+        }
+      } catch (_) {}
+    };
+
+    checkBoostTimer();
+    const interval = setInterval(checkBoostTimer, 1000);
+    return () => clearInterval(interval);
+  }, [showAlert]);
+
+  const handleActivateBoost = () => {
+    const now = Date.now();
+    const boostExpiresAt = now + BOOST_DURATION_MS;
+    const cooldownExpiresAt = now + BOOST_COOLDOWN_MS;
+    const newState = {
+      isBoosting: true,
+      isOnCooldown: false,
+      boostSecondsLeft: 30 * 60,
+      cooldownSecondsLeft: Math.floor(BOOST_COOLDOWN_MS / 1000),
+      boostExpiresAt,
+      cooldownExpiresAt
+    };
+
+    try {
+      localStorage.setItem(BOOST_STORAGE_KEY, JSON.stringify({ boostExpiresAt, cooldownExpiresAt }));
+    } catch (_) {}
+
+    setBoostState(newState);
+    triggerHaptic?.('medium');
+    showAlert?.('⚡ Spotlight Boost Activated! Your profile is prioritized to 5x more members in your area for the next 30 minutes.', 'success');
+    setShowBoostModal(false);
+  };
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -183,29 +315,59 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
   });
 
   // Apply Feed Mode Filtering (For You, Near Me, New Faces)
-  let feedProfiles = sortedProfiles;
+  let feedProfiles = [...sortedProfiles];
   if (feedMode === 'near_me') {
-    const userCity = userProfile?.city;
-    if (userCity) {
-      const nearList = sortedProfiles.filter(p => {
-        const distInfo = p.distanceKm != null
-          ? { distanceKm: p.distanceKm }
-          : calculateStateDistance(userCity, p.city);
-        return distInfo.distanceKm <= 450 || p.city?.toLowerCase() === userCity.toLowerCase();
-      });
-      feedProfiles = nearList.length > 0 ? nearList : sortedProfiles;
-    }
-  } else if (feedMode === 'new_faces') {
-    const newList = sortedProfiles.filter(p => {
-      if (!p.createdAt) return true; // keep if no date
-      const daysOld = (Date.now() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-      return daysOld <= 60;
-    }).sort((a, b) => {
-      const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return tB - tA;
+    const userCity = userProfile?.city || '';
+    const withDistance = sortedProfiles.map(p => {
+      const isExactCity = Boolean(userCity && p.city && p.city.trim().toLowerCase() === userCity.trim().toLowerCase());
+      let distKm = p.distanceKm;
+      let distText = p.distance;
+
+      if (distKm == null) {
+        if (userCity && p.city) {
+          const calc = calculateStateDistance(userCity, p.city);
+          distKm = calc.distanceKm;
+          distText = calc.formatted;
+        } else {
+          distKm = isExactCity ? 0 : 50;
+          distText = isExactCity ? 'Same City' : 'Nearby';
+        }
+      }
+
+      return {
+        ...p,
+        _isExactCity: isExactCity,
+        _computedDistanceKm: distKm,
+        _computedDistanceText: distText || (isExactCity ? `Same City • ${p.city}` : `${distKm} km away`)
+      };
     });
-    feedProfiles = newList.length > 0 ? newList : sortedProfiles;
+
+    feedProfiles = withDistance.sort((a, b) => {
+      // 1. Same City matches come first
+      if (a._isExactCity && !b._isExactCity) return -1;
+      if (!a._isExactCity && b._isExactCity) return 1;
+
+      // 2. Ascending order of physical distance (closest first)
+      if (a._computedDistanceKm !== b._computedDistanceKm) {
+        return a._computedDistanceKm - b._computedDistanceKm;
+      }
+
+      // 3. Secondary: profile completion
+      return (b.profileCompletion || 0) - (a.profileCompletion || 0);
+    });
+  } else if (feedMode === 'new_faces') {
+    // Sort all profiles by newest joined / created
+    feedProfiles = [...sortedProfiles].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (timeA !== timeB && !isNaN(timeA) && !isNaN(timeB)) {
+        return timeB - timeA; // Newest first
+      }
+      // If timestamps are identical or missing, reverse-sort by ID/name to guarantee a distinctly fresh order
+      const idA = String(a.id || a.userId || a.name || '');
+      const idB = String(b.id || b.userId || b.name || '');
+      return idB.localeCompare(idA);
+    });
   }
 
   const handleResetFilters = () => {
@@ -288,15 +450,30 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           <button
             type="button"
             onClick={() => {
-              setBoostActive(true);
-              triggerHaptic?.('medium');
-              showAlert?.('⚡ Spotlight Boost Activated! Your profile is prioritized to 5x more members in your city for the next 30 minutes.', 'success');
+              triggerHaptic?.('light');
+              setShowBoostModal(true);
             }}
-            className={`discover-nav-icon-btn boost-btn ${boostActive ? 'is-boosted' : ''}`}
+            className={`discover-nav-icon-btn boost-btn ${boostState.isBoosting ? 'is-boosted' : boostState.isOnCooldown ? 'is-cooldown' : 'is-ready'}`}
             aria-label="Spotlight Boost"
-            title="Spotlight Boost — 5x more visibility"
+            title={
+              boostState.isBoosting
+                ? `Spotlight Boost Active — ${formatBoostTime(boostState.boostSecondsLeft)} remaining`
+                : boostState.isOnCooldown
+                ? `Spotlight Boost on Cooldown — Ready in ${formatCooldownTime(boostState.cooldownSecondsLeft)}`
+                : 'Spotlight Boost — 5x more visibility for 30m'
+            }
           >
-            <Lightning size={22} weight="fill" />
+            <Lightning size={19} weight="fill" />
+            {boostState.isBoosting && (
+              <span className="boost-timer-chip font-ui">
+                {formatBoostTime(boostState.boostSecondsLeft)}
+              </span>
+            )}
+            {boostState.isOnCooldown && (
+              <span className="boost-cooldown-chip font-ui">
+                {formatCooldownTime(boostState.cooldownSecondsLeft)}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -334,7 +511,9 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       ) : feedProfiles.length > 0 ? (
         viewMode === 'deck' ? (
           <StoryDeck
+            key={feedMode}
             profiles={feedProfiles}
+            feedMode={feedMode}
             interestsSent={interestsSent}
             savedProfiles={savedProfiles}
             userProfile={userProfile}
@@ -350,10 +529,11 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           />
         ) : (
           <div className="gallery-wall-grid">
-            {sortedProfiles.map((profile) => (
+            {feedProfiles.map((profile) => (
               <ProfileCard
                 key={profile.id}
                 profile={profile}
+                feedMode={feedMode}
                 isInterestSent={
                   interestsSent.includes(profile.id) ||
                   (profile.userId && interestsSent.includes(profile.userId)) ||
@@ -388,6 +568,14 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       {showPreferences && (
         <DiscoverPreferences onClose={() => setShowPreferences(false)} />
       )}
+
+      {/* Spotlight Profile Boost Modal */}
+      <SpotlightBoostModal
+        isOpen={showBoostModal}
+        onClose={() => setShowBoostModal(false)}
+        boostState={boostState}
+        onActivate={handleActivateBoost}
+      />
 
       <style>{`
         .discover-feed-page {
@@ -708,17 +896,51 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
         .discover-nav-icon-btn.boost-btn {
           color: #C084FC;
+          gap: 5px;
+          padding: 0 10px;
+          border-radius: var(--radius-full);
+          transition: all 0.25s ease;
+          width: auto;
+          min-width: 40px;
         }
 
         .discover-nav-icon-btn.boost-btn:hover {
           color: #D8B4FE;
-          transform: scale(1.12);
+          transform: scale(1.05);
         }
 
         .discover-nav-icon-btn.boost-btn.is-boosted {
           background: linear-gradient(135deg, #A855F7, #C084FC);
           color: #FFFFFF;
-          box-shadow: 0 0 14px rgba(168, 85, 247, 0.6);
+          box-shadow: 0 0 16px rgba(168, 85, 247, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          animation: boostGlowPulse 2s infinite;
+        }
+
+        @keyframes boostGlowPulse {
+          0%, 100% { box-shadow: 0 0 14px rgba(168, 85, 247, 0.6); }
+          50% { box-shadow: 0 0 24px rgba(192, 132, 252, 0.9); }
+        }
+
+        .discover-nav-icon-btn.boost-btn.is-cooldown {
+          color: rgba(212, 173, 106, 0.9);
+          background: rgba(30, 24, 27, 0.7);
+          border: 1px solid rgba(212, 173, 106, 0.3);
+        }
+
+        .boost-timer-chip {
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+          font-variant-numeric: tabular-nums;
+          color: #FFFFFF;
+        }
+
+        .boost-cooldown-chip {
+          font-size: 10px;
+          font-weight: 700;
+          color: #D4AD6A;
+          letter-spacing: 0.02em;
         }
       `}</style>
     </div>

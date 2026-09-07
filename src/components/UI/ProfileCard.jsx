@@ -16,6 +16,7 @@ export const ProfileCard = ({
   onBlock,
   onReport,
   onClick,
+  feedMode = 'for_you',
   className = ''
 }) => {
   const { userProfile } = useApp();
@@ -171,12 +172,24 @@ export const ProfileCard = ({
           </>
         )}
         
-        {/* Premium Badge if applicable */}
-        {profile.isPremium && (
+        {/* Badges: Near Me distance, New Face, or Premium */}
+        {feedMode === 'near_me' ? (
+          <div className="profile-badge-row font-ui">
+            <span className="badge-near-me font-ui">
+              📍 {profile._computedDistanceText || profile.distance || (profile.city ? `In ${profile.city}` : 'Nearby')}
+            </span>
+          </div>
+        ) : feedMode === 'new_faces' ? (
+          <div className="profile-badge-row font-ui">
+            <span className="badge-new-face font-ui">
+              ✨ New Face
+            </span>
+          </div>
+        ) : profile.isPremium ? (
           <div className="profile-badge-row font-ui">
             <span className="badge-premium font-ui">Premium</span>
           </div>
-        )}
+        ) : null}
 
         {/* Dropdown Options */}
         <div className="profile-card-options-wrap" ref={dropdownRef}>
@@ -479,6 +492,34 @@ export const ProfileCard = ({
           text-transform: uppercase;
           letter-spacing: 0.5px;
           backdrop-filter: blur(4px);
+        }
+
+        .badge-near-me {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(18, 14, 16, 0.78);
+          color: #FAF5F0;
+          font-size: var(--text-caption);
+          padding: 3px 8px;
+          border-radius: var(--radius-full);
+          font-weight: 600;
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(212, 173, 106, 0.4);
+        }
+
+        .badge-new-face {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(18, 14, 16, 0.78);
+          color: #F3E8FF;
+          font-size: var(--text-caption);
+          padding: 3px 8px;
+          border-radius: var(--radius-full);
+          font-weight: 600;
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(192, 132, 252, 0.4);
         }
 
         /* Options Dropdown */
