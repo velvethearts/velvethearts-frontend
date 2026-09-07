@@ -35,7 +35,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeQuickFilter, setActiveQuickFilter] = useState('All');
-  const [feedMode, setFeedMode] = useState('for_you'); // 'for_you' | 'double_date' | 'college'
+  const [feedMode, setFeedMode] = useState('for_you'); // 'for_you' | 'near_me' | 'new_faces'
   const [boostActive, setBoostActive] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
@@ -182,16 +182,30 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     return (b.profileCompletion || 80) - (a.profileCompletion || 80);
   });
 
-  // Apply Feed Mode Filtering (For You, Double Date, College)
+  // Apply Feed Mode Filtering (For You, Near Me, New Faces)
   let feedProfiles = sortedProfiles;
-  if (feedMode === 'college') {
-    const collegeList = sortedProfiles.filter(p => {
-      const isCollegeAge = p.age >= 18 && p.age <= 24;
-      const text = `${p.story || ''} ${(p.interests || []).join(' ')} ${p.city || ''} ${p.occupation || ''}`.toLowerCase();
-      const hasCollegeKeywords = /college|university|campus|student|degree|btech|bsc|ba|mba|iit|du|usc|ucla|stanford|harvard|alumni|senior|freshman|sophomore/i.test(text);
-      return isCollegeAge || hasCollegeKeywords;
+  if (feedMode === 'near_me') {
+    const userCity = userProfile?.city;
+    if (userCity) {
+      const nearList = sortedProfiles.filter(p => {
+        const distInfo = p.distanceKm != null
+          ? { distanceKm: p.distanceKm }
+          : calculateStateDistance(userCity, p.city);
+        return distInfo.distanceKm <= 450 || p.city?.toLowerCase() === userCity.toLowerCase();
+      });
+      feedProfiles = nearList.length > 0 ? nearList : sortedProfiles;
+    }
+  } else if (feedMode === 'new_faces') {
+    const newList = sortedProfiles.filter(p => {
+      if (!p.createdAt) return true; // keep if no date
+      const daysOld = (Date.now() - new Date(p.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+      return daysOld <= 60;
+    }).sort((a, b) => {
+      const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tB - tA;
     });
-    feedProfiles = collegeList.length > 0 ? collegeList : sortedProfiles;
+    feedProfiles = newList.length > 0 ? newList : sortedProfiles;
   }
 
   const handleResetFilters = () => {
@@ -222,7 +236,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     (filters.sortBy && filters.sortBy !== 'default');
 
   return (
-    <div className="discover-feed-page page-enter">
+    <div className={`discover-feed-page page-enter ${viewMode === 'deck' ? 'is-deck-view' : ''}`}>
       {/* Modern Reference Header Navigation Rail */}
       <div className="discover-top-nav-bar font-ui">
         {/* Left: Preferences Button */}
@@ -233,16 +247,16 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           aria-label="Filter preferences"
           title="Filter Preferences"
         >
-          <Sliders size={20} weight="bold" />
+          <Sliders size={22} weight="bold" />
           {hasActiveFilters && <span className="active-filter-dot" />}
         </button>
 
-        {/* Center: Curated Feed Pills (For You | Double Date | College) */}
+        {/* Center: Curated Feed Pills (For You | Near Me | New Faces) */}
         <div className="discover-mode-pills" role="tablist" aria-label="Discover Modes">
           {[
             { id: 'for_you', label: 'For You' },
-            { id: 'double_date', label: 'Double Date' },
-            { id: 'college', label: 'College' },
+            { id: 'near_me', label: 'Near Me' },
+            { id: 'new_faces', label: 'New Faces' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -259,8 +273,18 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           ))}
         </div>
 
-        {/* Right: Boost Button + Search Toggle + View Mode */}
+        {/* Right: View Mode Toggle + Spotlight Boost Button */}
         <div className="discover-top-right-actions">
+          <button
+            type="button"
+            className="discover-nav-icon-btn mode-switch-btn"
+            onClick={() => setViewMode(viewMode === 'deck' ? 'grid' : 'deck')}
+            aria-label={`Switch to ${viewMode === 'deck' ? 'Grid' : 'Deck'} view`}
+            title={`Switch to ${viewMode === 'deck' ? 'Grid' : 'Deck'} view`}
+          >
+            {viewMode === 'deck' ? <SquaresFour size={19} weight="bold" /> : <Cards size={19} weight="bold" />}
+          </button>
+
           <button
             type="button"
             onClick={() => {
@@ -272,40 +296,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
             aria-label="Spotlight Boost"
             title="Spotlight Boost — 5x more visibility"
           >
-            <Lightning size={20} weight="fill" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowSearch(!showSearch)}
-            className={`discover-nav-icon-btn ${showSearch || searchTerm ? 'search-active' : ''}`}
-            aria-label="Toggle search"
-            title="Search profiles"
-          >
-            <MagnifyingGlass size={18} weight="bold" />
-          </button>
-
-          {/* View Mode Toggle Switch */}
-          <button
-            type="button"
-            className="view-mode-toggle-switch font-ui"
-            onClick={() => setViewMode(viewMode === 'deck' ? 'grid' : 'deck')}
-            aria-label={`Switch to ${viewMode === 'deck' ? 'Grid' : 'Deck'} view`}
-            title={`Current: ${viewMode === 'deck' ? 'Story Deck' : 'Gallery Grid'}`}
-          >
-            <Cards
-              size={17}
-              weight={viewMode === 'deck' ? 'fill' : 'regular'}
-              className={`toggle-icon ${viewMode === 'deck' ? 'active' : ''}`}
-            />
-            <div className="toggle-track">
-              <div className={`toggle-thumb ${viewMode === 'grid' ? 'grid-active' : 'deck-active'}`} />
-            </div>
-            <SquaresFour
-              size={17}
-              weight={viewMode === 'grid' ? 'fill' : 'regular'}
-              className={`toggle-icon ${viewMode === 'grid' ? 'active' : ''}`}
-            />
+            <Lightning size={22} weight="fill" />
           </button>
         </div>
       </div>
@@ -344,7 +335,6 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         viewMode === 'deck' ? (
           <StoryDeck
             profiles={feedProfiles}
-            feedMode={feedMode}
             interestsSent={interestsSent}
             savedProfiles={savedProfiles}
             userProfile={userProfile}
@@ -403,7 +393,11 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         .discover-feed-page {
           max-width: var(--content-max-width);
           margin: 0 auto;
-          padding: var(--space-6) var(--space-4);
+          padding: var(--space-4) var(--space-3);
+        }
+
+        .discover-feed-page.is-deck-view {
+          max-width: 440px;
         }
 
         .discover-header-actions {
@@ -606,19 +600,20 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 10px;
-          margin-bottom: var(--space-4);
+          gap: 8px;
+          margin-bottom: var(--space-3);
           padding: 4px 0;
-          flex-wrap: wrap;
+          flex-wrap: nowrap;
+          width: 100%;
         }
 
         .discover-nav-icon-btn {
           width: 38px;
           height: 38px;
           border-radius: 50%;
-          border: 1.5px solid var(--border-subtle);
-          background: var(--bg-surface);
-          color: var(--text-secondary);
+          border: none;
+          background: transparent;
+          color: rgba(255, 255, 255, 0.7);
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -629,50 +624,44 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         }
 
         .discover-nav-icon-btn:hover {
-          border-color: var(--border-default);
-          color: var(--text-primary);
-          transform: translateY(-1px);
+          color: #FFFFFF;
+          transform: scale(1.08);
         }
 
         .discover-nav-icon-btn.has-active {
-          border-color: var(--burgundy-400);
-          color: var(--burgundy-500);
+          color: var(--burgundy-400);
         }
 
         .discover-nav-icon-btn .active-filter-dot {
-          width: 8px;
-          height: 8px;
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
           background: var(--burgundy-500);
           position: absolute;
-          top: -1px;
-          right: -1px;
-          border: 2px solid var(--bg-surface);
+          top: 6px;
+          right: 6px;
+          box-shadow: 0 0 6px var(--burgundy-400);
         }
 
         .discover-mode-pills {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          padding: 3px 4px;
+          gap: 2px;
+          padding: 3px;
           border-radius: 999px;
-          background: rgba(0, 0, 0, 0.05);
-          border: 1px solid var(--border-subtle);
-        }
-
-        [data-theme="dark"] .discover-mode-pills {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          flex-shrink: 0;
         }
 
         .discover-mode-pill {
-          padding: 6px 16px;
+          padding: 5px 13px;
           border-radius: 999px;
           border: none;
           background: transparent;
-          color: var(--text-secondary);
+          color: rgba(255, 255, 255, 0.65);
           font-family: var(--font-ui);
-          font-size: 13px;
+          font-size: 12.5px;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -680,50 +669,44 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         }
 
         .discover-mode-pill:hover {
-          color: var(--text-primary);
+          color: #FFFFFF;
         }
 
         .discover-mode-pill.active {
-          background: var(--text-primary);
-          color: var(--bg-surface) !important;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        [data-theme="dark"] .discover-mode-pill.active {
-          background: #ffffff;
-          color: #141113 !important;
-          box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
+          background: #FFFFFF;
+          color: #11141A !important;
+          font-weight: 700;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .discover-top-right-actions {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 4px;
+          flex-shrink: 0;
+        }
+
+        .discover-nav-icon-btn.mode-switch-btn {
+          color: rgba(255, 255, 255, 0.55);
+        }
+
+        .discover-nav-icon-btn.mode-switch-btn:hover {
+          color: #FFFFFF;
         }
 
         .discover-nav-icon-btn.boost-btn {
-          color: #c084fc;
-          background: rgba(192, 132, 252, 0.1);
-          border-color: rgba(192, 132, 252, 0.3);
+          color: #C084FC;
         }
 
         .discover-nav-icon-btn.boost-btn:hover {
-          background: rgba(192, 132, 252, 0.2);
-          border-color: #c084fc;
-          color: #a855f7;
-          transform: scale(1.08);
+          color: #D8B4FE;
+          transform: scale(1.12);
         }
 
         .discover-nav-icon-btn.boost-btn.is-boosted {
-          background: linear-gradient(135deg, #a855f7, #c084fc);
-          color: #ffffff;
-          box-shadow: 0 0 14px rgba(168, 85, 247, 0.5);
-        }
-
-        .discover-nav-icon-btn.search-active {
-          border-color: var(--burgundy-400);
-          color: var(--burgundy-500);
-          background: var(--bg-accent-subtle);
+          background: linear-gradient(135deg, #A855F7, #C084FC);
+          color: #FFFFFF;
+          box-shadow: 0 0 14px rgba(168, 85, 247, 0.6);
         }
       `}</style>
     </div>

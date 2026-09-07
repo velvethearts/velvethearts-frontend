@@ -11,9 +11,7 @@ import {
   Bookmark,
   ArrowCounterClockwise,
   PaperPlaneTilt,
-  ArrowUp,
-  GraduationCap,
-  UsersThree
+  ArrowUp
 } from '@phosphor-icons/react';
 import { getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
@@ -26,7 +24,6 @@ export const StoryDeck = ({
   interestsSent = [],
   savedProfiles = [],
   userProfile = {},
-  feedMode = 'for_you', // 'for_you' | 'double_date' | 'college'
   onSendInterest,
   onUnsendInterest,
   onPassProfile,
@@ -53,10 +50,8 @@ export const StoryDeck = ({
   const dragStartRef = useRef({ x: 0, y: 0 });
 
   const activeProfile = profiles[currentIndex] || null;
-  const wingmanProfile = (feedMode === 'double_date' && profiles.length > 1) ? profiles[currentIndex + 1] : null;
 
   const vibeScore = computeVibeMatch(userProfile, activeProfile);
-  const wingmanVibeScore = wingmanProfile ? computeVibeMatch(userProfile, wingmanProfile) : 0;
 
   // Current photo index for active profile
   const currentPhotoIndex = activeProfile ? (photoIndices[activeProfile.id] || 0) : 0;
@@ -315,7 +310,6 @@ export const StoryDeck = ({
   const stampPassOpacity = swipeDirection === 'left' ? 1 : Math.min(Math.max(-dragOffset.x / 80, 0), 1);
   const stampSuperOpacity = swipeDirection === 'super' ? 1 : 0;
 
-  const isDoubleDate = feedMode === 'double_date' && Boolean(wingmanProfile);
 
   return (
     <div className="story-deck-wrapper">
@@ -345,7 +339,7 @@ export const StoryDeck = ({
 
       {/* Main Full-Bleed Card Container */}
       <div
-        className={`story-card-container ${swipeDirection ? `swiping-${swipeDirection}` : ''} ${isDoubleDate ? 'double-date-split' : ''}`}
+        className={`story-card-container ${swipeDirection ? `swiping-${swipeDirection}` : ''}`}
         style={{
           transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${rotateDeg}deg)`,
           transition: isDragging ? 'none' : 'transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
@@ -369,280 +363,169 @@ export const StoryDeck = ({
           SUPER SPARK ⭐️
         </div>
 
-        {/* DOUBLE DATE SPLIT VIEW */}
-        {isDoubleDate ? (
-          <div className="double-date-panes">
-            {/* Top Double Date Banner */}
-            <div className="double-date-top-banner font-ui">
-              <UsersThree size={16} weight="fill" />
-              <span>Double Date Match</span>
-            </div>
+        {/* Edge-to-Edge Full Photo */}
+        <ProtectedImage
+          src={displayPhotos[currentPhotoIndex] || getDefaultAvatar(activeProfile?.gender)}
+          alt={`${activeProfile.name}'s photo ${currentPhotoIndex + 1}`}
+          className="story-card-photo-full"
+          fallbackSrc={getDefaultAvatar(activeProfile?.gender)}
+        />
 
-            {/* Left Wing / Active Candidate */}
-            <div
-              className="double-date-pane pane-left"
-              onClick={() => onSelectProfile && onSelectProfile(activeProfile)}
-            >
-              <ProtectedImage
-                src={displayPhotos[0] || getDefaultAvatar(activeProfile.gender)}
-                alt={activeProfile.name}
-                className="double-date-photo"
-                fallbackSrc={getDefaultAvatar(activeProfile.gender)}
-              />
-              <div className="double-date-scrim" />
-              <div className="double-date-info font-ui">
-                <div className="double-date-name-row">
-                  <span className="double-date-name font-display">{activeProfile.name}, {activeProfile.age}</span>
-                  {activeProfile.verified && <VerifiedBadge variant="icon" size="sm" />}
-                </div>
-                <p className="double-date-quote font-body">&ldquo;{activeProfile.story || activeProfile.bio || activeProfile.relationshipIntent}&rdquo;</p>
-                <button
-                  type="button"
-                  className="story-expand-btn mini"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onSelectProfile) onSelectProfile(activeProfile);
-                  }}
-                  title="View Profile"
-                >
-                  <ArrowUp size={14} weight="bold" />
-                </button>
-              </div>
-            </div>
+        {/* Bottom Scrim Gradient */}
+        <div className="story-card-scrim" />
 
-            {/* Right Wing / Wingman */}
+        {/* Top Story Indicator Bars */}
+        <div className="story-photo-bars" aria-label="Photo carousel progress">
+          {displayPhotos.map((_, idx) => (
             <div
-              className="double-date-pane pane-right"
-              onClick={() => onSelectProfile && onSelectProfile(wingmanProfile)}
-            >
-              <ProtectedImage
-                src={extractPhotoUrls(wingmanProfile)[0] || getDefaultAvatar(wingmanProfile.gender)}
-                alt={wingmanProfile.name}
-                className="double-date-photo"
-                fallbackSrc={getDefaultAvatar(wingmanProfile.gender)}
-              />
-              <div className="double-date-scrim" />
-              <div className="double-date-info font-ui">
-                <div className="double-date-name-row">
-                  <span className="double-date-name font-display">{wingmanProfile.name}, {wingmanProfile.age}</span>
-                  {wingmanProfile.verified && <VerifiedBadge variant="icon" size="sm" />}
-                </div>
-                <p className="double-date-quote font-body">&ldquo;{wingmanProfile.story || wingmanProfile.bio || wingmanProfile.relationshipIntent}&rdquo;</p>
-                <button
-                  type="button"
-                  className="story-expand-btn mini"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onSelectProfile) onSelectProfile(wingmanProfile);
-                  }}
-                  title="View Wingman Profile"
-                >
-                  <ArrowUp size={14} weight="bold" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* STANDARD FULL-BLEED CARD (FOR YOU & COLLEGE) */
-          <>
-            {/* Edge-to-Edge Full Photo */}
-            <ProtectedImage
-              src={displayPhotos[currentPhotoIndex] || getDefaultAvatar(activeProfile?.gender)}
-              alt={`${activeProfile.name}'s photo ${currentPhotoIndex + 1}`}
-              className="story-card-photo-full"
-              fallbackSrc={getDefaultAvatar(activeProfile?.gender)}
+              key={idx}
+              className={`story-photo-bar ${idx === currentPhotoIndex ? 'active' : idx < currentPhotoIndex ? 'filled' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                setPhotoIndices(prev => ({ ...prev, [activeProfile.id]: idx }));
+              }}
             />
+          ))}
+        </div>
 
-            {/* Bottom Scrim Gradient */}
-            <div className="story-card-scrim" />
-
-            {/* Top Story Indicator Bars */}
-            <div className="story-photo-bars" aria-label="Photo carousel progress">
-              {displayPhotos.map((_, idx) => (
-                <div
-                  key={idx}
-                  className={`story-photo-bar ${idx === currentPhotoIndex ? 'active' : idx < currentPhotoIndex ? 'filled' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerHaptic('light');
-                    setPhotoIndices(prev => ({ ...prev, [activeProfile.id]: idx }));
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Tap Navigation Zones */}
-            {displayPhotos.length > 1 && (
-              <>
-                <div
-                  className="story-tap-zone zone-prev"
-                  onClick={handlePrevPhoto}
-                  aria-label="Previous photo"
-                />
-                <div
-                  className="story-tap-zone zone-next"
-                  onClick={handleNextPhoto}
-                  aria-label="Next photo"
-                />
-              </>
-            )}
-
-            {/* Top Badges Row */}
-            <div className="story-top-badges">
-              <div className="story-badges-left">
-                {/* Active Indicator */}
-                <div className="story-badge-pill badge-active font-ui">
-                  <span className="pulsing-green-dot" />
-                  <span>Active</span>
-                </div>
-
-                {/* College Badge */}
-                {feedMode === 'college' && (
-                  <div className="story-badge-pill badge-college font-ui">
-                    <GraduationCap size={13} weight="fill" />
-                    <span>{activeProfile.college || activeProfile.education || "USC '27"}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="story-badges-right">
-                {/* Likes You Gold Pill */}
-                <div
-                  className="story-badge-pill badge-likes-you font-ui"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerHaptic('light');
-                    setReactionTarget({
-                      isOpen: true,
-                      profile: activeProfile,
-                      targetType: 'letter',
-                      targetContent: ''
-                    });
-                  }}
-                  title="Likes you! Tap to reply with a note"
-                >
-                  <span>🫶 Likes You</span>
-                  <CaretRight size={12} weight="bold" />
-                </div>
-
-                {/* Bookmark Toggle */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onSaveProfile) onSaveProfile(activeProfile.id);
-                  }}
-                  className={`story-bookmark-btn ${isSaved ? 'saved' : ''}`}
-                  title={isSaved ? 'Saved' : 'Save Profile'}
-                  aria-label="Save profile"
-                >
-                  <Bookmark size={20} weight={isSaved ? 'fill' : 'regular'} />
-                </button>
-              </div>
-            </div>
-
-            {/* First-time swipe guide overlay */}
-            {showSwipeGuide && (
-              <div className="card-gesture-guide-overlay font-ui" onClick={completeSwipeGuide}>
-                <div className="guide-item guide-left">
-                  <CaretLeft size={18} weight="bold" className="anim-pulse-left" />
-                  <span>Swipe Left to Pass</span>
-                </div>
-                <div className="guide-item guide-right">
-                  <span>Swipe Right to Spark</span>
-                  <CaretRight size={18} weight="bold" className="anim-pulse-right" />
-                </div>
-                <span className="guide-tap-dismiss">Tap anywhere to dismiss</span>
-              </div>
-            )}
-
-            {/* Bottom Content Overlay */}
-            <div className="story-card-overlay-content">
-              {/* Profile Headline: Name + Age + Verified + Vibe Match + Expand Arrow */}
-              <div className="story-overlay-headline">
-                <div className="headline-left">
-                  <h2
-                    className="story-profile-name font-display"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onSelectProfile) onSelectProfile(activeProfile);
-                    }}
-                    title="View full profile"
-                  >
-                    {activeProfile.name} <span className="story-profile-age">{activeProfile.age}</span>
-                  </h2>
-                  {activeProfile.verified && (
-                    <VerifiedBadge variant="icon" size="md" />
-                  )}
-                  <div className="story-vibe-pill font-ui" title={`${vibeScore}% Vibe Compatibility`}>
-                    <Sparkle size={11} color="var(--gold-400)" weight="fill" />
-                    <span>{vibeScore}% Vibe</span>
-                  </div>
-                </div>
-
-                {/* Upward Circular Expander Button */}
-                <button
-                  type="button"
-                  className="story-expand-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerHaptic('light');
-                    if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
-                  }}
-                  title="View full profile details"
-                  aria-label="Expand profile"
-                >
-                  <ArrowUp size={18} weight="bold" />
-                </button>
-              </div>
-
-              {/* Identity & Campus Tags */}
-              <div className="story-meta-tags font-ui">
-                {feedMode === 'college' && (
-                  <span className="meta-tag college-tag">
-                    <GraduationCap size={12} weight="fill" />
-                    <span>{activeProfile.college || activeProfile.education || "USC '27"}</span>
-                  </span>
-                )}
-                {activeProfile.city && (
-                  <span className="meta-tag">{activeProfile.city}</span>
-                )}
-                {activeProfile.relationshipIntent && (
-                  <span className="meta-tag intent-tag">✨ {activeProfile.relationshipIntent}</span>
-                )}
-                {activeProfile.interests?.slice(0, 2).map(item => (
-                  <span key={item} className="meta-tag">{item}</span>
-                ))}
-              </div>
-
-              {/* Bio Quote Snippet */}
-              {(activeProfile.story || activeProfile.bio) && (
-                <div
-                  className="story-quote-card"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setReactionTarget({
-                      isOpen: true,
-                      profile: activeProfile,
-                      targetType: 'story',
-                      targetContent: activeProfile.story || activeProfile.bio
-                    });
-                  }}
-                  title="Click to comment on this story"
-                >
-                  <div className="quote-text-wrap font-body">
-                    <span className="quote-mark font-display">&ldquo;</span>
-                    <p className="quote-body">{activeProfile.story || activeProfile.bio}</p>
-                  </div>
-                  <span className="quote-reply-btn font-ui">
-                    <ChatCircleText size={14} weight="fill" />
-                    <span>Reply</span>
-                  </span>
-                </div>
-              )}
-            </div>
+        {/* Tap Navigation Zones */}
+        {displayPhotos.length > 1 && (
+          <>
+            <div
+              className="story-tap-zone zone-prev"
+              onClick={handlePrevPhoto}
+              aria-label="Previous photo"
+            />
+            <div
+              className="story-tap-zone zone-next"
+              onClick={handleNextPhoto}
+              aria-label="Next photo"
+            />
           </>
         )}
+
+        {/* First-time swipe guide overlay */}
+        {showSwipeGuide && (
+          <div className="card-gesture-guide-overlay font-ui" onClick={completeSwipeGuide}>
+            <div className="guide-item guide-left">
+              <CaretLeft size={18} weight="bold" className="anim-pulse-left" />
+              <span>Swipe Left to Pass</span>
+            </div>
+            <div className="guide-item guide-right">
+              <span>Swipe Right to Spark</span>
+              <CaretRight size={18} weight="bold" className="anim-pulse-right" />
+            </div>
+            <span className="guide-tap-dismiss">Tap anywhere to dismiss</span>
+          </div>
+        )}
+
+        {/* Bottom Content Overlay */}
+        <div className="story-card-overlay-content">
+          {/* Status Pill (Active or Likes You) directly above the name */}
+          {activeProfile.likesYou ? (
+            <div
+              className="story-status-pill pill-likes-you font-ui"
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                setReactionTarget({
+                  isOpen: true,
+                  profile: activeProfile,
+                  targetType: 'letter',
+                  targetContent: ''
+                });
+              }}
+              title="Likes you! Tap to reply"
+            >
+              <span>🫶 Likes You</span>
+              <CaretRight size={12} weight="bold" />
+            </div>
+          ) : (
+            <div className="story-status-pill pill-active font-ui">
+              <span className="pulsing-green-dot" />
+              <span>Active</span>
+            </div>
+          )}
+
+          {/* Headline: Name, Age, VerifiedBadge, Expand Arrow */}
+          <div className="story-overlay-headline">
+            <div className="headline-left">
+              <h2
+                className="story-profile-name font-ui"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onSelectProfile) onSelectProfile(activeProfile);
+                }}
+                title="View full profile"
+              >
+                {activeProfile.name} <span className="story-profile-age">{activeProfile.age}</span>
+              </h2>
+              {activeProfile.verified && (
+                <VerifiedBadge variant="icon" size="md" />
+              )}
+            </div>
+
+            {/* Upward Circular Expander Button */}
+            <button
+              type="button"
+              className="story-expand-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerHaptic('light');
+                if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
+              }}
+              title="View full profile details"
+              aria-label="Expand profile"
+            >
+              <ArrowUp size={18} weight="bold" />
+            </button>
+          </div>
+
+          {/* Clean Quote Bio directly over gradient (Nancy style) */}
+          {(activeProfile.story || activeProfile.bio) && (
+            <div
+              className="story-quote-clean font-ui"
+              onClick={(e) => {
+                e.stopPropagation();
+                setReactionTarget({
+                  isOpen: true,
+                  profile: activeProfile,
+                  targetType: 'story',
+                  targetContent: activeProfile.story || activeProfile.bio
+                });
+              }}
+              title="Click to reply to this quote"
+            >
+              <span className="quote-glyph">&ldquo;</span>
+              <p className="quote-text">{activeProfile.story || activeProfile.bio}</p>
+            </div>
+          )}
+
+          {/* Profile Attributes Row (Bella style: college, occupation, city, intent) */}
+          <div className="story-meta-row font-ui">
+            {activeProfile.college && (
+              <span className="meta-item">
+                <span className="meta-icon">🎓</span> {activeProfile.college}
+              </span>
+            )}
+            {activeProfile.occupation && (
+              <span className="meta-item">
+                <span className="meta-icon">💼</span> {activeProfile.occupation}
+              </span>
+            )}
+            {activeProfile.city && (
+              <span className="meta-item">
+                <span className="meta-icon">📍</span> {activeProfile.city}
+              </span>
+            )}
+            {activeProfile.relationshipIntent && (
+              <span className="meta-item intent-item">
+                ✨ {activeProfile.relationshipIntent}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Floating 5-Button Circular Console */}
@@ -749,14 +632,14 @@ export const StoryDeck = ({
         .story-card-container {
           position: relative;
           width: 100%;
-          aspect-ratio: 9 / 13.5;
-          min-height: 520px;
-          max-height: 620px;
-          border-radius: 28px;
+          aspect-ratio: 9 / 14.5;
+          min-height: 540px;
+          max-height: 640px;
+          border-radius: 22px;
           overflow: hidden;
-          background-color: var(--charcoal-900, #141012);
-          border: 1.5px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
-          box-shadow: 0 20px 48px rgba(0, 0, 0, 0.38);
+          background-color: #0d0f14;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
           cursor: grab;
         }
 
@@ -774,17 +657,17 @@ export const StoryDeck = ({
           pointer-events: none;
         }
 
-        /* Deep Gradient Bottom Scrim */
+        /* Deep Gradient Bottom Scrim - perfectly starts in lower 40% */
         .story-card-scrim {
           position: absolute;
           inset: 0;
           background: linear-gradient(
-            to top,
-            rgba(8, 6, 7, 0.96) 0%,
-            rgba(8, 6, 7, 0.78) 32%,
-            rgba(8, 6, 7, 0.28) 60%,
-            rgba(8, 6, 7, 0.05) 85%,
-            transparent 100%
+            to bottom,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 0) 48%,
+            rgba(0, 0, 0, 0.18) 62%,
+            rgba(0, 0, 0, 0.65) 80%,
+            rgba(0, 0, 0, 0.94) 100%
           );
           pointer-events: none;
           z-index: 2;
@@ -793,27 +676,26 @@ export const StoryDeck = ({
         /* Horizontal Story Photo Bars */
         .story-photo-bars {
           position: absolute;
-          top: 12px;
-          left: 14px;
-          right: 14px;
+          top: 10px;
+          left: 10px;
+          right: 10px;
           display: flex;
-          gap: 5px;
+          gap: 4px;
           z-index: 10;
         }
 
         .story-photo-bar {
           flex: 1;
-          height: 3.5px;
-          background: rgba(255, 255, 255, 0.32);
+          height: 3px;
+          background: rgba(255, 255, 255, 0.35);
           border-radius: 999px;
           cursor: pointer;
           transition: background-color 0.2s ease;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
         }
 
         .story-photo-bar.active {
           background: #FFFFFF;
-          box-shadow: 0 1px 5px rgba(0, 0, 0, 0.8);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
         }
 
         .story-photo-bar.filled {
@@ -838,44 +720,53 @@ export const StoryDeck = ({
           right: 0;
         }
 
-        /* Top Badges Row */
-        .story-top-badges {
+        /* Bottom Overlaid Details */
+        .story-card-overlay-content {
           position: absolute;
-          top: 24px;
-          left: 14px;
-          right: 14px;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 20px 16px 18px;
+          z-index: 8;
           display: flex;
-          align-items: center;
-          justify-content: space-between;
-          z-index: 10;
+          flex-direction: column;
+          gap: 8px;
           pointer-events: auto;
         }
 
-        .story-badges-left,
-        .story-badges-right {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .story-badge-pill {
+        /* Status Pills (Active / Likes You) directly above the name */
+        .story-status-pill {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 5px 12px;
+          width: fit-content;
           border-radius: 999px;
+          margin-bottom: 2px;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+        }
+
+        .story-status-pill:hover {
+          transform: scale(1.04);
+        }
+
+        .story-status-pill.pill-active {
+          background: #FFFFFF;
+          color: #111827;
+          padding: 3px 10px;
           font-size: 11.5px;
           font-weight: 700;
           letter-spacing: 0.02em;
-          backdrop-filter: blur(12px);
-          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
-        /* Active Badge */
-        .badge-active {
-          background: rgba(14, 11, 13, 0.65);
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          color: #FFFFFF;
+        .story-status-pill.pill-likes-you {
+          background: #F59E0B;
+          color: #181102;
+          padding: 4px 12px;
+          font-size: 12px;
+          font-weight: 700;
+          box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
         }
 
         .pulsing-green-dot {
@@ -892,64 +783,7 @@ export const StoryDeck = ({
           50% { transform: scale(1.35); opacity: 0.75; }
         }
 
-        /* College Badge */
-        .badge-college {
-          background: rgba(14, 11, 13, 0.65);
-          border: 1px solid rgba(212, 173, 106, 0.4);
-          color: #F3C68F;
-        }
-
-        /* Likes You Gold Pill */
-        .badge-likes-you {
-          background: linear-gradient(135deg, rgba(212, 173, 106, 0.3) 0%, rgba(212, 173, 106, 0.15) 100%);
-          border: 1px solid rgba(212, 173, 106, 0.55);
-          color: #F3C68F;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .badge-likes-you:hover {
-          background: linear-gradient(135deg, rgba(212, 173, 106, 0.45) 0%, rgba(212, 173, 106, 0.25) 100%);
-          transform: translateY(-1px);
-        }
-
-        /* Bookmark Toggle */
-        .story-bookmark-btn {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          background: rgba(14, 11, 13, 0.65);
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          color: rgba(255, 255, 255, 0.85);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          backdrop-filter: blur(12px);
-          transition: all 0.2s ease;
-        }
-
-        .story-bookmark-btn:hover,
-        .story-bookmark-btn.saved {
-          color: var(--gold-400, #D4AD6A);
-          border-color: var(--gold-400, #D4AD6A);
-          transform: scale(1.08);
-        }
-
-        /* Bottom Overlaid Details */
-        .story-card-overlay-content {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          padding: 20px 18px 18px;
-          z-index: 8;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          pointer-events: auto;
-        }
-
+        /* Headline: Name + Age + Verified + Expand Arrow */
         .story-overlay-headline {
           display: flex;
           align-items: center;
@@ -960,66 +794,55 @@ export const StoryDeck = ({
         .headline-left {
           display: flex;
           align-items: center;
-          flex-wrap: wrap;
           gap: 8px;
           min-width: 0;
         }
 
         .story-profile-name {
-          font-size: 1.65rem;
-          font-weight: 800;
+          font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 1.8rem;
+          font-weight: 700;
           color: #FFFFFF;
           line-height: 1.15;
-          letter-spacing: -0.02em;
-          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+          letter-spacing: -0.01em;
+          text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
           margin: 0;
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
         }
 
         .story-profile-name:hover {
-          color: var(--gold-300, #F3C68F);
+          color: #F3C68F;
         }
 
         .story-profile-age {
           font-weight: 500;
-          font-size: 0.9em;
-          opacity: 0.9;
-        }
-
-        .story-vibe-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 3px;
-          background: rgba(212, 173, 106, 0.2);
-          border: 1px solid rgba(212, 173, 106, 0.45);
-          color: #F3C68F;
-          font-size: 11px;
-          font-weight: 700;
-          padding: 2px 8px;
-          border-radius: 999px;
-          backdrop-filter: blur(8px);
+          font-size: 1.6rem;
+          opacity: 0.95;
         }
 
         /* Circular Upward Expander Button */
         .story-expand-btn {
-          width: 40px;
-          height: 40px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.18);
-          border: 1px solid rgba(255, 255, 255, 0.35);
+          background: rgba(0, 0, 0, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.25);
           color: #FFFFFF;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          backdrop-filter: blur(14px);
+          backdrop-filter: blur(12px);
           transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
           flex-shrink: 0;
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
         }
 
         .story-expand-btn:hover {
-          background: rgba(255, 255, 255, 0.32);
+          background: rgba(255, 255, 255, 0.2);
           transform: scale(1.12);
         }
 
@@ -1027,194 +850,66 @@ export const StoryDeck = ({
           transform: scale(0.95);
         }
 
-        .story-expand-btn.mini {
-          width: 32px;
-          height: 32px;
-        }
-
-        /* Meta Tags Row */
-        .story-meta-tags {
+        /* Clean Quote Line directly on scrim (Nancy style) */
+        .story-quote-clean {
           display: flex;
-          flex-wrap: wrap;
+          align-items: flex-start;
           gap: 6px;
-        }
-
-        .meta-tag {
-          font-size: 11.5px;
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.92);
-          background: rgba(255, 255, 255, 0.14);
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          border-radius: 999px;
-          padding: 3px 10px;
-          backdrop-filter: blur(8px);
-        }
-
-        .meta-tag.college-tag {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          background: rgba(212, 173, 106, 0.22);
-          border-color: rgba(212, 173, 106, 0.4);
-          color: #F3C68F;
-        }
-
-        .meta-tag.intent-tag {
-          background: rgba(184, 67, 106, 0.25);
-          border-color: rgba(184, 67, 106, 0.45);
-          color: #FFAEC5;
-        }
-
-        /* Bio Quote Card */
-        .story-quote-card {
-          position: relative;
-          background: rgba(18, 14, 16, 0.68);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          border-radius: 14px;
-          padding: 10px 14px;
-          backdrop-filter: blur(12px);
           cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
+          margin-top: 2px;
+          transition: opacity 0.2s ease;
         }
 
-        .story-quote-card:hover {
-          background: rgba(18, 14, 16, 0.84);
-          border-color: rgba(212, 173, 106, 0.5);
-          transform: translateY(-1px);
+        .story-quote-clean:hover {
+          opacity: 0.85;
         }
 
-        .quote-text-wrap {
-          display: flex;
-          align-items: baseline;
-          gap: 4px;
-          min-width: 0;
-          flex: 1;
-        }
-
-        .quote-mark {
+        .story-quote-clean .quote-glyph {
           font-size: 1.4rem;
           line-height: 1;
-          color: var(--gold-400, #D4AD6A);
+          color: #FFFFFF;
+          font-weight: 800;
           opacity: 0.9;
-        }
-
-        .quote-body {
-          font-size: 12.5px;
-          line-height: 1.4;
-          color: rgba(255, 255, 255, 0.92);
-          margin: 0;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-
-        .quote-reply-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 11px;
-          font-weight: 700;
-          color: var(--gold-300, #F3C68F);
-          background: rgba(212, 173, 106, 0.16);
-          border: 1px solid rgba(212, 173, 106, 0.35);
-          padding: 3px 8px;
-          border-radius: 999px;
-          white-space: nowrap;
+          font-family: Georgia, serif;
           flex-shrink: 0;
         }
 
-        /* DOUBLE DATE SPLIT VIEW STYLES */
-        .double-date-panes {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          width: 100%;
-          height: 100%;
-        }
-
-        .double-date-top-banner {
-          position: absolute;
-          top: 14px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 15;
-          background: rgba(18, 14, 16, 0.78);
-          border: 1px solid rgba(212, 173, 106, 0.5);
-          color: #F3C68F;
-          font-size: 11.5px;
-          font-weight: 700;
-          padding: 4px 14px;
-          border-radius: 999px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          backdrop-filter: blur(10px);
-          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-        }
-
-        .double-date-pane {
-          position: relative;
-          width: 50%;
-          height: 100%;
-          cursor: pointer;
-          overflow: hidden;
-        }
-
-        .double-date-pane.pane-left {
-          border-right: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .double-date-photo {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .double-date-scrim {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(to top, rgba(8, 6, 7, 0.95) 0%, rgba(8, 6, 7, 0.6) 40%, transparent 80%);
-          pointer-events: none;
-        }
-
-        .double-date-info {
-          position: absolute;
-          bottom: 16px;
-          left: 12px;
-          right: 12px;
-          z-index: 5;
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .double-date-name-row {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .double-date-name {
-          font-size: 1.15rem;
-          font-weight: 800;
-          color: #FFFFFF;
-          line-height: 1.2;
-        }
-
-        .double-date-quote {
-          font-size: 11px;
-          line-height: 1.35;
-          color: rgba(255, 255, 255, 0.85);
+        .story-quote-clean .quote-text {
+          font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 13px;
+          line-height: 1.4;
+          color: rgba(255, 255, 255, 0.95);
           margin: 0;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Clean Profile Attributes (Bella style: college, occupation, city, intent) */
+        .story-meta-row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 4px 10px;
+          margin-top: 2px;
+        }
+
+        .meta-item {
+          font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 12px;
+          font-weight: 500;
+          color: rgba(255, 255, 255, 0.88);
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+        }
+
+        .meta-item.intent-item {
+          color: #FFAEC5;
+          font-weight: 600;
         }
 
         /* FLOATING 5-BUTTON CIRCULAR CONSOLE */
@@ -1222,8 +917,8 @@ export const StoryDeck = ({
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 12px;
-          margin-top: 18px;
+          gap: 14px;
+          margin-top: 14px;
           width: 100%;
           z-index: 20;
         }
@@ -1235,13 +930,16 @@ export const StoryDeck = ({
           border-radius: 50%;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          background: var(--bg-surface-elevated, #241d20);
-          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+          background: rgba(24, 27, 34, 0.85);
+          backdrop-filter: blur(14px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
           padding: 0;
         }
 
         .console-btn:hover:not(:disabled) {
           transform: scale(1.12);
+          background: rgba(34, 38, 48, 0.95);
         }
 
         .console-btn:active:not(:disabled) {
@@ -1252,18 +950,15 @@ export const StoryDeck = ({
         .btn-rewind {
           width: 44px;
           height: 44px;
-          border: 1.5px solid rgba(245, 158, 11, 0.45);
           color: #F59E0B;
         }
 
         .btn-rewind:hover:not(:disabled) {
-          border-color: #F59E0B;
-          box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
-          background: rgba(245, 158, 11, 0.1);
+          box-shadow: 0 4px 18px rgba(245, 158, 11, 0.4);
         }
 
         .btn-rewind:disabled {
-          opacity: 0.3;
+          opacity: 0.25;
           cursor: not-allowed;
           transform: none;
         }
@@ -1272,56 +967,44 @@ export const StoryDeck = ({
         .btn-pass {
           width: 58px;
           height: 58px;
-          border: 2px solid rgba(239, 68, 68, 0.5);
-          color: #EF4444;
+          color: #FF4458;
         }
 
         .btn-pass:hover {
-          border-color: #EF4444;
-          box-shadow: 0 0 22px rgba(239, 68, 68, 0.5);
-          background: rgba(239, 68, 68, 0.1);
+          box-shadow: 0 6px 24px rgba(255, 68, 88, 0.45);
         }
 
         /* 3. Super Spark — Sky Blue (44px) */
         .btn-super {
           width: 44px;
           height: 44px;
-          border: 1.5px solid rgba(56, 189, 248, 0.5);
           color: #38BDF8;
         }
 
         .btn-super:hover {
-          border-color: #38BDF8;
-          box-shadow: 0 0 18px rgba(56, 189, 248, 0.5);
-          background: rgba(56, 189, 248, 0.1);
+          box-shadow: 0 4px 18px rgba(56, 189, 248, 0.45);
         }
 
         /* 4. Spark / Like — Emerald Green (58px) */
         .btn-spark {
           width: 58px;
           height: 58px;
-          border: 2px solid rgba(16, 185, 129, 0.5);
           color: #10B981;
         }
 
         .btn-spark:hover {
-          border-color: #10B981;
-          box-shadow: 0 0 22px rgba(16, 185, 129, 0.5);
-          background: rgba(16, 185, 129, 0.1);
+          box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45);
         }
 
-        /* 5. Direct Letter — Indigo (44px) */
+        /* 5. Direct Letter / Boost — Purple (44px) */
         .btn-letter {
           width: 44px;
           height: 44px;
-          border: 1.5px solid rgba(129, 140, 248, 0.5);
-          color: #818CF8;
+          color: #A855F7;
         }
 
         .btn-letter:hover {
-          border-color: #818CF8;
-          box-shadow: 0 0 18px rgba(129, 140, 248, 0.5);
-          background: rgba(129, 140, 248, 0.1);
+          box-shadow: 0 4px 18px rgba(168, 85, 247, 0.4);
         }
 
         /* Overlay Stamp Badges */
