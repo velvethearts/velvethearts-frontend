@@ -630,9 +630,19 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         }
 
         .discover-feed-page.is-deck-view {
-          max-width: 440px;
+          max-width: 480px;
+          width: 100%;
           padding-top: var(--space-2);
           padding-bottom: 0;
+          box-sizing: border-box;
+        }
+
+        @media (max-width: 640px) {
+          .discover-feed-page.is-deck-view {
+            max-width: 100%;
+            padding-left: 8px;
+            padding-right: 8px;
+          }
         }
 
         .discover-header-actions {
@@ -845,16 +855,18 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 8px;
-          margin-bottom: var(--space-3);
-          padding: 4px 0;
+          gap: 6px;
+          margin-bottom: var(--space-2);
+          padding: 2px 0;
           flex-wrap: nowrap;
           width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
         }
 
         .discover-nav-icon-btn {
-          width: 38px;
-          height: 38px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           border: none;
           background: transparent;
@@ -895,8 +907,8 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           border-radius: 50%;
           background: var(--burgundy-500);
           position: absolute;
-          top: 6px;
-          right: 6px;
+          top: 5px;
+          right: 5px;
           box-shadow: 0 0 6px var(--burgundy-400);
         }
 
@@ -904,11 +916,12 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           display: inline-flex;
           align-items: center;
           gap: 2px;
-          padding: 3px;
+          padding: 2px;
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.08);
           border: 1px solid rgba(255, 255, 255, 0.12);
-          flex-shrink: 0;
+          flex-shrink: 1;
+          min-width: 0;
         }
 
         [data-theme="light"] .discover-mode-pills {
@@ -917,17 +930,18 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         }
 
         .discover-mode-pill {
-          padding: 5px 13px;
+          padding: 4px 10px;
           border-radius: 999px;
           border: none;
           background: transparent;
           color: rgba(255, 255, 255, 0.65);
           font-family: var(--font-ui);
-          font-size: 12.5px;
+          font-size: 12px;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
           white-space: nowrap;
+          flex-shrink: 0;
         }
 
         .discover-mode-pill:hover {
@@ -1002,12 +1016,15 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           color: var(--burgundy-400, #E87A90);
           background: rgba(184, 67, 106, 0.12);
           border: 1px solid rgba(184, 67, 106, 0.28);
-          gap: 5px;
-          padding: 0 10px;
+          gap: 4px;
+          padding: 0 8px;
           border-radius: var(--radius-full);
           transition: all 0.25s ease;
           width: auto;
-          min-width: 40px;
+          min-width: 36px;
+          height: 36px;
+          box-sizing: border-box;
+          flex-shrink: 0;
         }
 
         .discover-nav-icon-btn.boost-btn:hover {
@@ -1055,9 +1072,10 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         .boost-timer-chip {
           font-size: 11px;
           font-weight: 800;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.02em;
           font-variant-numeric: tabular-nums;
           color: #FFFFFF;
+          line-height: 1;
         }
 
         .boost-cooldown-chip {
@@ -1065,10 +1083,38 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           font-weight: 700;
           color: var(--gold-primary, #D4AD6A);
           letter-spacing: 0.02em;
+          line-height: 1;
         }
 
         [data-theme="light"] .boost-cooldown-chip {
           color: #8A6D3B;
+        }
+
+        @media (max-width: 420px) {
+          .discover-top-nav-bar {
+            gap: 4px;
+          }
+          .discover-nav-icon-btn {
+            width: 33px;
+            height: 33px;
+          }
+          .discover-mode-pills {
+            padding: 1.5px;
+            gap: 1px;
+          }
+          .discover-mode-pill {
+            padding: 3.5px 7px;
+            font-size: 11px;
+          }
+          .discover-nav-icon-btn.boost-btn {
+            height: 33px;
+            padding: 0 6px;
+            min-width: 33px;
+          }
+          .boost-timer-chip,
+          .boost-cooldown-chip {
+            font-size: 10px;
+          }
         }
       `}</style>
     </div>

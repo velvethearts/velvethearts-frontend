@@ -211,6 +211,8 @@ html {
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
   background-color: var(--bg-page);
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 body {
@@ -220,6 +222,7 @@ body {
   color: var(--text-primary);
   background-color: var(--bg-page);
   min-height: 100dvh;
+  max-width: 100vw;
   overflow-x: hidden;
   transition: background-color var(--duration-normal) var(--ease-out-smooth),
               color var(--duration-normal) var(--ease-out-smooth);
@@ -227,6 +230,8 @@ body {
 
 #root {
   min-height: 100dvh;
+  max-width: 100vw;
+  overflow-x: hidden;
   background-color: var(--bg-page);
   color: var(--text-primary);
 }

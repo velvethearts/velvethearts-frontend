@@ -629,7 +629,7 @@ export const StoryDeck = ({
           align-items: center;
           position: relative;
           width: 100%;
-          max-width: 440px;
+          max-width: 480px;
           margin: 0 auto;
           user-select: none;
         }
@@ -641,36 +641,29 @@ export const StoryDeck = ({
           }
         }
 
-        /* Full-Bleed Card Frame */
+        /* Full-Bleed Card Frame — Fixed and Big across all screen sizes */
         .story-card-container {
           position: relative;
           width: 100%;
-          height: clamp(580px, calc(100dvh - 215px), 750px);
-          aspect-ratio: 9 / 15.5;
+          height: clamp(600px, calc(100dvh - 190px), 780px);
           min-height: 560px;
-          max-height: 750px;
-          border-radius: 22px;
+          max-height: 780px;
+          border-radius: 24px;
           overflow: hidden;
           background-color: #0d0f14;
           border: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+          box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
           cursor: grab;
+          flex-shrink: 0;
         }
 
         @media (max-width: 640px) {
           .story-card-container {
-            height: calc(100dvh - 200px);
-            min-height: 540px;
-            max-height: 720px;
-            aspect-ratio: auto;
-          }
-        }
-
-        @media (max-height: 720px) {
-          .story-card-container {
-            height: calc(100dvh - 180px);
-            min-height: 480px;
-            max-height: 580px;
+            width: 100%;
+            height: calc(100dvh - 175px);
+            min-height: 550px;
+            max-height: 740px;
+            border-radius: 20px;
           }
         }
 
