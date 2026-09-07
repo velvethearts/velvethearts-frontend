@@ -516,7 +516,8 @@ export const api = {
         },
 
         getVerifications(status) {
-            const params = status ? `?status=${status}` : '';
+            const hasStatus = status && status !== 'undefined' && status !== 'null';
+            const params = hasStatus ? `?status=${encodeURIComponent(status)}` : '';
             return request(`/api/v1/admin/verifications${params}`);
         },
 
@@ -535,7 +536,8 @@ export const api = {
         },
 
         getReports(status) {
-            const params = status ? `?status=${status}` : '';
+            const hasStatus = status && status !== 'undefined' && status !== 'null';
+            const params = hasStatus ? `?status=${encodeURIComponent(status)}` : '';
             return request(`/api/v1/admin/reports${params}`);
         },
 
@@ -547,8 +549,15 @@ export const api = {
         },
 
         getUsers(params = {}) {
-            const query = new URLSearchParams(params);
-            return request(`/api/v1/admin/users?${query.toString()}`);
+            const cleanParams = {};
+            for (const [k, v] of Object.entries(params)) {
+                if (v !== undefined && v !== null && v !== '' && v !== 'undefined') {
+                    cleanParams[k] = v;
+                }
+            }
+            const query = new URLSearchParams(cleanParams);
+            const qs = query.toString();
+            return request(`/api/v1/admin/users${qs ? `?${qs}` : ''}`);
         },
 
         getLogs(page = 1, limit = 50) {
@@ -567,6 +576,12 @@ export const api = {
             });
         },
 
+        deleteUser(userId) {
+            return request(`/api/v1/admin/users/${userId}/delete`, {
+                method: 'POST'
+            });
+        },
+
         createAdmin(userId) {
             return request('/api/v1/admin/create', {
                 method: 'POST',
@@ -578,6 +593,19 @@ export const api = {
             return request('/api/v1/admin/remove', {
                 method: 'POST',
                 body: { userId }
+            });
+        },
+
+        toggleUserVerification(userId, verified) {
+            return request(`/api/v1/admin/users/${userId}/verify`, {
+                method: 'POST',
+                body: { verified }
+            });
+        },
+
+        createDemoVerification() {
+            return request('/api/v1/admin/verifications/demo', {
+                method: 'POST'
             });
         }
     }

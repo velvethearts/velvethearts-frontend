@@ -37,6 +37,16 @@ export const VerificationPromptModal = () => {
       return;
     }
 
+    // If pending manual verification review, do not nag the user
+    const isPending = Boolean(
+      userProfile.verificationStatus === 'PENDING' ||
+      localStorage.getItem('vh_manual_verification_pending') === 'true'
+    );
+    if (isPending) {
+      setIsOpen(false);
+      return;
+    }
+
     // Check if snoozed
     try {
       const snoozedUntil = localStorage.getItem(SNOOZE_KEY);
@@ -54,6 +64,15 @@ export const VerificationPromptModal = () => {
         return;
       }
 
+      const checkPendingAgain = Boolean(
+        userProfile?.verificationStatus === 'PENDING' ||
+        localStorage.getItem('vh_manual_verification_pending') === 'true'
+      );
+      if (checkPendingAgain) {
+        setIsOpen(false);
+        return;
+      }
+
       const checkVerifiedAgain = Boolean(
         userProfile?.verified === true ||
         userProfile?.verified === 'true' ||
@@ -66,7 +85,7 @@ export const VerificationPromptModal = () => {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [isLoggedIn, isOnboarded, userProfile?.verified, activeTab]);
+  }, [isLoggedIn, isOnboarded, userProfile?.verified, userProfile?.verificationStatus, activeTab]);
 
   const handleMaybeLater = () => {
     try {

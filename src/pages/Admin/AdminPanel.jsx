@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
+import { getSocket } from '../../lib/socket';
 import { useApp } from '../../context/AppContext';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { EmptyState } from '../../components/UI/EmptyState';
+import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 import {
-  Crown,
   ShieldCheck,
   CheckCircle,
   XCircle,
@@ -14,23 +15,76 @@ import {
   Eye,
   CaretDown,
   CaretUp,
+  CaretLeft,
+  CaretRight,
   Users,
   ChartBar,
   IdentificationBadge,
   Warning,
   ArrowsClockwise,
+  MagnifyingGlass,
+  Sparkle,
+  SealCheck,
+  HourglassMedium,
+  Prohibit,
+  ArrowCounterClockwise,
+  Trash,
 } from '@phosphor-icons/react';
+
+// ─── REUSABLE LUXURY PAGINATION COMPONENT ───
+const AdminPagination = ({ page, totalPages, totalItems, pageSize, onPageChange }) => {
+  if (totalPages <= 1) return null;
+
+  const startItem = (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, totalItems);
+
+  return (
+    <div className="admin-pagination-wrapper font-ui">
+      <span className="admin-pagination-info">
+        Showing <strong className="admin-pagination-highlight">{startItem}–{endItem}</strong> of <strong className="admin-pagination-highlight">{totalItems}</strong>
+      </span>
+      <div className="admin-pagination-controls">
+        <button
+          type="button"
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className="admin-page-nav-btn"
+          title="Previous page"
+          aria-label="Previous page"
+        >
+          <CaretLeft size={15} weight="bold" />
+          <span>Prev</span>
+        </button>
+        <span className="admin-page-indicator">
+          Page <strong>{page}</strong> of <strong>{totalPages}</strong>
+        </span>
+        <button
+          type="button"
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className="admin-page-nav-btn"
+          title="Next page"
+          aria-label="Next page"
+        >
+          <span>Next</span>
+          <CaretRight size={15} weight="bold" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 // ─── Admin Panel Tabs ───
 const TABS = [
-  { id: 'verifications', label: 'Verification Requests', icon: IdentificationBadge },
-  { id: 'pending', label: 'Pending Users', icon: Users },
   { id: 'stats', label: 'Dashboard', icon: ChartBar },
+  { id: 'verifications', label: 'Verification Requests', icon: IdentificationBadge },
+  { id: 'users', label: 'Users Directory', icon: Users },
+  { id: 'pending', label: 'Pending Approvals', icon: Clock },
 ];
 
 export const AdminPanel = () => {
   const { showAlert, userRole } = useApp();
-  const [activeTab, setActiveTab] = useState('verifications');
+  const [activeTab, setActiveTab] = useState('stats');
 
   const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
@@ -39,37 +93,46 @@ export const AdminPanel = () => {
       <EmptyState
         icon={<Warning size={48} />}
         title="Access Denied"
-        desc="You don't have permission to access this page."
+        desc="You don't have permission to access the Velvet Hearts Admin Panel."
       />
     );
   }
 
   return (
     <div className="admin-panel">
-      <PageHeader title="Admin Panel" subtitle="Manage verification requests, users, and platform settings" />
+      <PageHeader 
+        title="Admin Control Center" 
+        subtitle="Manage user verifications, view registered members, and oversee platform health"
+      />
 
-      {/* Tab Navigation */}
-      <div className="admin-tabs">
-        {TABS.map(tab => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              className={`admin-tab ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <Icon size={18} weight={activeTab === tab.id ? 'fill' : 'regular'} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Luxury Segmented Tab Navigation Rail */}
+      <div className="admin-tabs-wrapper">
+        <nav className="admin-tabs" role="tablist" aria-label="Admin Navigation">
+          {TABS.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={isActive}
+                className={`admin-tab ${isActive ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <Icon size={18} weight={isActive ? 'fill' : 'regular'} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
       {/* Tab Content */}
       <div className="admin-tab-content">
+        {activeTab === 'stats' && <DashboardStatsTab onNavigateTab={setActiveTab} />}
         {activeTab === 'verifications' && <VerificationRequestsTab showAlert={showAlert} />}
+        {activeTab === 'users' && <UsersDirectoryTab showAlert={showAlert} />}
         {activeTab === 'pending' && <PendingUsersTab showAlert={showAlert} />}
-        {activeTab === 'stats' && <DashboardStatsTab />}
       </div>
 
       <style>{adminStyles}</style>
@@ -77,7 +140,264 @@ export const AdminPanel = () => {
   );
 };
 
-// ─── VERIFICATION REQUESTS TAB ───
+// ─── 1. DASHBOARD STATS TAB ───
+const DashboardStatsTab = ({ onNavigateTab }) => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [recentPage, setRecentPage] = useState(1);
+  const recentPageSize = 5;
+
+  const fetchStats = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.admin.getStats();
+      const statsData = res?.stats ? res : (res?.data || null);
+      setStats(statsData);
+      setRecentPage(1);
+    } catch (err) {
+      console.error('Failed to fetch dashboard stats:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  if (loading) {
+    return (
+      <div className="admin-loading">
+        <ArrowsClockwise size={28} className="admin-spinner" />
+        <span>Loading dashboard metrics…</span>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return <EmptyState icon={<ChartBar size={48} />} title="No Data Available" desc="Unable to load dashboard statistics at this moment." />;
+  }
+
+  const statCards = [
+    {
+      id: 'total',
+      label: 'Total Registered',
+      value: stats.stats?.totalCount || 0,
+      color: '#60a5fa',
+      accentBg: 'rgba(96, 165, 250, 0.12)',
+      icon: Users,
+      onClick: () => onNavigateTab('users'),
+    },
+    {
+      id: 'active',
+      label: 'Active Profiles',
+      value: stats.stats?.activeCount || 0,
+      color: '#4ade80',
+      accentBg: 'rgba(74, 222, 128, 0.12)',
+      icon: CheckCircle,
+      onClick: () => onNavigateTab('users'),
+    },
+    {
+      id: 'verifications',
+      label: 'Pending Verifications',
+      value: stats.stats?.verificationPendingCount || 0,
+      color: '#D4AD6A',
+      accentBg: 'rgba(212, 173, 106, 0.14)',
+      icon: HourglassMedium,
+      onClick: () => onNavigateTab('verifications'),
+      badge: (stats.stats?.verificationPendingCount || 0) > 0 ? 'Action Needed' : null,
+    },
+    {
+      id: 'verified',
+      label: 'Verified Profiles',
+      value: stats.stats?.verifiedCount || 0,
+      color: '#B8436A',
+      accentBg: 'rgba(184, 67, 106, 0.14)',
+      icon: SealCheck,
+      onClick: () => onNavigateTab('users'),
+    },
+    {
+      id: 'reports',
+      label: 'Open Reports',
+      value: stats.stats?.reportsCount || 0,
+      color: '#c084fc',
+      accentBg: 'rgba(192, 132, 252, 0.12)',
+      icon: Warning,
+    },
+    {
+      id: 'suspended',
+      label: 'Suspended Accounts',
+      value: stats.stats?.suspendedCount || 0,
+      color: '#fb923c',
+      accentBg: 'rgba(251, 146, 60, 0.12)',
+      icon: UserCircle,
+    },
+  ];
+
+  const recentList = stats.recentRegistrations || [];
+  const totalRecentPages = Math.ceil(recentList.length / recentPageSize) || 1;
+  const displayedRegistrations = recentList.slice((recentPage - 1) * recentPageSize, recentPage * recentPageSize);
+
+  return (
+    <div className="admin-section">
+      {/* Metric Cards Grid */}
+      <div className="admin-stats-grid">
+        {statCards.map((s) => {
+          const CardIcon = s.icon;
+          return (
+            <div
+              key={s.id}
+              className={`admin-stat-card ${s.onClick ? 'interactive' : ''}`}
+              onClick={s.onClick}
+              role={s.onClick ? 'button' : undefined}
+              tabIndex={s.onClick ? 0 : undefined}
+              title={s.onClick ? `View ${s.label}` : undefined}
+            >
+              <div className="admin-stat-top">
+                <div className="admin-stat-icon-wrap" style={{ background: s.accentBg, color: s.color }}>
+                  <CardIcon size={18} weight="fill" />
+                </div>
+                {s.badge && (
+                  <span className="admin-stat-pill-badge font-ui">{s.badge}</span>
+                )}
+              </div>
+              <span className="admin-stat-value font-display">{s.value}</span>
+              <span className="admin-stat-label font-ui">{s.label}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Quick Action Bar with App-Styled Buttons */}
+      <div className="admin-quick-actions">
+        <div className="admin-actions-left">
+          <Button
+            variant="primary"
+            onClick={() => onNavigateTab('verifications')}
+            className="admin-action-btn"
+          >
+            <ShieldCheck size={18} weight="fill" />
+            <span>Review Verification Requests</span>
+            {(stats.stats?.verificationPendingCount || 0) > 0 && (
+              <span className="admin-pill-counter">
+                {stats.stats.verificationPendingCount}
+              </span>
+            )}
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => onNavigateTab('users')}
+            className="admin-action-btn"
+          >
+            <Users size={18} weight="bold" />
+            <span>Browse All Users</span>
+            <span className="admin-pill-counter secondary">
+              {stats.stats?.totalCount || 0}
+            </span>
+          </Button>
+        </div>
+
+        <div className="admin-actions-right">
+          <button
+            type="button"
+            onClick={fetchStats}
+            disabled={loading}
+            className="admin-refresh-button font-ui"
+            title="Refresh dashboard metrics"
+            aria-label="Refresh dashboard metrics"
+          >
+            <ArrowsClockwise
+              size={17}
+              weight="bold"
+              className={`admin-refresh-icon ${loading ? 'spinning' : ''}`}
+            />
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Recent Registrations Table with Pagination */}
+      <div className="admin-recent-block">
+        <div className="admin-block-header">
+          <h3 className="admin-section-heading font-display">Recent Registrations</h3>
+          {recentList.length > 0 && (
+            <span className="admin-section-count font-ui">{recentList.length} members</span>
+          )}
+        </div>
+        {recentList.length === 0 ? (
+          <div className="admin-empty-inline">No registrations found.</div>
+        ) : (
+          <>
+            <div className="admin-recent-table-wrap">
+              <table className="admin-recent-table font-ui">
+                <thead>
+                  <tr>
+                    <th>Member</th>
+                    <th>Contact</th>
+                    <th>Location</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedRegistrations.map((u) => (
+                    <tr key={u.id}>
+                      <td>
+                        <div className="admin-table-user">
+                          {u.avatarUrl ? (
+                            <img src={u.avatarUrl} alt="" className="admin-table-avatar" />
+                          ) : (
+                            <UserCircle size={32} weight="fill" className="admin-table-avatar-icon" />
+                          )}
+                          <div>
+                            <div className="admin-table-name">
+                              {u.name || 'Anonymous User'}
+                              {u.verified && <VerifiedBadge variant="icon" size="sm" />}
+                            </div>
+                            <span className="admin-table-id">ID: {u.id.substring(0, 8)}…</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="admin-table-contact">{u.email || u.phoneNumber || '—'}</span>
+                      </td>
+                      <td>{u.city || '—'}</td>
+                      <td>
+                        <span className={`admin-role-badge ${u.role === 'ADMIN' ? 'role-admin' : 'role-user'}`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`admin-status-pill status-${u.status?.toLowerCase()}`}>
+                          {u.status}
+                        </span>
+                      </td>
+                      <td className="admin-table-date">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <AdminPagination
+              page={recentPage}
+              totalPages={totalRecentPages}
+              totalItems={recentList.length}
+              pageSize={recentPageSize}
+              onPageChange={setRecentPage}
+            />
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── 2. VERIFICATION REQUESTS TAB ───
 const VerificationRequestsTab = ({ showAlert }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,12 +405,16 @@ const VerificationRequestsTab = ({ showAlert }) => {
   const [actionLoading, setActionLoading] = useState(null);
   const [notesMap, setNotesMap] = useState({});
   const [expandedCard, setExpandedCard] = useState(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
 
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.admin.getVerifications(filter || undefined);
-      setRequests(res?.data || []);
+      const list = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      setRequests(list);
+      setPage(1);
     } catch (err) {
       console.error('Failed to fetch verification requests:', err);
     } finally {
@@ -106,7 +430,7 @@ const VerificationRequestsTab = ({ showAlert }) => {
     setActionLoading(id);
     try {
       await api.admin.approveVerification(id, notesMap[id] || '');
-      showAlert?.('✅ Verification approved — user is now verified.', 'success');
+      showAlert?.('✅ Verification approved — user profile is now officially verified.', 'success');
       fetchRequests();
     } catch (err) {
       showAlert?.('Failed to approve verification.', 'error');
@@ -137,190 +461,662 @@ const VerificationRequestsTab = ({ showAlert }) => {
     );
   }
 
+  const totalPages = Math.ceil(requests.length / pageSize) || 1;
+  const paginatedRequests = requests.slice((page - 1) * pageSize, page * pageSize);
+
   return (
     <div className="admin-section">
-      {/* Filter */}
-      <div className="admin-filter-row">
-        {['PENDING', 'APPROVED', 'REJECTED', ''].map(status => (
-          <button
-            key={status || 'all'}
-            className={`admin-filter-btn ${filter === status ? 'active' : ''}`}
-            onClick={() => setFilter(status)}
-          >
-            {status || 'All'}
-          </button>
-        ))}
+      {/* Filter Row */}
+      <div className="admin-filter-bar">
+        <div className="admin-filter-row">
+          {['PENDING', 'APPROVED', 'REJECTED', ''].map(status => (
+            <button
+              key={status || 'all'}
+              className={`admin-filter-btn ${filter === status ? 'active' : ''}`}
+              onClick={() => {
+                setFilter(status);
+                setPage(1);
+              }}
+            >
+              {status || 'All'}
+            </button>
+          ))}
+        </div>
+        {requests.length > 0 && (
+          <span className="admin-section-count font-ui">
+            {requests.length} {filter ? filter.toLowerCase() : 'total'} request{requests.length === 1 ? '' : 's'}
+          </span>
+        )}
       </div>
 
       {requests.length === 0 ? (
-        <EmptyState
-          icon={<ShieldCheck size={48} />}
-          title="No Verification Requests"
-          desc={`No ${filter?.toLowerCase() || ''} verification requests found.`}
-        />
+        <div className="admin-empty-box">
+          <EmptyState
+            icon={<ShieldCheck size={48} />}
+            title="No Verification Requests"
+            desc={`There are currently no ${filter?.toLowerCase() || ''} verification requests in the queue. When users fail auto-verification and request manual review, their live selfie submissions will appear here for comparison.`}
+          />
+        </div>
       ) : (
-        <div className="admin-cards-grid">
-          {requests.map(req => (
-            <div key={req.id} className={`admin-verification-card status-${req.status?.toLowerCase()}`}>
-              {/* Card Header */}
-              <div className="admin-card-header">
-                <div className="admin-card-user-info">
-                  <UserCircle size={36} weight="fill" className="admin-card-avatar" />
-                  <div>
-                    <h4 className="admin-card-name font-display">{req.userName}</h4>
-                    <span className="admin-card-meta">{req.userPhone} • {req.userCity || 'Unknown city'}</span>
+        <>
+          <div className="admin-cards-grid">
+            {paginatedRequests.map(req => (
+              <div key={req.id} className={`admin-verification-card status-${req.status?.toLowerCase()}`}>
+                {/* Card Header */}
+                <div className="admin-card-header">
+                  <div className="admin-card-user-info">
+                    <UserCircle size={36} weight="fill" className="admin-card-avatar" />
+                    <div>
+                      <h4 className="admin-card-name font-display">{req.userName}</h4>
+                      <span className="admin-card-meta">{req.userPhone || 'No phone'} • {req.userCity || 'City not set'}</span>
+                    </div>
                   </div>
+                  <span className={`admin-status-badge status-${req.status?.toLowerCase()}`}>
+                    {req.status}
+                  </span>
                 </div>
-                <span className={`admin-status-badge status-${req.status?.toLowerCase()}`}>
-                  {req.status}
-                </span>
-              </div>
 
-              {/* Photo Comparison */}
-              <div className="admin-photo-compare">
-                <div className="admin-photo-box">
-                  <span className="admin-photo-label">Selfie Submitted</span>
-                  <img
-                    src={req.selfieUrl}
-                    alt="Verification selfie"
-                    className="admin-photo-img"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="admin-photo-box">
-                  <span className="admin-photo-label">Profile Photo</span>
-                  {req.referenceUrl || req.profilePhotos?.[0] ? (
+                {/* Photo Comparison */}
+                <div className="admin-photo-compare">
+                  <div className="admin-photo-box">
+                    <span className="admin-photo-label">Live Camera Selfie</span>
                     <img
-                      src={req.referenceUrl || req.profilePhotos?.[0]}
-                      alt="Profile reference"
+                      src={req.selfieUrl}
+                      alt="Live selfie submitted"
                       className="admin-photo-img"
                       loading="lazy"
                     />
-                  ) : (
-                    <div className="admin-photo-placeholder">
-                      <UserCircle size={48} weight="thin" />
-                      <span>No photo</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Auto-fail Reason */}
-              {req.autoFailReason && (
-                <div className="admin-fail-reason">
-                  <Warning size={16} weight="fill" />
-                  <span>{req.autoFailReason}</span>
-                </div>
-              )}
-
-              {/* Expandable Details */}
-              <button
-                className="admin-expand-btn"
-                onClick={() => setExpandedCard(expandedCard === req.id ? null : req.id)}
-              >
-                {expandedCard === req.id ? <CaretUp size={16} /> : <CaretDown size={16} />}
-                <span>{expandedCard === req.id ? 'Hide Details' : 'Show Details'}</span>
-              </button>
-
-              {expandedCard === req.id && (
-                <div className="admin-card-details">
-                  <div className="admin-detail-row">
-                    <Clock size={14} />
-                    <span>Submitted: {new Date(req.createdAt).toLocaleString()}</span>
                   </div>
-                  {req.reviewedAt && (
-                    <div className="admin-detail-row">
-                      <Eye size={14} />
-                      <span>Reviewed: {new Date(req.reviewedAt).toLocaleString()} by {req.reviewerName || 'Admin'}</span>
-                    </div>
-                  )}
-                  {req.adminNotes && (
-                    <div className="admin-detail-row">
-                      <span className="admin-notes-text">Notes: {req.adminNotes}</span>
-                    </div>
-                  )}
-                  {/* All profile photos */}
-                  {req.profilePhotos?.length > 1 && (
-                    <div className="admin-all-photos">
-                      <span className="admin-photo-label">All Profile Photos</span>
-                      <div className="admin-photos-row">
-                        {req.profilePhotos.map((url, idx) => (
-                          <img key={idx} src={url} alt={`Profile ${idx + 1}`} className="admin-photo-thumb" loading="lazy" />
-                        ))}
+                  <div className="admin-photo-box">
+                    <span className="admin-photo-label">Current Profile Photo</span>
+                    {req.referenceUrl || req.profilePhotos?.[0] ? (
+                      <img
+                        src={req.referenceUrl || req.profilePhotos?.[0]}
+                        alt="Profile reference"
+                        className="admin-photo-img"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="admin-photo-placeholder">
+                        <UserCircle size={48} weight="thin" />
+                        <span>No profile photo</span>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Actions (only for pending) */}
-              {req.status === 'PENDING' && (
-                <div className="admin-card-actions">
-                  <textarea
-                    className="admin-notes-input"
-                    placeholder="Admin notes (optional)…"
-                    value={notesMap[req.id] || ''}
-                    onChange={(e) => setNotesMap(prev => ({ ...prev, [req.id]: e.target.value }))}
-                    rows={2}
-                  />
-                  <div className="admin-action-buttons">
-                    <Button
-                      variant="primary"
-                      onClick={() => handleApprove(req.id)}
-                      disabled={actionLoading === req.id}
-                      className="admin-approve-btn"
-                    >
-                      <CheckCircle size={18} weight="bold" />
-                      <span>{actionLoading === req.id ? 'Processing…' : 'Approve'}</span>
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => handleReject(req.id)}
-                      disabled={actionLoading === req.id}
-                      className="admin-reject-btn"
-                    >
-                      <XCircle size={18} weight="bold" />
-                      <span>Reject</span>
-                    </Button>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
+
+                {/* Auto-fail Reason */}
+                {req.autoFailReason && (
+                  <div className="admin-fail-reason">
+                    <Warning size={16} weight="fill" />
+                    <span>{req.autoFailReason}</span>
+                  </div>
+                )}
+
+                {/* Expandable Details */}
+                <button
+                  className="admin-expand-btn"
+                  onClick={() => setExpandedCard(expandedCard === req.id ? null : req.id)}
+                >
+                  {expandedCard === req.id ? <CaretUp size={16} /> : <CaretDown size={16} />}
+                  <span>{expandedCard === req.id ? 'Hide Details' : 'Show Details'}</span>
+                </button>
+
+                {expandedCard === req.id && (
+                  <div className="admin-card-details">
+                    <div className="admin-detail-row">
+                      <Clock size={14} />
+                      <span>Submitted: {new Date(req.createdAt).toLocaleString()}</span>
+                    </div>
+                    {req.reviewedAt && (
+                      <div className="admin-detail-row">
+                        <Eye size={14} />
+                        <span>Reviewed: {new Date(req.reviewedAt).toLocaleString()} by {req.reviewerName || 'Admin'}</span>
+                      </div>
+                    )}
+                    {req.adminNotes && (
+                      <div className="admin-detail-row">
+                        <span className="admin-notes-text">Notes: {req.adminNotes}</span>
+                      </div>
+                    )}
+                    {/* All profile photos */}
+                    {req.profilePhotos?.length > 1 && (
+                      <div className="admin-all-photos">
+                        <span className="admin-photo-label">All Profile Photos ({req.profilePhotos.length})</span>
+                        <div className="admin-photos-row">
+                          {req.profilePhotos.map((url, idx) => (
+                            <img key={idx} src={url} alt={`Profile ${idx + 1}`} className="admin-photo-thumb" loading="lazy" />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Action Area (only if PENDING) */}
+                {req.status === 'PENDING' && (
+                  <div className="admin-card-actions">
+                    <input
+                      type="text"
+                      placeholder="Admin review notes (optional)…"
+                      className="admin-notes-input"
+                      value={notesMap[req.id] || ''}
+                      onChange={e => setNotesMap({ ...notesMap, [req.id]: e.target.value })}
+                    />
+                    <div className="admin-action-buttons">
+                      <Button
+                        variant="primary"
+                        onClick={() => handleApprove(req.id)}
+                        disabled={actionLoading === req.id}
+                        className="admin-approve-btn"
+                      >
+                        <CheckCircle size={18} weight="bold" />
+                        <span>{actionLoading === req.id ? 'Authorizing…' : 'Approve & Verify'}</span>
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleReject(req.id)}
+                        disabled={actionLoading === req.id}
+                        className="admin-reject-btn"
+                      >
+                        <XCircle size={18} weight="bold" />
+                        <span>Reject</span>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <AdminPagination
+            page={page}
+            totalPages={totalPages}
+            totalItems={requests.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </div>
   );
 };
 
-// ─── PENDING USERS TAB ───
-const PendingUsersTab = ({ showAlert }) => {
-  const [queue, setQueue] = useState([]);
+// ─── 3. USERS DIRECTORY TAB ───
+const UsersDirectoryTab = ({ showAlert }) => {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [approvalFilter, setApprovalFilter] = useState('');
+  const [profileFilter, setProfileFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [dirStats, setDirStats] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
+  const pageSize = 10;
 
-  const fetchPending = useCallback(async () => {
-    setLoading(true);
+  const fetchDirStats = useCallback(async () => {
     try {
-      const res = await api.admin.getPending();
-      setQueue(res?.data || []);
-    } catch (err) {
-      console.error('Failed to fetch pending users:', err);
-    } finally {
-      setLoading(false);
+      const res = await api.admin.getStats();
+      const s = res?.stats || res?.data?.stats || null;
+      if (s) setDirStats(s);
+    } catch (e) {
+      console.warn('Failed to fetch directory stats:', e);
     }
   }, []);
 
   useEffect(() => {
-    fetchPending();
-  }, [fetchPending]);
+    fetchDirStats();
+  }, [fetchDirStats]);
 
-  const handleApprove = async (userId) => {
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.admin.getUsers({
+        searchQuery: search.trim() || undefined,
+        role: roleFilter || undefined,
+        status: statusFilter || undefined,
+        approvalStatus: approvalFilter || undefined,
+        profileStatus: profileFilter || undefined,
+        page,
+        limit: pageSize,
+      });
+
+      const list = Array.isArray(res?.users)
+        ? res.users
+        : Array.isArray(res?.data?.users)
+        ? res.data.users
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res)
+        ? res
+        : [];
+
+      const p = res?.pagination || res?.data?.pagination || null;
+      setUsers(list);
+
+      if (p) {
+        setTotalPages(p.pages || 1);
+        setTotalUsers(p.total || list.length);
+      } else {
+        setTotalPages(Math.ceil(list.length / pageSize) || 1);
+        setTotalUsers(list.length);
+      }
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+      showAlert?.('Failed to fetch users directory.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [search, roleFilter, statusFilter, approvalFilter, profileFilter, page, showAlert]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchUsers();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [fetchUsers]);
+
+  // Real-time socket listener: update instantly when a user completes onboarding!
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleOnboardingCompleted = (payload) => {
+      showAlert?.(`🎉 ${payload?.name || 'A user'} just completed profile onboarding!`, 'info');
+      fetchUsers();
+      fetchDirStats();
+    };
+
+    socket.on('profile_onboarding_completed', handleOnboardingCompleted);
+    return () => {
+      socket.off('profile_onboarding_completed', handleOnboardingCompleted);
+    };
+  }, [fetchUsers, fetchDirStats, showAlert]);
+
+  const handleToggleVerification = async (user) => {
+    const userId = user.id;
+    const currentVerified = user.verified;
+    setActionLoading(userId);
+    try {
+      const nextState = !currentVerified;
+      await api.admin.toggleUserVerification(userId, nextState);
+      if (!user.hasProfile && nextState) {
+        showAlert?.(
+          `Pre-approved verification for ${user.name || 'user'}! Badge will automatically activate once profile onboarding is completed.`,
+          'success'
+        );
+      } else {
+        showAlert?.(`User verification status changed to ${nextState ? 'VERIFIED' : 'UNVERIFIED'}.`, 'success');
+      }
+      fetchUsers();
+      fetchDirStats();
+    } catch (err) {
+      showAlert?.(err?.response?.data?.message || 'Failed to update verification status.', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleToggleSuspend = async (userId, currentStatus) => {
+    setActionLoading(userId);
+    try {
+      if (currentStatus === 'SUSPENDED' || currentStatus === 'DELETED') {
+        await api.admin.restoreUser(userId);
+        showAlert?.('User account restored successfully.', 'success');
+      } else {
+        await api.admin.suspendUser(userId);
+        showAlert?.('User account suspended.', 'info');
+      }
+      fetchUsers();
+      fetchDirStats();
+    } catch (err) {
+      showAlert?.('Failed to update account status.', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`Are you sure you want to mark the account for "${userName || 'this user'}" as DELETED? The account will be moved to Deleted accounts.`)) {
+      return;
+    }
+    setActionLoading(userId);
+    try {
+      await api.admin.deleteUser(userId);
+      showAlert?.('User account marked as deleted.', 'info');
+      fetchUsers();
+      fetchDirStats();
+    } catch (err) {
+      showAlert?.(err?.message || 'Failed to delete user account.', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const isFilterActive = Boolean(search || roleFilter || statusFilter || approvalFilter || profileFilter);
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setRoleFilter('');
+    setStatusFilter('');
+    setApprovalFilter('');
+    setProfileFilter('');
+    setPage(1);
+  };
+
+  return (
+    <div className="admin-section">
+      {/* Search & Filters Toolbar */}
+      <div className="admin-user-toolbar">
+        <div className="admin-search-input-wrap">
+          <MagnifyingGlass size={18} className="admin-search-icon" />
+          <input
+            type="text"
+            placeholder="Search by name, email, or phone…"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="admin-search-input"
+          />
+        </div>
+
+        <div className="admin-filter-selects">
+          <select 
+            value={profileFilter} 
+            onChange={(e) => {
+              setProfileFilter(e.target.value);
+              setPage(1);
+            }} 
+            className="admin-select-filter"
+            title="Filter by Profile Completion"
+          >
+            <option value="">All Profiles {dirStats?.totalCount !== undefined ? `(${dirStats.totalCount})` : ''}</option>
+            <option value="COMPLETED">Completed Profiles {dirStats?.completedProfileCount !== undefined ? `(${dirStats.completedProfileCount})` : ''}</option>
+            <option value="INCOMPLETE">Incomplete Profiles {dirStats?.incompleteProfileCount !== undefined ? `(${dirStats.incompleteProfileCount})` : ''}</option>
+          </select>
+
+          <select 
+            value={roleFilter} 
+            onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setPage(1);
+            }} 
+            className="admin-select-filter"
+            title="Filter by Role"
+          >
+            <option value="">All Roles {dirStats?.totalCount !== undefined ? `(${dirStats.totalCount})` : ''}</option>
+            <option value="USER">Standard Users {dirStats?.userCount !== undefined ? `(${dirStats.userCount})` : ''}</option>
+            <option value="ADMIN">Admins {dirStats?.adminCount !== undefined ? `(${dirStats.adminCount})` : ''}</option>
+          </select>
+
+          <select 
+            value={statusFilter} 
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }} 
+            className="admin-select-filter"
+            title="Filter by Account Status"
+          >
+            <option value="">All Statuses {dirStats?.totalCount !== undefined ? `(${dirStats.totalCount})` : ''}</option>
+            <option value="ACTIVE">Active {dirStats?.activeCount !== undefined ? `(${dirStats.activeCount})` : ''}</option>
+            <option value="SUSPENDED">Suspended {dirStats?.suspendedCount !== undefined ? `(${dirStats.suspendedCount})` : ''}</option>
+            <option value="DELETED">Deleted {dirStats?.deletedCount !== undefined ? `(${dirStats.deletedCount})` : ''}</option>
+          </select>
+
+          <select 
+            value={approvalFilter} 
+            onChange={(e) => {
+              setApprovalFilter(e.target.value);
+              setPage(1);
+            }} 
+            className="admin-select-filter"
+            title="Filter by Registration Approval"
+          >
+            <option value="">All Approvals {dirStats?.totalCount !== undefined ? `(${dirStats.totalCount})` : ''}</option>
+            <option value="APPROVED">Approved {dirStats?.approvedCount !== undefined ? `(${dirStats.approvedCount})` : ''}</option>
+            <option value="PENDING">Pending {dirStats?.pendingCount !== undefined ? `(${dirStats.pendingCount})` : ''}</option>
+            <option value="REJECTED">Rejected {dirStats?.rejectedCount !== undefined ? `(${dirStats.rejectedCount})` : ''}</option>
+          </select>
+
+          {isFilterActive && (
+            <button
+              type="button"
+              className="admin-clear-filter-btn"
+              onClick={handleClearFilters}
+              title="Reset all filters"
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="admin-loading">
+          <ArrowsClockwise size={28} className="admin-spinner" />
+          <span>Loading users…</span>
+        </div>
+      ) : users.length === 0 ? (
+        <EmptyState
+          icon={<Users size={48} />}
+          title={
+            profileFilter === 'INCOMPLETE'
+              ? 'No Incomplete Profiles'
+              : profileFilter === 'COMPLETED'
+              ? 'No Completed Profiles'
+              : statusFilter === 'SUSPENDED'
+              ? 'No Suspended Accounts'
+              : statusFilter === 'DELETED'
+              ? 'No Deleted Accounts'
+              : approvalFilter === 'PENDING'
+              ? 'No Pending Approvals'
+              : approvalFilter === 'REJECTED'
+              ? 'No Rejected Registrations'
+              : search
+              ? 'No Matching Accounts'
+              : 'No Users Found'
+          }
+          desc={
+            profileFilter === 'INCOMPLETE'
+              ? 'All registered members have finished their dating profile onboarding!'
+              : profileFilter === 'COMPLETED'
+              ? 'No accounts matching the criteria have completed onboarding yet.'
+              : statusFilter === 'SUSPENDED'
+              ? `There are currently 0 suspended accounts. All ${dirStats?.activeCount || totalUsers || 'active'} members are in good standing.`
+              : statusFilter === 'DELETED'
+              ? 'There are currently 0 deleted accounts in the database.'
+              : approvalFilter === 'PENDING'
+              ? 'All registered users are already approved. There are 0 pending registration reviews.'
+              : approvalFilter === 'REJECTED'
+              ? 'There are currently 0 rejected user registrations.'
+              : search
+              ? `No user accounts matched "${search}". Try searching by a different name, email, or phone number.`
+              : 'No accounts matched the selected filter criteria.'
+          }
+          action={
+            isFilterActive ? (
+              <button
+                type="button"
+                className="admin-btn admin-btn-secondary"
+                onClick={handleClearFilters}
+                style={{ marginTop: '8px' }}
+              >
+                Clear All Filters
+              </button>
+            ) : null
+          }
+        />
+      ) : (
+        <>
+          <div className="admin-users-list">
+            {users.map(u => (
+              <div key={u.id} className="admin-user-row">
+                <div className="admin-user-row-main">
+                  {u.photos?.[0] ? (
+                    <img src={u.photos[0]} alt="" className="admin-user-avatar" />
+                  ) : (
+                    <UserCircle size={44} weight="fill" className="admin-user-avatar-icon" />
+                  )}
+                  <div>
+                    <div className="admin-user-name-line">
+                      <span className="admin-user-name font-display">{u.name || 'Anonymous Member'}</span>
+                      {u.verified && <VerifiedBadge variant="pill" size="sm" />}
+                      {!u.hasProfile && (
+                        <span 
+                          className="admin-onboarding-pill" 
+                          title="User authenticated via OAuth/Phone, but dating profile onboarding is not yet completed"
+                        >
+                          Profile Incomplete
+                        </span>
+                      )}
+                      <span className={`admin-role-badge ${u.role === 'ADMIN' ? 'role-admin' : 'role-user'}`}>
+                        {u.role}
+                      </span>
+                      <span className={`admin-status-pill status-${u.status?.toLowerCase()}`}>
+                        {u.status}
+                      </span>
+                      {u.approvalStatus && (
+                        <span className={`admin-approval-pill status-${u.approvalStatus?.toLowerCase()}`}>
+                          {u.approvalStatus}
+                        </span>
+                      )}
+                    </div>
+                    <div className="admin-user-subline font-ui">
+                      <span>{u.email || u.phoneNumber || 'No contact on file'}</span>
+                      <span> • {u.city || 'Location not set'}</span>
+                      <span> • Joined {new Date(u.createdAt).toLocaleDateString()}</span>
+                      <span className="admin-user-id-sub"> • ID: {u.id.substring(0, 8)}…</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row Action Controls */}
+                <div className="admin-user-row-actions">
+                  <button
+                    className={`admin-verify-toggle-btn ${u.verified ? 'is-verified' : ''}`}
+                    onClick={() => handleToggleVerification(u)}
+                    disabled={actionLoading === u.id}
+                    title={u.verified ? 'Revoke verification badge' : 'Grant verified badge'}
+                  >
+                    <SealCheck size={17} weight="fill" />
+                    <span>{actionLoading === u.id ? 'Saving…' : u.verified ? 'Verified' : 'Verify'}</span>
+                  </button>
+
+                  <button
+                    className={`admin-suspend-toggle-btn ${u.status === 'SUSPENDED' || u.status === 'DELETED' ? 'is-suspended' : ''}`}
+                    onClick={() => handleToggleSuspend(u.id, u.status)}
+                    disabled={actionLoading === u.id || u.role === 'ADMIN'}
+                    title={u.status === 'DELETED' ? 'Restore deleted account' : u.status === 'SUSPENDED' ? 'Restore suspended account' : 'Suspend user account'}
+                  >
+                    {u.status === 'SUSPENDED' || u.status === 'DELETED' ? (
+                      <>
+                        <ArrowCounterClockwise size={16} weight="bold" />
+                        <span>Restore</span>
+                      </>
+                    ) : (
+                      <>
+                        <Prohibit size={16} weight="bold" />
+                        <span>Suspend</span>
+                      </>
+                    )}
+                  </button>
+
+                  {u.status !== 'DELETED' && u.role !== 'ADMIN' && (
+                    <button
+                      className="admin-delete-toggle-btn"
+                      onClick={() => handleDeleteUser(u.id, u.name)}
+                      disabled={actionLoading === u.id}
+                      title="Mark user account as Deleted"
+                    >
+                      <Trash size={16} weight="bold" />
+                      <span>Delete</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <AdminPagination
+            page={page}
+            totalPages={totalPages}
+            totalItems={totalUsers}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
+// ─── 4. PENDING APPROVALS TAB ───
+const PendingUsersTab = ({ showAlert }) => {
+  const [subTab, setSubTab] = useState('verifications'); // 'verifications' | 'registrations'
+  const [queue, setQueue] = useState([]);
+  const [verificationsQueue, setVerificationsQueue] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(null);
+  const [notesMap, setNotesMap] = useState({});
+  const [expandedCard, setExpandedCard] = useState(null);
+
+  // Pagination for both sub-queues
+  const [verifPage, setVerifPage] = useState(1);
+  const [regPage, setRegPage] = useState(1);
+  const pageSize = 6;
+
+  const fetchAllPending = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [pendingRes, verifRes] = await Promise.all([
+        api.admin.getPending().catch(err => {
+          console.error('Failed to fetch pending registrations:', err);
+          return [];
+        }),
+        api.admin.getVerifications('PENDING').catch(err => {
+          console.error('Failed to fetch pending verifications:', err);
+          return [];
+        }),
+      ]);
+
+      const pendingList = Array.isArray(pendingRes) ? pendingRes : (Array.isArray(pendingRes?.data) ? pendingRes.data : []);
+      const verifList = Array.isArray(verifRes) ? verifRes : (Array.isArray(verifRes?.data) ? verifRes.data : []);
+
+      setQueue(pendingList);
+      setVerificationsQueue(verifList);
+
+      // Auto-focus on whichever queue has items waiting
+      if (verifList.length > 0 && pendingList.length === 0) {
+        setSubTab('verifications');
+      } else if (pendingList.length > 0 && verifList.length === 0) {
+        setSubTab('registrations');
+      }
+    } catch (err) {
+      console.error('Failed to fetch pending approvals:', err);
+      showAlert?.('Failed to load pending approvals.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showAlert]);
+
+  useEffect(() => {
+    fetchAllPending();
+  }, [fetchAllPending]);
+
+  // Handle User Registration Approvals
+  const handleApproveUser = async (userId) => {
     setActionLoading(userId);
     try {
       await api.admin.approve(userId);
-      showAlert?.('✅ User approved successfully.', 'success');
-      fetchPending();
+      showAlert?.('✅ User registration approved.', 'success');
+      fetchAllPending();
     } catch (err) {
       showAlert?.('Failed to approve user.', 'error');
     } finally {
@@ -328,14 +1124,41 @@ const PendingUsersTab = ({ showAlert }) => {
     }
   };
 
-  const handleReject = async (userId) => {
+  const handleRejectUser = async (userId) => {
     setActionLoading(userId);
     try {
       await api.admin.reject(userId);
       showAlert?.('❌ User rejected.', 'info');
-      fetchPending();
+      fetchAllPending();
     } catch (err) {
       showAlert?.('Failed to reject user.', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle Photo Verification Approvals
+  const handleApproveVerification = async (id) => {
+    setActionLoading(id);
+    try {
+      await api.admin.approveVerification(id, notesMap[id] || '');
+      showAlert?.('✅ Verification approved — user profile is now officially verified.', 'success');
+      fetchAllPending();
+    } catch (err) {
+      showAlert?.('Failed to approve verification.', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRejectVerification = async (id) => {
+    setActionLoading(id);
+    try {
+      await api.admin.rejectVerification(id, notesMap[id] || '');
+      showAlert?.('❌ Verification request rejected.', 'info');
+      fetchAllPending();
+    } catch (err) {
+      showAlert?.('Failed to reject verification.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -345,182 +1168,328 @@ const PendingUsersTab = ({ showAlert }) => {
     return (
       <div className="admin-loading">
         <ArrowsClockwise size={28} className="admin-spinner" />
-        <span>Loading pending users…</span>
+        <span>Loading pending approvals queue…</span>
       </div>
     );
   }
 
-  if (queue.length === 0) {
-    return (
-      <EmptyState
-        icon={<Users size={48} />}
-        title="No Pending Users"
-        desc="All user registrations have been reviewed."
-      />
-    );
-  }
+  const verifTotalPages = Math.ceil(verificationsQueue.length / pageSize) || 1;
+  const displayedVerifications = verificationsQueue.slice((verifPage - 1) * pageSize, verifPage * pageSize);
+
+  const regTotalPages = Math.ceil(queue.length / pageSize) || 1;
+  const displayedRegistrations = queue.slice((regPage - 1) * pageSize, regPage * pageSize);
 
   return (
     <div className="admin-section">
-      <div className="admin-cards-grid">
-        {queue.map(user => (
-          <div key={user.userId} className="admin-user-card">
-            <div className="admin-card-header">
-              <div className="admin-card-user-info">
-                {user.photos?.[0] ? (
-                  <img src={user.photos[0]} alt="" className="admin-user-avatar" />
-                ) : (
-                  <UserCircle size={36} weight="fill" className="admin-card-avatar" />
-                )}
-                <div>
-                  <h4 className="admin-card-name font-display">{user.name || 'Unnamed'}</h4>
-                  <span className="admin-card-meta">{user.phoneNumber} • {user.city || 'Unknown'}</span>
-                </div>
-              </div>
-              <span className="admin-completion-badge">{user.profileCompletion}%</span>
-            </div>
+      {/* Pending Queue Sub-Tabs Selector */}
+      <div className="admin-subtabs-row">
+        <button
+          type="button"
+          className={`admin-subtab-btn ${subTab === 'verifications' ? 'active' : ''}`}
+          onClick={() => setSubTab('verifications')}
+        >
+          <ShieldCheck size={18} weight={subTab === 'verifications' ? 'fill' : 'regular'} />
+          <span>Photo Verifications</span>
+          <span className={`admin-pill-counter ${subTab === 'verifications' ? '' : 'secondary'}`}>
+            {verificationsQueue.length}
+          </span>
+        </button>
 
-            <div className="admin-user-details">
-              <span>{user.gender || '—'} • {user.relationshipIntent || '—'}</span>
-              {user.hasPriorHistory && (
-                <span className="admin-prior-flag">
-                  <Warning size={14} weight="fill" />
-                  Prior history: {user.priorRejections} rejection(s), {user.priorDeletions} deletion(s)
-                </span>
-              )}
-            </div>
+        <button
+          type="button"
+          className={`admin-subtab-btn ${subTab === 'registrations' ? 'active' : ''}`}
+          onClick={() => setSubTab('registrations')}
+        >
+          <Users size={18} weight={subTab === 'registrations' ? 'fill' : 'regular'} />
+          <span>User Registrations</span>
+          <span className={`admin-pill-counter ${subTab === 'registrations' ? '' : 'secondary'}`}>
+            {queue.length}
+          </span>
+        </button>
+      </div>
 
-            {/* Photo thumbnails */}
-            {user.photos?.length > 0 && (
-              <div className="admin-photos-row">
-                {user.photos.slice(0, 4).map((url, idx) => (
-                  <img key={idx} src={url} alt={`Photo ${idx + 1}`} className="admin-photo-thumb" loading="lazy" />
+      {/* SUBTAB 1: Photo Verifications Queue */}
+      {subTab === 'verifications' && (
+        <>
+          {verificationsQueue.length === 0 ? (
+            <EmptyState
+              icon={<ShieldCheck size={48} />}
+              title="No Pending Verification Requests"
+              desc="All member identity verifications are currently up to date."
+            />
+          ) : (
+            <>
+              <div className="admin-cards-grid">
+                {displayedVerifications.map(req => (
+                  <div key={req.id} className="admin-verification-card status-pending">
+                    <div className="admin-card-header">
+                      <div className="admin-card-user-info">
+                        <UserCircle size={36} weight="fill" className="admin-card-avatar" />
+                        <div>
+                          <h4 className="admin-card-name font-display">{req.userName}</h4>
+                          <span className="admin-card-meta">{req.userPhone || 'No phone'} • {req.userCity || 'City not set'}</span>
+                        </div>
+                      </div>
+                      <span className="admin-status-badge status-pending">PENDING</span>
+                    </div>
+
+                    <div className="admin-photo-compare">
+                      <div className="admin-photo-box">
+                        <span className="admin-photo-label">Live Camera Selfie</span>
+                        <img src={req.selfieUrl} alt="Selfie submitted" className="admin-photo-img" loading="lazy" />
+                      </div>
+                      <div className="admin-photo-box">
+                        <span className="admin-photo-label">Current Profile Photo</span>
+                        {req.referenceUrl || req.profilePhotos?.[0] ? (
+                          <img src={req.referenceUrl || req.profilePhotos?.[0]} alt="Reference" className="admin-photo-img" loading="lazy" />
+                        ) : (
+                          <div className="admin-photo-placeholder">
+                            <UserCircle size={48} weight="thin" />
+                            <span>No profile photo</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {req.autoFailReason && (
+                      <div className="admin-fail-reason">
+                        <Warning size={16} weight="fill" />
+                        <span>{req.autoFailReason}</span>
+                      </div>
+                    )}
+
+                    <button
+                      className="admin-expand-btn"
+                      onClick={() => setExpandedCard(expandedCard === req.id ? null : req.id)}
+                    >
+                      {expandedCard === req.id ? <CaretUp size={16} /> : <CaretDown size={16} />}
+                      <span>{expandedCard === req.id ? 'Hide Details' : 'Show Details'}</span>
+                    </button>
+
+                    {expandedCard === req.id && (
+                      <div className="admin-card-details">
+                        <div className="admin-detail-row">
+                          <Clock size={14} />
+                          <span>Submitted: {new Date(req.createdAt).toLocaleString()}</span>
+                        </div>
+                        {req.profilePhotos?.length > 1 && (
+                          <div className="admin-all-photos">
+                            <span className="admin-photo-label">All Profile Photos ({req.profilePhotos.length})</span>
+                            <div className="admin-photos-row">
+                              {req.profilePhotos.map((url, idx) => (
+                                <img key={idx} src={url} alt={`Profile ${idx + 1}`} className="admin-photo-thumb" loading="lazy" />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="admin-card-actions">
+                      <input
+                        type="text"
+                        placeholder="Admin review notes (optional)…"
+                        className="admin-notes-input"
+                        value={notesMap[req.id] || ''}
+                        onChange={e => setNotesMap({ ...notesMap, [req.id]: e.target.value })}
+                      />
+                      <div className="admin-action-buttons">
+                        <Button
+                          variant="primary"
+                          onClick={() => handleApproveVerification(req.id)}
+                          disabled={actionLoading === req.id}
+                          className="admin-approve-btn"
+                        >
+                          <CheckCircle size={18} weight="bold" />
+                          <span>{actionLoading === req.id ? 'Authorizing…' : 'Approve & Verify'}</span>
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleRejectVerification(req.id)}
+                          disabled={actionLoading === req.id}
+                          className="admin-reject-btn"
+                        >
+                          <XCircle size={18} weight="bold" />
+                          <span>Reject</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
-            )}
 
-            <div className="admin-action-buttons">
-              <Button
-                variant="primary"
-                onClick={() => handleApprove(user.userId)}
-                disabled={actionLoading === user.userId}
-                className="admin-approve-btn"
-              >
-                <CheckCircle size={18} weight="bold" />
-                <span>{actionLoading === user.userId ? 'Processing…' : 'Approve'}</span>
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => handleReject(user.userId)}
-                disabled={actionLoading === user.userId}
-                className="admin-reject-btn"
-              >
-                <XCircle size={18} weight="bold" />
-                <span>Reject</span>
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+              <AdminPagination
+                page={verifPage}
+                totalPages={verifTotalPages}
+                totalItems={verificationsQueue.length}
+                pageSize={pageSize}
+                onPageChange={setVerifPage}
+              />
+            </>
+          )}
+        </>
+      )}
+
+      {/* SUBTAB 2: User Registrations Queue */}
+      {subTab === 'registrations' && (
+        <>
+          {queue.length === 0 ? (
+            <EmptyState
+              icon={<Users size={48} />}
+              title="No Pending Registrations"
+              desc="All user registrations have been approved and are active on Velvet Hearts."
+            />
+          ) : (
+            <>
+              <div className="admin-cards-grid">
+                {displayedRegistrations.map(user => (
+                  <div key={user.userId} className="admin-user-card">
+                    <div className="admin-card-header">
+                      <div className="admin-card-user-info">
+                        {user.photos?.[0] ? (
+                          <img src={user.photos[0]} alt="" className="admin-user-avatar" />
+                        ) : (
+                          <UserCircle size={36} weight="fill" className="admin-card-avatar" />
+                        )}
+                        <div>
+                          <h4 className="admin-card-name font-display">{user.name || 'Unnamed'}</h4>
+                          <span className="admin-card-meta">{user.phoneNumber || user.email || 'No contact'} • {user.city || 'Unknown'}</span>
+                        </div>
+                      </div>
+                      <span className="admin-completion-badge">{user.profileCompletion}%</span>
+                    </div>
+
+                    <div className="admin-user-details">
+                      <span>{user.gender || '—'} • {user.relationshipIntent || '—'}</span>
+                      {user.hasPriorHistory && (
+                        <span className="admin-prior-flag">
+                          <Warning size={14} weight="fill" />
+                          Prior history: {user.priorRejections} rejection(s), {user.priorDeletions} deletion(s)
+                        </span>
+                      )}
+                    </div>
+
+                    {user.photos?.length > 0 && (
+                      <div className="admin-photos-row">
+                        {user.photos.slice(0, 4).map((url, idx) => (
+                          <img key={idx} src={url} alt={`Photo ${idx + 1}`} className="admin-photo-thumb" loading="lazy" />
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="admin-action-buttons">
+                      <Button
+                        variant="primary"
+                        onClick={() => handleApproveUser(user.userId)}
+                        disabled={actionLoading === user.userId}
+                        className="admin-approve-btn"
+                      >
+                        <CheckCircle size={18} weight="bold" />
+                        <span>{actionLoading === user.userId ? 'Processing…' : 'Approve'}</span>
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => handleRejectUser(user.userId)}
+                        disabled={actionLoading === user.userId}
+                        className="admin-reject-btn"
+                      >
+                        <XCircle size={18} weight="bold" />
+                        <span>Reject</span>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <AdminPagination
+                page={regPage}
+                totalPages={regTotalPages}
+                totalItems={queue.length}
+                pageSize={pageSize}
+                onPageChange={setRegPage}
+              />
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 };
 
-// ─── DASHBOARD STATS TAB ───
-const DashboardStatsTab = () => {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await api.admin.getStats();
-        setStats(res?.data || null);
-      } catch (err) {
-        console.error('Failed to fetch dashboard stats:', err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="admin-loading">
-        <ArrowsClockwise size={28} className="admin-spinner" />
-        <span>Loading dashboard…</span>
-      </div>
-    );
-  }
-
-  if (!stats) {
-    return <EmptyState icon={<ChartBar size={48} />} title="No Data" desc="Unable to load dashboard statistics." />;
-  }
-
-  const statCards = [
-    { label: 'Pending Approvals', value: stats.stats?.pendingCount || 0, color: '#D4AD6A' },
-    { label: 'Active Users', value: stats.stats?.activeCount || 0, color: '#4ade80' },
-    { label: 'Suspended', value: stats.stats?.suspendedCount || 0, color: '#fb923c' },
-    { label: 'Deleted', value: stats.stats?.deletedCount || 0, color: '#f87171' },
-    { label: 'Open Reports', value: stats.stats?.reportsCount || 0, color: '#c084fc' },
-    { label: 'Total Users', value: stats.stats?.totalCount || 0, color: '#60a5fa' },
-  ];
-
-  return (
-    <div className="admin-section">
-      <div className="admin-stats-grid">
-        {statCards.map((s, idx) => (
-          <div key={idx} className="admin-stat-card" style={{ borderTopColor: s.color }}>
-            <span className="admin-stat-value" style={{ color: s.color }}>{s.value}</span>
-            <span className="admin-stat-label">{s.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ─── Styles ───
+// ─── STYLES ───
 const adminStyles = `
   .admin-panel {
     padding: var(--space-4);
-    max-width: 960px;
+    max-width: 1060px;
     margin: 0 auto;
-  }
-
-  .admin-tabs {
-    display: flex;
-    gap: var(--space-2);
-    margin-bottom: var(--space-6);
-    overflow-x: auto;
-    padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
-  .admin-tab {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    font-family: var(--font-ui);
-    font-weight: 500;
-    font-size: var(--text-body-sm);
-    white-space: nowrap;
-    transition: all var(--duration-fast);
-    border: 1px solid transparent;
-  }
-
-  .admin-tab:hover {
-    background-color: var(--bg-muted);
     color: var(--text-primary);
   }
 
+  .admin-tabs-wrapper {
+    margin-bottom: var(--space-6);
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .admin-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px;
+    background: var(--bg-surface-elevated, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+    border-radius: var(--radius-full, 9999px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+
+  [data-theme="dark"] .admin-tabs {
+    background: rgba(28, 20, 24, 0.7);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  .admin-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: var(--radius-full, 9999px);
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: var(--text-body-sm, 13px);
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .admin-tab:hover {
+    color: var(--text-primary);
+    background: rgba(184, 67, 106, 0.08);
+  }
+
+  [data-theme="dark"] .admin-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
   .admin-tab.active {
-    background-color: var(--bg-accent-subtle);
-    color: var(--text-accent);
-    border-color: var(--text-accent);
+    background: linear-gradient(135deg, var(--burgundy-500, #B8436A) 0%, var(--burgundy-700, #8A2548) 100%);
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 4px 14px rgba(184, 67, 106, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  }
+
+  [data-theme="dark"] .admin-tab.active {
+    background: linear-gradient(135deg, #B8436A 0%, #7A1D3A 100%);
+    color: #FFFFFF !important;
+    border-color: rgba(212, 173, 106, 0.35);
+    box-shadow: 0 4px 16px rgba(184, 67, 106, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
 
   .admin-loading {
@@ -541,35 +1510,392 @@ const adminStyles = `
     to { transform: rotate(360deg); }
   }
 
-  .admin-filter-row {
+  .admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: 14px;
+    margin-bottom: var(--space-6);
+  }
+
+  .admin-stat-card {
+    position: relative;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl, 18px);
+    padding: 16px 18px;
     display: flex;
-    gap: var(--space-2);
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+  }
+
+  .admin-stat-card.interactive {
+    cursor: pointer;
+  }
+
+  [data-theme="dark"] .admin-stat-card {
+    background: linear-gradient(160deg, rgba(32, 22, 27, 0.85) 0%, rgba(20, 15, 18, 0.95) 100%);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  .admin-stat-card.interactive:hover {
+    transform: translateY(-3px);
+    border-color: rgba(184, 67, 106, 0.35);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12), 0 0 20px rgba(184, 67, 106, 0.12);
+  }
+
+  [data-theme="dark"] .admin-stat-card.interactive:hover {
+    border-color: rgba(212, 173, 106, 0.35);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 24px rgba(184, 67, 106, 0.25);
+  }
+
+  .admin-stat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .admin-stat-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+  }
+
+  .admin-stat-card:hover .admin-stat-icon-wrap {
+    transform: scale(1.08);
+  }
+
+  .admin-stat-value {
+    font-family: var(--font-display);
+    font-size: 2.1rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin: 2px 0 0;
+  }
+
+  .admin-stat-label {
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .admin-stat-pill-badge {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 700;
+    color: #D4AD6A;
+    background: rgba(212, 173, 106, 0.16);
+    border: 1px solid rgba(212, 173, 106, 0.35);
+    padding: 2px 8px;
+    border-radius: 9999px;
+    letter-spacing: 0.02em;
+    animation: adminBadgePulse 2s infinite;
+  }
+
+  @keyframes adminBadgePulse {
+    0% { box-shadow: 0 0 0 0 rgba(212, 173, 106, 0.5); }
+    70% { box-shadow: 0 0 0 6px rgba(212, 173, 106, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(212, 173, 106, 0); }
+  }
+
+  .admin-quick-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+  }
+
+  .admin-actions-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .admin-actions-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+  }
+
+  .admin-pill-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.22);
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 4px;
+    line-height: 1.2;
+  }
+
+  .admin-pill-counter.secondary {
+    background: rgba(184, 67, 106, 0.15);
+    color: var(--burgundy-500, #B8436A);
+  }
+
+  [data-theme="dark"] .admin-pill-counter.secondary {
+    background: rgba(212, 173, 106, 0.18);
+    color: #D4AD6A;
+  }
+
+  /* Velvet Hearts Luxury Refresh Button */
+  .admin-refresh-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 18px;
+    height: 42px;
+    border-radius: var(--radius-full, 9999px);
+    background: var(--bg-surface, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--border-default, rgba(255, 255, 255, 0.12));
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: var(--text-body-sm, 13px);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  [data-theme="dark"] .admin-refresh-button {
+    background: rgba(36, 26, 30, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .admin-refresh-button:hover:not(:disabled) {
+    background: rgba(184, 67, 106, 0.14);
+    border-color: rgba(184, 67, 106, 0.5);
+    color: var(--rose-400, #F0A0AD);
+    transform: translateY(-1.5px);
+    box-shadow: 0 6px 16px rgba(184, 67, 106, 0.3);
+  }
+
+  [data-theme="dark"] .admin-refresh-button:hover:not(:disabled) {
+    background: rgba(184, 67, 106, 0.22);
+    border-color: rgba(212, 173, 106, 0.45);
+    color: #FFFFFF;
+    box-shadow: 0 6px 20px rgba(184, 67, 106, 0.4);
+  }
+
+  .admin-refresh-button:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .admin-refresh-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .admin-refresh-icon.spinning {
+    animation: adminSpin 0.75s linear infinite;
+  }
+
+  @keyframes adminSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  .admin-section-heading {
+    font-size: var(--text-heading-sm);
+    color: var(--text-primary);
+    margin-bottom: var(--space-3);
+  }
+
+  .admin-recent-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .admin-recent-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-body-sm);
+    text-align: left;
+  }
+
+  .admin-recent-table th {
+    background: var(--bg-muted);
+    padding: var(--space-3) var(--space-4);
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .admin-recent-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+    color: var(--text-primary);
+  }
+
+  .admin-recent-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .admin-recent-table tr:hover td {
+    background: rgba(184, 67, 106, 0.04);
+  }
+
+  .admin-table-user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .admin-table-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid var(--border-subtle);
+  }
+
+  .admin-table-avatar-icon {
+    color: var(--text-muted);
+  }
+
+  .admin-table-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .admin-table-id {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  .admin-table-contact {
+    color: var(--text-secondary);
+    font-size: var(--text-caption);
+    font-weight: 500;
+  }
+
+  .admin-table-date {
+    color: var(--text-muted);
+    font-size: var(--text-caption);
+    white-space: nowrap;
+  }
+
+  .admin-role-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .admin-role-badge.role-admin {
+    background: rgba(184, 67, 106, 0.2);
+    color: #b8436a;
+    border: 1px solid rgba(184, 67, 106, 0.4);
+  }
+
+  [data-theme="dark"] .admin-role-badge.role-admin {
+    background: rgba(184, 67, 106, 0.3);
+    color: #f0bdc8;
+    border-color: #d4ad6a;
+  }
+
+  .admin-role-badge.role-user {
+    background: var(--bg-muted);
+    color: var(--text-secondary);
+  }
+
+  .admin-status-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .admin-status-pill.status-active {
+    background: rgba(74, 222, 128, 0.15);
+    color: #16a34a;
+    border: 1px solid rgba(74, 222, 128, 0.3);
+  }
+
+  [data-theme="dark"] .admin-status-pill.status-active {
+    color: #4ade80;
+  }
+
+  .admin-status-pill.status-suspended {
+    background: rgba(251, 146, 60, 0.15);
+    color: #ea580c;
+    border: 1px solid rgba(251, 146, 60, 0.3);
+  }
+
+  /* Filter bar */
+  .admin-filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
     margin-bottom: var(--space-4);
     flex-wrap: wrap;
   }
 
+  .admin-filter-row {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
   .admin-filter-btn {
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-full);
     font-size: var(--text-caption);
     font-family: var(--font-ui);
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-secondary);
-    border: 1px solid var(--border-subtle);
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-surface);
+    cursor: pointer;
     transition: all var(--duration-fast);
     text-transform: capitalize;
   }
 
   .admin-filter-btn:hover {
     background-color: var(--bg-muted);
+    color: var(--text-primary);
+    border-color: var(--border-default);
   }
 
   .admin-filter-btn.active {
-    background-color: var(--text-accent);
-    color: #fff;
-    border-color: var(--text-accent);
+    background-color: var(--burgundy-500);
+    color: #FFFFFF !important;
+    border-color: var(--burgundy-500);
+    box-shadow: 0 2px 8px rgba(184, 67, 106, 0.3);
   }
 
+  /* Cards Grid */
   .admin-cards-grid {
     display: grid;
     gap: var(--space-4);
@@ -580,29 +1906,31 @@ const adminStyles = `
     background-color: var(--bg-surface);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    padding: var(--space-4);
-    transition: box-shadow var(--duration-fast);
+    padding: var(--space-5);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--duration-fast);
   }
 
   .admin-verification-card:hover,
   .admin-user-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
   }
 
   .admin-verification-card.status-approved {
-    border-left: 3px solid #4ade80;
+    border-left: 4px solid #16a34a;
   }
   .admin-verification-card.status-rejected {
-    border-left: 3px solid #f87171;
+    border-left: 4px solid #ef4444;
   }
   .admin-verification-card.status-pending {
-    border-left: 3px solid #D4AD6A;
+    border-left: 4px solid #D4AD6A;
   }
 
   .admin-card-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     margin-bottom: var(--space-3);
   }
 
@@ -613,76 +1941,69 @@ const adminStyles = `
   }
 
   .admin-card-avatar {
-    color: var(--text-muted);
-  }
-
-  .admin-user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
+    color: var(--text-accent);
   }
 
   .admin-card-name {
     font-size: var(--text-body);
     font-weight: 600;
     color: var(--text-primary);
-    margin: 0;
   }
 
   .admin-card-meta {
     font-size: var(--text-caption);
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
   }
 
   .admin-status-badge {
-    font-size: 11px;
-    font-weight: 600;
-    font-family: var(--font-ui);
-    padding: 3px 10px;
+    padding: var(--space-1) var(--space-3);
     border-radius: var(--radius-full);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: var(--text-caption);
+    font-family: var(--font-ui);
+    font-weight: 700;
+  }
+
+  .admin-status-badge.status-approved {
+    background-color: rgba(74, 222, 128, 0.15);
+    color: #16a34a;
+  }
+  [data-theme="dark"] .admin-status-badge.status-approved {
+    color: #4ade80;
+  }
+
+  .admin-status-badge.status-rejected {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
   }
 
   .admin-status-badge.status-pending {
-    background-color: rgba(212, 173, 106, 0.15);
+    background-color: rgba(212, 173, 106, 0.2);
+    color: #b45309;
+  }
+  [data-theme="dark"] .admin-status-badge.status-pending {
     color: #D4AD6A;
   }
-  .admin-status-badge.status-approved {
-    background-color: rgba(74, 222, 128, 0.15);
-    color: #4ade80;
-  }
-  .admin-status-badge.status-rejected {
-    background-color: rgba(248, 113, 113, 0.15);
-    color: #f87171;
-  }
 
-  .admin-completion-badge {
-    font-size: 13px;
-    font-weight: 600;
-    font-family: var(--font-ui);
-    color: var(--text-accent);
-  }
-
+  /* Photo compare */
   .admin-photo-compare {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
-    margin-bottom: var(--space-3);
+    gap: var(--space-4);
+    margin: var(--space-4) 0;
   }
 
   .admin-photo-box {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: var(--space-2);
   }
 
   .admin-photo-label {
     font-size: var(--text-caption);
-    color: var(--text-tertiary);
-    font-weight: 500;
+    color: var(--text-primary);
     font-family: var(--font-ui);
+    font-weight: 600;
   }
 
   .admin-photo-img {
@@ -690,112 +2011,110 @@ const adminStyles = `
     aspect-ratio: 1;
     object-fit: cover;
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-subtle);
-    background-color: var(--bg-muted);
+    border: 1.5px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
   }
 
   .admin-photo-placeholder {
     width: 100%;
     aspect-ratio: 1;
     border-radius: var(--radius-md);
-    border: 1px dashed var(--border-subtle);
+    border: 2px dashed var(--border-subtle);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--space-1);
     color: var(--text-muted);
     font-size: var(--text-caption);
+    font-family: var(--font-ui);
+    gap: var(--space-1);
+    background: var(--bg-muted);
   }
 
   .admin-fail-reason {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    background-color: rgba(248, 113, 113, 0.08);
-    border-radius: var(--radius-sm);
-    color: #f87171;
-    font-size: var(--text-caption);
+    padding: var(--space-3);
+    background-color: rgba(251, 146, 60, 0.12);
+    border: 1px solid rgba(251, 146, 60, 0.3);
+    border-radius: var(--radius-md);
+    color: #ea580c;
+    font-size: var(--text-body-sm);
     font-family: var(--font-ui);
-    margin-bottom: var(--space-3);
-    line-height: 1.4;
+    margin: var(--space-3) 0;
+    font-weight: 500;
+  }
+
+  [data-theme="dark"] .admin-fail-reason {
+    color: #fb923c;
   }
 
   .admin-expand-btn {
     display: flex;
     align-items: center;
     gap: var(--space-1);
-    color: var(--text-tertiary);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
     font-size: var(--text-caption);
     font-family: var(--font-ui);
+    cursor: pointer;
     padding: var(--space-1) 0;
-    margin-bottom: var(--space-2);
-    transition: color var(--duration-fast);
+    margin-top: var(--space-2);
+    font-weight: 600;
   }
 
   .admin-expand-btn:hover {
-    color: var(--text-primary);
+    color: var(--burgundy-500);
   }
 
   .admin-card-details {
-    padding: var(--space-2) 0;
+    margin-top: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-subtle);
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    border-top: 1px solid var(--border-subtle);
+    font-size: var(--text-caption);
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
   }
 
   .admin-detail-row {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    font-size: var(--text-caption);
-    color: var(--text-tertiary);
   }
 
   .admin-notes-text {
     font-style: italic;
-    color: var(--text-secondary);
   }
 
-  .admin-user-details {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    font-size: var(--text-caption);
-    color: var(--text-secondary);
-    margin-bottom: var(--space-3);
-  }
-
-  .admin-prior-flag {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    color: #fb923c;
-    font-weight: 500;
+  .admin-all-photos {
+    margin-top: var(--space-2);
   }
 
   .admin-photos-row {
     display: flex;
     gap: var(--space-2);
     overflow-x: auto;
-    padding-bottom: var(--space-2);
-    margin-bottom: var(--space-3);
+    margin-top: var(--space-1);
   }
 
   .admin-photo-thumb {
     width: 64px;
     height: 64px;
-    border-radius: var(--radius-sm);
     object-fit: cover;
-    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-subtle);
     flex-shrink: 0;
   }
 
   .admin-card-actions {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
     border-top: 1px solid var(--border-subtle);
-    padding-top: var(--space-3);
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
@@ -803,81 +2122,598 @@ const adminStyles = `
 
   .admin-notes-input {
     width: 100%;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-subtle);
-    background-color: var(--bg-muted);
+    padding: var(--space-3);
+    border: 1.5px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-surface);
     color: var(--text-primary);
+    font-size: var(--text-body-sm);
     font-family: var(--font-ui);
-    font-size: var(--text-caption);
-    resize: vertical;
-    min-height: 40px;
+    transition: all var(--duration-fast);
   }
 
   .admin-notes-input:focus {
     outline: none;
-    border-color: var(--text-accent);
+    border-color: var(--burgundy-500);
+    box-shadow: 0 0 0 3px rgba(184, 67, 106, 0.18);
   }
 
   .admin-action-buttons {
     display: flex;
-    gap: var(--space-2);
+    gap: var(--space-3);
   }
 
   .admin-approve-btn {
     flex: 1;
+    background-color: #16a34a !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3) !important;
+  }
+
+  .admin-approve-btn:hover:not(:disabled) {
+    background-color: #15803d !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45) !important;
+    transform: translateY(-1.5px);
   }
 
   .admin-reject-btn {
     flex: 1;
+    background-color: rgba(239, 68, 68, 0.12) !important;
+    color: #ef4444 !important;
+    border: 1.5px solid rgba(239, 68, 68, 0.4) !important;
+    font-weight: 600;
   }
 
-  .admin-all-photos {
+  .admin-reject-btn:hover:not(:disabled) {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4) !important;
+    transform: translateY(-1.5px);
+  }
+
+  /* Users directory */
+  .admin-user-search-bar {
+    display: flex;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  .admin-search-input-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .admin-search-icon {
+    position: absolute;
+    left: var(--space-3);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .admin-search-input {
+    width: 100%;
+    padding: var(--space-3) var(--space-3) var(--space-3) 38px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: var(--text-body-sm);
+    transition: all var(--duration-fast);
+  }
+
+  .admin-search-input:focus {
+    outline: none;
+    border-color: var(--burgundy-500);
+    box-shadow: 0 0 0 3px rgba(184, 67, 106, 0.18);
+  }
+
+  .admin-role-select {
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: var(--text-body-sm);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .admin-role-select:focus {
+    outline: none;
+    border-color: var(--burgundy-500);
+  }
+
+  .admin-users-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
-    margin-top: var(--space-2);
-  }
-
-  /* Stats Grid */
-  .admin-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: var(--space-3);
   }
 
-  .admin-stat-card {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-    border-top: 3px solid;
-    border-radius: var(--radius-md);
-    padding: var(--space-4);
+  .admin-user-row {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: var(--space-1);
+    justify-content: space-between;
+    padding: var(--space-4);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    gap: var(--space-3);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--duration-fast);
   }
 
-  .admin-stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    font-family: var(--font-display);
+  .admin-user-row:hover {
+    border-color: var(--border-default);
+    box-shadow: var(--shadow-md);
   }
 
-  .admin-stat-label {
+  .admin-user-row-main {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .admin-user-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid var(--border-subtle);
+  }
+
+  .admin-user-avatar-icon {
+    color: var(--text-muted);
+  }
+
+  .admin-user-name-line {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .admin-user-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--text-body);
+  }
+
+  .admin-user-subline {
     font-size: var(--text-caption);
-    color: var(--text-tertiary);
-    font-family: var(--font-ui);
-    text-align: center;
+    color: var(--text-secondary);
+    margin-top: 3px;
+    font-weight: 500;
   }
 
-  @media (max-width: 600px) {
-    .admin-photo-compare {
-      grid-template-columns: 1fr 1fr;
-    }
+  .admin-user-row-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
 
-    .admin-stats-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
+  .admin-verify-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--duration-fast);
+  }
+
+  .admin-verify-toggle-btn:hover:not(:disabled) {
+    background: #16a34a !important;
+    border-color: #16a34a !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .admin-verify-toggle-btn.is-verified {
+    background: rgba(184, 67, 106, 0.15);
+    border-color: #b8436a;
+    color: #b8436a;
+  }
+
+  [data-theme="dark"] .admin-verify-toggle-btn.is-verified {
+    color: #f0bdc8;
+    border-color: #d4ad6a;
+  }
+
+  .admin-verify-toggle-btn.is-verified:hover:not(:disabled) {
+    background: #ef4444 !important;
+    border-color: #ef4444 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    transform: translateY(-1px);
+  }
+
+  /* ── Block Header & Counts ── */
+  .admin-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+  }
+
+  .admin-section-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: var(--bg-surface-elevated, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--border-subtle);
+    padding: 3px 10px;
+    border-radius: var(--radius-full, 9999px);
+    letter-spacing: 0.02em;
+  }
+
+  /* ── Luxury Pagination Bar ── */
+  .admin-pagination-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: var(--space-4);
+    padding: 10px 18px;
+    background: var(--bg-surface, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full, 9999px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .admin-pagination-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .admin-pagination-highlight {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .admin-pagination-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .admin-page-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: var(--radius-full, 9999px);
+    border: 1px solid var(--border-default);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-ui);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-page-nav-btn:hover:not(:disabled) {
+    background: rgba(184, 67, 106, 0.14);
+    border-color: rgba(184, 67, 106, 0.5);
+    color: var(--burgundy-500, #B8436A);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(184, 67, 106, 0.2);
+  }
+
+  [data-theme="dark"] .admin-page-nav-btn:hover:not(:disabled) {
+    background: rgba(184, 67, 106, 0.24);
+    border-color: rgba(212, 173, 106, 0.45);
+    color: #FFFFFF;
+  }
+
+  .admin-page-nav-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .admin-page-indicator {
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 0 4px;
+    white-space: nowrap;
+  }
+
+  .admin-page-indicator strong {
+    color: var(--text-primary);
+  }
+
+  /* ── Users Directory Toolbar ── */
+  .admin-user-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .admin-filter-selects {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .admin-select-filter {
+    padding: 8px 14px;
+    border-radius: var(--radius-full, 9999px);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .admin-select-filter:focus {
+    outline: none;
+    border-color: var(--burgundy-500);
+    box-shadow: 0 0 0 2px rgba(184, 67, 106, 0.2);
+  }
+
+  .admin-user-id-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .admin-approval-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .admin-approval-pill.status-approved {
+    background: rgba(74, 222, 128, 0.12);
+    color: #16a34a;
+    border: 1px solid rgba(74, 222, 128, 0.3);
+  }
+
+  [data-theme="dark"] .admin-approval-pill.status-approved {
+    color: #4ade80;
+  }
+
+  .admin-approval-pill.status-pending {
+    background: rgba(212, 173, 106, 0.15);
+    color: #D4AD6A;
+    border: 1px solid rgba(212, 173, 106, 0.35);
+  }
+
+  .admin-approval-pill.status-rejected {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  /* ── Role, Status & Filter Badges ── */
+  .admin-clear-filter-btn {
+    padding: 7px 14px;
+    border-radius: var(--radius-full, 9999px);
+    border: 1px solid var(--border-default);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .admin-clear-filter-btn:hover {
+    background: rgba(184, 67, 106, 0.15);
+    border-color: var(--burgundy-500);
+    color: var(--text-primary);
+  }
+
+  .admin-role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-full, 9999px);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .admin-role-badge.role-admin {
+    background: rgba(212, 173, 106, 0.16);
+    color: #D4AD6A;
+    border: 1px solid rgba(212, 173, 106, 0.4);
+  }
+
+  .admin-role-badge.role-user {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .admin-status-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-full, 9999px);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .admin-status-pill.status-active {
+    background: rgba(74, 222, 128, 0.12);
+    color: #16a34a;
+    border: 1px solid rgba(74, 222, 128, 0.3);
+  }
+
+  [data-theme="dark"] .admin-status-pill.status-active {
+    color: #4ade80;
+  }
+
+  .admin-status-pill.status-suspended {
+    background: rgba(251, 146, 60, 0.12);
+    color: #ea580c;
+    border: 1px solid rgba(251, 146, 60, 0.35);
+  }
+
+  [data-theme="dark"] .admin-status-pill.status-suspended {
+    color: #fb923c;
+  }
+
+  .admin-status-pill.status-deleted {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .admin-onboarding-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: var(--radius-full, 9999px);
+    font-size: 0.68rem;
+    font-weight: 600;
+    background: rgba(168, 85, 247, 0.12);
+    color: #a855f7;
+    border: 1px dashed rgba(168, 85, 247, 0.4);
+    letter-spacing: 0.01em;
+  }
+
+  [data-theme="dark"] .admin-onboarding-pill {
+    color: #c084fc;
+    border-color: rgba(192, 132, 252, 0.4);
+  }
+
+  /* ── Suspend / Restore Button ── */
+  .admin-suspend-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--duration-fast);
+  }
+
+  .admin-suspend-toggle-btn:hover:not(:disabled) {
+    border-color: #fb923c;
+    color: #ea580c;
+    background: rgba(251, 146, 60, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .admin-suspend-toggle-btn.is-suspended {
+    border-color: #4ade80;
+    color: #16a34a;
+    background: rgba(74, 222, 128, 0.12);
+  }
+
+  .admin-suspend-toggle-btn.is-suspended:hover:not(:disabled) {
+    border-color: #16a34a;
+    background: rgba(74, 222, 128, 0.22);
+  }
+
+  .admin-suspend-toggle-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── Delete Button ── */
+  .admin-delete-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--border-subtle);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--duration-fast);
+  }
+
+  .admin-delete-toggle-btn:hover:not(:disabled) {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .admin-delete-toggle-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── Pending Approvals Sub-Tabs Rail ── */
+  .admin-subtabs-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--space-5);
+    flex-wrap: wrap;
+  }
+
+  .admin-subtab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: var(--radius-full, 9999px);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface, rgba(255, 255, 255, 0.04));
+    color: var(--text-secondary);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .admin-subtab-btn:hover {
+    color: var(--text-primary);
+    border-color: rgba(184, 67, 106, 0.35);
+  }
+
+  .admin-subtab-btn.active {
+    background: linear-gradient(135deg, var(--burgundy-500, #B8436A) 0%, var(--burgundy-700, #8A2548) 100%);
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 14px rgba(184, 67, 106, 0.35);
+  }
+
+  [data-theme="dark"] .admin-subtab-btn.active {
+    background: linear-gradient(135deg, #B8436A 0%, #7A1D3A 100%);
+    border-color: rgba(212, 173, 106, 0.35);
+    box-shadow: 0 4px 16px rgba(184, 67, 106, 0.5);
   }
 `;

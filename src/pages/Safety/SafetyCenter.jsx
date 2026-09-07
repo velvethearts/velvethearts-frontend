@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { auth } from '../../lib/firebase';
-import { ShieldCheck, Users, Info, HandWaving, EnvelopeSimple, Camera } from '@phosphor-icons/react';
+import { ShieldCheck, Users, Info, HandWaving, EnvelopeSimple, Camera, Clock } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Card } from '../../components/UI/Card';
 import { Button } from '../../components/UI/Button';
@@ -128,6 +128,10 @@ export const SafetyCenter = () => {
                   <h3 className="safety-verify-title font-display">Profile Authenticity</h3>
                   {userProfile?.verified ? (
                     <VerifiedBadge variant="pill" size="md" />
+                  ) : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true') ? (
+                    <span className="safety-pending-tag font-ui" style={{ fontSize: '11px', background: 'rgba(212, 173, 106, 0.15)', color: '#D4AD6A', padding: '3px 10px', borderRadius: '12px', fontWeight: 600, border: '1px solid rgba(212, 173, 106, 0.3)' }}>⏳ Under Review</span>
+                  ) : userProfile?.verificationStatus === 'REJECTED' ? (
+                    <span className="safety-rejected-tag font-ui" style={{ fontSize: '11px', background: 'rgba(208, 48, 80, 0.12)', color: '#D03050', padding: '3px 10px', borderRadius: '12px', fontWeight: 600, border: '1px solid rgba(208, 48, 80, 0.3)' }}>⚠️ Not Approved</span>
                   ) : (
                     <span className="safety-unverified-tag font-ui">Not Verified</span>
                   )}
@@ -135,15 +139,45 @@ export const SafetyCenter = () => {
                 <p className="safety-verify-desc font-body">
                   {userProfile?.verified
                     ? 'Your identity is confirmed with a verified live pose selfie. Your profile displays the official Verified Badge to all matches.'
+                    : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                    ? 'Your manual verification request has been submitted and is currently being processed by our moderation team.'
+                    : userProfile?.verificationStatus === 'REJECTED'
+                    ? 'Your previous verification was not approved. Tap below to retake your face scan.'
                     : 'Prevent catfishing and get up to 3x more meaningful connections by verifying your identity with a quick one-handed selfie gesture.'}
                 </p>
               </div>
             </div>
             {!userProfile?.verified && (
               <div className="safety-verify-action">
-                <Button variant="primary" onClick={() => setIsVerifyModalOpen(true)}>
-                  <Camera size={18} weight="bold" />
-                  <span>Verify Profile Now</span>
+                <Button variant="primary" onClick={() => {
+                  const isPending = Boolean(
+                    userProfile?.verificationStatus === 'PENDING' ||
+                    localStorage.getItem('vh_manual_verification_pending') === 'true'
+                  );
+                  if (isPending) {
+                    showAlert?.({
+                      title: 'Verification Under Review',
+                      message: 'Your photo verification has already been sent for manual review. Our team is currently reviewing your profile. Please wait.',
+                    });
+                  }
+                  setIsVerifyModalOpen(true);
+                }}>
+                  {(userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true') ? (
+                    <>
+                      <Clock size={18} weight="bold" />
+                      <span>Check Verification Status</span>
+                    </>
+                  ) : userProfile?.verificationStatus === 'REJECTED' ? (
+                    <>
+                      <Camera size={18} weight="bold" />
+                      <span>Retake Face Scan</span>
+                    </>
+                  ) : (
+                    <>
+                      <Camera size={18} weight="bold" />
+                      <span>Verify Profile Now</span>
+                    </>
+                  )}
                 </Button>
               </div>
             )}

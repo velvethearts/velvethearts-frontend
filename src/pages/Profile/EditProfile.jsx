@@ -468,11 +468,21 @@ export const EditProfile = ({ onBack }) => {
                 <ShieldCheck size={26} weight="fill" color={localProfile.verified ? '#22C55E' : '#B8436A'} />
                 <div>
                   <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)' }}>
-                    {localProfile.verified ? 'Verified Profile Badge Active ✓' : 'Verification Required for Primary Photo'}
+                    {localProfile.verified
+                      ? 'Verified Profile Badge Active ✓'
+                      : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                      ? 'Manual Verification Under Process'
+                      : userProfile?.verificationStatus === 'REJECTED'
+                      ? 'Verification Not Approved'
+                      : 'Verification Required for Primary Photo'}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                     {localProfile.verified
                       ? 'Your primary photo is authenticated against your live biometric face scan.'
+                      : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                      ? 'Your manual review is currently being processed by our team. Tap to check status.'
+                      : userProfile?.verificationStatus === 'REJECTED'
+                      ? 'Previous verification was not approved. Tap to retake your face scan.'
                       : 'A quick 10-second live face scan is required to earn your Verified Rosette badge.'}
                   </div>
                 </div>
@@ -484,7 +494,11 @@ export const EditProfile = ({ onBack }) => {
                   size="sm"
                   onClick={() => setIsVerifyModalOpen(true)}
                 >
-                  Verify Now (10s)
+                  {(userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                    ? 'In Review'
+                    : userProfile?.verificationStatus === 'REJECTED'
+                    ? 'Retake Scan'
+                    : 'Verify Now (10s)'}
                 </Button>
               ) : (
                 <span

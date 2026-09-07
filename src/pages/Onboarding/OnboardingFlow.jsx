@@ -1118,23 +1118,45 @@ export const OnboardingFlow = () => {
                                         <ShieldCheck size={28} weight="fill" color="#B8436A" />
                                         <div>
                                             <div className="onboarding-verify-title">
-                                                {formData.verified ? 'Photo Verification Complete ✓' : 'Get Verified Badge (Recommended)'}
+                                                {formData.verified
+                                                    ? 'Photo Verification Complete ✓'
+                                                    : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                                                    ? 'Manual Verification Under Review ⏳'
+                                                    : 'Get Verified Badge (Recommended)'}
                                             </div>
                                             <p className="onboarding-verify-desc font-body">
                                                 {formData.verified
                                                     ? 'Your live pose selfie was confirmed. You’ll launch with the official Verified Badge!'
+                                                    : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                                                    ? 'Your photos are under review by our moderation team. You can continue onboarding while we verify your profile.'
                                                     : 'Prove you are real with a quick 1-handed pose selfie to get 3x more meaningful connections.'}
                                             </p>
                                         </div>
                                     </div>
                                     <Button
                                         type="button"
-                                        variant={formData.verified ? 'secondary' : 'primary'}
+                                        variant={formData.verified ? 'secondary' : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true') ? 'secondary' : 'primary'}
                                         size="sm"
-                                        onClick={() => setIsVerifyModalOpen(true)}
+                                        onClick={() => {
+                                            const isPending = Boolean(
+                                                userProfile?.verificationStatus === 'PENDING' ||
+                                                localStorage.getItem('vh_manual_verification_pending') === 'true'
+                                            );
+                                            if (isPending) {
+                                                showAlert?.({
+                                                    title: 'Verification Under Review',
+                                                    message: 'Your photo verification has already been sent for manual review. Our team is currently reviewing your profile. Please wait.',
+                                                });
+                                            }
+                                            setIsVerifyModalOpen(true);
+                                        }}
                                         className="onboarding-verify-btn"
                                     >
-                                        {formData.verified ? 'Re-verify' : 'Verify Now'}
+                                        {formData.verified
+                                            ? 'Re-verify'
+                                            : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                                            ? 'Check Status'
+                                            : 'Verify Now'}
                                     </Button>
                                 </div>
                             )}

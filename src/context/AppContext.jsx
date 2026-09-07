@@ -464,8 +464,15 @@ export const AppProvider = ({ children }) => {
                     photos: profile.photos || [],
                     voiceIntroUrl: profile.voiceIntroUrl || null,
                     sparkNote: profile.sparkNote || null,
-                    verified: Boolean(profile.verified ?? user.verified ?? data.verified ?? prev.verified ?? false)
+                    verified: Boolean(profile.verified ?? user.verified ?? data.verified ?? prev.verified ?? false),
+                    verificationStatus: profile.verificationStatus || data.verificationStatus || prev.verificationStatus || (profile.verified ? 'APPROVED' : null),
+                    latestVerificationRequest: profile.latestVerificationRequest || prev.latestVerificationRequest || null,
                 };
+                if (next.verificationStatus === 'PENDING') {
+                    try { localStorage.setItem('vh_manual_verification_pending', 'true'); } catch (_) {}
+                } else if (next.verificationStatus === 'APPROVED' || next.verificationStatus === 'REJECTED' || next.verified) {
+                    try { localStorage.removeItem('vh_manual_verification_pending'); } catch (_) {}
+                }
                 try {
                     localStorage.setItem('vh-user-profile', JSON.stringify(next));
                 } catch (_) { }
@@ -1077,6 +1084,24 @@ export const AppProvider = ({ children }) => {
                         }
                         return next;
                     });
+                });
+
+                socket.on('user_verification_updated', ({ verified }) => {
+                    setUserProfile(prev => {
+                        if (!prev) return prev;
+                        const next = {
+                            ...prev,
+                            verified: Boolean(verified),
+                            verificationStatus: verified ? 'APPROVED' : 'REJECTED'
+                        };
+                        try {
+                            localStorage.setItem('vh-user-profile', JSON.stringify(next));
+                        } catch {}
+                        return next;
+                    });
+                    if (verified) {
+                        localStorage.removeItem('vh_manual_verification_pending');
+                    }
                 });
 
                 // Fetch initial notifications inbox on connect

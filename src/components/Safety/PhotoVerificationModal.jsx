@@ -10,7 +10,11 @@ import {
   Sparkle,
   WarningCircle,
   UserFocus,
-  SunHorizon
+  SunHorizon,
+  Clock,
+  HourglassMedium,
+  CalendarBlank,
+  Info
 } from '@phosphor-icons/react';
 import { Button } from '../UI/Button';
 import { VerifiedBadge } from '../UI/VerifiedBadge';
@@ -31,7 +35,24 @@ import {
 export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPhotoUrl }) => {
   const { userProfile, setUserProfile, showAlert } = useApp();
 
-  const [step, setStep] = useState('intro'); // 'intro' | 'camera' | 'preview' | 'failed' | 'success'
+  const [step, setStep] = useState(() => {
+    const isAlreadyVerified = Boolean(
+      userProfile?.verified === true ||
+      userProfile?.verified === 'true' ||
+      localStorage.getItem('vh-user-verified') === 'true'
+    );
+    if (isAlreadyVerified) return 'success';
+
+    const isLocallyPending = Boolean(
+      userProfile?.verificationStatus === 'PENDING' ||
+      localStorage.getItem('vh_manual_verification_pending') === 'true'
+    );
+    if (isLocallyPending) return 'under_review';
+
+    if (userProfile?.verificationStatus === 'REJECTED') return 'rejected';
+
+    return 'intro';
+  });
   const [stream, setStream] = useState(null);
   const [cameraError, setCameraError] = useState('');
   const [capturedImage, setCapturedImage] = useState(null);
@@ -40,25 +61,149 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
   const [failureReason, setFailureReason] = useState('');
   const [manualReviewSubmitted, setManualReviewSubmitted] = useState(false);
   const [manualReviewLoading, setManualReviewLoading] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState(() => {
+    if (userProfile?.latestVerificationRequest) return userProfile.latestVerificationRequest;
+    if (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true') {
+      return { status: 'PENDING', createdAt: new Date().toISOString() };
+    }
+    return null;
+  });
+  const [statusLoading, setStatusLoading] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const countdownIntervalRef = useRef(null);
   const livenessSamplesRef = useRef([]);
 
+  const formatSubmittedDate = (dateVal) => {
+    if (!dateVal) return 'Recently';
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return 'Recently';
+      return d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } catch {
+      return 'Recently';
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
-      setStep('intro');
       setCapturedImage(null);
       setCameraError('');
       setFailureReason('');
       setManualReviewSubmitted(false);
       setManualReviewLoading(false);
       livenessSamplesRef.current = [];
+
+      // Check if user is already verified
+      const isAlreadyVerified = Boolean(
+        userProfile?.verified === true ||
+        userProfile?.verified === 'true' ||
+        localStorage.getItem('vh-user-verified') === 'true'
+      );
+      if (isAlreadyVerified) {
+        setStep('success');
+        return;
+      }
+
+      // Fast optimistic check from local storage or context profile
+      const isLocallyPending = Boolean(
+        userProfile?.verificationStatus === 'PENDING' ||
+        localStorage.getItem('vh_manual_verification_pending') === 'true'
+      );
+      const isLocallyRejected = Boolean(
+        userProfile?.verificationStatus === 'REJECTED'
+      );
+
+      if (isLocallyPending) {
+        setStep('under_review');
+      } else if (isLocallyRejected) {
+        setStep('rejected');
+      } else {
+        setStep('intro');
+      }
+
+      // Query latest verification status from backend API
+      const fetchVerificationStatus = async () => {
+        try {
+          if (api.isConfigured && api.getVerificationStatus) {
+            setStatusLoading(true);
+            const data = await api.getVerificationStatus();
+            if (data) {
+              setVerificationStatus(data);
+            }
+
+            if (data?.status === 'PENDING') {
+              setStep('under_review');
+              localStorage.setItem('vh_manual_verification_pending', 'true');
+              if (setUserProfile) {
+                setUserProfile((prev) => {
+                  const updated = {
+                    ...prev,
+                    verificationStatus: 'PENDING',
+                    latestVerificationRequest: data,
+                  };
+                  try { localStorage.setItem('vh-user-profile', JSON.stringify(updated)); } catch (_) {}
+                  return updated;
+                });
+              }
+            } else if (data?.status === 'REJECTED') {
+              setStep('rejected');
+              localStorage.removeItem('vh_manual_verification_pending');
+              if (setUserProfile) {
+                setUserProfile((prev) => {
+                  const updated = {
+                    ...prev,
+                    verificationStatus: 'REJECTED',
+                    latestVerificationRequest: data,
+                  };
+                  try { localStorage.setItem('vh-user-profile', JSON.stringify(updated)); } catch (_) {}
+                  return updated;
+                });
+              }
+            } else if (data?.status === 'APPROVED' || data?.id === 'verified_profile') {
+              setStep('success');
+              localStorage.removeItem('vh_manual_verification_pending');
+              localStorage.setItem('vh-user-verified', 'true');
+              if (setUserProfile) {
+                setUserProfile((prev) => {
+                  const updated = {
+                    ...prev,
+                    verified: true,
+                    verificationStatus: 'APPROVED',
+                    latestVerificationRequest: data,
+                  };
+                  try { localStorage.setItem('vh-user-profile', JSON.stringify(updated)); } catch (_) {}
+                  return updated;
+                });
+              }
+            } else {
+              // Only reset to intro if local storage does not confirm pending
+              if (!isLocallyPending && localStorage.getItem('vh_manual_verification_pending') !== 'true') {
+                localStorage.removeItem('vh_manual_verification_pending');
+                setStep((curr) => (curr === 'under_review' ? 'intro' : curr));
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('[PhotoVerification] Error checking verification status:', err);
+        } finally {
+          setStatusLoading(false);
+        }
+      };
+
+      fetchVerificationStatus();
     } else {
       stopCamera();
     }
-  }, [isOpen]);
+  }, [isOpen, userProfile?.verificationStatus, userProfile?.verified]);
 
   useEffect(() => {
     return () => {
@@ -70,6 +215,23 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
   }, []);
 
   const startCamera = async () => {
+    // Strictly forbid camera from opening if manual verification is currently under process
+    const isPending = Boolean(
+      verificationStatus?.status === 'PENDING' ||
+      userProfile?.verificationStatus === 'PENDING' ||
+      localStorage.getItem('vh_manual_verification_pending') === 'true'
+    );
+    if (isPending) {
+      setStep('under_review');
+      showAlert?.('Manual verification is currently under process. Our team will review your request shortly.', 'info');
+      return;
+    }
+
+    if (userProfile?.verified) {
+      setStep('success');
+      return;
+    }
+
     setCameraError('');
     setFailureReason('');
     livenessSamplesRef.current = [];
@@ -299,6 +461,53 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       setStep('failed');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRequestManualReview = async () => {
+    if (!capturedImage || manualReviewLoading) return;
+    setManualReviewLoading(true);
+    try {
+      const referenceUrl = primaryPhotoUrl || userProfile?.photos?.[0] || null;
+      await api.submitManualVerification({
+        selfie: capturedImage,
+        referenceUrl,
+        autoFailReason: failureReason,
+      });
+
+      setManualReviewSubmitted(true);
+      localStorage.setItem('vh_manual_verification_pending', 'true');
+      setVerificationStatus({
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+      });
+      if (setUserProfile) {
+        setUserProfile((prev) => {
+          const updated = {
+            ...prev,
+            verificationStatus: 'PENDING',
+            latestVerificationRequest: {
+              status: 'PENDING',
+              createdAt: new Date().toISOString(),
+            },
+          };
+          try {
+            localStorage.setItem('vh-user-profile', JSON.stringify(updated));
+          } catch (_) {}
+          return updated;
+        });
+      }
+      showAlert?.({
+        title: 'Submitted for Review',
+        message: 'Your verification has been sent for manual review. Our moderation team is currently reviewing your profile. Please wait.',
+      });
+      stopCamera();
+      setStep('under_review');
+    } catch (err) {
+      console.error('Manual verification submission failed:', err);
+      showAlert?.('Failed to submit manual review request. Please try again.', 'error');
+    } finally {
+      setManualReviewLoading(false);
     }
   };
 
@@ -548,6 +757,16 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
               <div className="photo-verify-actions">
                 <Button
                   variant="primary"
+                  disabled={manualReviewLoading}
+                  className="photo-verify-btn-full"
+                  onClick={handleRequestManualReview}
+                >
+                  <ShieldCheck size={18} weight="bold" />
+                  <span>{manualReviewLoading ? 'Submitting Review…' : 'Submit for Manual Review'}</span>
+                </Button>
+
+                <Button
+                  variant="secondary"
                   onClick={startCamera}
                   className="photo-verify-btn-full"
                 >
@@ -555,55 +774,148 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                   <span>Retake Face Scan</span>
                 </Button>
 
-                {/* Manual Review Request */}
-                {!manualReviewSubmitted ? (
-                  <Button
-                    variant="secondary"
-                    disabled={manualReviewLoading}
-                    className="photo-verify-btn-full"
-                    onClick={async () => {
-                      if (!capturedImage) return;
-                      setManualReviewLoading(true);
-                      try {
-                        const referenceUrl = primaryPhotoUrl || userProfile?.photos?.[0] || null;
-                        await api.submitManualVerification({
-                          selfie: capturedImage,
-                          referenceUrl,
-                          autoFailReason: failureReason,
-                        });
-                        setManualReviewSubmitted(true);
-                        showAlert?.('Your verification has been submitted for manual review. Our team will review it shortly.', 'success');
-                      } catch (err) {
-                        console.error('Manual verification submission failed:', err);
-                        showAlert?.('Failed to submit manual review request. Please try again.', 'error');
-                      } finally {
-                        setManualReviewLoading(false);
-                      }
-                    }}
-                  >
-                    <ShieldCheck size={18} weight="bold" />
-                    <span>{manualReviewLoading ? 'Submitting…' : 'Request Manual Review'}</span>
-                  </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    stopCamera();
+                    onClose();
+                  }}
+                  className="photo-verify-btn-full"
+                  style={{ fontSize: 'var(--text-body-sm)' }}
+                >
+                  Maybe Later
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP: MANUAL REVIEW UNDER PROCESS */}
+          {step === 'under_review' && (
+            <div className="photo-verify-under-review-step">
+              <div className="photo-verify-pulse-icon">
+                <HourglassMedium size={38} weight="fill" color="#D4AD6A" />
+              </div>
+
+              <div className="photo-verify-status-pill pending font-ui">
+                <Clock size={14} weight="bold" />
+                <span>Verification Under Review</span>
+              </div>
+
+              <h3 className="photo-verify-headline font-display">
+                Manual Verification Under Process
+              </h3>
+              <p className="photo-verify-desc font-body">
+                Your photo verification request has been received and is currently being processed by our moderation team. You do not need to take another face scan.
+              </p>
+
+              {/* Status Details Card */}
+              <div className="photo-verify-info-card font-ui">
+                <div className="photo-verify-info-row">
+                  <span className="photo-verify-info-label">
+                    <Clock size={16} color="#D4AD6A" />
+                    <span>Current Status</span>
+                  </span>
+                  <span className="photo-verify-info-value" style={{ color: '#D4AD6A', fontWeight: 600 }}>
+                    In Review by Moderation Team
+                  </span>
+                </div>
+
+                <div className="photo-verify-info-row">
+                  <span className="photo-verify-info-label">
+                    <CalendarBlank size={16} color="var(--text-secondary)" />
+                    <span>Submitted On</span>
+                  </span>
+                  <span className="photo-verify-info-value">
+                    {formatSubmittedDate(verificationStatus?.createdAt)}
+                  </span>
+                </div>
+
+                <div className="photo-verify-info-row">
+                  <span className="photo-verify-info-label">
+                    <ShieldCheck size={16} color="#4ADE80" />
+                    <span>Review Window</span>
+                  </span>
+                  <span className="photo-verify-info-value">
+                    Typically within 24 hours
+                  </span>
+                </div>
+
+                <div className="photo-verify-info-note">
+                  <Info size={16} weight="fill" color="#D4AD6A" style={{ flexShrink: 0 }} />
+                  <span>
+                    Your profile and messaging remain completely active while our team reviews your photos. You'll receive your <strong>Verified Rosette</strong> as soon as your review is approved.
+                  </span>
+                </div>
+              </div>
+
+              <div className="photo-verify-actions" style={{ width: '100%', marginTop: '8px' }}>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    stopCamera();
+                    onClose();
+                  }}
+                  className="photo-verify-btn-full"
+                >
+                  <CheckCircle size={18} weight="bold" />
+                  <span>Got It</span>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP: VERIFICATION NOT APPROVED / REJECTED */}
+          {step === 'rejected' && (
+            <div className="photo-verify-rejected-step">
+              <div className="photo-verify-failed-icon">
+                <WarningCircle size={46} weight="fill" color="#D03050" />
+              </div>
+
+              <div className="photo-verify-status-pill rejected font-ui">
+                <WarningCircle size={14} weight="bold" />
+                <span>Verification Not Approved</span>
+              </div>
+
+              <h3 className="photo-verify-headline font-display" style={{ color: '#D03050' }}>
+                Verification Not Approved
+              </h3>
+
+              <p className="photo-verify-desc font-body">
+                {verificationStatus?.adminNotes ? (
+                  <>
+                    <strong>Moderator Note:</strong> &ldquo;{verificationStatus.adminNotes}&rdquo;
+                  </>
                 ) : (
-                  <div className="photo-verify-manual-submitted" style={{
-                    padding: '12px 16px',
-                    background: 'rgba(74, 222, 128, 0.1)',
-                    borderRadius: 'var(--radius-md)',
-                    textAlign: 'center',
-                    color: '#4ade80',
-                    fontFamily: 'var(--font-ui)',
-                    fontSize: 'var(--text-body-sm)',
-                    fontWeight: 500,
-                  }}>
-                    ✅ Manual review submitted! Our team will verify your profile shortly.
-                  </div>
+                  'Your previous verification request could not be approved due to low lighting, blurriness, or an unclear face view.'
                 )}
+              </p>
+
+              <div className="photo-verify-info-card font-ui" style={{ borderColor: 'rgba(208, 48, 80, 0.25)' }}>
+                <div className="photo-verify-info-note" style={{ color: 'var(--text-primary)' }}>
+                  <SunHorizon size={18} weight="fill" color="#D03050" style={{ flexShrink: 0 }} />
+                  <span>
+                    Please ensure you are in a brightly lit room, remove dark glasses or hats, and look straight into the camera for your new scan.
+                  </span>
+                </div>
+              </div>
+
+              <div className="photo-verify-actions" style={{ width: '100%', marginTop: '8px' }}>
+                <Button
+                  variant="primary"
+                  onClick={startCamera}
+                  className="photo-verify-btn-full"
+                >
+                  <Camera size={18} weight="bold" />
+                  <span>Retake Face Scan</span>
+                </Button>
 
                 <Button
-                  variant="secondary"
-                  onClick={onClose}
+                  variant="ghost"
+                  onClick={() => {
+                    stopCamera();
+                    onClose();
+                  }}
                   className="photo-verify-btn-full"
-                  style={{ opacity: 0.7, fontSize: 'var(--text-caption)' }}
                 >
                   Maybe Later
                 </Button>

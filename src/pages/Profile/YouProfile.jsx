@@ -202,6 +202,16 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
             hoverable
             onClick={() => {
               if (!userProfile?.verified) {
+                const isPending = Boolean(
+                  userProfile?.verificationStatus === 'PENDING' ||
+                  localStorage.getItem('vh_manual_verification_pending') === 'true'
+                );
+                if (isPending) {
+                  showAlert?.({
+                    title: 'Verification Under Review',
+                    message: 'Your photo verification has already been sent for manual review. Our team is currently reviewing your profile. Please wait.',
+                  });
+                }
                 setIsVerifyModalOpen(true);
               } else {
                 setActiveTab('safety');
@@ -216,6 +226,10 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
                   <span className="tile-title">Photo Verification</span>
                   {userProfile?.verified ? (
                     <VerifiedBadge variant="pill" size="sm" interactive={false} />
+                  ) : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true') ? (
+                    <span className="safety-pending-tag font-ui" style={{ fontSize: '10px', background: 'rgba(212, 173, 106, 0.15)', color: '#D4AD6A', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, border: '1px solid rgba(212, 173, 106, 0.3)' }}>⏳ In Review</span>
+                  ) : userProfile?.verificationStatus === 'REJECTED' ? (
+                    <span className="safety-rejected-tag font-ui" style={{ fontSize: '10px', background: 'rgba(208, 48, 80, 0.12)', color: '#D03050', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, border: '1px solid rgba(208, 48, 80, 0.3)' }}>⚠️ Not Approved</span>
                   ) : (
                     <span className="safety-unverified-tag font-ui" style={{ fontSize: '10px' }}>Get Verified</span>
                   )}
@@ -223,6 +237,10 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
                 <span className="tile-desc">
                   {userProfile?.verified
                     ? 'Your profile is authenticated with a verified live pose'
+                    : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                    ? 'Manual verification is currently under process by our team'
+                    : userProfile?.verificationStatus === 'REJECTED'
+                    ? 'Previous verification was not approved. Tap to retake scan.'
                     : 'Confirm your authenticity with a quick 1-handed selfie'}
                 </span>
               </div>
