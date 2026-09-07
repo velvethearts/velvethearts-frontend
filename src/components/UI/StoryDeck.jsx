@@ -274,12 +274,15 @@ export const StoryDeck = ({
             align-items: center;
             justify-content: center;
             text-align: center;
-            min-height: 520px;
+            min-height: 380px;
             padding: var(--space-8) var(--space-4);
             background-color: var(--bg-surface);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-2xl);
             box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+            margin: auto 0;
+            width: 100%;
+            box-sizing: border-box;
           }
 
           .empty-deck-sparkle {

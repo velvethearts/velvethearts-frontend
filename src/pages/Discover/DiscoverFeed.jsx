@@ -698,13 +698,15 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           </div>
         )
       ) : (
-        <EmptyState
-          title="No profiles found"
-          desc="Try widening your search terms or adjusting preferences."
-          actionLabel="Reset Filters"
-          onActionClick={handleResetFilters}
-          icon={<HeartBreak size={40} />}
-        />
+        <div className="discover-empty-state-wrap">
+          <EmptyState
+            title="No profiles found"
+            desc="Try widening your search terms or adjusting preferences."
+            actionLabel="Reset Filters"
+            onActionClick={handleResetFilters}
+            icon={<HeartBreak size={40} />}
+          />
+        </div>
       )}
 
       {/* Preferences modal drawer */}
@@ -752,7 +754,6 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             padding: 4px 10px 4px 10px;
             box-sizing: border-box;
             overflow: hidden;
@@ -764,6 +765,24 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
             flex-shrink: 0;
             margin-bottom: 4px;
           }
+        }
+
+        .discover-empty-state-wrap {
+          flex: 1;
+          min-height: 380px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          padding: var(--space-6) var(--space-3);
+          box-sizing: border-box;
+          margin: auto 0;
+        }
+
+        .discover-empty-state-wrap .vh-empty-state {
+          margin: 0 auto;
+          width: 100%;
+          max-width: 420px;
         }
 
         .discover-header-actions {
