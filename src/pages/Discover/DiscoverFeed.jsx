@@ -1013,7 +1013,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
         /* Velvet Hearts Signature Boost Button */
         .discover-nav-icon-btn.boost-btn {
-          color: var(--burgundy-400, #E87A90);
+          color: var(--burgundy-400, #D0607F);
           background: rgba(184, 67, 106, 0.12);
           border: 1px solid rgba(184, 67, 106, 0.28);
           gap: 4px;
@@ -1028,45 +1028,54 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         }
 
         .discover-nav-icon-btn.boost-btn:hover {
-          color: var(--burgundy-300, #F3A4B5);
-          background: rgba(184, 67, 106, 0.2);
+          color: #FFFFFF;
+          background: var(--burgundy-500, #B8436A);
+          border-color: var(--burgundy-500, #B8436A);
           transform: scale(1.05);
         }
 
         [data-theme="light"] .discover-nav-icon-btn.boost-btn {
-          color: var(--burgundy-600, #9E3256);
+          color: var(--burgundy-600, #9B3456);
           background: rgba(184, 67, 106, 0.08);
           border: 1px solid rgba(184, 67, 106, 0.22);
         }
 
         [data-theme="light"] .discover-nav-icon-btn.boost-btn:hover {
-          color: var(--burgundy-700, #7A223E);
-          background: rgba(184, 67, 106, 0.15);
+          color: #FFFFFF;
+          background: var(--burgundy-600, #9B3456);
+          border-color: var(--burgundy-600, #9B3456);
         }
 
         .discover-nav-icon-btn.boost-btn.is-boosted {
-          background: linear-gradient(135deg, var(--burgundy-500, #B8436A) 0%, var(--gold-primary, #D4AD6A) 100%);
+          background: linear-gradient(135deg, var(--burgundy-600, #9B3456) 0%, var(--burgundy-500, #B8436A) 100%);
           color: #FFFFFF;
           box-shadow: 0 0 16px rgba(184, 67, 106, 0.65);
-          border: 1px solid rgba(255, 255, 255, 0.35);
+          border: 1px solid rgba(255, 255, 255, 0.25);
           animation: boostGlowPulse 2s infinite;
         }
 
         @keyframes boostGlowPulse {
-          0%, 100% { box-shadow: 0 0 14px rgba(184, 67, 106, 0.6); }
-          50% { box-shadow: 0 0 24px rgba(212, 173, 106, 0.85); }
+          0%, 100% { box-shadow: 0 0 10px rgba(184, 67, 106, 0.45); }
+          50% { box-shadow: 0 0 20px rgba(184, 67, 106, 0.8); }
+        }
+
+        [data-theme="light"] .discover-nav-icon-btn.boost-btn.is-boosted {
+          background: linear-gradient(135deg, var(--burgundy-700, #7A2842) 0%, var(--burgundy-600, #9B3456) 100%);
+          color: #FFFFFF;
+          box-shadow: 0 3px 12px rgba(155, 52, 86, 0.35);
+          border: none;
         }
 
         .discover-nav-icon-btn.boost-btn.is-cooldown {
-          color: var(--gold-primary, #D4AD6A);
+          color: var(--charcoal-400, #B5ABAD);
           background: rgba(30, 24, 27, 0.7);
-          border: 1px solid rgba(212, 173, 106, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.12);
         }
 
         [data-theme="light"] .discover-nav-icon-btn.boost-btn.is-cooldown {
-          color: #8A6D3B;
-          background: #FFFDF9;
-          border: 1px solid rgba(212, 173, 106, 0.4);
+          color: var(--charcoal-600, #7A6E70);
+          background: var(--charcoal-100, #F5F1F2);
+          border: 1px solid var(--charcoal-200, #E8E3E4);
         }
 
         .boost-timer-chip {

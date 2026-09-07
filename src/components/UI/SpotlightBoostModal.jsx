@@ -320,13 +320,14 @@ export const SpotlightBoostModal = ({
 
           .spotlight-icon-circle.is-ready,
           .spotlight-icon-circle.is-active {
-            background: linear-gradient(135deg, var(--burgundy-500, #B8436A) 0%, var(--gold-primary, #D4AD6A) 100%);
+            background: linear-gradient(135deg, var(--burgundy-600, #9B3456) 0%, var(--burgundy-500, #B8436A) 100%);
             box-shadow: 0 8px 24px rgba(184, 67, 106, 0.45);
           }
 
           [data-theme="light"] .spotlight-icon-circle.is-ready,
           [data-theme="light"] .spotlight-icon-circle.is-active {
-            box-shadow: 0 8px 24px rgba(184, 67, 106, 0.35);
+            background: linear-gradient(135deg, var(--burgundy-700, #7A2842) 0%, var(--burgundy-600, #9B3456) 100%);
+            box-shadow: 0 8px 24px rgba(155, 52, 86, 0.35);
           }
 
           .spotlight-icon-circle.is-cooldown {
@@ -486,7 +487,7 @@ export const SpotlightBoostModal = ({
 
           .spotlight-progress-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #B8436A 0%, #D4AD6A 100%);
+            background: linear-gradient(90deg, var(--burgundy-600, #9B3456) 0%, var(--burgundy-400, #D0607F) 100%);
             border-radius: 3px;
             transition: width 1s linear;
           }
@@ -615,15 +616,16 @@ export const SpotlightBoostModal = ({
           }
 
           .btn-boost-launch {
-            background: linear-gradient(135deg, var(--burgundy-500, #B8436A) 0%, var(--gold-primary, #D4AD6A) 100%) !important;
+            background: linear-gradient(135deg, var(--burgundy-600, #9B3456) 0%, var(--burgundy-500, #B8436A) 100%) !important;
             border: 1px solid rgba(255, 255, 255, 0.25) !important;
             color: #FFFFFF !important;
             box-shadow: 0 4px 20px rgba(184, 67, 106, 0.45) !important;
           }
 
           [data-theme="light"] .btn-boost-launch {
+            background: linear-gradient(135deg, var(--burgundy-700, #7A2842) 0%, var(--burgundy-600, #9B3456) 100%) !important;
             border: none !important;
-            box-shadow: 0 4px 20px rgba(184, 67, 106, 0.35) !important;
+            box-shadow: 0 4px 20px rgba(155, 52, 86, 0.35) !important;
           }
 
           .btn-boost-launch:hover {
