@@ -19,7 +19,14 @@ export const ProfileCard = ({
   feedMode = 'for_you',
   className = ''
 }) => {
-  const { userProfile } = useApp();
+  const { userProfile, onlineUserIds } = useApp();
+  const isOnline = Boolean(
+    onlineUserIds && (
+      onlineUserIds.has(profile.userId) ||
+      onlineUserIds.has(profile.id) ||
+      profile.isOnline === true
+    )
+  );
   const [showDropdown, setShowDropdown] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const dropdownRef = useRef(null);
@@ -247,13 +254,35 @@ export const ProfileCard = ({
       </div>
 
       <div className="profile-card-details">
-        {/* Active status pill */}
-        <div className="card-status-row">
-          <span className="card-status-pill pill-active font-ui">
-            <span className="pulsing-green-dot" />
-            <span>Active</span>
-          </span>
-        </div>
+        {/* Status pill (Likes You, Active Now, Distance/Location, or New Face) */}
+        {(profile.likesYou || isOnline || feedMode === 'near_me' || feedMode === 'new_faces' || profile.city) && (
+          <div className="card-status-row">
+            {profile.likesYou ? (
+              <span className="card-status-pill pill-likes-you font-ui">
+                <span>🫶 Likes You</span>
+              </span>
+            ) : isOnline ? (
+              <span className="card-status-pill pill-active font-ui">
+                <span className="pulsing-green-dot" />
+                <span>Active Now</span>
+              </span>
+            ) : feedMode === 'near_me' ? (
+              <span className="card-status-pill pill-near-me font-ui">
+                <span className="pulsing-location-dot" />
+                <span>{profile._computedDistanceText || profile.distance || (profile.city ? `📍 ${profile.city}` : '📍 Nearby')}</span>
+              </span>
+            ) : feedMode === 'new_faces' ? (
+              <span className="card-status-pill pill-new-face font-ui">
+                <Sparkle size={11} weight="fill" color="#B8436A" />
+                <span>New Face</span>
+              </span>
+            ) : profile.city ? (
+              <span className="card-status-pill pill-near-me font-ui">
+                <span>📍 {profile.city}</span>
+              </span>
+            ) : null}
+          </div>
+        )}
 
         <div className="card-name-row">
           <div className="card-name-left">
