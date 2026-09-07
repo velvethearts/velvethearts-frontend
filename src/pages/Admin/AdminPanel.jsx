@@ -77,6 +77,31 @@ const AdminPagination = ({ page, totalPages, totalItems, pageSize, onPageChange 
   );
 };
 
+// ─── ADMIN PHOTO DISPLAY WITH OUTLINED PLACEHOLDER FALLBACK ───
+const AdminPhotoDisplay = ({ src, alt = '', placeholderText = 'No user image added yet' }) => {
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  // If no source is provided or loading failed, display the dashed outlined placeholder box
+  if (!src || loadFailed) {
+    return (
+      <div className="admin-photo-placeholder" role="img" aria-label={placeholderText}>
+        <UserCircle size={48} weight="thin" />
+        <span>{placeholderText}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="admin-photo-img"
+      loading="lazy"
+      onError={() => setLoadFailed(true)}
+    />
+  );
+};
+
 // ─── ADMIN PROFILE INSPECTOR VIEW ───
 const AdminProfileInspector = ({ user, onBack, showAlert }) => {
   const [currentUser, setCurrentUser] = useState(user);
@@ -826,28 +851,19 @@ const VerificationRequestsTab = ({ showAlert, onViewUser }) => {
                 <div className="admin-photo-compare">
                   <div className="admin-photo-box">
                     <span className="admin-photo-label">Live Camera Selfie</span>
-                    <img
+                    <AdminPhotoDisplay
                       src={req.selfieUrl}
                       alt="Live selfie submitted"
-                      className="admin-photo-img"
-                      loading="lazy"
+                      placeholderText="No user image added yet"
                     />
                   </div>
                   <div className="admin-photo-box">
                     <span className="admin-photo-label">Current Profile Photo</span>
-                    {req.referenceUrl || req.profilePhotos?.[0] ? (
-                      <img
-                        src={req.referenceUrl || req.profilePhotos?.[0]}
-                        alt="Profile reference"
-                        className="admin-photo-img"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="admin-photo-placeholder">
-                        <UserCircle size={48} weight="thin" />
-                        <span>No profile photo</span>
-                      </div>
-                    )}
+                    <AdminPhotoDisplay
+                      src={req.referenceUrl || req.profilePhotos?.[0]}
+                      alt="Profile reference"
+                      placeholderText="No profile photo"
+                    />
                   </div>
                 </div>
 
@@ -1603,18 +1619,19 @@ const PendingUsersTab = ({ showAlert, onViewUser }) => {
                     <div className="admin-photo-compare">
                       <div className="admin-photo-box">
                         <span className="admin-photo-label">Live Camera Selfie</span>
-                        <img src={req.selfieUrl} alt="Selfie submitted" className="admin-photo-img" loading="lazy" />
+                        <AdminPhotoDisplay
+                          src={req.selfieUrl}
+                          alt="Selfie submitted"
+                          placeholderText="No user image added yet"
+                        />
                       </div>
                       <div className="admin-photo-box">
                         <span className="admin-photo-label">Current Profile Photo</span>
-                        {req.referenceUrl || req.profilePhotos?.[0] ? (
-                          <img src={req.referenceUrl || req.profilePhotos?.[0]} alt="Reference" className="admin-photo-img" loading="lazy" />
-                        ) : (
-                          <div className="admin-photo-placeholder">
-                            <UserCircle size={48} weight="thin" />
-                            <span>No profile photo</span>
-                          </div>
-                        )}
+                        <AdminPhotoDisplay
+                          src={req.referenceUrl || req.profilePhotos?.[0]}
+                          alt="Reference"
+                          placeholderText="No profile photo"
+                        />
                       </div>
                     </div>
 
@@ -1821,6 +1838,14 @@ const adminStyles = `
     display: flex;
     overflow-x: auto;
     padding-bottom: 4px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .admin-tabs-wrapper::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   .admin-tabs {
@@ -2114,32 +2139,36 @@ const adminStyles = `
 
   .admin-recent-table-wrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     background: var(--bg-surface);
     box-shadow: var(--shadow-sm);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .admin-recent-table-wrap::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   .admin-recent-table {
     width: 100%;
+    min-width: 680px;
     border-collapse: collapse;
     font-size: var(--text-body-sm);
     text-align: left;
   }
 
-  .admin-recent-table th {
-    background: var(--bg-muted);
-    padding: var(--space-3) var(--space-4);
-    font-weight: 600;
-    color: var(--text-primary);
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
+  .admin-recent-table th,
   .admin-recent-table td {
     padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--border-subtle);
     vertical-align: middle;
     color: var(--text-primary);
+    white-space: nowrap;
   }
 
   .admin-recent-table tr:last-child td {
@@ -2154,6 +2183,8 @@ const adminStyles = `
     display: flex;
     align-items: center;
     gap: var(--space-3);
+    min-width: 230px;
+    white-space: nowrap;
   }
 
   .admin-table-avatar {
@@ -3224,6 +3255,8 @@ const adminStyles = `
     transition: all 0.15s ease;
     max-width: 100%;
     vertical-align: middle;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   [data-theme="dark"] .admin-user-id-chip {
@@ -3239,10 +3272,14 @@ const adminStyles = `
 
   .admin-user-id-chip.table-id {
     margin-top: 4px;
+    white-space: nowrap;
+    display: inline-flex;
   }
 
   .admin-user-id-chip.inline-chip {
     margin-left: 4px;
+    white-space: nowrap;
+    display: inline-flex;
   }
 
   .admin-id-tag {
@@ -3251,6 +3288,7 @@ const adminStyles = `
     text-transform: uppercase;
     letter-spacing: 0.5px;
     opacity: 0.75;
+    flex-shrink: 0;
   }
 
   .admin-id-full {
@@ -3259,7 +3297,7 @@ const adminStyles = `
     font-weight: 500;
     letter-spacing: 0.2px;
     user-select: all;
-    word-break: break-all;
+    white-space: nowrap;
   }
 
   .admin-id-copy-icon {

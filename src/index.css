@@ -387,6 +387,31 @@ p {
   box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
 }
 
+/* Hide scrollbars on smaller screens for a sleek native app feel */
+@media (max-width: 768px) {
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+}
+
+/* No-scrollbar utility for horizontal sliders and tab wrappers */
+.no-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 
 /* ============================================================
    UTILITY CLASSES
