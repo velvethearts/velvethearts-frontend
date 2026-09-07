@@ -597,6 +597,16 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           gap: var(--space-6);
         }
 
+        @media (max-width: 640px) {
+          .gallery-wall-grid {
+            grid-template-columns: 1fr;
+            max-width: 440px;
+            margin: 0 auto;
+            gap: var(--space-4);
+            padding-bottom: var(--space-2);
+          }
+        }
+
         /* Modern Reference Header Navigation Rail */
         .discover-top-nav-bar {
           display: flex;

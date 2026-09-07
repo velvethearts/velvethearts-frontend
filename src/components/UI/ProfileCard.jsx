@@ -234,10 +234,18 @@ export const ProfileCard = ({
       </div>
 
       <div className="profile-card-details">
+        {/* Active status pill */}
+        <div className="card-status-row">
+          <span className="card-status-pill pill-active font-ui">
+            <span className="pulsing-green-dot" />
+            <span>Active</span>
+          </span>
+        </div>
+
         <div className="card-name-row">
           <div className="card-name-left">
-            <h3 className="card-name font-display">{profile.name}</h3>
-            <span className="card-age font-ui">, {profile.age}</span>
+            <h3 className="card-name font-ui">{profile.name}</h3>
+            <span className="card-age font-ui">{profile.age}</span>
             {profile.verified && (
               <VerifiedBadge variant="icon" size="md" />
             )}
@@ -250,11 +258,32 @@ export const ProfileCard = ({
           </div>
         </div>
 
-        <p className="card-location font-ui">{profile.city}</p>
-        <span className="card-intent font-ui">{profile.relationshipIntent}</span>
+        {/* Clean Profile Attributes (college, occupation, city, intent) */}
+        <div className="card-meta-row font-ui">
+          {profile.college && (
+            <span className="meta-item">
+              <span className="meta-icon">🎓</span> {profile.college}
+            </span>
+          )}
+          {profile.occupation && (
+            <span className="meta-item">
+              <span className="meta-icon">💼</span> {profile.occupation}
+            </span>
+          )}
+          {profile.city && (
+            <span className="meta-item">
+              <span className="meta-icon">📍</span> {profile.city}
+            </span>
+          )}
+          {profile.relationshipIntent && (
+            <span className="meta-item intent-item">
+              ✨ {profile.relationshipIntent}
+            </span>
+          )}
+        </div>
 
         {profile.story && (
-          <p className="card-story-clamp font-body italic">
+          <p className="card-story-clamp font-ui">
             &ldquo;{profile.story}&rdquo;
           </p>
         )}
@@ -291,22 +320,28 @@ export const ProfileCard = ({
             {isInterestSent ? (
               <CheckCircle size={18} weight="fill" />
             ) : (
-              <Heart size={18} weight="regular" />
+              <Heart size={18} weight="fill" />
             )}
             <span className="font-ui">
-              {isInterestSent ? 'Invite Sent' : 'Send Interest'}
+              {isInterestSent ? 'Invite Sent ✓' : 'Send Interest'}
             </span>
           </button>
         </div>
       </div>
 
       <style>{`
-        /* Image container with correct aspect ratio */
+        /* Image container with taller, modern aspect ratio */
         .profile-img-wrap {
           position: relative;
-          aspect-ratio: 4/5;
+          aspect-ratio: 9 / 12.5;
           background-color: var(--charcoal-200);
           overflow: hidden;
+        }
+
+        @media (max-width: 640px) {
+          .profile-img-wrap {
+            aspect-ratio: 9 / 13;
+          }
         }
 
         /* Photo dots indicators */
@@ -527,10 +562,43 @@ export const ProfileCard = ({
 
         /* Profile details container */
         .profile-card-details {
-          padding: var(--space-3);
+          padding: var(--space-4);
           display: flex;
           flex-direction: column;
-          gap: var(--space-1);
+          gap: 6px;
+        }
+
+        /* Status pill directly above name */
+        .card-status-row {
+          margin-bottom: 2px;
+        }
+
+        .card-status-pill.pill-active {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: rgba(255, 255, 255, 0.95);
+          color: #111827;
+          padding: 2.5px 8px;
+          border-radius: 999px;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .pulsing-green-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #10B981;
+          box-shadow: 0 0 6px #10B981;
+          animation: pulseEmerald 1.8s infinite;
+        }
+
+        @keyframes pulseEmerald {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.35); opacity: 0.75; }
         }
 
         .card-name-row {
@@ -549,16 +617,20 @@ export const ProfileCard = ({
         }
 
         .card-name {
-          font-size: var(--text-heading-sm);
+          font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 1.35rem;
           color: var(--text-primary);
           margin: 0;
-          font-weight: 600;
+          font-weight: 700;
+          letter-spacing: -0.01em;
         }
 
         .card-age {
-          font-size: var(--text-heading-sm);
+          font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 1.25rem;
           color: var(--text-secondary);
-          margin-left: 1px;
+          margin-left: 2px;
+          font-weight: 500;
         }
 
         .badge-vibe-inline {
@@ -582,16 +654,29 @@ export const ProfileCard = ({
           color: var(--gold-300, #E6C78E);
         }
 
-        .card-location {
-          font-size: var(--text-body-sm);
-          color: var(--text-tertiary);
-          margin: 0;
+        /* Clean Profile Attributes */
+        .card-meta-row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 4px 10px;
+          margin-top: 2px;
+          margin-bottom: 2px;
         }
 
-        .card-intent {
-          font-size: var(--text-caption);
-          color: var(--burgundy-400);
+        .meta-item {
+          font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 12px;
           font-weight: 500;
+          color: var(--text-secondary);
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .meta-item.intent-item {
+          color: var(--burgundy-400);
+          font-weight: 600;
         }
 
         .card-interests-wrap {
@@ -611,14 +696,15 @@ export const ProfileCard = ({
         }
 
         .card-story-clamp {
-          font-size: var(--text-body-sm);
+          font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 12.5px;
           color: var(--text-secondary);
           line-height: var(--leading-relaxed);
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
-          margin: var(--space-1) 0;
+          margin: 2px 0;
         }
 
         /* Interest action button sent state */
@@ -626,8 +712,20 @@ export const ProfileCard = ({
           width: 100%;
           justify-content: center;
           gap: var(--space-2);
-          font-size: var(--text-body-sm) !important;
-          padding: var(--space-2) var(--space-4) !important;
+          font-size: 13.5px !important;
+          font-weight: 700 !important;
+          padding: 10px 16px !important;
+          border-radius: 999px !important;
+          background: linear-gradient(135deg, var(--burgundy-500, #9B1D48) 0%, var(--burgundy-600, #801438) 100%) !important;
+          border: none !important;
+          color: #FFFFFF !important;
+          box-shadow: 0 4px 14px rgba(155, 29, 72, 0.35);
+          transition: all var(--duration-fast);
+        }
+
+        .interest-action-btn:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 18px rgba(155, 29, 72, 0.45);
         }
 
         .interest-action-btn.sent {
@@ -635,14 +733,12 @@ export const ProfileCard = ({
           border-color: #059669 !important;
           color: #FFFFFF !important;
           cursor: pointer;
-          transition: all var(--duration-fast);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
         }
 
         .interest-action-btn.sent:hover:not(:disabled) {
           background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-          border-color: #047857 !important;
-          transform: scale(1.02) !important;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+          transform: translateY(-1px);
         }
 
         /* Card footer */
