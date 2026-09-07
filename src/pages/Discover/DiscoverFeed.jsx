@@ -60,6 +60,29 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
   const [showPreferences, setShowPreferences] = useState(false);
   const [showBoostModal, setShowBoostModal] = useState(false);
   const [viewMode, setViewMode] = useState('deck'); // 'deck' | 'grid'
+  const searchContainerRef = React.useRef(null);
+
+  // Close search when clicking outside
+  React.useEffect(() => {
+    if (!showSearch && !searchTerm) return;
+
+    const handleClickOutsideSearch = (e) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target) &&
+        !e.target.closest('.search-toggle-btn')
+      ) {
+        setShowSearch(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutsideSearch);
+    document.addEventListener('touchstart', handleClickOutsideSearch);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutsideSearch);
+      document.removeEventListener('touchstart', handleClickOutsideSearch);
+    };
+  }, [showSearch, searchTerm]);
 
   // Boost Profile State with 30-min timer and 2-day cooldown
   const [boostState, setBoostState] = useState(() => {
@@ -401,17 +424,32 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     <div className={`discover-feed-page page-enter ${viewMode === 'deck' ? 'is-deck-view' : ''}`}>
       {/* Modern Reference Header Navigation Rail */}
       <div className="discover-top-nav-bar font-ui">
-        {/* Left: Preferences Button */}
-        <button
-          type="button"
-          onClick={() => setShowPreferences(true)}
-          className={`discover-nav-icon-btn ${hasActiveFilters ? 'has-active' : ''}`}
-          aria-label="Filter preferences"
-          title="Filter Preferences"
-        >
-          <Sliders size={22} weight="bold" />
-          {hasActiveFilters && <span className="active-filter-dot" />}
-        </button>
+        {/* Left: Preferences Button + Search Toggle */}
+        <div className="discover-top-left-actions">
+          <button
+            type="button"
+            onClick={() => setShowPreferences(true)}
+            className={`discover-nav-icon-btn ${hasActiveFilters ? 'has-active' : ''}`}
+            aria-label="Filter preferences"
+            title="Filter Preferences"
+          >
+            <Sliders size={20} weight="bold" />
+            {hasActiveFilters && <span className="active-filter-dot" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic?.('light');
+              setShowSearch(prev => !prev);
+            }}
+            className={`discover-nav-icon-btn search-toggle-btn ${showSearch ? 'is-active' : ''}`}
+            aria-label="Search profiles"
+            title={showSearch ? 'Close search' : 'Search profiles'}
+          >
+            <MagnifyingGlass size={19} weight="bold" />
+          </button>
+        </div>
 
         {/* Center: Curated Feed Pills (For You | Near Me | New Faces) */}
         <div className="discover-mode-pills" role="tablist" aria-label="Discover Modes">
@@ -480,7 +518,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
       {/* Collapsible Search Input Container */}
       {(showSearch || searchTerm) && (
-        <div className="search-bar-wrap page-enter">
+        <div className="search-bar-wrap page-enter" ref={searchContainerRef}>
           <div className="search-input-group">
             <MagnifyingGlass size={18} className="search-icon" />
             <input
@@ -492,8 +530,12 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
               aria-label="Search profiles"
               autoFocus={showSearch && !searchTerm}
             />
-            {searchTerm && (
+            {searchTerm ? (
               <button onClick={() => setSearchTerm('')} className="search-clear-btn" aria-label="Clear search">
+                <X size={16} />
+              </button>
+            ) : (
+              <button onClick={() => setShowSearch(false)} className="search-clear-btn" aria-label="Close search">
                 <X size={16} />
               </button>
             )}
@@ -877,6 +919,18 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           color: #11141A !important;
           font-weight: 700;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .discover-top-left-actions {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          flex-shrink: 0;
+        }
+
+        .discover-nav-icon-btn.search-toggle-btn.is-active {
+          background: rgba(255, 255, 255, 0.16);
+          color: #FFFFFF;
         }
 
         .discover-top-right-actions {

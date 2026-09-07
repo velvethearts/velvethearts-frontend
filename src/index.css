@@ -981,7 +981,10 @@ html {
 .vh-modal-body {
   padding: var(--space-6);
   overflow-y: auto;
-  flex: 1;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* Cards */

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from '@phosphor-icons/react';
 
 export const Modal = ({
@@ -11,12 +12,30 @@ export const Modal = ({
   className = ''
 }) => {
   const modalRef = useRef(null);
+  const modalBodyRef = useRef(null);
   const triggerRef = useRef(null);
 
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
   });
+
+  // Always reset scroll position of the modal body when opened
+  useEffect(() => {
+    if (isOpen && modalBodyRef.current) {
+      modalBodyRef.current.scrollTop = 0;
+    }
+  }, [isOpen]);
+
+  // Lock body scroll when modal is active
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
 
   // Focus trap & Escape logic
   useEffect(() => {
@@ -68,8 +87,18 @@ export const Modal = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="vh-modal-overlay" onClick={onClose}>
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onCloseRef.current?.();
+    }
+  };
+
+  return createPortal(
+    <div
+      className="vh-modal-overlay"
+      onClick={handleOverlayClick}
+      onMouseDown={handleOverlayClick}
+    >
       <div
         ref={modalRef}
         role={role}
@@ -78,6 +107,7 @@ export const Modal = ({
         tabIndex={-1}
         className={`vh-modal-card vh-modal-variant-${variant} ${className}`}
         onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         <header className="vh-modal-header">
           {title && (
@@ -86,17 +116,18 @@ export const Modal = ({
             </h2>
           )}
           <button 
-            onClick={onClose} 
+            onClick={() => onCloseRef.current?.()} 
             className="vh-modal-close-btn" 
             aria-label="Close dialog"
           >
             <X size={20} />
           </button>
         </header>
-        <div className="vh-modal-body">
+        <div className="vh-modal-body" ref={modalBodyRef}>
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

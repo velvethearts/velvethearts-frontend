@@ -19,6 +19,16 @@ export const DiscoverPreferences = ({ onClose }) => {
   const { filters, setFilters } = useApp();
   const [localFilters, setLocalFilters] = useState({ ...filters });
   const [showAllGenders, setShowAllGenders] = useState(false);
+  const contentRef = React.useRef(null);
+
+  // Auto scroll to top on mount / open
+  React.useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+      const parentBody = contentRef.current.closest('.vh-modal-body');
+      if (parentBody) parentBody.scrollTop = 0;
+    }
+  }, []);
 
   const primaryGenders = ['All', 'Woman', 'Man', 'Non-binary'];
   const extendedGenders = [
@@ -94,7 +104,7 @@ export const DiscoverPreferences = ({ onClose }) => {
       title="Filter Preferences"
       variant="bottom-drawer"
     >
-      <div className="pref-body-content font-ui">
+      <div className="pref-body-content font-ui" ref={contentRef}>
         {/* 1. Gender Preference */}
         <div className="pref-item-section">
           <div className="pref-section-title-row">
@@ -480,13 +490,17 @@ export const DiscoverPreferences = ({ onClose }) => {
         }
 
         .pref-actions-footer {
+          position: sticky;
+          bottom: -24px;
+          background: var(--bg-surface, #141113);
+          border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+          padding: 16px 0;
+          margin-top: 16px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          border-top: 1px solid var(--border-subtle);
-          padding-top: var(--space-5);
-          margin-top: var(--space-4);
-          padding-bottom: var(--space-2);
+          z-index: 20;
+          box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.35);
         }
 
         .pref-clear-all {
