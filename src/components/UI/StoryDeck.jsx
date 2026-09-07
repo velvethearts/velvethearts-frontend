@@ -632,15 +632,33 @@ export const StoryDeck = ({
         .story-card-container {
           position: relative;
           width: 100%;
-          aspect-ratio: 9 / 14.5;
-          min-height: 540px;
-          max-height: 640px;
+          height: clamp(580px, calc(100dvh - 215px), 750px);
+          aspect-ratio: 9 / 15.5;
+          min-height: 560px;
+          max-height: 750px;
           border-radius: 22px;
           overflow: hidden;
           background-color: #0d0f14;
           border: 1px solid rgba(255, 255, 255, 0.08);
           box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
           cursor: grab;
+        }
+
+        @media (max-width: 640px) {
+          .story-card-container {
+            height: calc(100dvh - 200px);
+            min-height: 540px;
+            max-height: 720px;
+            aspect-ratio: auto;
+          }
+        }
+
+        @media (max-height: 720px) {
+          .story-card-container {
+            height: calc(100dvh - 180px);
+            min-height: 480px;
+            max-height: 580px;
+          }
         }
 
         .story-card-container:active {

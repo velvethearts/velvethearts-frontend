@@ -398,6 +398,8 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
         .discover-feed-page.is-deck-view {
           max-width: 440px;
+          padding-top: var(--space-2);
+          padding-bottom: 0;
         }
 
         .discover-header-actions {
