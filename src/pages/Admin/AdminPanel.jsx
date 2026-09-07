@@ -1302,11 +1302,14 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
                       <Eye size={14} weight="bold" />
                     </span>
                   </div>
-                  <div>
+                  <div className="admin-user-info-col">
                     <div className="admin-user-name-line">
                       <span className="admin-user-name font-display">{u.name || 'Anonymous Member'}</span>
                       <Eye size={14} className="admin-name-view-hint" />
                       {u.verified && <VerifiedBadge variant="pill" size="sm" />}
+                    </div>
+
+                    <div className="admin-user-badges-row">
                       {!u.hasProfile && (
                         <span 
                           className="admin-onboarding-pill" 
@@ -1327,22 +1330,24 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
                         </span>
                       )}
                     </div>
+
                     <div className="admin-user-subline font-ui">
                       <span>{u.email || u.phoneNumber || 'No contact on file'}</span>
                       <span> • {u.city || 'Location not set'}</span>
                       <span> • Joined {new Date(u.createdAt).toLocaleDateString()}</span>
-                      <span 
-                        className="admin-user-id-chip inline-chip"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          copyId(u.id);
-                        }}
-                        title="Click to copy full User ID"
-                      >
-                        <span className="admin-id-tag">ID:</span>
-                        <code className="admin-id-full">{u.id}</code>
-                        <Copy size={12} className="admin-id-copy-icon" />
-                      </span>
+                    </div>
+
+                    <div 
+                      className="admin-user-id-chip inline-chip"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyId(u.id);
+                      }}
+                      title={`Click to copy full User ID: ${u.id}`}
+                    >
+                      <span className="admin-id-tag">ID:</span>
+                      <code className="admin-id-full">{u.id}</code>
+                      <Copy size={12} className="admin-id-copy-icon" />
                     </div>
                   </div>
                 </div>
@@ -1831,15 +1836,21 @@ const adminStyles = `
     max-width: 1060px;
     margin: 0 auto;
     color: var(--text-primary);
+    box-sizing: border-box;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   .admin-tabs-wrapper {
     margin-bottom: var(--space-6);
     display: flex;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     padding-bottom: 4px;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .admin-tabs-wrapper::-webkit-scrollbar {
@@ -2679,8 +2690,14 @@ const adminStyles = `
 
   .admin-user-row-main {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .admin-user-avatar-wrap {
+    flex-shrink: 0;
   }
 
   .admin-user-avatar {
@@ -2689,35 +2706,60 @@ const adminStyles = `
     border-radius: 50%;
     object-fit: cover;
     border: 1.5px solid var(--border-subtle);
+    flex-shrink: 0;
   }
 
   .admin-user-avatar-icon {
     color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .admin-user-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
   }
 
   .admin-user-name-line {
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    flex-wrap: wrap;
   }
 
   .admin-user-name {
     font-weight: 600;
     color: var(--text-primary);
     font-size: var(--text-body);
+    word-break: normal;
+  }
+
+  .admin-user-badges-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 1px;
   }
 
   .admin-user-subline {
     font-size: var(--text-caption);
     color: var(--text-secondary);
-    margin-top: 3px;
+    margin-top: 2px;
     font-weight: 500;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
   }
 
   .admin-user-row-actions {
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    flex-shrink: 0;
   }
 
   .admin-verify-toggle-btn {
@@ -3507,4 +3549,158 @@ const adminStyles = `
     color: var(--text-primary);
     word-break: break-all;
   }
+
+  /* ── Responsive Mobile & Tablet Optimizations ── */
+  @media (max-width: 860px) {
+    .admin-user-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    .admin-user-row-main {
+      width: 100%;
+      min-width: 0;
+      align-items: flex-start;
+    }
+
+    .admin-user-info-col {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .admin-user-row-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 12px;
+      margin-top: 2px;
+    }
+
+    .admin-verify-toggle-btn,
+    .admin-suspend-toggle-btn,
+    .admin-delete-toggle-btn {
+      flex: 1;
+      justify-content: center;
+      padding: 8px 10px;
+      font-size: 12px;
+      min-height: 38px;
+      box-sizing: border-box;
+      white-space: nowrap;
+    }
+
+    .admin-user-id-chip.inline-chip {
+      margin-left: 0;
+      margin-top: 5px;
+      max-width: 100%;
+    }
+
+    .admin-user-id-chip .admin-id-full {
+      max-width: 210px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .admin-panel {
+      padding: 12px 10px;
+    }
+
+    .admin-tabs-wrapper {
+      margin-left: -4px;
+      margin-right: -4px;
+      padding-left: 4px;
+      padding-right: 28px;
+      padding-bottom: 6px;
+      margin-bottom: 16px;
+    }
+
+    .admin-tabs {
+      flex-shrink: 0;
+    }
+
+    .admin-user-toolbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+
+    .admin-search-input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .admin-filter-selects {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .admin-select-filter {
+      width: 100%;
+      min-width: 0;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      box-sizing: border-box;
+      padding: 7px 10px;
+      font-size: 11.5px;
+    }
+
+    .admin-clear-filter-btn {
+      grid-column: 1 / -1;
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+    }
+
+    .admin-user-name {
+      font-size: 15px;
+    }
+
+    .admin-user-avatar {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+    }
+
+    .admin-user-avatar-icon {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+    }
+
+    .admin-user-id-chip .admin-id-full {
+      max-width: 175px;
+    }
+
+    .admin-verify-toggle-btn,
+    .admin-suspend-toggle-btn,
+    .admin-delete-toggle-btn {
+      font-size: 11.5px;
+      padding: 7px 6px;
+      gap: 4px;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .admin-user-row {
+      padding: 12px;
+    }
+
+    .admin-filter-selects {
+      grid-template-columns: 1fr;
+    }
+
+    .admin-user-id-chip .admin-id-full {
+      max-width: 145px;
+    }
+  }
 `;
+
