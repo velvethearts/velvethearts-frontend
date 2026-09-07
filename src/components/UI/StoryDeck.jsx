@@ -715,20 +715,22 @@ export const StoryDeck = ({
 
         .story-photo-bar {
           flex: 1;
-          height: 3px;
-          background: rgba(255, 255, 255, 0.35);
+          height: 3.5px;
+          background: rgba(255, 255, 255, 0.65);
           border-radius: 999px;
           cursor: pointer;
-          transition: background-color 0.2s ease;
+          transition: background-color 0.2s ease, box-shadow 0.2s ease;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
         }
 
         .story-photo-bar.active {
           background: #FFFFFF;
-          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+          box-shadow: 0 0 8px rgba(255, 255, 255, 0.95), 0 1px 4px rgba(0, 0, 0, 0.8);
         }
 
         .story-photo-bar.filled {
-          background: rgba(255, 255, 255, 0.75);
+          background: rgba(255, 255, 255, 0.9);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
         }
 
         /* Tap Navigation Zones */

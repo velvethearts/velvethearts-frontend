@@ -364,26 +364,30 @@ export const ProfileCard = ({
           left: 50%;
           transform: translateX(-50%);
           display: flex;
-          gap: 4px;
+          gap: 5px;
           z-index: 5;
-          background-color: rgba(0, 0, 0, 0.35);
+          background-color: rgba(0, 0, 0, 0.45);
           padding: 3px var(--space-2);
           border-radius: var(--radius-full);
-          backdrop-filter: blur(4px);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
 
         .card-photo-dot {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background-color: rgba(255, 255, 255, 0.5);
-          transition: background-color var(--duration-fast);
+          background-color: rgba(255, 255, 255, 0.65);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+          transition: all var(--duration-fast);
         }
 
         .card-photo-dot.active {
-          background-color: var(--pink-gold);
-          width: 14px;
-          border-radius: 3px;
+          background-color: #FFFFFF;
+          width: 16px;
+          border-radius: var(--radius-full);
+          box-shadow: 0 0 6px rgba(255, 255, 255, 0.95), 0 1px 3px rgba(0, 0, 0, 0.5);
         }
 
         /* Photo navigation tap overlays */

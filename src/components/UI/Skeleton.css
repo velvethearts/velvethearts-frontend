@@ -86,7 +86,7 @@
   flex: 1;
   height: 3.5px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.65);
 }
 
 .story-deck-skeleton-top-badges {
