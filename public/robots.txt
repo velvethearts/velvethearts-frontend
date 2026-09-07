@@ -4,11 +4,25 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /assets/
+Disallow: /chat
+Disallow: /matches
+Disallow: /discover
+Disallow: /diary
+Disallow: /notifications
+Disallow: /profile
+Disallow: /settings
 
 # Allow major search engines and AI grounding crawlers
 User-agent: Googlebot
 Allow: /
+Disallow: /api/
+Disallow: /chat
+Disallow: /matches
+Disallow: /discover
+Disallow: /diary
+Disallow: /notifications
+Disallow: /profile
+Disallow: /settings
 
 User-agent: Google-Extended
 Allow: /
@@ -30,3 +44,4 @@ Host: https://www.velvethearts.in
 
 # Sitemap location
 Sitemap: https://www.velvethearts.in/sitemap.xml
+
