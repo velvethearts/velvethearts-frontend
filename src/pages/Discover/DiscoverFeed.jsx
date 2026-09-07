@@ -855,7 +855,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           border-radius: 50%;
           border: none;
           background: transparent;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.75);
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -870,8 +870,20 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           transform: scale(1.08);
         }
 
+        [data-theme="light"] .discover-nav-icon-btn {
+          color: var(--charcoal-600, #6B5E62);
+        }
+
+        [data-theme="light"] .discover-nav-icon-btn:hover {
+          color: var(--charcoal-900, #1A1517);
+        }
+
         .discover-nav-icon-btn.has-active {
           color: var(--burgundy-400);
+        }
+
+        [data-theme="light"] .discover-nav-icon-btn.has-active {
+          color: var(--burgundy-500);
         }
 
         .discover-nav-icon-btn .active-filter-dot {
@@ -892,8 +904,13 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           padding: 3px;
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.12);
           flex-shrink: 0;
+        }
+
+        [data-theme="light"] .discover-mode-pills {
+          background: rgba(0, 0, 0, 0.05);
+          border: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .discover-mode-pill {
@@ -914,11 +931,26 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           color: #FFFFFF;
         }
 
+        [data-theme="light"] .discover-mode-pill {
+          color: var(--charcoal-600, #6B5E62);
+        }
+
+        [data-theme="light"] .discover-mode-pill:hover {
+          color: var(--charcoal-900, #1A1517);
+        }
+
         .discover-mode-pill.active {
           background: #FFFFFF;
           color: #11141A !important;
           font-weight: 700;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="light"] .discover-mode-pill.active {
+          background: #FFFFFF;
+          color: var(--burgundy-600, #9E3256) !important;
+          box-shadow: 0 2px 8px rgba(58, 14, 26, 0.12);
+          border: 1px solid rgba(184, 67, 106, 0.15);
         }
 
         .discover-top-left-actions {
@@ -933,6 +965,12 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           color: #FFFFFF;
         }
 
+        [data-theme="light"] .discover-nav-icon-btn.search-toggle-btn.is-active {
+          background: rgba(184, 67, 106, 0.1);
+          color: var(--burgundy-600, #9E3256);
+          border: 1px solid rgba(184, 67, 106, 0.18);
+        }
+
         .discover-top-right-actions {
           display: flex;
           align-items: center;
@@ -941,15 +979,26 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         }
 
         .discover-nav-icon-btn.mode-switch-btn {
-          color: rgba(255, 255, 255, 0.55);
+          color: rgba(255, 255, 255, 0.6);
         }
 
         .discover-nav-icon-btn.mode-switch-btn:hover {
           color: #FFFFFF;
         }
 
+        [data-theme="light"] .discover-nav-icon-btn.mode-switch-btn {
+          color: var(--charcoal-600, #6B5E62);
+        }
+
+        [data-theme="light"] .discover-nav-icon-btn.mode-switch-btn:hover {
+          color: var(--charcoal-900, #1A1517);
+        }
+
+        /* Velvet Hearts Signature Boost Button */
         .discover-nav-icon-btn.boost-btn {
-          color: #C084FC;
+          color: var(--burgundy-400, #E87A90);
+          background: rgba(184, 67, 106, 0.12);
+          border: 1px solid rgba(184, 67, 106, 0.28);
           gap: 5px;
           padding: 0 10px;
           border-radius: var(--radius-full);
@@ -959,27 +1008,45 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         }
 
         .discover-nav-icon-btn.boost-btn:hover {
-          color: #D8B4FE;
+          color: var(--burgundy-300, #F3A4B5);
+          background: rgba(184, 67, 106, 0.2);
           transform: scale(1.05);
         }
 
+        [data-theme="light"] .discover-nav-icon-btn.boost-btn {
+          color: var(--burgundy-600, #9E3256);
+          background: rgba(184, 67, 106, 0.08);
+          border: 1px solid rgba(184, 67, 106, 0.22);
+        }
+
+        [data-theme="light"] .discover-nav-icon-btn.boost-btn:hover {
+          color: var(--burgundy-700, #7A223E);
+          background: rgba(184, 67, 106, 0.15);
+        }
+
         .discover-nav-icon-btn.boost-btn.is-boosted {
-          background: linear-gradient(135deg, #A855F7, #C084FC);
+          background: linear-gradient(135deg, var(--burgundy-500, #B8436A) 0%, var(--gold-primary, #D4AD6A) 100%);
           color: #FFFFFF;
-          box-shadow: 0 0 16px rgba(168, 85, 247, 0.65);
-          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 0 16px rgba(184, 67, 106, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.35);
           animation: boostGlowPulse 2s infinite;
         }
 
         @keyframes boostGlowPulse {
-          0%, 100% { box-shadow: 0 0 14px rgba(168, 85, 247, 0.6); }
-          50% { box-shadow: 0 0 24px rgba(192, 132, 252, 0.9); }
+          0%, 100% { box-shadow: 0 0 14px rgba(184, 67, 106, 0.6); }
+          50% { box-shadow: 0 0 24px rgba(212, 173, 106, 0.85); }
         }
 
         .discover-nav-icon-btn.boost-btn.is-cooldown {
-          color: rgba(212, 173, 106, 0.9);
+          color: var(--gold-primary, #D4AD6A);
           background: rgba(30, 24, 27, 0.7);
           border: 1px solid rgba(212, 173, 106, 0.3);
+        }
+
+        [data-theme="light"] .discover-nav-icon-btn.boost-btn.is-cooldown {
+          color: #8A6D3B;
+          background: #FFFDF9;
+          border: 1px solid rgba(212, 173, 106, 0.4);
         }
 
         .boost-timer-chip {
@@ -993,8 +1060,12 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         .boost-cooldown-chip {
           font-size: 10px;
           font-weight: 700;
-          color: #D4AD6A;
+          color: var(--gold-primary, #D4AD6A);
           letter-spacing: 0.02em;
+        }
+
+        [data-theme="light"] .boost-cooldown-chip {
+          color: #8A6D3B;
         }
       `}</style>
     </div>

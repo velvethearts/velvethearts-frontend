@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Lightning, Clock, Sparkle, X, CheckCircle, ShieldCheck, Flame } from '@phosphor-icons/react';
 import { Button } from './Button';
 
@@ -45,7 +46,7 @@ export const SpotlightBoostModal = ({
     ? Math.min(100, Math.max(0, Math.round(((1800 - boostSecondsLeft) / 1800) * 100)))
     : 0;
 
-  return (
+  return createPortal(
     <div
       className="vh-modal-overlay spotlight-modal-overlay"
       role="dialog"
@@ -173,7 +174,7 @@ export const SpotlightBoostModal = ({
             <div className="spotlight-perks-list font-ui">
               <div className="spotlight-perk-item">
                 <div className="perk-icon-wrap">
-                  <Lightning size={18} weight="fill" color="#C084FC" />
+                  <Lightning size={19} weight="fill" color="var(--burgundy-500, #B8436A)" />
                 </div>
                 <div>
                   <strong>Top Priority Placement</strong>
@@ -183,7 +184,7 @@ export const SpotlightBoostModal = ({
 
               <div className="spotlight-perk-item">
                 <div className="perk-icon-wrap">
-                  <Clock size={18} weight="fill" color="#D4AD6A" />
+                  <Clock size={19} weight="fill" color="var(--gold-primary, #D4AD6A)" />
                 </div>
                 <div>
                   <strong>30 Minutes Active Duration</strong>
@@ -193,7 +194,7 @@ export const SpotlightBoostModal = ({
 
               <div className="spotlight-perk-item">
                 <div className="perk-icon-wrap">
-                  <ShieldCheck size={18} weight="fill" color="#10B981" />
+                  <ShieldCheck size={19} weight="fill" color="var(--success, #10B981)" />
                 </div>
                 <div>
                   <strong>Fair Discovery (2-Day Cooldown)</strong>
@@ -214,7 +215,7 @@ export const SpotlightBoostModal = ({
               <Button
                 variant="secondary"
                 onClick={onClose}
-                className="spotlight-btn-full"
+                className="spotlight-btn-full spotlight-btn-secondary"
               >
                 Maybe Later
               </Button>
@@ -223,10 +224,13 @@ export const SpotlightBoostModal = ({
         )}
 
         <style>{`
+          /* ============================================================
+             VELVET HEARTS SPOTLIGHT BOOST MODAL — THEME ADAPTIVE
+             ============================================================ */
           .spotlight-modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(7, 5, 6, 0.82);
+            background: rgba(10, 8, 9, 0.78);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
             z-index: 9999;
@@ -236,17 +240,29 @@ export const SpotlightBoostModal = ({
             padding: 20px;
           }
 
+          [data-theme="light"] .spotlight-modal-overlay {
+            background: rgba(45, 25, 32, 0.45);
+          }
+
           .spotlight-modal-card {
             position: relative;
             width: 100%;
             max-width: 440px;
-            background: linear-gradient(165deg, rgba(28, 20, 24, 0.96) 0%, rgba(18, 14, 16, 0.98) 100%);
-            border: 1px solid rgba(192, 132, 252, 0.25);
+            background: linear-gradient(165deg, rgba(28, 20, 24, 0.98) 0%, rgba(18, 14, 16, 0.99) 100%);
+            border: 1px solid rgba(184, 67, 106, 0.3);
             border-radius: 28px;
             padding: 32px 28px;
-            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 30px rgba(168, 85, 247, 0.15);
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 0 35px rgba(184, 67, 106, 0.18);
             color: #FFFFFF;
             text-align: center;
+            transition: all var(--duration-normal) var(--ease-out-smooth);
+          }
+
+          [data-theme="light"] .spotlight-modal-card {
+            background: linear-gradient(165deg, #FFFFFF 0%, #FFF8F6 100%);
+            border: 1px solid rgba(184, 67, 106, 0.22);
+            box-shadow: 0 24px 64px rgba(58, 14, 26, 0.14), 0 0 30px rgba(184, 67, 106, 0.1);
+            color: var(--charcoal-900, #1A1517);
           }
 
           .spotlight-close-btn {
@@ -258,7 +274,7 @@ export const SpotlightBoostModal = ({
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.75);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -267,8 +283,19 @@ export const SpotlightBoostModal = ({
           }
 
           .spotlight-close-btn:hover {
-            background: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.18);
             color: #FFFFFF;
+          }
+
+          [data-theme="light"] .spotlight-close-btn {
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: var(--charcoal-600, #6B5E62);
+          }
+
+          [data-theme="light"] .spotlight-close-btn:hover {
+            background: rgba(184, 67, 106, 0.1);
+            color: var(--burgundy-600, #9E3256);
           }
 
           .spotlight-hero-badge {
@@ -293,21 +320,32 @@ export const SpotlightBoostModal = ({
 
           .spotlight-icon-circle.is-ready,
           .spotlight-icon-circle.is-active {
-            background: linear-gradient(135deg, #A855F7 0%, #7E22CE 100%);
-            box-shadow: 0 8px 24px rgba(168, 85, 247, 0.5);
+            background: linear-gradient(135deg, var(--burgundy-500, #B8436A) 0%, var(--gold-primary, #D4AD6A) 100%);
+            box-shadow: 0 8px 24px rgba(184, 67, 106, 0.45);
+          }
+
+          [data-theme="light"] .spotlight-icon-circle.is-ready,
+          [data-theme="light"] .spotlight-icon-circle.is-active {
+            box-shadow: 0 8px 24px rgba(184, 67, 106, 0.35);
           }
 
           .spotlight-icon-circle.is-cooldown {
             background: rgba(36, 28, 32, 0.9);
-            border: 1.5px solid rgba(212, 173, 106, 0.35);
+            border: 1.5px solid rgba(212, 173, 106, 0.4);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+          }
+
+          [data-theme="light"] .spotlight-icon-circle.is-cooldown {
+            background: #FFFDF9;
+            border: 1.5px solid rgba(212, 173, 106, 0.5);
+            box-shadow: 0 6px 18px rgba(58, 14, 26, 0.1);
           }
 
           .spotlight-pulse-ring {
             position: absolute;
             inset: -8px;
             border-radius: 50%;
-            border: 1.5px solid rgba(192, 132, 252, 0.4);
+            border: 1.5px solid rgba(184, 67, 106, 0.4);
             animation: pulseRadar 2.2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
           }
 
@@ -328,13 +366,19 @@ export const SpotlightBoostModal = ({
             gap: 6px;
             padding: 4px 12px;
             border-radius: 20px;
-            background: rgba(168, 85, 247, 0.18);
-            border: 1px solid rgba(192, 132, 252, 0.4);
-            color: #D8B4FE;
+            background: rgba(184, 67, 106, 0.16);
+            border: 1px solid rgba(184, 67, 106, 0.35);
+            color: #FFAEC5;
             font-size: 0.75rem;
             font-weight: 700;
             letter-spacing: 0.06em;
             margin-bottom: 12px;
+          }
+
+          [data-theme="light"] .spotlight-status-tag {
+            background: rgba(184, 67, 106, 0.1);
+            border-color: rgba(184, 67, 106, 0.28);
+            color: var(--burgundy-600, #9E3256);
           }
 
           .spotlight-status-tag.is-cooldown {
@@ -343,12 +387,18 @@ export const SpotlightBoostModal = ({
             color: #F8E7D8;
           }
 
+          [data-theme="light"] .spotlight-status-tag.is-cooldown {
+            background: rgba(212, 173, 106, 0.12);
+            border-color: rgba(212, 173, 106, 0.4);
+            color: var(--gold-800, #7A5B28);
+          }
+
           .pulsing-live-dot {
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background-color: #A855F7;
-            box-shadow: 0 0 8px #C084FC;
+            background-color: var(--burgundy-500, #B8436A);
+            box-shadow: 0 0 8px var(--burgundy-400, #D0607F);
             animation: liveDotPulse 1.4s infinite;
           }
 
@@ -364,6 +414,10 @@ export const SpotlightBoostModal = ({
             margin: 0 0 8px;
           }
 
+          [data-theme="light"] .spotlight-title {
+            color: var(--charcoal-900, #1A1517);
+          }
+
           .spotlight-desc {
             font-size: 0.92rem;
             line-height: 1.48;
@@ -371,13 +425,23 @@ export const SpotlightBoostModal = ({
             margin: 0 0 20px;
           }
 
+          [data-theme="light"] .spotlight-desc {
+            color: var(--charcoal-600, #6B5E62);
+          }
+
           /* Timer Box */
           .spotlight-timer-box {
             background: rgba(12, 9, 11, 0.65);
-            border: 1px solid rgba(192, 132, 252, 0.25);
+            border: 1px solid rgba(184, 67, 106, 0.25);
             border-radius: 20px;
             padding: 20px 16px;
             margin-bottom: 16px;
+          }
+
+          [data-theme="light"] .spotlight-timer-box {
+            background: #FFFFFF;
+            border: 1px solid rgba(184, 67, 106, 0.18);
+            box-shadow: 0 4px 18px rgba(58, 14, 26, 0.06);
           }
 
           .spotlight-timer-number {
@@ -385,9 +449,14 @@ export const SpotlightBoostModal = ({
             font-weight: 800;
             letter-spacing: 0.03em;
             color: #FFFFFF;
-            text-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+            text-shadow: 0 0 20px rgba(184, 67, 106, 0.5);
             margin-bottom: 4px;
             font-variant-numeric: tabular-nums;
+          }
+
+          [data-theme="light"] .spotlight-timer-number {
+            color: var(--burgundy-700, #7A223E);
+            text-shadow: 0 0 16px rgba(184, 67, 106, 0.15);
           }
 
           .spotlight-timer-label {
@@ -396,6 +465,10 @@ export const SpotlightBoostModal = ({
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-bottom: 14px;
+          }
+
+          [data-theme="light"] .spotlight-timer-label {
+            color: var(--charcoal-500, #8A7B80);
           }
 
           .spotlight-progress-bar-track {
@@ -407,9 +480,13 @@ export const SpotlightBoostModal = ({
             margin: 0 auto;
           }
 
+          [data-theme="light"] .spotlight-progress-bar-track {
+            background: rgba(0, 0, 0, 0.08);
+          }
+
           .spotlight-progress-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #A855F7, #C084FC);
+            background: linear-gradient(90deg, #B8436A 0%, #D4AD6A 100%);
             border-radius: 3px;
             transition: width 1s linear;
           }
@@ -418,6 +495,10 @@ export const SpotlightBoostModal = ({
             font-size: 0.8rem;
             color: rgba(255, 255, 255, 0.6);
             margin-bottom: 22px;
+          }
+
+          [data-theme="light"] .spotlight-notice-pill {
+            color: var(--charcoal-600, #6B5E62);
           }
 
           /* Cooldown Box */
@@ -429,19 +510,33 @@ export const SpotlightBoostModal = ({
             margin-bottom: 24px;
           }
 
+          [data-theme="light"] .spotlight-cooldown-box {
+            background: #FFFDF9;
+            border: 1px solid rgba(212, 173, 106, 0.35);
+            box-shadow: 0 4px 18px rgba(58, 14, 26, 0.06);
+          }
+
           .cooldown-subhead {
             font-size: 0.82rem;
-            color: #D4AD6A;
+            color: var(--gold-primary, #D4AD6A);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             font-weight: 600;
             margin-bottom: 6px;
           }
 
+          [data-theme="light"] .cooldown-subhead {
+            color: var(--gold-800, #7A5B28);
+          }
+
           .cooldown-timer {
             font-size: 1.8rem;
             font-weight: 700;
             color: #FAF5F0;
+          }
+
+          [data-theme="light"] .cooldown-timer {
+            color: var(--charcoal-900, #1A1517);
           }
 
           /* Perks List */
@@ -455,6 +550,12 @@ export const SpotlightBoostModal = ({
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 18px;
             padding: 16px;
+          }
+
+          [data-theme="light"] .spotlight-perks-list {
+            background: #FFFFFF;
+            border: 1px solid rgba(184, 67, 106, 0.16);
+            box-shadow: 0 4px 16px rgba(58, 14, 26, 0.05);
           }
 
           .spotlight-perk-item {
@@ -474,16 +575,28 @@ export const SpotlightBoostModal = ({
             flex-shrink: 0;
           }
 
+          [data-theme="light"] .perk-icon-wrap {
+            background: rgba(184, 67, 106, 0.08);
+          }
+
           .spotlight-perk-item strong {
             display: block;
             font-size: 0.88rem;
             color: #FFFFFF;
           }
 
+          [data-theme="light"] .spotlight-perk-item strong {
+            color: var(--charcoal-900, #1A1517);
+          }
+
           .spotlight-perk-item span {
             display: block;
             font-size: 0.78rem;
             color: rgba(255, 255, 255, 0.6);
+          }
+
+          [data-theme="light"] .spotlight-perk-item span {
+            color: var(--charcoal-600, #6B5E62);
           }
 
           /* Actions */
@@ -502,18 +615,35 @@ export const SpotlightBoostModal = ({
           }
 
           .btn-boost-launch {
-            background: linear-gradient(135deg, #A855F7 0%, #7E22CE 100%) !important;
-            border-color: #A855F7 !important;
+            background: linear-gradient(135deg, var(--burgundy-500, #B8436A) 0%, var(--gold-primary, #D4AD6A) 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
             color: #FFFFFF !important;
-            box-shadow: 0 4px 18px rgba(168, 85, 247, 0.45) !important;
+            box-shadow: 0 4px 20px rgba(184, 67, 106, 0.45) !important;
+          }
+
+          [data-theme="light"] .btn-boost-launch {
+            border: none !important;
+            box-shadow: 0 4px 20px rgba(184, 67, 106, 0.35) !important;
           }
 
           .btn-boost-launch:hover {
             filter: brightness(1.1) !important;
             transform: translateY(-1px);
           }
+
+          [data-theme="light"] .spotlight-btn-secondary {
+            background: rgba(0, 0, 0, 0.04) !important;
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            color: var(--charcoal-700, #4A3E42) !important;
+          }
+
+          [data-theme="light"] .spotlight-btn-secondary:hover {
+            background: rgba(184, 67, 106, 0.08) !important;
+            color: var(--burgundy-600, #9E3256) !important;
+          }
         `}</style>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

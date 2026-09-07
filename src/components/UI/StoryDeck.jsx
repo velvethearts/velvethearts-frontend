@@ -979,9 +979,20 @@ export const StoryDeck = ({
           padding: 0;
         }
 
+        [data-theme="light"] .console-btn {
+          background: #FFFFFF;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          box-shadow: 0 4px 16px rgba(58, 14, 26, 0.12);
+        }
+
         .console-btn:hover:not(:disabled) {
           transform: scale(1.12);
           background: rgba(34, 38, 48, 0.95);
+        }
+
+        [data-theme="light"] .console-btn:hover:not(:disabled) {
+          background: #FFF8F6;
+          box-shadow: 0 8px 24px rgba(58, 14, 26, 0.18);
         }
 
         .console-btn:active:not(:disabled) {
