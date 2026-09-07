@@ -265,10 +265,26 @@
         }
       ]
     </script>
+    <style>
+      @keyframes vhSplashPulse {
+        0%, 100% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.06); opacity: 1; filter: drop-shadow(0 0 20px rgba(243,198,143,0.45)); }
+      }
+    </style>
   </head>
-  <body>
+  <body style="margin:0;background:#141113;">
     <div id="root">
-      <!-- Grounding content for Search Crawlers and AI Overviews prior to JS hydration -->
+      <!-- Branded Initial Splash while React hydrates -->
+      <div id="initial-splash" style="position:fixed;inset:0;background:#141113;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;font-family:'Playfair Display',Georgia,serif;color:#fce7f3;">
+        <img src="/velvet-heart-logo.png" alt="Velvet Hearts Logo" style="width:72px;height:72px;object-fit:contain;animation:vhSplashPulse 1.8s ease-in-out infinite;margin-bottom:16px;" />
+        <div style="font-size:1.35rem;font-weight:600;letter-spacing:0.06em;color:#f3c68f;text-shadow:0 0 16px rgba(243,198,143,0.35);">
+          Velvet Hearts
+        </div>
+      </div>
+    </div>
+
+    <noscript>
+      <!-- Grounding content for Search Crawlers, AI Bots, and non-JS clients -->
       <main style="max-width:800px;margin:0 auto;padding:40px 24px;font-family:Georgia,serif;color:#fce7f3;background:#1a1517;min-height:100vh;">
         <header>
           <h1 style="font-size:2.2rem;color:#f3c68f;margin-bottom:12px;">Velvet Hearts — Official Intentional Dating &amp; Relationship Platform</h1>
@@ -313,7 +329,7 @@
           <p style="font-size:0.9rem;color:#998D8F;">&copy; 2026 Velvet Hearts. All rights reserved. Where every heart belongs.</p>
         </footer>
       </main>
-    </div>
+    </noscript>
 
     <script type="module" src="/src/main.jsx"></script>
     <script>
