@@ -32,10 +32,14 @@ import {
   evaluateLiveAntiSpoofing
 } from '../../utils/faceBiometrics';
 
-export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPhotoUrl }) => {
+export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPhotoUrl, isReverify = false }) => {
   const { userProfile, setUserProfile, showAlert } = useApp();
 
+  const [isReverifying, setIsReverifying] = useState(isReverify);
+
   const [step, setStep] = useState(() => {
+    if (isReverify) return 'intro';
+
     const isAlreadyVerified = Boolean(
       userProfile?.verified === true ||
       userProfile?.verified === 'true' ||
@@ -102,6 +106,14 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       setManualReviewLoading(false);
       livenessSamplesRef.current = [];
 
+      if (isReverify) {
+        setIsReverifying(true);
+        setStep('intro');
+        return;
+      }
+
+      setIsReverifying(false);
+
       // Check if user is already verified
       const isAlreadyVerified = Boolean(
         userProfile?.verified === true ||
@@ -138,6 +150,10 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
             const data = await api.getVerificationStatus();
             if (data) {
               setVerificationStatus(data);
+            }
+
+            if (isReverify || isReverifying) {
+              return;
             }
 
             if (data?.status === 'PENDING') {
@@ -202,8 +218,9 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       fetchVerificationStatus();
     } else {
       stopCamera();
+      setIsReverifying(false);
     }
-  }, [isOpen, userProfile?.verificationStatus, userProfile?.verified]);
+  }, [isOpen, userProfile?.verificationStatus, userProfile?.verified, isReverify]);
 
   useEffect(() => {
     return () => {
@@ -227,7 +244,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       return;
     }
 
-    if (userProfile?.verified) {
+    if (userProfile?.verified && !isReverifying && !isReverify) {
       setStep('success');
       return;
     }
@@ -453,6 +470,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
         });
       }
 
+      setIsReverifying(false);
       setStep('success');
       if (onVerified) onVerified();
     } catch (err) {
@@ -945,11 +963,26 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                   variant="primary"
                   onClick={() => {
                     stopCamera();
+                    setIsReverifying(false);
                     onClose();
                   }}
                   className="photo-verify-btn-full"
                 >
                   Done
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setIsReverifying(true);
+                    setCapturedImage(null);
+                    setStep('intro');
+                  }}
+                  className="photo-verify-btn-full"
+                  style={{ marginTop: '8px' }}
+                >
+                  <ArrowsClockwise size={16} weight="bold" style={{ marginRight: '6px' }} />
+                  Re-verify Face Scan
                 </Button>
               </div>
             </div>

@@ -60,6 +60,7 @@ export const OnboardingFlow = () => {
     const [showAllErrors, setShowAllErrors] = useState(false);
     const [showDraftBanner, setShowDraftBanner] = useState(!!draft);
     const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+    const [isReverifyMode, setIsReverifyMode] = useState(false);
 
     const handleStartFresh = async () => {
         const confirmed = await showConfirm({
@@ -1148,6 +1149,11 @@ export const OnboardingFlow = () => {
                                                     message: 'Your photo verification has already been sent for manual review. Our team is currently reviewing your profile. Please wait.',
                                                 });
                                             }
+                                            if (formData.verified) {
+                                                setIsReverifyMode(true);
+                                            } else {
+                                                setIsReverifyMode(false);
+                                            }
                                             setIsVerifyModalOpen(true);
                                         }}
                                         className="onboarding-verify-btn"
@@ -2103,7 +2109,11 @@ export const OnboardingFlow = () => {
 
             <PhotoVerificationModal
                 isOpen={isVerifyModalOpen}
-                onClose={() => setIsVerifyModalOpen(false)}
+                isReverify={isReverifyMode}
+                onClose={() => {
+                    setIsVerifyModalOpen(false);
+                    setIsReverifyMode(false);
+                }}
                 primaryPhotoUrl={photoPreviews[0] || null}
                 onVerified={() => {
                     setFormData(prev => ({ ...prev, verified: true }));
@@ -2113,6 +2123,7 @@ export const OnboardingFlow = () => {
                         localStorage.removeItem('vh_verification_snoozed_until');
                     } catch (_) {}
                     setIsVerifyModalOpen(false);
+                    setIsReverifyMode(false);
                 }}
             />
         </div>
