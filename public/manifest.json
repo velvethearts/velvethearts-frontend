@@ -12,6 +12,7 @@
   "background_color": "#0d090b",
   "theme_color": "#b8436a",
   "categories": ["dating", "social", "lifestyle"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/velvet-heart-logo.png",
@@ -24,6 +25,29 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Discover Profiles",
+      "short_name": "Discover",
+      "description": "Explore verified profiles and real-time vibe matches",
+      "url": "/?tab=discover",
+      "icons": [{ "src": "/velvet-heart-logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mutual Matches",
+      "short_name": "Matches",
+      "description": "Check your connections and mutual sparks",
+      "url": "/?tab=matches",
+      "icons": [{ "src": "/velvet-heart-logo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Direct Messages",
+      "short_name": "Chat",
+      "description": "Chat with your verified connections",
+      "url": "/?tab=chat",
+      "icons": [{ "src": "/velvet-heart-logo.png", "sizes": "192x192" }]
     }
   ]
 }

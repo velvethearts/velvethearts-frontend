@@ -11,6 +11,7 @@ import { LandingPage } from './pages/Landing/LandingPage';
 import { ToastContainer } from './components/UI/ToastContainer';
 import { CookieConsentBanner } from './components/UI/CookieConsentBanner';
 import { initGA } from './lib/analytics';
+import { updateMetadata } from './lib/metadata';
 
 // Route-based Code Splitting: Lazy-load authenticated & secondary sub-pages
 const AuthFlow = lazy(() => import('./pages/Auth/AuthFlow').then(m => ({ default: m.AuthFlow })));
@@ -28,6 +29,7 @@ const SafetyCenter = lazy(() => import('./pages/Safety/SafetyCenter').then(m => 
 const NotificationsPage = lazy(() => import('./pages/Notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const VerificationPromptModal = lazy(() => import('./components/Safety/VerificationPromptModal').then(m => ({ default: m.VerificationPromptModal })));
 const AdminPanel = lazy(() => import('./pages/Admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
+const NotFoundPage = lazy(() => import('./pages/NotFound/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 const AuthLoadingScreen = () => {
   return (
@@ -81,6 +83,8 @@ function AppContent() {
   console.log('APPCONTENT_RENDER:', { authLoading, isLoggedIn, isOnboarded, approvalStatus, userRole, activeTab });
 
   const [showAuth, setShowAuth] = useState(false);
+  const [isNotFound, setIsNotFound] = useState(false);
+  const [notFoundPath, setNotFoundPath] = useState('');
 
   // Specific detail sub-page triggers
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -117,6 +121,7 @@ function AppContent() {
       const handleSwMessage = (e) => {
         const targetTab = e.data?.tab || (e.data?.url?.includes('notifications') ? 'notifications' : e.data?.url?.includes('chat') ? 'chat' : null);
         if (e.data?.type === 'NAVIGATE' && targetTab) {
+          setIsNotFound(false);
           setActiveTab(targetTab);
         }
       };
@@ -125,50 +130,135 @@ function AppContent() {
     }
   }, [setActiveTab]);
 
-  // Handle URL pathname and query parameter deep linking (e.g. /discover or /?tab=chat)
+  // Handle URL pathname and query parameter deep linking (e.g. /discover, /?tab=chat, or unknown 404 routes)
   React.useEffect(() => {
-    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety'];
+    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety', 'admin'];
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
 
-    if (tabParam && validTabs.includes(tabParam)) {
-      setActiveTab(tabParam);
-      try {
-        window.history.replaceState({}, '', '/');
-      } catch (_) { }
+    if (tabParam) {
+      if (validTabs.includes(tabParam)) {
+        setActiveTab(tabParam);
+        setIsNotFound(false);
+      } else {
+        setIsNotFound(true);
+        setNotFoundPath(`?tab=${tabParam}`);
+      }
     } else {
       const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
-      if (cleanPath && validTabs.includes(cleanPath)) {
+      if (!cleanPath || cleanPath === '') {
+        setIsNotFound(false);
+      } else if (cleanPath === '404') {
+        setIsNotFound(true);
+        setNotFoundPath('/404');
+      } else if (validTabs.includes(cleanPath)) {
         setActiveTab(cleanPath);
-        try {
-          window.history.replaceState({}, '', '/');
-        } catch (_) { }
+        setIsNotFound(false);
+      } else {
+        setIsNotFound(true);
+        setNotFoundPath(`/${cleanPath}`);
       }
     }
-  }, [setActiveTab]);
 
-  // SEO: Dynamic page title based on current state
-  React.useEffect(() => {
-    const BASE_TITLE = 'Velvet Hearts';
-    const TAB_TITLES = {
-      discover: 'Discover',
-      matches: 'Matches',
-      chat: 'Chat',
-      notifications: 'Notifications',
-      profile: 'Profile',
-      settings: 'Settings',
-      safety: 'Safety Center',
+    const handlePopState = () => {
+      const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+      if (!path || path === '') {
+        setIsNotFound(false);
+      } else if (path === '404') {
+        setIsNotFound(true);
+        setNotFoundPath('/404');
+      } else if (validTabs.includes(path)) {
+        setActiveTab(path);
+        setIsNotFound(false);
+      } else {
+        setIsNotFound(true);
+        setNotFoundPath(`/${path}`);
+      }
     };
 
-    if (!isLoggedIn) {
-      document.title = `${BASE_TITLE} | Intentional Dating & Inclusive Relationship Platform`;
-    } else if (!isOnboarded) {
-      document.title = `Get Started | ${BASE_TITLE}`;
-    } else {
-      const tabLabel = TAB_TITLES[activeTab] || 'Discover';
-      document.title = `${tabLabel} | ${BASE_TITLE}`;
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [setActiveTab]);
+
+  // Dynamic SEO & Social Sharing Metadata Management
+  React.useEffect(() => {
+    if (isNotFound) {
+      updateMetadata({
+        title: '404 — Page Not Found',
+        description: "The page you're searching for doesn't exist on Velvet Hearts. Let's guide you back to where genuine connections happen.",
+        robots: 'noindex, nofollow',
+        canonicalPath: '/404',
+      });
+      return;
     }
-  }, [activeTab, isLoggedIn, isOnboarded]);
+
+    if (!isLoggedIn) {
+      updateMetadata({
+        title: 'Official Website — Intentional Dating & Verified Profiles',
+        description: 'Velvet Hearts is the official intentional dating platform featuring 16-zone biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching across India.',
+        robots: 'index, follow, max-image-preview:large',
+        canonicalPath: '/',
+      });
+    } else if (!isOnboarded) {
+      updateMetadata({
+        title: 'Get Started & Complete Your Profile',
+        description: 'Join Velvet Hearts and set up your authentic, intentional profile.',
+        robots: 'noindex, nofollow',
+        canonicalPath: '/onboarding',
+      });
+    } else {
+      const TAB_META = {
+        discover: {
+          title: 'Discover Profiles',
+          description: 'Browse verified profiles, 2-minute voice intros, and real-time vibe matches across India on Velvet Hearts.',
+          path: '/discover',
+        },
+        matches: {
+          title: 'Your Matches & Connections',
+          description: 'View your mutual sparks, conversations, and interactive couple diaries on Velvet Hearts.',
+          path: '/matches',
+        },
+        chat: {
+          title: 'Direct Messages',
+          description: 'Chat privately and securely with your intentional matches on Velvet Hearts.',
+          path: '/chat',
+        },
+        notifications: {
+          title: 'Notifications & Activity',
+          description: 'Stay updated on new sparks, profile views, and message requests on Velvet Hearts.',
+          path: '/notifications',
+        },
+        profile: {
+          title: 'Your Profile',
+          description: 'Manage your verified photos, voice intro, prompts, and relationship preferences on Velvet Hearts.',
+          path: '/profile',
+        },
+        settings: {
+          title: 'Settings & Privacy',
+          description: 'Configure your privacy preferences, account safety, and notification controls on Velvet Hearts.',
+          path: '/settings',
+        },
+        safety: {
+          title: 'Safety Center & Guidelines',
+          description: 'Biometric face verification guidelines, emergency contacts, and anti-catfish safety resources on Velvet Hearts.',
+          path: '/safety',
+        },
+        admin: {
+          title: 'Admin Moderation Console',
+          description: 'Platform verification moderation, user reports, and administrative management on Velvet Hearts.',
+          path: '/admin',
+        },
+      };
+
+      const currentMeta = TAB_META[activeTab] || TAB_META.discover;
+      updateMetadata({
+        title: currentMeta.title,
+        description: currentMeta.description,
+        robots: 'noindex, nofollow',
+        canonicalPath: currentMeta.path,
+      });
+    }
+  }, [activeTab, isLoggedIn, isOnboarded, isNotFound]);
 
   const renderActivePage = () => {
     switch (activeTab) {
@@ -251,6 +341,19 @@ function AppContent() {
         }
         return <AdminPanel onSelectProfile={setSelectedProfile} />;
 
+      case '404':
+        return (
+          <NotFoundPage
+            path={notFoundPath || '/404'}
+            isLoggedIn={isLoggedIn}
+            onNavigate={(target) => {
+              setIsNotFound(false);
+              setActiveTab(target);
+              try { window.history.pushState({}, '', `/${target}`); } catch (_) {}
+            }}
+          />
+        );
+
       default:
         return <DiscoverFeed onSelectProfile={setSelectedProfile} />;
     }
@@ -261,7 +364,40 @@ function AppContent() {
     return <AuthLoadingScreen />;
   }
 
-  // 1. Logged Out State: Landing or Auth Screen
+  // 1. Dedicated 404 Route (renders for any invalid route, logged in or logged out)
+  if (isNotFound) {
+    return (
+      <Suspense fallback={<AuthLoadingScreen />}>
+        <NotFoundPage
+          path={notFoundPath}
+          isLoggedIn={isLoggedIn}
+          onNavigate={(target) => {
+            setIsNotFound(false);
+            if (target === 'home') {
+              try { window.history.pushState({}, '', '/'); } catch (_) {}
+            } else {
+              setActiveTab(target);
+              try { window.history.pushState({}, '', `/${target}`); } catch (_) {}
+            }
+          }}
+          onSignIn={() => {
+            setIsNotFound(false);
+            setAuthInitialMode('login');
+            setShowAuth(true);
+            try { window.history.pushState({}, '', '/'); } catch (_) {}
+          }}
+          onGetStarted={() => {
+            setIsNotFound(false);
+            setAuthInitialMode('signup');
+            setShowAuth(true);
+            try { window.history.pushState({}, '', '/'); } catch (_) {}
+          }}
+        />
+      </Suspense>
+    );
+  }
+
+  // 2. Logged Out State: Landing or Auth Screen
   if (!isLoggedIn) {
     if (showAuth) {
       return (
