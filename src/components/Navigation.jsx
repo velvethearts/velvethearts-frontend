@@ -125,6 +125,8 @@ export const Navigation = ({ children, isChatViewActive }) => {
           display: flex;
           min-height: 100vh;
           width: 100%;
+          background-color: var(--bg-page);
+          transition: background-color var(--duration-normal) var(--ease-out-smooth);
         }
 
         .desktop-sidebar {
@@ -269,6 +271,8 @@ export const Navigation = ({ children, isChatViewActive }) => {
           flex: 1;
           width: 100%;
           min-height: 100vh;
+          background-color: var(--bg-page);
+          transition: background-color var(--duration-normal) var(--ease-out-smooth);
           padding-bottom: calc(var(--bottom-nav-height) + var(--space-6));
         }
 

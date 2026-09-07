@@ -6,6 +6,7 @@ import { ProfileCard } from '../../components/UI/ProfileCard';
 import { StoryDeck } from '../../components/UI/StoryDeck';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { StoryDeckSkeleton, GridCardSkeleton } from '../../components/UI/Skeleton';
 import { calculateStateDistance } from '../../constants/indiaLocations';
 
 export const DiscoverFeed = ({ onSelectProfile }) => {
@@ -291,17 +292,13 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         ))}
       </div>
 
-      {/* Grid Loaders or Content Cards */}
+      {/* Dynamic Luxury Shimmer Skeletons based on View Mode */}
       {loadingProfiles ? (
-        <div className="gallery-wall-grid">
-          {Array.from({ length: 3 }).map((_, idx) => (
-            <div key={idx} className="skeleton-card" aria-hidden="true">
-              <div className="skeleton-image skeleton-pulse" />
-              <div className="skeleton-text skeleton-pulse" />
-              <div className="skeleton-text-short skeleton-pulse" />
-            </div>
-          ))}
-        </div>
+        viewMode === 'deck' ? (
+          <StoryDeckSkeleton />
+        ) : (
+          <GridCardSkeleton count={3} />
+        )
       ) : sortedProfiles.length > 0 ? (
         viewMode === 'deck' ? (
           <StoryDeck
@@ -560,39 +557,6 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
           gap: var(--space-6);
-        }
-
-        /* Skeletons */
-        .skeleton-card {
-          background-color: var(--bg-surface);
-          border-radius: var(--radius-lg);
-          border: 1px solid var(--border-subtle);
-          padding: var(--space-4);
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-3);
-          height: 400px;
-        }
-
-        .skeleton-image {
-          width: 100%;
-          flex: 1;
-          background-color: var(--charcoal-200);
-          border-radius: var(--radius-md);
-        }
-
-        .skeleton-text {
-          height: 20px;
-          background-color: var(--charcoal-200);
-          border-radius: 4px;
-          width: 70%;
-        }
-
-        .skeleton-text-short {
-          height: 15px;
-          background-color: var(--charcoal-200);
-          border-radius: 4px;
-          width: 40%;
         }
       `}</style>
     </div>

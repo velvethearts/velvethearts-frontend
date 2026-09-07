@@ -210,6 +210,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  background-color: var(--bg-page);
 }
 
 body {
@@ -220,6 +221,14 @@ body {
   background-color: var(--bg-page);
   min-height: 100dvh;
   overflow-x: hidden;
+  transition: background-color var(--duration-normal) var(--ease-out-smooth),
+              color var(--duration-normal) var(--ease-out-smooth);
+}
+
+#root {
+  min-height: 100dvh;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
 }
 
 /* Noise texture overlay on body */
