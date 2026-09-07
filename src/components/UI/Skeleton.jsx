@@ -35,51 +35,56 @@ export const StoryDeckSkeleton = () => {
   return (
     <div className="story-deck-skeleton-wrap" aria-label="Loading profile..." aria-busy="true">
       <div className="story-deck-skeleton-card">
-        {/* Hero Photo Aspect Ratio */}
+        {/* Full-bleed hero photo container */}
         <div className="story-deck-skeleton-hero">
           <Skeleton width="100%" height="100%" borderRadius="0" className="story-deck-skeleton-photo" />
 
-          {/* Simulated Photo Indicators */}
+          {/* Simulated Story Bars */}
           <div className="story-deck-skeleton-indicators">
             <div className="story-deck-skeleton-bar" />
             <div className="story-deck-skeleton-bar" />
             <div className="story-deck-skeleton-bar" />
+            <div className="story-deck-skeleton-bar" />
           </div>
 
-          {/* Simulated Vibe Match Pill */}
-          <Skeleton
-            width="82px"
-            height="28px"
-            borderRadius="14px"
-            className="story-deck-skeleton-vibe-pill"
-          />
-
-          {/* Hero Bottom Overlay */}
-          <div className="story-deck-skeleton-hero-overlay">
-            <Skeleton width="58%" height="28px" borderRadius="6px" />
-            <Skeleton width="38%" height="16px" borderRadius="4px" />
-          </div>
-        </div>
-
-        {/* Card Body */}
-        <div className="story-deck-skeleton-body">
-          {/* Story Quote Shimmer */}
-          <Skeleton width="100%" height="74px" borderRadius="14px" className="story-deck-skeleton-quote-box" />
-
-          {/* Interest Chips Shimmer */}
-          <div className="story-deck-skeleton-chips">
-            <Skeleton width="86px" height="30px" borderRadius="15px" />
-            <Skeleton width="104px" height="30px" borderRadius="15px" />
-            <Skeleton width="72px" height="30px" borderRadius="15px" />
+          {/* Top Badges */}
+          <div className="story-deck-skeleton-top-badges">
+            <Skeleton width="76px" height="26px" borderRadius="13px" />
+            <Skeleton width="94px" height="26px" borderRadius="13px" />
           </div>
 
-          {/* Action Button Circles Shimmer */}
-          <div className="story-deck-skeleton-actions">
-            <Skeleton width="54px" height="54px" borderRadius="50%" className="story-deck-skeleton-action-btn secondary" />
-            <Skeleton width="68px" height="68px" borderRadius="50%" className="story-deck-skeleton-action-btn primary" />
-            <Skeleton width="54px" height="54px" borderRadius="50%" className="story-deck-skeleton-action-btn secondary" />
+          {/* Bottom Overlaid Details */}
+          <div className="story-deck-skeleton-bottom-overlay">
+            {/* Headline Row: Name + Age + Circular Arrow */}
+            <div className="story-deck-skeleton-name-row">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Skeleton width="130px" height="28px" borderRadius="8px" />
+                <Skeleton width="22px" height="22px" borderRadius="50%" />
+                <Skeleton width="60px" height="20px" borderRadius="10px" />
+              </div>
+              <Skeleton width="40px" height="40px" borderRadius="50%" />
+            </div>
+
+            {/* Meta Tags Row */}
+            <div className="story-deck-skeleton-tags">
+              <Skeleton width="70px" height="22px" borderRadius="11px" />
+              <Skeleton width="90px" height="22px" borderRadius="11px" />
+              <Skeleton width="60px" height="22px" borderRadius="11px" />
+            </div>
+
+            {/* Story Quote Shimmer */}
+            <Skeleton width="100%" height="52px" borderRadius="14px" className="story-deck-skeleton-quote-box" />
           </div>
         </div>
+      </div>
+
+      {/* Floating 5-Button Circular Console Shimmer */}
+      <div className="story-deck-skeleton-console">
+        <Skeleton width="44px" height="44px" borderRadius="50%" />
+        <Skeleton width="58px" height="58px" borderRadius="50%" />
+        <Skeleton width="44px" height="44px" borderRadius="50%" />
+        <Skeleton width="58px" height="58px" borderRadius="50%" />
+        <Skeleton width="44px" height="44px" borderRadius="50%" />
       </div>
     </div>
   );

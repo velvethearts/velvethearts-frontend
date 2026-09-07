@@ -3,21 +3,19 @@ import { computeVibeMatch } from '../../utils/vibe';
 import {
   Heart,
   X,
-  ArrowLeft,
-  ArrowRight,
   Star,
   Sparkle,
   ChatCircleText,
-  CheckCircle,
   CaretLeft,
   CaretRight,
-  CaretUp,
-  Info,
-  User,
   Bookmark,
-  HandGrabbing
+  ArrowCounterClockwise,
+  PaperPlaneTilt,
+  ArrowUp,
+  GraduationCap,
+  UsersThree
 } from '@phosphor-icons/react';
-import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
+import { getDefaultAvatar, extractPhotoUrls } from '../../utils/avatar';
 import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 import { PromptReactionModal } from './PromptReactionModal';
 import { ProtectedImage } from './ProtectedImage';
@@ -28,6 +26,7 @@ export const StoryDeck = ({
   interestsSent = [],
   savedProfiles = [],
   userProfile = {},
+  feedMode = 'for_you', // 'for_you' | 'double_date' | 'college'
   onSendInterest,
   onUnsendInterest,
   onPassProfile,
@@ -54,8 +53,10 @@ export const StoryDeck = ({
   const dragStartRef = useRef({ x: 0, y: 0 });
 
   const activeProfile = profiles[currentIndex] || null;
+  const wingmanProfile = (feedMode === 'double_date' && profiles.length > 1) ? profiles[currentIndex + 1] : null;
 
   const vibeScore = computeVibeMatch(userProfile, activeProfile);
+  const wingmanVibeScore = wingmanProfile ? computeVibeMatch(userProfile, wingmanProfile) : 0;
 
   // Current photo index for active profile
   const currentPhotoIndex = activeProfile ? (photoIndices[activeProfile.id] || 0) : 0;
@@ -63,7 +64,7 @@ export const StoryDeck = ({
   const displayPhotos = photosList.length > 0 ? photosList : [getDefaultAvatar(activeProfile?.gender)];
 
   const handlePrevPhoto = (e) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!activeProfile) return;
     triggerHaptic('light');
     playHapticSound('pop');
@@ -74,7 +75,7 @@ export const StoryDeck = ({
   };
 
   const handleNextPhoto = (e) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!activeProfile) return;
     triggerHaptic('light');
     playHapticSound('pop');
@@ -114,7 +115,7 @@ export const StoryDeck = ({
 
   const spawnParticles = (type) => {
     const isSuper = type === 'super';
-    const count = isSuper ? 16 : 12;
+    const count = isSuper ? 18 : 14;
     const newParticles = Array.from({ length: count }).map((_, i) => {
       const angle = (Math.PI * (i / count)) - (Math.PI / 2) + (Math.random() * 0.4 - 0.2);
       const speed = 120 + Math.random() * 160;
@@ -124,8 +125,8 @@ export const StoryDeck = ({
         x: Math.cos(angle) * speed,
         y: Math.sin(angle) * speed - 60,
         rotation: Math.random() * 360,
-        size: 14 + Math.random() * 12,
-        color: isSuper ? '#D4AD6A' : '#B8436A'
+        size: 14 + Math.random() * 14,
+        color: isSuper ? '#38BDF8' : '#10B981'
       };
     });
     setParticles(newParticles);
@@ -151,8 +152,8 @@ export const StoryDeck = ({
 
     // Animate card offscreen
     setDragOffset({
-      x: direction === 'left' ? -650 : direction === 'right' ? 650 : 0,
-      y: direction === 'super' ? -650 : 0
+      x: direction === 'left' ? -680 : direction === 'right' ? 680 : 0,
+      y: direction === 'super' ? -680 : 0
     });
 
     setTimeout(() => {
@@ -182,6 +183,7 @@ export const StoryDeck = ({
 
   // Drag Gesture Handlers
   const handleTouchStart = (e) => {
+    if (e.target.closest('button') || e.target.closest('.story-tap-zone') || e.target.closest('.story-badge-likes')) return;
     const touch = e.touches[0];
     dragStartRef.current = { x: touch.clientX, y: touch.clientY };
     setIsDragging(true);
@@ -191,7 +193,6 @@ export const StoryDeck = ({
     if (!isDragging) return;
     const touch = e.touches[0];
     const dx = touch.clientX - dragStartRef.current.x;
-    // Only track X — let Y scroll freely without interfering with the page
     setDragOffset({ x: dx, y: 0 });
   };
 
@@ -199,29 +200,17 @@ export const StoryDeck = ({
     if (!isDragging) return;
     setIsDragging(false);
 
-    // Moderate swipe on photo area changes photo if multiple photos exist
-    const isModerateSwipe = Math.abs(dragOffset.x) >= 25 && Math.abs(dragOffset.x) < 100 && Math.abs(dragOffset.y) < 60;
-    if (isModerateSwipe && displayPhotos.length > 1) {
-      if (dragOffset.x < 0 && currentPhotoIndex < displayPhotos.length - 1) {
-        handleNextPhoto();
-      } else if (dragOffset.x > 0 && currentPhotoIndex > 0) {
-        handlePrevPhoto();
-      }
-      setDragOffset({ x: 0, y: 0 });
-      return;
-    }
-
     if (dragOffset.x > 100) {
       handleSwipe('right');
     } else if (dragOffset.x < -100) {
       handleSwipe('left');
     } else {
-      // Snap back
       setDragOffset({ x: 0, y: 0 });
     }
   };
 
   const handleMouseDown = (e) => {
+    if (e.target.closest('button') || e.target.closest('.story-tap-zone') || e.target.closest('.story-badge-likes') || e.target.closest('.story-expand-btn')) return;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
     setIsDragging(true);
   };
@@ -229,7 +218,6 @@ export const StoryDeck = ({
   const handleMouseMove = (e) => {
     if (!isDragging) return;
     const dx = e.clientX - dragStartRef.current.x;
-    // Only track X — Y scroll is for the page
     setDragOffset({ x: dx, y: 0 });
   };
 
@@ -237,41 +225,12 @@ export const StoryDeck = ({
     if (!isDragging) return;
     setIsDragging(false);
 
-    // Moderate swipe on photo area changes photo if multiple photos exist
-    const isModerateSwipe = Math.abs(dragOffset.x) >= 25 && Math.abs(dragOffset.x) < 100 && Math.abs(dragOffset.y) < 60;
-    if (isModerateSwipe && displayPhotos.length > 1) {
-      if (dragOffset.x < 0 && currentPhotoIndex < displayPhotos.length - 1) {
-        handleNextPhoto();
-      } else if (dragOffset.x > 0 && currentPhotoIndex > 0) {
-        handlePrevPhoto();
-      }
-      setDragOffset({ x: 0, y: 0 });
-      return;
-    }
-
     if (dragOffset.x > 100) {
       handleSwipe('right');
     } else if (dragOffset.x < -100) {
       handleSwipe('left');
     } else {
       setDragOffset({ x: 0, y: 0 });
-    }
-  };
-
-  const handleHeroClick = (e) => {
-    if (displayPhotos.length <= 1) return;
-    if (e.target.closest('button') || e.target.closest('.story-top-badges') || e.target.closest('.card-gesture-guide-overlay')) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const ratio = x / rect.width;
-
-    if (ratio < 0.35 && currentPhotoIndex > 0) {
-      e.stopPropagation();
-      handlePrevPhoto(e);
-    } else if (ratio > 0.65 && currentPhotoIndex < displayPhotos.length - 1) {
-      e.stopPropagation();
-      handleNextPhoto(e);
     }
   };
 
@@ -283,7 +242,7 @@ export const StoryDeck = ({
         </div>
         <h3 className="empty-deck-title font-display">You're All Caught Up!</h3>
         <p className="empty-deck-desc font-body">
-          You've explored all current profiles in your area. Check back soon or try adjusting your preferences.
+          You've explored all current profiles in this mode. Check back soon or try switching categories.
         </p>
         <button
           type="button"
@@ -303,11 +262,12 @@ export const StoryDeck = ({
             align-items: center;
             justify-content: center;
             text-align: center;
-            min-height: 480px;
+            min-height: 520px;
             padding: var(--space-8) var(--space-4);
             background-color: var(--bg-surface);
             border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-xl);
+            border-radius: var(--radius-2xl);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
           }
 
           .empty-deck-sparkle {
@@ -335,6 +295,8 @@ export const StoryDeck = ({
             border-radius: var(--radius-full);
             font-weight: 600;
             transition: all var(--duration-fast);
+            border: none;
+            cursor: pointer;
           }
 
           .restart-deck-btn:hover {
@@ -347,18 +309,17 @@ export const StoryDeck = ({
   }
 
   const isSaved = savedProfiles.includes(activeProfile.id);
+  const rotateDeg = dragOffset.x * 0.05;
 
-  // Rotation tilt angle based on drag x offset only
-  const rotateDeg = dragOffset.x * 0.06;
-
-  // Overlay stamp opacity — only driven by x drag or button trigger
   const stampSparkOpacity = swipeDirection === 'right' ? 1 : Math.min(Math.max(dragOffset.x / 80, 0), 1);
   const stampPassOpacity = swipeDirection === 'left' ? 1 : Math.min(Math.max(-dragOffset.x / 80, 0), 1);
   const stampSuperOpacity = swipeDirection === 'super' ? 1 : 0;
 
+  const isDoubleDate = feedMode === 'double_date' && Boolean(wingmanProfile);
+
   return (
     <div className="story-deck-wrapper">
-      {/* Explosive Burst Particles Container */}
+      {/* Burst Particles Container */}
       <div className="burst-particles-container" aria-hidden="true">
         {particles.map(p => (
           <div
@@ -382,11 +343,11 @@ export const StoryDeck = ({
         ))}
       </div>
 
-      {/* Dynamic Main Card */}
+      {/* Main Full-Bleed Card Container */}
       <div
-        className={`story-card-container ${swipeDirection ? `swiping-${swipeDirection}` : ''}`}
+        className={`story-card-container ${swipeDirection ? `swiping-${swipeDirection}` : ''} ${isDoubleDate ? 'double-date-split' : ''}`}
         style={{
-          transform: `translate3d(${dragOffset.x}px, 0px, 0) rotate(${rotateDeg}deg)`,
+          transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${rotateDeg}deg)`,
           transition: isDragging ? 'none' : 'transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
         }}
         onTouchStart={handleTouchStart}
@@ -402,261 +363,352 @@ export const StoryDeck = ({
           SPARK ✨
         </div>
         <div className="card-stamp stamp-pass font-display" style={{ opacity: stampPassOpacity }}>
-          PASS Softly
+          PASS
         </div>
         <div className="card-stamp stamp-super font-display" style={{ opacity: stampSuperOpacity }}>
           SUPER SPARK ⭐️
         </div>
 
-        {/* Hero Photo Panel */}
-        <div className="story-card-hero" onClick={handleHeroClick}>
-          {/* Session-Based Gesture Guide Overlay */}
-          {showSwipeGuide && (
-            <div className="card-gesture-guide-overlay font-ui" onClick={completeSwipeGuide}>
-              <div className="guide-item guide-left">
-                <CaretLeft size={18} weight="bold" className="anim-pulse-left" />
-                <span>Swipe Left to Pass</span>
-              </div>
-
-              <div className="guide-item guide-right">
-                <span>Swipe Right to Spark</span>
-                <CaretRight size={18} weight="bold" className="anim-pulse-right" />
-              </div>
-
-              <span className="guide-tap-dismiss">Tap anywhere to dismiss</span>
+        {/* DOUBLE DATE SPLIT VIEW */}
+        {isDoubleDate ? (
+          <div className="double-date-panes">
+            {/* Top Double Date Banner */}
+            <div className="double-date-top-banner font-ui">
+              <UsersThree size={16} weight="fill" />
+              <span>Double Date Match</span>
             </div>
-          )}
-          <ProtectedImage
-            src={displayPhotos[currentPhotoIndex] || getDefaultAvatar(activeProfile?.gender)}
-            alt={`${activeProfile.name}'s photo ${currentPhotoIndex + 1}`}
-            className="story-card-photo-wrap"
-            imgClassName="story-card-photo"
-            style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}
-            fallbackSrc={getDefaultAvatar(activeProfile?.gender)}
-          />
 
-          {/* Photo Dots */}
-          {displayPhotos.length > 1 && (
-            <div className="story-photo-dots">
+            {/* Left Wing / Active Candidate */}
+            <div
+              className="double-date-pane pane-left"
+              onClick={() => onSelectProfile && onSelectProfile(activeProfile)}
+            >
+              <ProtectedImage
+                src={displayPhotos[0] || getDefaultAvatar(activeProfile.gender)}
+                alt={activeProfile.name}
+                className="double-date-photo"
+                fallbackSrc={getDefaultAvatar(activeProfile.gender)}
+              />
+              <div className="double-date-scrim" />
+              <div className="double-date-info font-ui">
+                <div className="double-date-name-row">
+                  <span className="double-date-name font-display">{activeProfile.name}, {activeProfile.age}</span>
+                  {activeProfile.verified && <VerifiedBadge variant="icon" size="sm" />}
+                </div>
+                <p className="double-date-quote font-body">&ldquo;{activeProfile.story || activeProfile.bio || activeProfile.relationshipIntent}&rdquo;</p>
+                <button
+                  type="button"
+                  className="story-expand-btn mini"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSelectProfile) onSelectProfile(activeProfile);
+                  }}
+                  title="View Profile"
+                >
+                  <ArrowUp size={14} weight="bold" />
+                </button>
+              </div>
+            </div>
+
+            {/* Right Wing / Wingman */}
+            <div
+              className="double-date-pane pane-right"
+              onClick={() => onSelectProfile && onSelectProfile(wingmanProfile)}
+            >
+              <ProtectedImage
+                src={extractPhotoUrls(wingmanProfile)[0] || getDefaultAvatar(wingmanProfile.gender)}
+                alt={wingmanProfile.name}
+                className="double-date-photo"
+                fallbackSrc={getDefaultAvatar(wingmanProfile.gender)}
+              />
+              <div className="double-date-scrim" />
+              <div className="double-date-info font-ui">
+                <div className="double-date-name-row">
+                  <span className="double-date-name font-display">{wingmanProfile.name}, {wingmanProfile.age}</span>
+                  {wingmanProfile.verified && <VerifiedBadge variant="icon" size="sm" />}
+                </div>
+                <p className="double-date-quote font-body">&ldquo;{wingmanProfile.story || wingmanProfile.bio || wingmanProfile.relationshipIntent}&rdquo;</p>
+                <button
+                  type="button"
+                  className="story-expand-btn mini"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSelectProfile) onSelectProfile(wingmanProfile);
+                  }}
+                  title="View Wingman Profile"
+                >
+                  <ArrowUp size={14} weight="bold" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* STANDARD FULL-BLEED CARD (FOR YOU & COLLEGE) */
+          <>
+            {/* Edge-to-Edge Full Photo */}
+            <ProtectedImage
+              src={displayPhotos[currentPhotoIndex] || getDefaultAvatar(activeProfile?.gender)}
+              alt={`${activeProfile.name}'s photo ${currentPhotoIndex + 1}`}
+              className="story-card-photo-full"
+              fallbackSrc={getDefaultAvatar(activeProfile?.gender)}
+            />
+
+            {/* Bottom Scrim Gradient */}
+            <div className="story-card-scrim" />
+
+            {/* Top Story Indicator Bars */}
+            <div className="story-photo-bars" aria-label="Photo carousel progress">
               {displayPhotos.map((_, idx) => (
-                <span
+                <div
                   key={idx}
-                  className={`story-photo-dot ${idx === currentPhotoIndex ? 'active' : ''}`}
+                  className={`story-photo-bar ${idx === currentPhotoIndex ? 'active' : idx < currentPhotoIndex ? 'filled' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerHaptic('light');
+                    setPhotoIndices(prev => ({ ...prev, [activeProfile.id]: idx }));
+                  }}
                 />
               ))}
             </div>
-          )}
 
-          {/* Photo Arrows */}
-          {displayPhotos.length > 1 && (
-            <>
-              {currentPhotoIndex > 0 && (
-                <button
-                  type="button"
-                  className="story-photo-arrow prev"
+            {/* Tap Navigation Zones */}
+            {displayPhotos.length > 1 && (
+              <>
+                <div
+                  className="story-tap-zone zone-prev"
                   onClick={handlePrevPhoto}
                   aria-label="Previous photo"
-                >
-                  <CaretLeft size={18} weight="bold" />
-                </button>
-              )}
-              {currentPhotoIndex < displayPhotos.length - 1 && (
-                <button
-                  type="button"
-                  className="story-photo-arrow next"
+                />
+                <div
+                  className="story-tap-zone zone-next"
                   onClick={handleNextPhoto}
                   aria-label="Next photo"
+                />
+              </>
+            )}
+
+            {/* Top Badges Row */}
+            <div className="story-top-badges">
+              <div className="story-badges-left">
+                {/* Active Indicator */}
+                <div className="story-badge-pill badge-active font-ui">
+                  <span className="pulsing-green-dot" />
+                  <span>Active</span>
+                </div>
+
+                {/* College Badge */}
+                {feedMode === 'college' && (
+                  <div className="story-badge-pill badge-college font-ui">
+                    <GraduationCap size={13} weight="fill" />
+                    <span>{activeProfile.college || activeProfile.education || "USC '27"}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="story-badges-right">
+                {/* Likes You Gold Pill */}
+                <div
+                  className="story-badge-pill badge-likes-you font-ui"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerHaptic('light');
+                    setReactionTarget({
+                      isOpen: true,
+                      profile: activeProfile,
+                      targetType: 'letter',
+                      targetContent: ''
+                    });
+                  }}
+                  title="Likes you! Tap to reply with a note"
                 >
-                  <CaretRight size={18} weight="bold" />
+                  <span>🫶 Likes You</span>
+                  <CaretRight size={12} weight="bold" />
+                </div>
+
+                {/* Bookmark Toggle */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSaveProfile) onSaveProfile(activeProfile.id);
+                  }}
+                  className={`story-bookmark-btn ${isSaved ? 'saved' : ''}`}
+                  title={isSaved ? 'Saved' : 'Save Profile'}
+                  aria-label="Save profile"
+                >
+                  <Bookmark size={20} weight={isSaved ? 'fill' : 'regular'} />
                 </button>
-              )}
-            </>
-          )}
-
-          {/* Photo Reaction Pin Launcher */}
-          <button
-            type="button"
-            className="photo-pin-reaction-btn font-ui"
-            onClick={(e) => {
-              e.stopPropagation();
-              setReactionTarget({
-                isOpen: true,
-                profile: activeProfile,
-                targetType: 'photo',
-                targetContent: displayPhotos[currentPhotoIndex]
-              });
-            }}
-            title="React to this photo"
-          >
-            <ChatCircleText size={16} weight="fill" />
-            <span>React</span>
-          </button>
-        </div>
-
-        {/* Story Body Details */}
-        <div className="story-card-body font-ui">
-          {/* City • Intent meta line */}
-          <p className="story-meta-line font-ui">
-            <span className="story-meta-city">{activeProfile.city}</span>
-            <span className="story-meta-sep">•</span>
-            <span className="story-meta-intent">{activeProfile.relationshipIntent}</span>
-          </p>
-
-          {/* Big editorial name + age + verified badge + vibe match badge + bookmark */}
-          <div className="story-title-row">
-            <div className="story-title-left">
-              <h2
-                className="story-card-name font-display"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
-                }}
-                title="View full profile"
-              >
-                {activeProfile.name}<span className="story-card-age">, {activeProfile.age}</span>
-              </h2>
-              {activeProfile.verified && (
-                <VerifiedBadge variant="icon" size="md" />
-              )}
-              <div className="badge-vibe-inline font-ui" title={`${vibeScore}% Vibe Compatibility`}>
-                <Sparkle size={12} color="var(--gold-500, #D4AD6A)" weight="fill" />
-                <span>{vibeScore}% Vibe</span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onSaveProfile) onSaveProfile(activeProfile.id);
-              }}
-              className={`story-bookmark-btn ${isSaved ? 'saved' : ''}`}
-              title={isSaved ? 'Saved' : 'Save Profile'}
-            >
-              <Bookmark size={20} weight={isSaved ? 'fill' : 'regular'} />
-            </button>
-          </div>
 
-          {/* Identity chips */}
-          <div className="story-identity-row font-ui">
-            <span className="identity-tag">{activeProfile.gender}</span>
-            <span className="identity-tag">{activeProfile.orientation}</span>
-          </div>
+            {/* First-time swipe guide overlay */}
+            {showSwipeGuide && (
+              <div className="card-gesture-guide-overlay font-ui" onClick={completeSwipeGuide}>
+                <div className="guide-item guide-left">
+                  <CaretLeft size={18} weight="bold" className="anim-pulse-left" />
+                  <span>Swipe Left to Pass</span>
+                </div>
+                <div className="guide-item guide-right">
+                  <span>Swipe Right to Spark</span>
+                  <CaretRight size={18} weight="bold" className="anim-pulse-right" />
+                </div>
+                <span className="guide-tap-dismiss">Tap anywhere to dismiss</span>
+              </div>
+            )}
 
-          {/* Story description */}
-          {activeProfile.story && (
-            <div
-              className="story-quote-block"
-              onClick={(e) => {
-                e.stopPropagation();
-                setReactionTarget({
-                  isOpen: true,
-                  profile: activeProfile,
-                  targetType: 'story',
-                  targetContent: activeProfile.story
-                });
-              }}
-              title="Click to comment on this story"
-            >
-              <p className="story-quote-text font-body">{activeProfile.story}</p>
-              <span className="quote-reply-hint font-ui">💬 Reply to story</span>
-            </div>
-          )}
+            {/* Bottom Content Overlay */}
+            <div className="story-card-overlay-content">
+              {/* Profile Headline: Name + Age + Verified + Vibe Match + Expand Arrow */}
+              <div className="story-overlay-headline">
+                <div className="headline-left">
+                  <h2
+                    className="story-profile-name font-display"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onSelectProfile) onSelectProfile(activeProfile);
+                    }}
+                    title="View full profile"
+                  >
+                    {activeProfile.name} <span className="story-profile-age">{activeProfile.age}</span>
+                  </h2>
+                  {activeProfile.verified && (
+                    <VerifiedBadge variant="icon" size="md" />
+                  )}
+                  <div className="story-vibe-pill font-ui" title={`${vibeScore}% Vibe Compatibility`}>
+                    <Sparkle size={11} color="var(--gold-400)" weight="fill" />
+                    <span>{vibeScore}% Vibe</span>
+                  </div>
+                </div>
 
-          {/* Interests chips */}
-          {activeProfile.interests?.length > 0 && (
-            <div className="story-interests-wrap font-ui">
-              {activeProfile.interests.map(interest => (
+                {/* Upward Circular Expander Button */}
                 <button
-                  key={interest}
                   type="button"
-                  className="story-interest-chip"
+                  className="story-expand-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerHaptic('light');
+                    if (onSelectProfile && activeProfile) onSelectProfile(activeProfile);
+                  }}
+                  title="View full profile details"
+                  aria-label="Expand profile"
+                >
+                  <ArrowUp size={18} weight="bold" />
+                </button>
+              </div>
+
+              {/* Identity & Campus Tags */}
+              <div className="story-meta-tags font-ui">
+                {feedMode === 'college' && (
+                  <span className="meta-tag college-tag">
+                    <GraduationCap size={12} weight="fill" />
+                    <span>{activeProfile.college || activeProfile.education || "USC '27"}</span>
+                  </span>
+                )}
+                {activeProfile.city && (
+                  <span className="meta-tag">{activeProfile.city}</span>
+                )}
+                {activeProfile.relationshipIntent && (
+                  <span className="meta-tag intent-tag">✨ {activeProfile.relationshipIntent}</span>
+                )}
+                {activeProfile.interests?.slice(0, 2).map(item => (
+                  <span key={item} className="meta-tag">{item}</span>
+                ))}
+              </div>
+
+              {/* Bio Quote Snippet */}
+              {(activeProfile.story || activeProfile.bio) && (
+                <div
+                  className="story-quote-card"
                   onClick={(e) => {
                     e.stopPropagation();
                     setReactionTarget({
                       isOpen: true,
                       profile: activeProfile,
-                      targetType: 'interest',
-                      targetContent: interest
+                      targetType: 'story',
+                      targetContent: activeProfile.story || activeProfile.bio
                     });
                   }}
-                  title={`React to ${interest}`}
+                  title="Click to comment on this story"
                 >
-                  <span>{interest}</span>
-                  <span className="chip-plus">+</span>
-                </button>
-              ))}
+                  <div className="quote-text-wrap font-body">
+                    <span className="quote-mark font-display">&ldquo;</span>
+                    <p className="quote-body">{activeProfile.story || activeProfile.bio}</p>
+                  </div>
+                  <span className="quote-reply-btn font-ui">
+                    <ChatCircleText size={14} weight="fill" />
+                    <span>Reply</span>
+                  </span>
+                </div>
+              )}
             </div>
-          )}
-
-          {/* View Profile Button */}
-          <button
-            type="button"
-            className="story-view-full-btn font-ui"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onSelectProfile && activeProfile) {
-                onSelectProfile(activeProfile);
-              }
-            }}
-            title="View complete profile details"
-          >
-            <User size={16} weight="regular" />
-            <span>View Profile</span>
-          </button>
-        </div>
+          </>
+        )}
       </div>
 
-      {/* Action bar — single primary row */}
-      <div className="story-actions-bar">
-        <div className="story-actions-primary">
-          {/* Skip */}
-          <button
-            type="button"
-            onClick={() => handleSwipe('left')}
-            className="action-pill-btn btn-skip-pill"
-            aria-label="Pass this profile"
-            title="Pass"
-          >
-            <X size={16} weight="bold" />
-            <span>Skip</span>
-          </button>
-
-          {/* Super Spark — clearly labeled */}
-          <button
-            type="button"
-            onClick={() => handleSwipe('super')}
-            className="action-pill-btn btn-super-spark-pill"
-            aria-label="Super Spark — show strong interest"
-            title="Super Spark — they'll be notified you're very interested!"
-          >
-            <Star size={16} weight="fill" />
-            <span>Super Spark</span>
-          </button>
-
-          {/* Spark */}
-          <button
-            type="button"
-            onClick={() => handleSwipe('right')}
-            className="action-pill-btn btn-spark-pill"
-            aria-label="Spark this profile"
-            title="Spark"
-          >
-            <Heart size={16} weight="fill" />
-            <span>Spark</span>
-          </button>
-        </div>
-
-        {/* Undo — subtle text button below */}
+      {/* Floating 5-Button Circular Console */}
+      <div className="story-floating-console" aria-label="Profile actions">
+        {/* 1. Rewind / Undo */}
         <button
           type="button"
           onClick={handleUndo}
           disabled={swipeHistory.length === 0}
-          className="btn-undo-text font-ui"
+          className="console-btn btn-rewind"
           aria-label="Undo last swipe"
-          title="Undo last swipe (Backspace)"
+          title="Rewind (Backspace)"
         >
-          <ArrowLeft size={13} weight="bold" />
-          <span>Undo</span>
+          <ArrowCounterClockwise size={20} weight="bold" />
+        </button>
+
+        {/* 2. Pass */}
+        <button
+          type="button"
+          onClick={() => handleSwipe('left')}
+          className="console-btn btn-pass"
+          aria-label="Pass this profile"
+          title="Pass (Left Arrow)"
+        >
+          <X size={26} weight="bold" />
+        </button>
+
+        {/* 3. Super Spark */}
+        <button
+          type="button"
+          onClick={() => handleSwipe('super')}
+          className="console-btn btn-super"
+          aria-label="Super Spark — stand out instantly"
+          title="Super Spark (Up Arrow)"
+        >
+          <Star size={22} weight="fill" />
+        </button>
+
+        {/* 4. Spark / Like */}
+        <button
+          type="button"
+          onClick={() => handleSwipe('right')}
+          className="console-btn btn-spark"
+          aria-label="Spark this profile"
+          title="Spark (Right Arrow)"
+        >
+          <Heart size={26} weight="fill" />
+        </button>
+
+        {/* 5. Direct Letter / Note */}
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic('medium');
+            setReactionTarget({
+              isOpen: true,
+              profile: activeProfile,
+              targetType: 'letter',
+              targetContent: ''
+            });
+          }}
+          className="console-btn btn-letter"
+          aria-label="Send direct handwritten letter"
+          title="Send a Velvet Letter"
+        >
+          <PaperPlaneTilt size={20} weight="fill" />
         </button>
       </div>
 
@@ -691,30 +743,637 @@ export const StoryDeck = ({
             max-width: 100%;
             width: 100%;
           }
-
-          .story-card-container {
-            border-radius: 20px;
-          }
-
-          .story-card-hero {
-            aspect-ratio: 3/4 !important;
-            min-height: 390px;
-          }
         }
 
+        /* Full-Bleed Card Frame */
         .story-card-container {
-          width: 100%;
-          background-color: var(--bg-surface);
-          border: 1.5px solid var(--border-subtle);
-          border-radius: 22px;
-          overflow: hidden;
-          box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
           position: relative;
+          width: 100%;
+          aspect-ratio: 9 / 13.5;
+          min-height: 520px;
+          max-height: 620px;
+          border-radius: 28px;
+          overflow: hidden;
+          background-color: var(--charcoal-900, #141012);
+          border: 1.5px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+          box-shadow: 0 20px 48px rgba(0, 0, 0, 0.38);
           cursor: grab;
         }
 
         .story-card-container:active {
           cursor: grabbing;
+        }
+
+        /* Full Card Photo */
+        .story-card-photo-full {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          pointer-events: none;
+        }
+
+        /* Deep Gradient Bottom Scrim */
+        .story-card-scrim {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to top,
+            rgba(8, 6, 7, 0.96) 0%,
+            rgba(8, 6, 7, 0.78) 32%,
+            rgba(8, 6, 7, 0.28) 60%,
+            rgba(8, 6, 7, 0.05) 85%,
+            transparent 100%
+          );
+          pointer-events: none;
+          z-index: 2;
+        }
+
+        /* Horizontal Story Photo Bars */
+        .story-photo-bars {
+          position: absolute;
+          top: 12px;
+          left: 14px;
+          right: 14px;
+          display: flex;
+          gap: 5px;
+          z-index: 10;
+        }
+
+        .story-photo-bar {
+          flex: 1;
+          height: 3.5px;
+          background: rgba(255, 255, 255, 0.32);
+          border-radius: 999px;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .story-photo-bar.active {
+          background: #FFFFFF;
+          box-shadow: 0 1px 5px rgba(0, 0, 0, 0.8);
+        }
+
+        .story-photo-bar.filled {
+          background: rgba(255, 255, 255, 0.75);
+        }
+
+        /* Tap Navigation Zones */
+        .story-tap-zone {
+          position: absolute;
+          top: 0;
+          bottom: 140px;
+          width: 32%;
+          z-index: 6;
+          cursor: pointer;
+        }
+
+        .zone-prev {
+          left: 0;
+        }
+
+        .zone-next {
+          right: 0;
+        }
+
+        /* Top Badges Row */
+        .story-top-badges {
+          position: absolute;
+          top: 24px;
+          left: 14px;
+          right: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          z-index: 10;
+          pointer-events: auto;
+        }
+
+        .story-badges-left,
+        .story-badges-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .story-badge-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 5px 12px;
+          border-radius: 999px;
+          font-size: 11.5px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          backdrop-filter: blur(12px);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Active Badge */
+        .badge-active {
+          background: rgba(14, 11, 13, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          color: #FFFFFF;
+        }
+
+        .pulsing-green-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #10B981;
+          box-shadow: 0 0 8px #10B981;
+          animation: pulseEmerald 1.8s infinite;
+        }
+
+        @keyframes pulseEmerald {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.35); opacity: 0.75; }
+        }
+
+        /* College Badge */
+        .badge-college {
+          background: rgba(14, 11, 13, 0.65);
+          border: 1px solid rgba(212, 173, 106, 0.4);
+          color: #F3C68F;
+        }
+
+        /* Likes You Gold Pill */
+        .badge-likes-you {
+          background: linear-gradient(135deg, rgba(212, 173, 106, 0.3) 0%, rgba(212, 173, 106, 0.15) 100%);
+          border: 1px solid rgba(212, 173, 106, 0.55);
+          color: #F3C68F;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .badge-likes-you:hover {
+          background: linear-gradient(135deg, rgba(212, 173, 106, 0.45) 0%, rgba(212, 173, 106, 0.25) 100%);
+          transform: translateY(-1px);
+        }
+
+        /* Bookmark Toggle */
+        .story-bookmark-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: rgba(14, 11, 13, 0.65);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          color: rgba(255, 255, 255, 0.85);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          backdrop-filter: blur(12px);
+          transition: all 0.2s ease;
+        }
+
+        .story-bookmark-btn:hover,
+        .story-bookmark-btn.saved {
+          color: var(--gold-400, #D4AD6A);
+          border-color: var(--gold-400, #D4AD6A);
+          transform: scale(1.08);
+        }
+
+        /* Bottom Overlaid Details */
+        .story-card-overlay-content {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 20px 18px 18px;
+          z-index: 8;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          pointer-events: auto;
+        }
+
+        .story-overlay-headline {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        .headline-left {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 8px;
+          min-width: 0;
+        }
+
+        .story-profile-name {
+          font-size: 1.65rem;
+          font-weight: 800;
+          color: #FFFFFF;
+          line-height: 1.15;
+          letter-spacing: -0.02em;
+          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+          margin: 0;
+          cursor: pointer;
+        }
+
+        .story-profile-name:hover {
+          color: var(--gold-300, #F3C68F);
+        }
+
+        .story-profile-age {
+          font-weight: 500;
+          font-size: 0.9em;
+          opacity: 0.9;
+        }
+
+        .story-vibe-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          background: rgba(212, 173, 106, 0.2);
+          border: 1px solid rgba(212, 173, 106, 0.45);
+          color: #F3C68F;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 2px 8px;
+          border-radius: 999px;
+          backdrop-filter: blur(8px);
+        }
+
+        /* Circular Upward Expander Button */
+        .story-expand-btn {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.18);
+          border: 1px solid rgba(255, 255, 255, 0.35);
+          color: #FFFFFF;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          backdrop-filter: blur(14px);
+          transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          flex-shrink: 0;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .story-expand-btn:hover {
+          background: rgba(255, 255, 255, 0.32);
+          transform: scale(1.12);
+        }
+
+        .story-expand-btn:active {
+          transform: scale(0.95);
+        }
+
+        .story-expand-btn.mini {
+          width: 32px;
+          height: 32px;
+        }
+
+        /* Meta Tags Row */
+        .story-meta-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .meta-tag {
+          font-size: 11.5px;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.92);
+          background: rgba(255, 255, 255, 0.14);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          border-radius: 999px;
+          padding: 3px 10px;
+          backdrop-filter: blur(8px);
+        }
+
+        .meta-tag.college-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(212, 173, 106, 0.22);
+          border-color: rgba(212, 173, 106, 0.4);
+          color: #F3C68F;
+        }
+
+        .meta-tag.intent-tag {
+          background: rgba(184, 67, 106, 0.25);
+          border-color: rgba(184, 67, 106, 0.45);
+          color: #FFAEC5;
+        }
+
+        /* Bio Quote Card */
+        .story-quote-card {
+          position: relative;
+          background: rgba(18, 14, 16, 0.68);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 14px;
+          padding: 10px 14px;
+          backdrop-filter: blur(12px);
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        .story-quote-card:hover {
+          background: rgba(18, 14, 16, 0.84);
+          border-color: rgba(212, 173, 106, 0.5);
+          transform: translateY(-1px);
+        }
+
+        .quote-text-wrap {
+          display: flex;
+          align-items: baseline;
+          gap: 4px;
+          min-width: 0;
+          flex: 1;
+        }
+
+        .quote-mark {
+          font-size: 1.4rem;
+          line-height: 1;
+          color: var(--gold-400, #D4AD6A);
+          opacity: 0.9;
+        }
+
+        .quote-body {
+          font-size: 12.5px;
+          line-height: 1.4;
+          color: rgba(255, 255, 255, 0.92);
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .quote-reply-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--gold-300, #F3C68F);
+          background: rgba(212, 173, 106, 0.16);
+          border: 1px solid rgba(212, 173, 106, 0.35);
+          padding: 3px 8px;
+          border-radius: 999px;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+
+        /* DOUBLE DATE SPLIT VIEW STYLES */
+        .double-date-panes {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          width: 100%;
+          height: 100%;
+        }
+
+        .double-date-top-banner {
+          position: absolute;
+          top: 14px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 15;
+          background: rgba(18, 14, 16, 0.78);
+          border: 1px solid rgba(212, 173, 106, 0.5);
+          color: #F3C68F;
+          font-size: 11.5px;
+          font-weight: 700;
+          padding: 4px 14px;
+          border-radius: 999px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .double-date-pane {
+          position: relative;
+          width: 50%;
+          height: 100%;
+          cursor: pointer;
+          overflow: hidden;
+        }
+
+        .double-date-pane.pane-left {
+          border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .double-date-photo {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .double-date-scrim {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(8, 6, 7, 0.95) 0%, rgba(8, 6, 7, 0.6) 40%, transparent 80%);
+          pointer-events: none;
+        }
+
+        .double-date-info {
+          position: absolute;
+          bottom: 16px;
+          left: 12px;
+          right: 12px;
+          z-index: 5;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .double-date-name-row {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .double-date-name {
+          font-size: 1.15rem;
+          font-weight: 800;
+          color: #FFFFFF;
+          line-height: 1.2;
+        }
+
+        .double-date-quote {
+          font-size: 11px;
+          line-height: 1.35;
+          color: rgba(255, 255, 255, 0.85);
+          margin: 0;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        /* FLOATING 5-BUTTON CIRCULAR CONSOLE */
+        .story-floating-console {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin-top: 18px;
+          width: 100%;
+          z-index: 20;
+        }
+
+        .console-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          background: var(--bg-surface-elevated, #241d20);
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+          padding: 0;
+        }
+
+        .console-btn:hover:not(:disabled) {
+          transform: scale(1.12);
+        }
+
+        .console-btn:active:not(:disabled) {
+          transform: scale(0.92);
+        }
+
+        /* 1. Rewind — Amber/Yellow (44px) */
+        .btn-rewind {
+          width: 44px;
+          height: 44px;
+          border: 1.5px solid rgba(245, 158, 11, 0.45);
+          color: #F59E0B;
+        }
+
+        .btn-rewind:hover:not(:disabled) {
+          border-color: #F59E0B;
+          box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
+          background: rgba(245, 158, 11, 0.1);
+        }
+
+        .btn-rewind:disabled {
+          opacity: 0.3;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        /* 2. Pass — Rose/Red (58px) */
+        .btn-pass {
+          width: 58px;
+          height: 58px;
+          border: 2px solid rgba(239, 68, 68, 0.5);
+          color: #EF4444;
+        }
+
+        .btn-pass:hover {
+          border-color: #EF4444;
+          box-shadow: 0 0 22px rgba(239, 68, 68, 0.5);
+          background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* 3. Super Spark — Sky Blue (44px) */
+        .btn-super {
+          width: 44px;
+          height: 44px;
+          border: 1.5px solid rgba(56, 189, 248, 0.5);
+          color: #38BDF8;
+        }
+
+        .btn-super:hover {
+          border-color: #38BDF8;
+          box-shadow: 0 0 18px rgba(56, 189, 248, 0.5);
+          background: rgba(56, 189, 248, 0.1);
+        }
+
+        /* 4. Spark / Like — Emerald Green (58px) */
+        .btn-spark {
+          width: 58px;
+          height: 58px;
+          border: 2px solid rgba(16, 185, 129, 0.5);
+          color: #10B981;
+        }
+
+        .btn-spark:hover {
+          border-color: #10B981;
+          box-shadow: 0 0 22px rgba(16, 185, 129, 0.5);
+          background: rgba(16, 185, 129, 0.1);
+        }
+
+        /* 5. Direct Letter — Indigo (44px) */
+        .btn-letter {
+          width: 44px;
+          height: 44px;
+          border: 1.5px solid rgba(129, 140, 248, 0.5);
+          color: #818CF8;
+        }
+
+        .btn-letter:hover {
+          border-color: #818CF8;
+          box-shadow: 0 0 18px rgba(129, 140, 248, 0.5);
+          background: rgba(129, 140, 248, 0.1);
+        }
+
+        /* Overlay Stamp Badges */
+        .card-stamp {
+          position: absolute;
+          top: var(--space-6);
+          padding: var(--space-2) var(--space-4);
+          border-radius: var(--radius-md);
+          font-size: var(--text-heading);
+          font-weight: 800;
+          letter-spacing: var(--tracking-wider);
+          text-transform: uppercase;
+          z-index: 50;
+          pointer-events: none;
+          backdrop-filter: blur(4px);
+          transition: opacity var(--duration-fast);
+        }
+
+        .stamp-spark {
+          right: var(--space-6);
+          border: 3px solid #10B981;
+          color: #10B981;
+          transform: rotate(12deg);
+          background-color: rgba(16, 185, 129, 0.2);
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .stamp-pass {
+          left: var(--space-6);
+          border: 3px solid #EF4444;
+          color: #EF4444;
+          transform: rotate(-12deg);
+          background-color: rgba(239, 68, 68, 0.2);
+          box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .stamp-super {
+          top: 35%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-6deg) scale(1.1);
+          border: 3.5px solid #38BDF8;
+          color: #38BDF8;
+          background-color: rgba(56, 189, 248, 0.25);
+          box-shadow: 0 0 30px rgba(56, 189, 248, 0.6);
+        }
+
+        .swiping-right {
+          box-shadow: 0 0 40px rgba(16, 185, 129, 0.55) !important;
+        }
+
+        .swiping-super {
+          box-shadow: 0 0 50px rgba(56, 189, 248, 0.65) !important;
         }
 
         /* Burst Particles Container */
@@ -750,583 +1409,6 @@ export const StoryDeck = ({
           }
         }
 
-        /* Overlay Stamp Badges */
-        .card-stamp {
-          position: absolute;
-          top: var(--space-6);
-          padding: var(--space-2) var(--space-4);
-          border-radius: var(--radius-md);
-          font-size: var(--text-heading);
-          font-weight: 800;
-          letter-spacing: var(--tracking-wider);
-          text-transform: uppercase;
-          z-index: 50;
-          pointer-events: none;
-          backdrop-filter: blur(4px);
-          transition: opacity var(--duration-fast);
-        }
-
-        .stamp-spark {
-          right: var(--space-6);
-          border: 3px solid var(--burgundy-400);
-          color: var(--burgundy-400);
-          transform: rotate(12deg);
-          background-color: rgba(184, 67, 106, 0.2);
-          box-shadow: 0 0 20px rgba(184, 67, 106, 0.4);
-        }
-
-        .stamp-pass {
-          left: var(--space-6);
-          border: 3px solid var(--charcoal-400);
-          color: var(--charcoal-300);
-          transform: rotate(-12deg);
-          background-color: rgba(40, 32, 35, 0.4);
-        }
-
-        .stamp-super {
-          top: 35%;
-          left: 50%;
-          transform: translate(-50%, -50%) rotate(-6deg) scale(1.1);
-          border: 3.5px solid var(--gold-400);
-          color: var(--gold-400);
-          background-color: rgba(212, 173, 106, 0.25);
-          box-shadow: 0 0 30px rgba(212, 173, 106, 0.6);
-        }
-
-        .swiping-right {
-          box-shadow: 0 0 40px rgba(184, 67, 106, 0.6) !important;
-        }
-
-        .swiping-super {
-          box-shadow: 0 0 50px rgba(212, 173, 106, 0.7) !important;
-        }
-
-        /* Hero Photo */
-        .story-card-hero {
-          position: relative;
-          aspect-ratio: 4/5;
-          width: 100%;
-          background-color: var(--charcoal-200);
-        }
-
-        .story-card-photo {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .story-photo-dots {
-          position: absolute;
-          top: 12px;
-          left: 16px;
-          right: 16px;
-          display: flex;
-          gap: 5px;
-          width: calc(100% - 32px);
-          max-width: none;
-          z-index: 12;
-        }
-
-        .story-photo-dot {
-          flex: 1;
-          height: 3px;
-          background-color: rgba(255, 255, 255, 0.35);
-          border-radius: 999px;
-          transition: background-color var(--duration-fast);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-        }
-
-        .story-photo-dot.active {
-          background-color: #FFFFFF;
-          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
-        }
-
-        .story-photo-arrow {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          background-color: rgba(26, 21, 23, 0.65);
-          color: #FFFFFF;
-          border: 1px solid rgba(255, 255, 255, 0.25);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 15;
-          cursor: pointer;
-          backdrop-filter: blur(4px);
-          padding: 0;
-          transition: all var(--duration-fast);
-        }
-
-        .story-photo-arrow:hover {
-          background-color: rgba(26, 21, 23, 0.9);
-          transform: translateY(-50%) scale(1.08);
-        }
-
-        .story-photo-arrow.prev { left: var(--space-2); }
-        .story-photo-arrow.next { right: var(--space-2); }
-
-        .photo-pin-reaction-btn {
-          position: absolute;
-          bottom: var(--space-3);
-          right: var(--space-3);
-          background-color: rgba(26, 21, 23, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          color: #FFFFFF;
-          border-radius: var(--radius-full);
-          padding: 3px var(--space-3);
-          font-size: var(--text-caption);
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          backdrop-filter: blur(6px);
-          cursor: pointer;
-          transition: all var(--duration-fast);
-          z-index: 15;
-        }
-
-        .photo-pin-reaction-btn:hover {
-          background-color: var(--burgundy-500);
-          border-color: var(--burgundy-400);
-          transform: scale(1.05);
-        }
-
-        /* Card Body Details */
-        .story-card-body {
-          padding: var(--space-3) var(--space-4);
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-2);
-        }
-
-        .story-meta-line {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 11px;
-          font-weight: 600;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--text-tertiary);
-          margin-bottom: 2px;
-        }
-
-        .story-meta-sep {
-          opacity: 0.5;
-        }
-
-        .story-meta-intent {
-          color: var(--text-accent);
-        }
-
-        .story-title-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: var(--space-2);
-          margin-bottom: 2px;
-        }
-
-        .story-title-left {
-          display: flex;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 6px 8px;
-          flex: 1;
-          min-width: 0;
-        }
-
-        .story-card-name {
-          font-size: clamp(1.3rem, 2.5vw, 1.7rem);
-          font-weight: 800;
-          color: var(--text-primary);
-          line-height: 1.15;
-          cursor: pointer;
-          letter-spacing: -0.02em;
-          margin: 0;
-        }
-
-        .story-card-name:hover {
-          color: var(--text-accent);
-        }
-
-        .badge-vibe-inline {
-          display: inline-flex;
-          align-items: center;
-          gap: 3.5px;
-          background: rgba(212, 173, 106, 0.14);
-          border: 1px solid rgba(212, 173, 106, 0.35);
-          color: var(--gold-700, #8A6D3B);
-          font-size: 11px;
-          font-weight: 700;
-          padding: 2px 7px;
-          border-radius: var(--radius-full);
-          line-height: 1;
-          white-space: nowrap;
-        }
-
-        [data-theme="dark"] .badge-vibe-inline {
-          background: rgba(212, 173, 106, 0.16);
-          border-color: rgba(212, 173, 106, 0.35);
-          color: var(--gold-300, #E6C78E);
-        }
-
-        .story-card-age {
-          font-weight: 500;
-          color: var(--text-secondary);
-          font-size: 0.8em;
-        }
-
-        .story-bookmark-btn {
-          background: transparent;
-          border: none;
-          color: var(--text-tertiary);
-          cursor: pointer;
-          padding: 2px;
-          border-radius: 50%;
-          transition: all var(--duration-fast);
-          flex-shrink: 0;
-        }
-
-        .story-bookmark-btn:hover, .story-bookmark-btn.saved {
-          color: var(--gold-500);
-        }
-
-        .story-profile-strip {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          border-top: 1px solid var(--border-subtle);
-          padding-top: 10px;
-          margin-top: 6px;
-          gap: var(--space-2);
-        }
-
-        .profile-strip-left {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          min-width: 0;
-        }
-
-        .profile-strip-avatar {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 2px solid var(--burgundy-400);
-          flex-shrink: 0;
-        }
-
-        .profile-strip-info {
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-        }
-
-        .profile-strip-name {
-          font-size: var(--text-body-sm);
-          font-weight: 700;
-          color: var(--text-primary);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .profile-strip-tagline {
-          font-size: 11px;
-          color: var(--text-tertiary);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .profile-strip-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          font-size: 12px;
-          font-weight: 700;
-          color: var(--text-accent);
-          letter-spacing: 0.02em;
-          white-space: nowrap;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          transition: all var(--duration-fast);
-          flex-shrink: 0;
-        }
-
-        .profile-strip-link:hover {
-          color: var(--burgundy-400);
-        }
-
-        /* Quote / Description Block */
-        .story-quote-block {
-          background: var(--bg-surface-warm);
-          border-radius: var(--radius-md);
-          padding: 8px 12px;
-          cursor: pointer;
-          transition: all var(--duration-fast);
-          border: 1px solid var(--border-subtle);
-        }
-
-        .story-quote-block:hover {
-          background: var(--bg-accent-subtle);
-          border-color: var(--burgundy-300);
-        }
-
-        .story-quote-text {
-          font-size: var(--text-body-sm);
-          color: var(--text-secondary);
-          line-height: var(--leading-relaxed);
-          margin: 0 0 2px;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-
-        .quote-reply-hint {
-          font-size: 11px;
-          color: var(--text-accent);
-          font-weight: 600;
-        }
-
-        /* Identity */
-        .story-identity-row {
-          display: flex;
-          gap: 6px;
-          flex-wrap: wrap;
-        }
-
-        .identity-tag {
-          font-size: 11px;
-          background: var(--bg-surface-warm);
-          border: 1px solid var(--border-subtle);
-          color: var(--text-secondary);
-          padding: 2px var(--space-3);
-          border-radius: var(--radius-full);
-          font-weight: 500;
-        }
-
-        /* Interests Chips */
-        .story-interests-wrap {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-
-        .story-interest-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          background: var(--burgundy-50);
-          color: var(--burgundy-600);
-          border: 1px solid var(--burgundy-200);
-          padding: 2px 10px;
-          border-radius: var(--radius-full);
-          font-size: 11px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all var(--duration-fast);
-        }
-
-        .story-interest-chip:hover {
-          background: var(--burgundy-100);
-          border-color: var(--burgundy-300);
-          transform: translateY(-1px);
-        }
-
-        .chip-plus {
-          font-weight: bold;
-          opacity: 0.7;
-        }
-
-        .story-view-full-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: var(--space-2);
-          background: var(--bg-surface-warm);
-          border: 1px solid var(--border-subtle);
-          border-radius: var(--radius-full);
-          padding: 10px var(--space-4);
-          color: var(--text-secondary);
-          font-size: var(--text-body-sm);
-          font-weight: 600;
-          letter-spacing: 0.02em;
-          cursor: pointer;
-          transition: all var(--duration-fast);
-          margin-top: var(--space-3);
-          width: 100%;
-        }
-
-        .story-view-full-btn:hover {
-          border-color: var(--burgundy-300);
-          color: var(--burgundy-500);
-          background: var(--bg-accent-subtle);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(184, 67, 106, 0.12);
-        }
-
-        .story-view-full-btn:active {
-          transform: translateY(0);
-        }
-
-        /* Action Bar — single row of 3 pill buttons + undo below */
-        .story-actions-bar {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: var(--space-2);
-          margin-top: var(--space-4);
-          width: 100%;
-        }
-
-        .story-actions-primary {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: var(--space-2);
-          width: 100%;
-        }
-
-        .action-pill-btn {
-          flex: 1 1 0px;
-          min-width: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          padding: 12px 8px;
-          border-radius: var(--radius-full);
-          font-size: 13px;
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          cursor: pointer;
-          transition: all var(--duration-fast);
-          white-space: nowrap;
-        }
-
-        .action-pill-btn:hover {
-          transform: translateY(-2px);
-        }
-
-        /* Skip — neutral outlined */
-        .btn-skip-pill {
-          background: transparent;
-          color: var(--text-primary);
-          border: 2px solid var(--border-default);
-        }
-
-        .btn-skip-pill:hover {
-          border-color: var(--charcoal-500);
-          background: var(--bg-surface-warm);
-        }
-
-        /* Super Spark — gold, clearly labelled */
-        .btn-super-spark-pill {
-          background: transparent;
-          color: var(--gold-400);
-          border: 2px solid var(--gold-400);
-          box-shadow: 0 4px 14px rgba(212, 173, 106, 0.2);
-        }
-
-        .btn-super-spark-pill:hover {
-          background: rgba(212, 173, 106, 0.12);
-          box-shadow: 0 6px 20px rgba(212, 173, 106, 0.4);
-        }
-
-        /* Spark — rose filled */
-        .btn-spark-pill {
-          background: linear-gradient(135deg, var(--burgundy-500) 0%, var(--burgundy-600) 100%);
-          color: #FFFFFF;
-          border: 2px solid transparent;
-          box-shadow: 0 6px 20px rgba(184, 67, 106, 0.4);
-        }
-
-        .btn-spark-pill:hover {
-          background: linear-gradient(135deg, var(--burgundy-400) 0%, var(--burgundy-500) 100%);
-          box-shadow: 0 8px 26px rgba(184, 67, 106, 0.55);
-        }
-
-        /* Undo — visible outlined pill button */
-        .btn-undo-text {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-          background: transparent;
-          border: 1.5px solid var(--border-default);
-          color: var(--text-secondary);
-          font-size: 13px;
-          font-weight: 600;
-          letter-spacing: 0.03em;
-          cursor: pointer;
-          padding: 8px 20px;
-          border-radius: var(--radius-full);
-          transition: all var(--duration-fast);
-          margin-top: 4px;
-        }
-
-        .btn-undo-text:hover:not(:disabled) {
-          color: var(--text-primary);
-          border-color: var(--text-secondary);
-          background: var(--bg-surface-warm);
-        }
-
-        .btn-undo-text:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
-        }
-
-        @media (max-width: 480px) {
-          .story-actions-primary {
-            gap: 6px;
-          }
-
-          .action-pill-btn {
-            padding: 10px 4px;
-            font-size: 11.5px;
-            gap: 4px;
-          }
-
-          .action-pill-btn svg {
-            width: 14px;
-            height: 14px;
-          }
-
-          .btn-undo-text {
-            padding: 7px 16px;
-            font-size: 12px;
-          }
-        }
-
-        /* Swipe Tutorial Hint Overlay & Animation */
-        @keyframes cardNudgeHint {
-          0% { transform: translate3d(0, 0, 0) rotate(0deg); }
-          20% { transform: translate3d(22px, -5px, 0) rotate(3deg); }
-          40% { transform: translate3d(-22px, -5px, 0) rotate(-3deg); }
-          60% { transform: translate3d(10px, -2px, 0) rotate(1.5deg); }
-          80% { transform: translate3d(-10px, -2px, 0) rotate(-1.5deg); }
-          100% { transform: translate3d(0, 0, 0) rotate(0deg); }
-        }
-
-        .story-card-container.initial-nudge-hint {
-          animation: cardNudgeHint 1.4s ease-in-out 0.3s 1 normal forwards;
-        }
-
-        @keyframes pulseHandSwipe {
-          0%, 100% { transform: translateX(0) scale(1); }
-          30% { transform: translateX(5px) scale(1.1); }
-          70% { transform: translateX(-5px) scale(1.1); }
-        }
-
         /* Card Gesture Guide Overlay */
         .card-gesture-guide-overlay {
           position: absolute;
@@ -1340,7 +1422,7 @@ export const StoryDeck = ({
           justify-content: center;
           padding: 20px;
           cursor: pointer;
-          border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+          border-radius: 28px;
           animation: fadeIn 0.3s ease-out;
         }
 
@@ -1364,12 +1446,6 @@ export const StoryDeck = ({
           color: #FF8A80;
         }
 
-        .guide-up {
-          background: rgba(255, 213, 79, 0.18);
-          border: 1px solid rgba(255, 213, 79, 0.5);
-          color: #FFE082;
-        }
-
         .guide-right {
           background: rgba(102, 187, 106, 0.18);
           border: 1px solid rgba(102, 187, 106, 0.5);
@@ -1383,11 +1459,6 @@ export const StoryDeck = ({
           letter-spacing: 0.3px;
         }
 
-        @keyframes pulseUp {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
-        }
-
         @keyframes pulseLeft {
           0%, 100% { transform: translateX(0); }
           50% { transform: translateX(-6px); }
@@ -1398,16 +1469,17 @@ export const StoryDeck = ({
           50% { transform: translateX(6px); }
         }
 
-        .anim-pulse-up {
-          animation: pulseUp 1.4s ease-in-out infinite;
-        }
-
         .anim-pulse-left {
           animation: pulseLeft 1.4s ease-in-out infinite;
         }
 
         .anim-pulse-right {
           animation: pulseRight 1.4s ease-in-out infinite;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       `}</style>
     </div>

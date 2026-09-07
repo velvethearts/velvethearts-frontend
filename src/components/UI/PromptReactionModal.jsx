@@ -41,6 +41,8 @@ export const PromptReactionModal = ({
         return `Reacting to ${profileName}'s Story`;
       case 'interest':
         return `Shared Interest: ${targetContent}`;
+      case 'letter':
+        return `Send a Velvet Letter to ${profileName}`;
       case 'photo':
       default:
         return `Commenting on ${profileName}'s Photo`;
@@ -72,6 +74,11 @@ export const PromptReactionModal = ({
           )}
           {targetType === 'interest' && (
             <span className="context-interest-pill font-ui">✨ {targetContent}</span>
+          )}
+          {targetType === 'letter' && (
+            <p className="context-quote-text font-body" style={{ color: 'var(--gold-400)', margin: 0 }}>
+              ✉️ Send a direct handwritten note with your spark to make an unforgettable impression.
+            </p>
           )}
           {targetType === 'photo' && targetContent && (
             <div className="context-photo-preview">

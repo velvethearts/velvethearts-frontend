@@ -45,11 +45,16 @@
 
 .story-deck-skeleton-card {
   width: 100%;
-  background-color: var(--bg-surface, #1e191b);
-  border: 1.5px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
-  border-radius: 22px;
+  max-width: 440px;
+  aspect-ratio: 9 / 13.5;
+  min-height: 520px;
+  max-height: 620px;
+  background-color: var(--charcoal-900, #141012);
+  border: 1.5px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  border-radius: 28px;
   overflow: hidden;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.38);
+  position: relative;
   display: flex;
   flex-direction: column;
 }
@@ -57,9 +62,8 @@
 .story-deck-skeleton-hero {
   position: relative;
   width: 100%;
-  aspect-ratio: 3 / 4;
-  min-height: 380px;
-  background-color: var(--bg-surface-elevated, #282124);
+  height: 100%;
+  background-color: var(--bg-surface-elevated, #241d20);
   overflow: hidden;
 }
 
@@ -74,84 +78,74 @@
   left: 14px;
   right: 14px;
   display: flex;
-  gap: 6px;
+  gap: 5px;
   z-index: 2;
 }
 
 .story-deck-skeleton-bar {
   flex: 1;
-  height: 3px;
-  border-radius: 2px;
+  height: 3.5px;
+  border-radius: 999px;
   background: rgba(255, 255, 255, 0.2);
 }
 
-.story-deck-skeleton-vibe-pill {
+.story-deck-skeleton-top-badges {
   position: absolute;
-  top: 26px;
+  top: 24px;
+  left: 14px;
   right: 14px;
-  width: 78px;
-  height: 28px;
-  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   z-index: 2;
 }
 
-.story-deck-skeleton-hero-overlay {
+.story-deck-skeleton-bottom-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20px 18px 14px;
-  background: linear-gradient(to top, rgba(20, 17, 19, 0.95) 0%, rgba(20, 17, 19, 0.4) 60%, transparent 100%);
+  padding: 20px 18px 18px;
+  background: linear-gradient(
+    to top,
+    rgba(8, 6, 7, 0.96) 0%,
+    rgba(8, 6, 7, 0.78) 32%,
+    rgba(8, 6, 7, 0.28) 60%,
+    transparent 100%
+  );
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  z-index: 2;
 }
 
-.story-deck-skeleton-body {
-  padding: 18px 20px 24px;
+.story-deck-skeleton-name-row {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.story-deck-skeleton-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .story-deck-skeleton-quote-box {
   width: 100%;
-  height: 72px;
+  height: 52px;
   border-radius: 14px;
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
-}
-
-.story-deck-skeleton-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.story-deck-skeleton-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding-top: 6px;
-}
-
-.story-deck-skeleton-action-btn {
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
 }
 
-.story-deck-skeleton-action-btn.secondary {
-  width: 52px;
-  height: 52px;
-}
-
-.story-deck-skeleton-action-btn.primary {
-  width: 66px;
-  height: 66px;
-  box-shadow: 0 8px 22px rgba(184, 67, 106, 0.2);
+.story-deck-skeleton-console {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+  width: 100%;
 }
 
 /* ==========================================================================

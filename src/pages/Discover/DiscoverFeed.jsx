@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Sliders, MagnifyingGlass, X, HeartBreak, Cards, SquaresFour } from '@phosphor-icons/react';
+import { Sliders, MagnifyingGlass, X, HeartBreak, Cards, SquaresFour, Lightning, Sparkle } from '@phosphor-icons/react';
 import { DiscoverPreferences } from './DiscoverPreferences';
 import { ProfileCard } from '../../components/UI/ProfileCard';
 import { StoryDeck } from '../../components/UI/StoryDeck';
@@ -8,6 +8,7 @@ import { EmptyState } from '../../components/UI/EmptyState';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { StoryDeckSkeleton, GridCardSkeleton } from '../../components/UI/Skeleton';
 import { calculateStateDistance } from '../../constants/indiaLocations';
+import { triggerHaptic } from '../../utils/haptics';
 
 export const DiscoverFeed = ({ onSelectProfile }) => {
   const {
@@ -28,11 +29,15 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     passedProfileIds,
     setPassedProfileIds,
     passProfile,
-    unpassProfile
+    unpassProfile,
+    showAlert
   } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeQuickFilter, setActiveQuickFilter] = useState('All');
+  const [feedMode, setFeedMode] = useState('for_you'); // 'for_you' | 'double_date' | 'college'
+  const [boostActive, setBoostActive] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [viewMode, setViewMode] = useState('deck'); // 'deck' | 'grid'
 
@@ -177,9 +182,22 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     return (b.profileCompletion || 80) - (a.profileCompletion || 80);
   });
 
+  // Apply Feed Mode Filtering (For You, Double Date, College)
+  let feedProfiles = sortedProfiles;
+  if (feedMode === 'college') {
+    const collegeList = sortedProfiles.filter(p => {
+      const isCollegeAge = p.age >= 18 && p.age <= 24;
+      const text = `${p.story || ''} ${(p.interests || []).join(' ')} ${p.city || ''} ${p.occupation || ''}`.toLowerCase();
+      const hasCollegeKeywords = /college|university|campus|student|degree|btech|bsc|ba|mba|iit|du|usc|ucla|stanford|harvard|alumni|senior|freshman|sophomore/i.test(text);
+      return isCollegeAge || hasCollegeKeywords;
+    });
+    feedProfiles = collegeList.length > 0 ? collegeList : sortedProfiles;
+  }
+
   const handleResetFilters = () => {
     setSearchTerm('');
     setActiveQuickFilter('All');
+    setFeedMode('for_you');
     setPassedProfileIds([]);
     setFilters({
       gender: 'All',
@@ -200,97 +218,120 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     (filters.ageMin && filters.ageMin > 18) ||
     (filters.ageMax && filters.ageMax < 60) ||
     (filters.distanceMax && filters.distanceMax < 2500) ||
-    Boolean(filters.verifiedOnly);
+    Boolean(filters.verifiedOnly) ||
     (filters.sortBy && filters.sortBy !== 'default');
 
   return (
     <div className="discover-feed-page page-enter">
-      {/* Dynamic Header */}
-      <PageHeader
-        title="Discover"
-        subtitle="Find someone who sees you."
-        actions={
-          <div className="discover-header-actions">
-            {/* View Mode Toggle Switch */}
-            <button
-              type="button"
-              className="view-mode-toggle-switch font-ui"
-              onClick={() => setViewMode(viewMode === 'deck' ? 'grid' : 'deck')}
-              aria-label={`Switch to ${viewMode === 'deck' ? 'Grid' : 'Deck'} view`}
-              title={`Current: ${viewMode === 'deck' ? 'Story Deck' : 'Gallery Grid'} (Click to switch)`}
-            >
-              <Cards
-                size={18}
-                weight={viewMode === 'deck' ? 'fill' : 'regular'}
-                className={`toggle-icon ${viewMode === 'deck' ? 'active' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setViewMode('deck');
-                }}
-              />
-              <div className="toggle-track">
-                <div className={`toggle-thumb ${viewMode === 'grid' ? 'grid-active' : 'deck-active'}`} />
-              </div>
-              <SquaresFour
-                size={18}
-                weight={viewMode === 'grid' ? 'fill' : 'regular'}
-                className={`toggle-icon ${viewMode === 'grid' ? 'active' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setViewMode('grid');
-                }}
-              />
-            </button>
+      {/* Modern Reference Header Navigation Rail */}
+      <div className="discover-top-nav-bar font-ui">
+        {/* Left: Preferences Button */}
+        <button
+          type="button"
+          onClick={() => setShowPreferences(true)}
+          className={`discover-nav-icon-btn ${hasActiveFilters ? 'has-active' : ''}`}
+          aria-label="Filter preferences"
+          title="Filter Preferences"
+        >
+          <Sliders size={20} weight="bold" />
+          {hasActiveFilters && <span className="active-filter-dot" />}
+        </button>
 
-            {/* Preferences icon-only button */}
+        {/* Center: Curated Feed Pills (For You | Double Date | College) */}
+        <div className="discover-mode-pills" role="tablist" aria-label="Discover Modes">
+          {[
+            { id: 'for_you', label: 'For You' },
+            { id: 'double_date', label: 'Double Date' },
+            { id: 'college', label: 'College' },
+          ].map(tab => (
             <button
-              type="button"
-              onClick={() => setShowPreferences(true)}
-              className={`filters-toggle-btn icon-only font-ui ${hasActiveFilters ? 'has-active' : ''}`}
-              aria-label="Filter preferences drawer"
-              title="Preferences & Filters"
+              key={tab.id}
+              role="tab"
+              aria-selected={feedMode === tab.id}
+              onClick={() => {
+                setFeedMode(tab.id);
+                triggerHaptic?.('light');
+              }}
+              className={`discover-mode-pill ${feedMode === tab.id ? 'active' : ''}`}
             >
-              <Sliders size={20} />
-              {hasActiveFilters && <span className="active-filters-indicator" />}
+              <span>{tab.label}</span>
             </button>
-          </div>
-        }
-      />
+          ))}
+        </div>
 
-      {/* Search Input Container */}
-      <div className="search-bar-wrap">
-        <div className="search-input-group">
-          <MagnifyingGlass size={20} className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search by name, interest, city..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="search-input font-ui"
-            aria-label="Search profiles"
-          />
-          {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="search-clear-btn" aria-label="Clear search">
-              <X size={16} />
-            </button>
-          )}
+        {/* Right: Boost Button + Search Toggle + View Mode */}
+        <div className="discover-top-right-actions">
+          <button
+            type="button"
+            onClick={() => {
+              setBoostActive(true);
+              triggerHaptic?.('medium');
+              showAlert?.('⚡ Spotlight Boost Activated! Your profile is prioritized to 5x more members in your city for the next 30 minutes.', 'success');
+            }}
+            className={`discover-nav-icon-btn boost-btn ${boostActive ? 'is-boosted' : ''}`}
+            aria-label="Spotlight Boost"
+            title="Spotlight Boost — 5x more visibility"
+          >
+            <Lightning size={20} weight="fill" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowSearch(!showSearch)}
+            className={`discover-nav-icon-btn ${showSearch || searchTerm ? 'search-active' : ''}`}
+            aria-label="Toggle search"
+            title="Search profiles"
+          >
+            <MagnifyingGlass size={18} weight="bold" />
+          </button>
+
+          {/* View Mode Toggle Switch */}
+          <button
+            type="button"
+            className="view-mode-toggle-switch font-ui"
+            onClick={() => setViewMode(viewMode === 'deck' ? 'grid' : 'deck')}
+            aria-label={`Switch to ${viewMode === 'deck' ? 'Grid' : 'Deck'} view`}
+            title={`Current: ${viewMode === 'deck' ? 'Story Deck' : 'Gallery Grid'}`}
+          >
+            <Cards
+              size={17}
+              weight={viewMode === 'deck' ? 'fill' : 'regular'}
+              className={`toggle-icon ${viewMode === 'deck' ? 'active' : ''}`}
+            />
+            <div className="toggle-track">
+              <div className={`toggle-thumb ${viewMode === 'grid' ? 'grid-active' : 'deck-active'}`} />
+            </div>
+            <SquaresFour
+              size={17}
+              weight={viewMode === 'grid' ? 'fill' : 'regular'}
+              className={`toggle-icon ${viewMode === 'grid' ? 'active' : ''}`}
+            />
+          </button>
         </div>
       </div>
 
-      {/* Quick Filters Horizontal Row */}
-      <div className="quick-filters-row" role="tablist" aria-label="Quick discovery filters">
-        {['All', 'Near Me', 'New', 'Verified Only'].map(f => (
-          <button
-            key={f}
-            role="tab"
-            aria-selected={activeQuickFilter === f}
-            onClick={() => setActiveQuickFilter(f)}
-            className={`quick-filter-pill font-ui ${activeQuickFilter === f ? 'active' : ''}`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
+      {/* Collapsible Search Input Container */}
+      {(showSearch || searchTerm) && (
+        <div className="search-bar-wrap page-enter">
+          <div className="search-input-group">
+            <MagnifyingGlass size={18} className="search-icon" />
+            <input
+              type="text"
+              placeholder="Search by name, interest, city, campus..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="search-input font-ui"
+              aria-label="Search profiles"
+              autoFocus={showSearch && !searchTerm}
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="search-clear-btn" aria-label="Clear search">
+                <X size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Dynamic Luxury Shimmer Skeletons based on View Mode */}
       {loadingProfiles ? (
@@ -299,10 +340,11 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         ) : (
           <GridCardSkeleton count={3} />
         )
-      ) : sortedProfiles.length > 0 ? (
+      ) : feedProfiles.length > 0 ? (
         viewMode === 'deck' ? (
           <StoryDeck
-            profiles={sortedProfiles}
+            profiles={feedProfiles}
+            feedMode={feedMode}
             interestsSent={interestsSent}
             savedProfiles={savedProfiles}
             userProfile={userProfile}
@@ -557,6 +599,131 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
           gap: var(--space-6);
+        }
+
+        /* Modern Reference Header Navigation Rail */
+        .discover-top-nav-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          margin-bottom: var(--space-4);
+          padding: 4px 0;
+          flex-wrap: wrap;
+        }
+
+        .discover-nav-icon-btn {
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          border: 1.5px solid var(--border-subtle);
+          background: var(--bg-surface);
+          color: var(--text-secondary);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          position: relative;
+          transition: all var(--duration-fast);
+          flex-shrink: 0;
+        }
+
+        .discover-nav-icon-btn:hover {
+          border-color: var(--border-default);
+          color: var(--text-primary);
+          transform: translateY(-1px);
+        }
+
+        .discover-nav-icon-btn.has-active {
+          border-color: var(--burgundy-400);
+          color: var(--burgundy-500);
+        }
+
+        .discover-nav-icon-btn .active-filter-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--burgundy-500);
+          position: absolute;
+          top: -1px;
+          right: -1px;
+          border: 2px solid var(--bg-surface);
+        }
+
+        .discover-mode-pills {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 3px 4px;
+          border-radius: 999px;
+          background: rgba(0, 0, 0, 0.05);
+          border: 1px solid var(--border-subtle);
+        }
+
+        [data-theme="dark"] .discover-mode-pills {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .discover-mode-pill {
+          padding: 6px 16px;
+          border-radius: 999px;
+          border: none;
+          background: transparent;
+          color: var(--text-secondary);
+          font-family: var(--font-ui);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          white-space: nowrap;
+        }
+
+        .discover-mode-pill:hover {
+          color: var(--text-primary);
+        }
+
+        .discover-mode-pill.active {
+          background: var(--text-primary);
+          color: var(--bg-surface) !important;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] .discover-mode-pill.active {
+          background: #ffffff;
+          color: #141113 !important;
+          box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .discover-top-right-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .discover-nav-icon-btn.boost-btn {
+          color: #c084fc;
+          background: rgba(192, 132, 252, 0.1);
+          border-color: rgba(192, 132, 252, 0.3);
+        }
+
+        .discover-nav-icon-btn.boost-btn:hover {
+          background: rgba(192, 132, 252, 0.2);
+          border-color: #c084fc;
+          color: #a855f7;
+          transform: scale(1.08);
+        }
+
+        .discover-nav-icon-btn.boost-btn.is-boosted {
+          background: linear-gradient(135deg, #a855f7, #c084fc);
+          color: #ffffff;
+          box-shadow: 0 0 14px rgba(168, 85, 247, 0.5);
+        }
+
+        .discover-nav-icon-btn.search-active {
+          border-color: var(--burgundy-400);
+          color: var(--burgundy-500);
+          background: var(--bg-accent-subtle);
         }
       `}</style>
     </div>
