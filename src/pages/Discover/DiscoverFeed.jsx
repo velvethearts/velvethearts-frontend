@@ -5,6 +5,7 @@ import { DiscoverPreferences } from './DiscoverPreferences';
 import { ProfileCard } from '../../components/UI/ProfileCard';
 import { StoryDeck } from '../../components/UI/StoryDeck';
 import { SpotlightBoostModal } from '../../components/UI/SpotlightBoostModal';
+import { LocationPermissionModal } from '../../components/UI/LocationPermissionModal';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { StoryDeckSkeleton, GridCardSkeleton } from '../../components/UI/Skeleton';
@@ -62,8 +63,22 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [showBoostModal, setShowBoostModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
   const [viewMode, setViewMode] = useState('deck'); // 'deck' | 'grid'
   const searchContainerRef = React.useRef(null);
+
+  // Ask only once when user navigates to Near Me mode
+  useEffect(() => {
+    if (feedMode === 'near_me') {
+      try {
+        const hasPrompted = localStorage.getItem('vh_location_permission_prompted');
+        const hasCoords = Boolean(userLocation?.coords);
+        if (!hasPrompted && !hasCoords) {
+          setShowLocationModal(true);
+        }
+      } catch (e) {}
+    }
+  }, [feedMode, userLocation]);
 
   // Close search when clicking outside
   React.useEffect(() => {
@@ -579,7 +594,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
                 className="gps-action-btn enable font-ui"
                 onClick={() => {
                   triggerHaptic?.('light');
-                  requestUserLocation();
+                  setShowLocationModal(true);
                 }}
                 disabled={isLocationLoading}
               >
@@ -691,6 +706,14 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         onClose={() => setShowBoostModal(false)}
         boostState={boostState}
         onActivate={handleActivateBoost}
+      />
+
+      {/* Location Permission Explanatory Modal (Asks Only Once) */}
+      <LocationPermissionModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onEnableLocation={requestUserLocation}
+        isLocationLoading={isLocationLoading}
       />
 
       <style>{`
