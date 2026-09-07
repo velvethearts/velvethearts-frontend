@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
-import { Bell, ChatCircleText, Heart, Info, EnvelopeSimple } from '@phosphor-icons/react';
+import { Bell, ChatCircleText, Heart, Info, EnvelopeSimple, Clock } from '@phosphor-icons/react';
 
 export const NotificationsPage = () => {
   const { notificationItems, notificationUnreadCount, markNotificationRead, markAllNotificationsRead, deleteNotificationItem, setActiveTab, setDeepLinkConversationId } = useApp();
@@ -28,6 +28,11 @@ export const NotificationsPage = () => {
         return <Heart size={20} />;
       case 'REWIND_LETTER':
         return <EnvelopeSimple size={20} />;
+      case 'BOOST':
+      case 'BOOST_EXPIRED':
+      case 'BOOST_READY':
+      case 'TIME':
+        return <Clock size={20} weight="fill" color="var(--burgundy-500, #B8436A)" />;
       case 'SYSTEM':
         return <Info size={20} />;
       default:
@@ -82,7 +87,15 @@ export const NotificationsPage = () => {
       return;
     }
 
-    if (n.type === 'SYSTEM') {
+    if (
+      n.type === 'SYSTEM' ||
+      n.type === 'BOOST' ||
+      n.type === 'BOOST_EXPIRED' ||
+      n.type === 'BOOST_READY' ||
+      n.type === 'TIME' ||
+      titleLower.includes('boost') ||
+      contentLower.includes('boost')
+    ) {
       setActiveTab('discover');
       return;
     }

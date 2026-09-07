@@ -14,8 +14,10 @@ import { api } from '../lib/api';
 import { connectSocket, disconnectSocket, emitMarkSeen, getSocket } from '../lib/socket';
 import { registerPushNotifications } from '../lib/pushManager';
 import { ConfirmModal } from '../components/UI/ConfirmModal';
+import { Clock } from '@phosphor-icons/react';
 const AppContext = createContext();
 const CHAT_CLEARS_STORAGE_KEY = 'vh-cleared-chats';
+const BOOST_STORAGE_KEY = 'vh_profile_boost_state';
 
 const getStoredChatClears = () => {
     try {
@@ -409,6 +411,118 @@ export const AppProvider = ({ children }) => {
     const removeToast = useCallback((id) => {
         setToastNotifications(prev => prev.filter(t => t.id !== id));
     }, []);
+
+    // ─── Global Spotlight Boost Background Watcher ─────────────────────
+    useEffect(() => {
+        const checkGlobalBoostState = () => {
+            try {
+                const savedStr = localStorage.getItem(BOOST_STORAGE_KEY);
+                if (!savedStr) return;
+                const saved = JSON.parse(savedStr);
+                const { boostExpiresAt, cooldownExpiresAt, expiredNotified, cooldownNotified } = saved;
+                const now = Date.now();
+
+                // 1. Boost has completed, enter cooldown
+                if (now >= boostExpiresAt && now < cooldownExpiresAt && !expiredNotified) {
+                    saved.expiredNotified = true;
+                    localStorage.setItem(BOOST_STORAGE_KEY, JSON.stringify(saved));
+
+                    // In-app Toast with Clock icon
+                    addToast({
+                        title: 'Spotlight Boost Ended',
+                        message: 'Your 30-minute boost has finished. Cooldown is active for 2 days.',
+                        icon: <Clock size={22} weight="fill" color="var(--burgundy-500, #B8436A)" />,
+                        tab: 'discover',
+                        duration: 6000
+                    });
+
+                    // In-app Notification center item
+                    const expiredNotif = {
+                        id: `boost_expired_${boostExpiresAt}`,
+                        type: 'BOOST_EXPIRED',
+                        title: 'Spotlight Boost Ended',
+                        content: 'Your 30-minute Spotlight Boost has finished. Your 2-day cooldown is now active.',
+                        createdAt: new Date(boostExpiresAt).toISOString(),
+                        isRead: false
+                    };
+                    setNotificationItems(prev => {
+                        if (prev.some(n => n.id === expiredNotif.id)) return prev;
+                        const next = [expiredNotif, ...prev];
+                        setNotificationUnreadCount(next.filter(n => !n.isRead).length);
+                        return next;
+                    });
+
+                    // Browser Desktop / Web Notification if permitted
+                    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                        try {
+                            new Notification('⏱️ Spotlight Boost Ended', {
+                                body: 'Your 30-minute boost has finished. Cooldown is active for 2 days.',
+                                icon: '/favicon.ico',
+                                tag: 'spotlight-boost'
+                            });
+                        } catch (_) {}
+                    }
+                }
+
+                // 2. Cooldown has completed, boost is ready again
+                else if (now >= cooldownExpiresAt) {
+                    if (!cooldownNotified) {
+                        // In-app Toast with Clock icon
+                        addToast({
+                            title: 'Spotlight Boost Ready!',
+                            message: 'Your 2-day cooldown is complete. Activate your boost again for 5x visibility!',
+                            icon: <Clock size={22} weight="fill" color="var(--burgundy-500, #B8436A)" />,
+                            tab: 'discover',
+                            duration: 6000
+                        });
+
+                        // In-app Notification center item
+                        const readyNotif = {
+                            id: `boost_ready_${cooldownExpiresAt}`,
+                            type: 'BOOST_READY',
+                            title: 'Spotlight Boost Ready!',
+                            content: 'Your 2-day cooldown has ended. Tap to activate your free Spotlight Boost and reach 5x more members in your area.',
+                            createdAt: new Date(cooldownExpiresAt).toISOString(),
+                            isRead: false
+                        };
+                        setNotificationItems(prev => {
+                            if (prev.some(n => n.id === readyNotif.id)) return prev;
+                            const next = [readyNotif, ...prev];
+                            setNotificationUnreadCount(next.filter(n => !n.isRead).length);
+                            return next;
+                        });
+
+                        // Browser Desktop / Web Notification if permitted
+                        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                            try {
+                                new Notification('⏰ Spotlight Boost Ready!', {
+                                    body: 'Your 2-day cooldown is complete. Tap to boost your profile for 5x visibility!',
+                                    icon: '/favicon.ico',
+                                    tag: 'spotlight-boost'
+                                });
+                            } catch (_) {}
+                        }
+                    }
+
+                    // Reset boost state in localStorage
+                    localStorage.removeItem(BOOST_STORAGE_KEY);
+                }
+            } catch (_) {}
+        };
+
+        checkGlobalBoostState();
+        const timer = setInterval(checkGlobalBoostState, 1000);
+        const handleFocusOrVisible = () => checkGlobalBoostState();
+
+        window.addEventListener('focus', handleFocusOrVisible);
+        document.addEventListener('visibilitychange', handleFocusOrVisible);
+
+        return () => {
+            clearInterval(timer);
+            window.removeEventListener('focus', handleFocusOrVisible);
+            document.removeEventListener('visibilitychange', handleFocusOrVisible);
+        };
+    }, [addToast]);
 
     const [filters, setFilters] = useState({
         gender: 'All',

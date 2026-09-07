@@ -141,21 +141,15 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
             cooldownExpiresAt
           });
         } else if (now < cooldownExpiresAt) {
-          setBoostState(prev => {
-            if (prev.isBoosting) {
-              showAlert?.('⚡ Your 30-minute Spotlight Boost has finished! Cooldown is active for 2 days.', 'info');
-            }
-            return {
-              isBoosting: false,
-              isOnCooldown: true,
-              boostSecondsLeft: 0,
-              cooldownSecondsLeft: Math.max(0, Math.floor((cooldownExpiresAt - now) / 1000)),
-              boostExpiresAt,
-              cooldownExpiresAt
-            };
+          setBoostState({
+            isBoosting: false,
+            isOnCooldown: true,
+            boostSecondsLeft: 0,
+            cooldownSecondsLeft: Math.max(0, Math.floor((cooldownExpiresAt - now) / 1000)),
+            boostExpiresAt,
+            cooldownExpiresAt
           });
         } else {
-          localStorage.removeItem(BOOST_STORAGE_KEY);
           setBoostState({
             isBoosting: false,
             isOnCooldown: false,
@@ -171,7 +165,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     checkBoostTimer();
     const interval = setInterval(checkBoostTimer, 1000);
     return () => clearInterval(interval);
-  }, [showAlert]);
+  }, []);
 
   const handleActivateBoost = () => {
     const now = Date.now();
@@ -183,12 +177,19 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       boostSecondsLeft: 30 * 60,
       cooldownSecondsLeft: Math.floor(BOOST_COOLDOWN_MS / 1000),
       boostExpiresAt,
-      cooldownExpiresAt
+      cooldownExpiresAt,
+      expiredNotified: false,
+      cooldownNotified: false
     };
 
     try {
-      localStorage.setItem(BOOST_STORAGE_KEY, JSON.stringify({ boostExpiresAt, cooldownExpiresAt }));
+      localStorage.setItem(BOOST_STORAGE_KEY, JSON.stringify(newState));
     } catch (_) {}
+
+    // Request browser notification permission if not yet requested
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
 
     setBoostState(newState);
     triggerHaptic?.('medium');

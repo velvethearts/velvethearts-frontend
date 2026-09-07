@@ -14,15 +14,23 @@ export const ToastContainer = () => {
           key={toast.id} 
           className="toast-card page-enter"
           onClick={() => {
-            if (toast.partnerId) {
+            if (toast.onClick) {
+              toast.onClick();
+            } else if (toast.tab) {
+              setActiveTab(toast.tab);
+            } else if (toast.partnerId) {
               setDeepLinkConversationId(toast.partnerId);
+              setActiveTab('chat');
             }
-            setActiveTab('chat');
             removeToast(toast.id);
           }}
         >
           <div className="toast-avatar-wrap">
-            {toast.photo ? (
+            {toast.icon ? (
+              <div className="toast-icon-placeholder toast-custom-icon">
+                {toast.icon}
+              </div>
+            ) : toast.photo ? (
               <img src={toast.photo} alt={toast.title} className="toast-avatar" />
             ) : (
               <div className="toast-icon-placeholder">
@@ -103,6 +111,17 @@ export const ToastContainer = () => {
 
         .toast-icon-placeholder {
           color: var(--text-accent);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .toast-icon-placeholder.toast-custom-icon {
+          color: var(--burgundy-500, #B8436A);
+        }
+
+        [data-theme="dark"] .toast-icon-placeholder.toast-custom-icon {
+          color: #FFAEC5;
         }
 
         .toast-content {
