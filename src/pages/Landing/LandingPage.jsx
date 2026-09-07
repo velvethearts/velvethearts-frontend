@@ -6,7 +6,7 @@ import { ThemeToggle } from '../../components/UI/ThemeToggle';
 import { triggerCookieBanner } from '../../lib/analytics';
 
 export const LandingPage = ({ onGetStarted, onSignIn }) => {
-  const { showAlert = () => {} } = useApp?.() || {};
+  const { showAlert = () => { } } = useApp?.() || {};
   const [openFaqIndex, setOpenFaqIndex] = React.useState(null);
 
   const faqs = [
@@ -70,7 +70,7 @@ export const LandingPage = ({ onGetStarted, onSignIn }) => {
             </div>
 
             <p className="hero-description font-body">
-              A dating experience built on warmth, safety, and the belief that everyone deserves to be seen for who they truly are. No gamified swiping. No superficial checklist matching. Just human connection.
+              A dating experience built on warmth, safety, and the belief that everyone deserves to be seen for who they truly are. No superficial checklist matching. Just human connection.
             </p>
 
             <div className="hero-actions">
