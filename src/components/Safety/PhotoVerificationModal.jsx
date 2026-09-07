@@ -38,6 +38,8 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
   const [countdown, setCountdown] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [failureReason, setFailureReason] = useState('');
+  const [manualReviewSubmitted, setManualReviewSubmitted] = useState(false);
+  const [manualReviewLoading, setManualReviewLoading] = useState(false);
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -50,6 +52,8 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       setCapturedImage(null);
       setCameraError('');
       setFailureReason('');
+      setManualReviewSubmitted(false);
+      setManualReviewLoading(false);
       livenessSamplesRef.current = [];
     } else {
       stopCamera();
@@ -550,10 +554,56 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
                   <ArrowsClockwise size={18} weight="bold" />
                   <span>Retake Face Scan</span>
                 </Button>
+
+                {/* Manual Review Request */}
+                {!manualReviewSubmitted ? (
+                  <Button
+                    variant="secondary"
+                    disabled={manualReviewLoading}
+                    className="photo-verify-btn-full"
+                    onClick={async () => {
+                      if (!capturedImage) return;
+                      setManualReviewLoading(true);
+                      try {
+                        const referenceUrl = primaryPhotoUrl || userProfile?.photos?.[0] || null;
+                        await api.submitManualVerification({
+                          selfie: capturedImage,
+                          referenceUrl,
+                          autoFailReason: failureReason,
+                        });
+                        setManualReviewSubmitted(true);
+                        showAlert?.('Your verification has been submitted for manual review. Our team will review it shortly.', 'success');
+                      } catch (err) {
+                        console.error('Manual verification submission failed:', err);
+                        showAlert?.('Failed to submit manual review request. Please try again.', 'error');
+                      } finally {
+                        setManualReviewLoading(false);
+                      }
+                    }}
+                  >
+                    <ShieldCheck size={18} weight="bold" />
+                    <span>{manualReviewLoading ? 'Submitting…' : 'Request Manual Review'}</span>
+                  </Button>
+                ) : (
+                  <div className="photo-verify-manual-submitted" style={{
+                    padding: '12px 16px',
+                    background: 'rgba(74, 222, 128, 0.1)',
+                    borderRadius: 'var(--radius-md)',
+                    textAlign: 'center',
+                    color: '#4ade80',
+                    fontFamily: 'var(--font-ui)',
+                    fontSize: 'var(--text-body-sm)',
+                    fontWeight: 500,
+                  }}>
+                    ✅ Manual review submitted! Our team will verify your profile shortly.
+                  </div>
+                )}
+
                 <Button
                   variant="secondary"
                   onClick={onClose}
                   className="photo-verify-btn-full"
+                  style={{ opacity: 0.7, fontSize: 'var(--text-caption)' }}
                 >
                   Maybe Later
                 </Button>

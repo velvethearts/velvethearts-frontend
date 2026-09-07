@@ -471,6 +471,17 @@ export const api = {
         });
     },
 
+    submitManualVerification(data) {
+        return request('/api/v1/profile/verify-manual', {
+            method: 'POST',
+            body: data
+        });
+    },
+
+    getVerificationStatus() {
+        return request('/api/v1/profile/verification-status');
+    },
+
     // ==========================================================
     // ADMIN
     // ==========================================================
@@ -498,6 +509,76 @@ export const api = {
             return request(
                 `/api/v1/admin/users/history?${params.toString()}`
             );
+        },
+
+        getStats() {
+            return request('/api/v1/admin/stats');
+        },
+
+        getVerifications(status) {
+            const params = status ? `?status=${status}` : '';
+            return request(`/api/v1/admin/verifications${params}`);
+        },
+
+        approveVerification(id, notes) {
+            return request(`/api/v1/admin/verifications/${id}/approve`, {
+                method: 'POST',
+                body: { notes }
+            });
+        },
+
+        rejectVerification(id, notes) {
+            return request(`/api/v1/admin/verifications/${id}/reject`, {
+                method: 'POST',
+                body: { notes }
+            });
+        },
+
+        getReports(status) {
+            const params = status ? `?status=${status}` : '';
+            return request(`/api/v1/admin/reports${params}`);
+        },
+
+        closeReport(reportId, data) {
+            return request(`/api/v1/admin/reports/${reportId}/close`, {
+                method: 'POST',
+                body: data
+            });
+        },
+
+        getUsers(params = {}) {
+            const query = new URLSearchParams(params);
+            return request(`/api/v1/admin/users?${query.toString()}`);
+        },
+
+        getLogs(page = 1, limit = 50) {
+            return request(`/api/v1/admin/logs?page=${page}&limit=${limit}`);
+        },
+
+        suspendUser(userId) {
+            return request(`/api/v1/admin/users/${userId}/suspend`, {
+                method: 'POST'
+            });
+        },
+
+        restoreUser(userId) {
+            return request(`/api/v1/admin/users/${userId}/restore`, {
+                method: 'POST'
+            });
+        },
+
+        createAdmin(userId) {
+            return request('/api/v1/admin/create', {
+                method: 'POST',
+                body: { userId }
+            });
+        },
+
+        removeAdmin(userId) {
+            return request('/api/v1/admin/remove', {
+                method: 'POST',
+                body: { userId }
+            });
         }
     }
 };

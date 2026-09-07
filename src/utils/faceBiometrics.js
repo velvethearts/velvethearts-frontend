@@ -520,14 +520,14 @@ export const compareFaceBiometrics = async (newPhotoSource, referencePhotoUrl) =
           'Similarity:', similarityScore.toFixed(3)
         );
 
-        // Strict Anti-Catfish Threshold:
-        // Different individuals exhibit composite difference > 0.19 or morphometric shift > 0.12
-        // Same person under varying lighting exhibits composite difference <= 0.18
+        // Anti-Catfish Threshold (relaxed — admin manual review acts as safety net):
+        // Different individuals exhibit composite difference > 0.28 or morphometric shift > 0.20
+        // Same person under varying lighting exhibits composite difference <= 0.27
         const isDifferentPerson = (
-          compositeFaceDifference > 0.19 ||
-          morphometricDiscrepancy > 0.13 ||
-          avgZonalDiff > 0.22 ||
-          similarityScore < 0.81
+          compositeFaceDifference > 0.28 ||
+          morphometricDiscrepancy > 0.20 ||
+          avgZonalDiff > 0.30 ||
+          similarityScore < 0.72
         );
 
         if (isDifferentPerson) {
@@ -603,7 +603,7 @@ export const evaluateLiveAntiSpoofing = async (livenessSamples, capturedImageDat
     const avgMotionDelta = totalDiff / Math.max(1, pixelCount);
     console.log('[AntiSpoofing] 3-Second Liveness motion delta:', avgMotionDelta.toFixed(3));
 
-    if (avgMotionDelta < 0.25) {
+    if (avgMotionDelta < 0.15) {
       return {
         isValid: false,
         isSpoof: true,

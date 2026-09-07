@@ -25,6 +25,7 @@ const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage').then(m =
 const SafetyCenter = lazy(() => import('./pages/Safety/SafetyCenter').then(m => ({ default: m.SafetyCenter })));
 const NotificationsPage = lazy(() => import('./pages/Notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const VerificationPromptModal = lazy(() => import('./components/Safety/VerificationPromptModal').then(m => ({ default: m.VerificationPromptModal })));
+const AdminPanel = lazy(() => import('./pages/Admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
 
 const AuthLoadingScreen = () => {
   return (
@@ -236,6 +237,9 @@ function AppContent() {
 
       case 'safety':
         return <SafetyCenter />;
+
+      case 'admin':
+        return <AdminPanel />;
 
       default:
         return <DiscoverFeed onSelectProfile={setSelectedProfile} />;
