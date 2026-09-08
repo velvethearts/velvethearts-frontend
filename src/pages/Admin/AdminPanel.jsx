@@ -7,6 +7,7 @@ import { Button } from '../../components/UI/Button';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 import { ProfileDetail } from '../ProfileDetail/ProfileDetail';
+import { AdminVerificationRecommendation } from '../../components/Admin/AdminVerificationRecommendation';
 import {
   ShieldCheck,
   CheckCircle,
@@ -1009,7 +1010,11 @@ const VerificationRequestsTab = ({ showAlert, onViewUser }) => {
                   </div>
                 </div>
 
-                {/* Auto-fail Reason */}
+                {/* Smart Verification Recommendation & Rationale */}
+                <AdminVerificationRecommendation
+                  request={req}
+                  onApplyReason={(note) => setNotesMap(prev => ({ ...prev, [req.id]: note }))}
+                />
                 {req.autoFailReason && (
                   <div className="admin-fail-reason">
                     <Warning size={16} weight="fill" />
@@ -1850,6 +1855,12 @@ const PendingUsersTab = ({ showAlert, onViewUser }) => {
                         />
                       </div>
                     </div>
+
+                    {/* Smart Verification Recommendation & Rationale */}
+                    <AdminVerificationRecommendation
+                      request={req}
+                      onApplyReason={(note) => setNotesMap(prev => ({ ...prev, [req.id]: note }))}
+                    />
 
                     {req.autoFailReason && (
                       <div className="admin-fail-reason">
@@ -2693,6 +2704,201 @@ const adminStyles = `
   [data-theme="dark"] .admin-fail-reason {
     color: #fb923c;
   }
+
+  /* Admin Verification Smart Recommendation Card */
+  .admin-rec-card {
+    margin: var(--space-3) 0;
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    transition: all 0.2s ease;
+  }
+
+  .admin-rec-card.variant-approve {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.04) 100%);
+    border-color: rgba(16, 185, 129, 0.35);
+  }
+
+  .admin-rec-card.variant-reject {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.04) 100%);
+    border-color: rgba(239, 68, 68, 0.35);
+  }
+
+  .admin-rec-card.variant-review {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.09) 0%, rgba(217, 119, 6, 0.04) 100%);
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+
+  .admin-rec-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .admin-rec-badge-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .admin-rec-icon.icon-approve {
+    color: #059669;
+    flex-shrink: 0;
+  }
+
+  .admin-rec-icon.icon-reject {
+    color: #dc2626;
+    flex-shrink: 0;
+  }
+
+  .admin-rec-icon.icon-review {
+    color: #d97706;
+    flex-shrink: 0;
+  }
+
+  .admin-rec-decision-pill {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+  }
+
+  .admin-rec-decision-pill.pill-approve {
+    background: rgba(16, 185, 129, 0.16);
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+  }
+
+  .admin-rec-decision-pill.pill-reject {
+    background: rgba(239, 68, 68, 0.14);
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+  }
+
+  .admin-rec-decision-pill.pill-review {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+  }
+
+  .admin-rec-confidence {
+    font-size: var(--text-caption);
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+
+  .admin-rec-apply-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface-secondary, #f1f5f9);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .admin-rec-apply-btn:hover {
+    background: var(--surface-tertiary, #e2e8f0);
+    color: var(--text-primary);
+    border-color: var(--border-medium);
+  }
+
+  .admin-rec-body {
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+
+  .admin-rec-why-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    color: var(--text-primary);
+  }
+
+  .admin-rec-why-tag {
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+
+  .admin-rec-why-text {
+    color: var(--text-primary);
+    word-break: break-word;
+  }
+
+  [data-theme="dark"] .admin-rec-card.variant-approve {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(5, 150, 105, 0.06) 100%);
+    border-color: rgba(52, 211, 153, 0.35);
+  }
+
+  [data-theme="dark"] .admin-rec-card.variant-reject {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.14) 0%, rgba(220, 38, 38, 0.06) 100%);
+    border-color: rgba(248, 113, 113, 0.35);
+  }
+
+  [data-theme="dark"] .admin-rec-card.variant-review {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(217, 119, 6, 0.06) 100%);
+    border-color: rgba(251, 191, 36, 0.35);
+  }
+
+  [data-theme="dark"] .admin-rec-icon.icon-approve {
+    color: #34d399;
+  }
+
+  [data-theme="dark"] .admin-rec-icon.icon-reject {
+    color: #f87171;
+  }
+
+  [data-theme="dark"] .admin-rec-icon.icon-review {
+    color: #fbbf24;
+  }
+
+  [data-theme="dark"] .admin-rec-decision-pill.pill-approve {
+    background: rgba(16, 185, 129, 0.22);
+    color: #6ee7b7;
+    border-color: rgba(52, 211, 153, 0.4);
+  }
+
+  [data-theme="dark"] .admin-rec-decision-pill.pill-reject {
+    background: rgba(239, 68, 68, 0.22);
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.4);
+  }
+
+  [data-theme="dark"] .admin-rec-decision-pill.pill-review {
+    background: rgba(245, 158, 11, 0.22);
+    color: #fcd34d;
+    border-color: rgba(251, 191, 36, 0.4);
+  }
+
+  [data-theme="dark"] .admin-rec-apply-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-secondary);
+  }
+
+  [data-theme="dark"] .admin-rec-apply-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
 
   .admin-expand-btn {
     display: flex;
