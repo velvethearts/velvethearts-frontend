@@ -1575,9 +1575,23 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                             )
                           ) : 'Start a warm conversation...'}
                         </p>
-                        {unreadCount > 0 && !isActive && (
-                          <span className="partner-unread-badge font-ui">{unreadCount > 99 ? '99+' : unreadCount}</span>
-                        )}
+                        <div className="partner-item-meta-actions">
+                          {unreadCount > 0 && !isActive && (
+                            <span className="partner-unread-badge font-ui">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                          )}
+                          <button
+                            type="button"
+                            className={`partner-pin-action-btn ${isPinned ? 'is-pinned' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              togglePinChat(partner.id || partner.userId);
+                            }}
+                            title={isPinned ? 'Unpin chat' : 'Pin chat to top'}
+                            aria-label={isPinned ? 'Unpin chat' : 'Pin chat to top'}
+                          >
+                            <PushPinSimple size={14} weight={isPinned ? 'fill' : 'regular'} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </button>
@@ -2820,6 +2834,41 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           justify-content: center;
           line-height: 1;
           flex-shrink: 0;
+        }
+
+        .partner-item-meta-actions {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          flex-shrink: 0;
+        }
+
+        .partner-pin-action-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-tertiary);
+          cursor: pointer;
+          padding: 4px;
+          border-radius: var(--radius-full);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all var(--duration-fast);
+          opacity: 0.6;
+        }
+
+        .partner-list-item:hover .partner-pin-action-btn,
+        .partner-pin-action-btn.is-pinned {
+          opacity: 1;
+        }
+
+        .partner-pin-action-btn.is-pinned {
+          color: var(--burgundy-500);
+        }
+
+        .partner-pin-action-btn:hover {
+          color: var(--burgundy-500);
+          background-color: rgba(184, 67, 106, 0.12);
         }
 
         /* Message Area */
