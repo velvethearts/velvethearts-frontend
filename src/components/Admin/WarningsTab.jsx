@@ -531,52 +531,107 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         .warnings-metric-card {
           padding: 18px 20px;
           border-radius: var(--radius-lg, 18px);
-          background: var(--bg-surface, #FFFFFF);
-          border: 1px solid var(--border-subtle, #E5E7EB);
-          box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.05));
+          background: #FFFFFF;
+          border: 1.5px solid #E5E7EB;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
-        [data-theme="dark"] .warnings-metric-card {
-          background: rgba(255, 255, 255, 0.03);
-          border-color: rgba(255, 255, 255, 0.08);
-          box-shadow: none;
+        /* Distinct Luxury Light Mode Card Palettes */
+        .warnings-metric-card.card-active {
+          background: #FFFBEB;
+          border-color: #FDE68A;
+          box-shadow: 0 2px 8px rgba(217, 119, 6, 0.08);
         }
-
-        .warnings-metric-card:hover {
-          background: var(--bg-surface-warm, #FFF8F0);
-          border-color: var(--border-default, #D1D5DB);
+        .warnings-metric-card.card-active:hover {
+          background: #FEF3C7;
+          border-color: #FCD34D;
           transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(217, 119, 6, 0.15);
+        }
+        .warnings-metric-card.card-active.selected {
+          border-color: #D97706;
+          box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.25), 0 6px 18px rgba(217, 119, 6, 0.18);
         }
 
+        .warnings-metric-card.card-appealed {
+          background: #F0F9FF;
+          border-color: #BAE6FD;
+          box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+        }
+        .warnings-metric-card.card-appealed:hover {
+          background: #E0F2FE;
+          border-color: #7DD3FC;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(2, 132, 199, 0.15);
+        }
+        .warnings-metric-card.card-appealed.selected {
+          border-color: #0284C7;
+          box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25), 0 6px 18px rgba(2, 132, 199, 0.18);
+        }
+
+        .warnings-metric-card.card-resolved {
+          background: #F0FDF4;
+          border-color: #BBF7D0;
+          box-shadow: 0 2px 8px rgba(22, 163, 74, 0.08);
+        }
+        .warnings-metric-card.card-resolved:hover {
+          background: #DCFCE7;
+          border-color: #86EFAC;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(22, 163, 74, 0.15);
+        }
+        .warnings-metric-card.card-resolved.selected {
+          border-color: #16A34A;
+          box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.25), 0 6px 18px rgba(22, 163, 74, 0.18);
+        }
+
+        .warnings-metric-card.card-suspended {
+          background: #FEF2F2;
+          border-color: #FECACA;
+          box-shadow: 0 2px 8px rgba(220, 38, 38, 0.08);
+        }
+        .warnings-metric-card.card-suspended:hover {
+          background: #FEE2E2;
+          border-color: #FCA5A5;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(220, 38, 38, 0.15);
+        }
+        .warnings-metric-card.card-suspended.selected {
+          border-color: #DC2626;
+          box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25), 0 6px 18px rgba(220, 38, 38, 0.18);
+        }
+
+        /* Dark Theme Card Overrides */
+        [data-theme="dark"] .warnings-metric-card {
+          background: rgba(255, 255, 255, 0.03) !important;
+          border-color: rgba(255, 255, 255, 0.08) !important;
+          box-shadow: none !important;
+        }
         [data-theme="dark"] .warnings-metric-card:hover {
-          background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.06) !important;
+          border-color: rgba(255, 255, 255, 0.16) !important;
         }
-
-        .warnings-metric-card.selected.card-active {
-          background: rgba(245, 158, 11, 0.12);
-          border-color: rgba(245, 158, 11, 0.5);
-          box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
+        [data-theme="dark"] .warnings-metric-card.card-active.selected {
+          background: rgba(245, 158, 11, 0.12) !important;
+          border-color: rgba(245, 158, 11, 0.6) !important;
+          box-shadow: 0 4px 20px rgba(245, 158, 11, 0.2) !important;
         }
-
-        .warnings-metric-card.selected.card-appealed {
-          background: rgba(56, 189, 248, 0.12);
-          border-color: rgba(56, 189, 248, 0.5);
-          box-shadow: 0 4px 20px rgba(56, 189, 248, 0.15);
+        [data-theme="dark"] .warnings-metric-card.card-appealed.selected {
+          background: rgba(56, 189, 248, 0.12) !important;
+          border-color: rgba(56, 189, 248, 0.6) !important;
+          box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2) !important;
         }
-
-        .warnings-metric-card.selected.card-resolved {
-          background: rgba(16, 185, 129, 0.12);
-          border-color: rgba(16, 185, 129, 0.5);
-          box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+        [data-theme="dark"] .warnings-metric-card.card-resolved.selected {
+          background: rgba(16, 185, 129, 0.12) !important;
+          border-color: rgba(16, 185, 129, 0.6) !important;
+          box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2) !important;
         }
-
-        .warnings-metric-card.selected.card-suspended {
-          background: rgba(239, 68, 68, 0.12);
-          border-color: rgba(239, 68, 68, 0.5);
-          box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+        [data-theme="dark"] .warnings-metric-card.card-suspended.selected {
+          background: rgba(239, 68, 68, 0.12) !important;
+          border-color: rgba(239, 68, 68, 0.6) !important;
+          box-shadow: 0 4px 20px rgba(239, 68, 68, 0.2) !important;
         }
 
         .metric-header {
@@ -592,10 +647,10 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           letter-spacing: 0.05em;
         }
 
-        .text-active { color: #d97706; }
-        .text-appealed { color: #0284c7; }
-        .text-resolved { color: #16a34a; }
-        .text-suspended { color: #dc2626; }
+        .text-active { color: #B45309; }
+        .text-appealed { color: #0284C7; }
+        .text-resolved { color: #15803D; }
+        .text-suspended { color: #DC2626; }
 
         [data-theme="dark"] .text-active { color: #fbbf24; }
         [data-theme="dark"] .text-appealed { color: #38bdf8; }
@@ -605,19 +660,32 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         .metric-value {
           font-size: 28px;
           font-weight: 800;
-          color: var(--text-primary, #111827);
           margin: 10px 0 2px;
           line-height: 1;
         }
 
+        .card-active .metric-value { color: #78350F; }
+        .card-appealed .metric-value { color: #0C4A6E; }
+        .card-resolved .metric-value { color: #14532D; }
+        .card-suspended .metric-value { color: #7F1D1D; }
+
         [data-theme="dark"] .metric-value {
-          color: #ffffff;
+          color: #ffffff !important;
         }
 
         .metric-sub {
           font-size: 11.5px;
-          color: var(--text-muted, #6B7280);
           margin: 0;
+          font-weight: 500;
+        }
+
+        .card-active .metric-sub { color: #92400E; }
+        .card-appealed .metric-sub { color: #0369A1; }
+        .card-resolved .metric-sub { color: #166534; }
+        .card-suspended .metric-sub { color: #991B1B; }
+
+        [data-theme="dark"] .metric-sub {
+          color: rgba(255, 255, 255, 0.6) !important;
         }
 
         /* ── Search & Filter Toolbar ── */
@@ -628,9 +696,9 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           gap: 12px;
           padding: 12px 16px;
           border-radius: var(--radius-lg, 16px);
-          background: var(--bg-surface, #FFFFFF);
-          border: 1px solid var(--border-subtle, #E5E7EB);
-          box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
+          background: #FFFFFF;
+          border: 1.5px solid #E5E7EB;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
           flex-wrap: wrap;
         }
 
@@ -657,30 +725,42 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
         .warnings-search-input {
           width: 100%;
-          padding: 9px 14px 9px 38px;
+          padding: 10px 14px 10px 38px;
           border-radius: var(--radius-md, 12px);
-          background: var(--bg-input, #FFF8F0);
-          border: 1px solid var(--border-default, #D1D5DB);
-          color: var(--text-primary, #111827);
+          background: #FFFFFF !important;
+          border: 1.5px solid #D1D5DB !important;
+          color: #111827 !important;
           font-size: 13px;
           outline: none;
           transition: all 0.2s ease;
           box-sizing: border-box;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .warnings-search-input::placeholder {
+          color: #6B7280 !important;
         }
 
         [data-theme="dark"] .warnings-search-input {
-          background: rgba(0, 0, 0, 0.4);
-          border-color: rgba(255, 255, 255, 0.12);
-          color: #ffffff;
+          background: rgba(0, 0, 0, 0.45) !important;
+          border-color: rgba(255, 255, 255, 0.14) !important;
+          color: #ffffff !important;
+          box-shadow: none;
+        }
+
+        [data-theme="dark"] .warnings-search-input::placeholder {
+          color: rgba(255, 255, 255, 0.45) !important;
         }
 
         .warnings-search-input:focus {
-          border-color: var(--burgundy-500, #B8436A);
+          border-color: var(--burgundy-500, #B8436A) !important;
+          box-shadow: 0 0 0 3px rgba(184, 67, 106, 0.15) !important;
         }
 
         [data-theme="dark"] .warnings-search-input:focus {
-          border-color: #D4AD6A;
-          background: rgba(0, 0, 0, 0.6);
+          border-color: #D4AD6A !important;
+          background: rgba(0, 0, 0, 0.65) !important;
+          box-shadow: 0 0 0 3px rgba(212, 173, 106, 0.2) !important;
         }
 
         .warnings-toolbar-actions {
@@ -690,56 +770,64 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .warnings-select-filter {
-          padding: 9px 14px;
+          padding: 10px 14px;
           border-radius: var(--radius-md, 12px);
-          background: var(--bg-input, #FFF8F0);
-          border: 1px solid var(--border-default, #D1D5DB);
-          color: var(--text-primary, #111827);
-          font-size: 12.5px;
+          background: #FFFFFF !important;
+          border: 1.5px solid #D1D5DB !important;
+          color: #111827 !important;
+          font-size: 13px;
+          font-weight: 600;
           outline: none;
           cursor: pointer;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         [data-theme="dark"] .warnings-select-filter {
-          background: rgba(0, 0, 0, 0.4);
-          border-color: rgba(255, 255, 255, 0.12);
-          color: #ffffff;
+          background: rgba(24, 17, 21, 0.9) !important;
+          border-color: rgba(255, 255, 255, 0.14) !important;
+          color: #ffffff !important;
+          box-shadow: none;
         }
 
         .warnings-select-filter:focus {
-          border-color: var(--burgundy-500, #B8436A);
+          border-color: var(--burgundy-500, #B8436A) !important;
+          box-shadow: 0 0 0 3px rgba(184, 67, 106, 0.15) !important;
         }
 
         [data-theme="dark"] .warnings-select-filter:focus {
-          border-color: #D4AD6A;
+          border-color: #D4AD6A !important;
+          box-shadow: 0 0 0 3px rgba(212, 173, 106, 0.2) !important;
         }
 
         .warnings-refresh-btn {
-          padding: 9px;
+          padding: 10px;
           border-radius: var(--radius-md, 12px);
-          background: var(--bg-surface-warm, #F3F4F6);
-          border: 1px solid var(--border-subtle, #E5E7EB);
-          color: var(--text-secondary, #4B5563);
+          background: #FFFFFF;
+          border: 1.5px solid #D1D5DB;
+          color: #374151;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           transition: all 0.2s ease;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .warnings-refresh-btn:hover {
-          background: var(--bg-muted, #E5E7EB);
-          color: var(--text-primary, #111827);
+          background: rgba(184, 67, 106, 0.08);
+          border-color: var(--burgundy-500, #B8436A);
+          color: var(--burgundy-600, #9B3456);
         }
 
         [data-theme="dark"] .warnings-refresh-btn {
           background: rgba(255, 255, 255, 0.06);
           border-color: rgba(255, 255, 255, 0.12);
-          color: rgba(255, 255, 255, 0.8);
+          color: rgba(255, 255, 255, 0.85);
+          box-shadow: none;
         }
 
         [data-theme="dark"] .warnings-refresh-btn:hover {
-          background: rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.14);
           color: #ffffff;
         }
 
@@ -892,8 +980,12 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         .warning-user-name {
           font-size: 16px;
           font-weight: 700;
-          color: #ffffff;
+          color: var(--text-primary, #111827);
           margin: 0;
+        }
+
+        [data-theme="dark"] .warning-user-name {
+          color: #ffffff;
         }
 
         .warning-violation-badge {
@@ -901,24 +993,42 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.04em;
-          padding: 2.5px 8px;
+          padding: 3px 9px;
           border-radius: 999px;
           border: 1px solid transparent;
         }
 
         .violation-name {
+          background: #F3E8FF;
+          border-color: #D8B4FE;
+          color: #7E22CE;
+        }
+
+        .violation-photo {
+          background: #FFE4E6;
+          border-color: #FDA4AF;
+          color: #BE123C;
+        }
+
+        .violation-policy {
+          background: #FEF3C7;
+          border-color: #FCD34D;
+          color: #B45309;
+        }
+
+        [data-theme="dark"] .violation-name {
           background: rgba(168, 85, 247, 0.15);
           border-color: rgba(168, 85, 247, 0.4);
           color: #c084fc;
         }
 
-        .violation-photo {
+        [data-theme="dark"] .violation-photo {
           background: rgba(244, 63, 94, 0.15);
           border-color: rgba(244, 63, 94, 0.4);
           color: #fb7185;
         }
 
-        .violation-policy {
+        [data-theme="dark"] .violation-policy {
           background: rgba(245, 158, 11, 0.15);
           border-color: rgba(245, 158, 11, 0.4);
           color: #fbbf24;
@@ -929,24 +1039,42 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           align-items: center;
           gap: 8px;
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.5);
+          color: #4B5563;
           margin-top: 4px;
           flex-wrap: wrap;
+        }
+
+        [data-theme="dark"] .warning-user-meta-row {
+          color: rgba(255, 255, 255, 0.5);
         }
 
         .warning-id-pill {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          padding: 1px 6px;
-          background: rgba(255, 255, 255, 0.05);
+          padding: 2px 7px;
+          background: #F3F4F6;
+          border: 1px solid #E5E7EB;
           border-radius: 6px;
           cursor: pointer;
-          color: rgba(255, 255, 255, 0.7);
+          color: #374151;
+          font-weight: 500;
           transition: all 0.2s ease;
         }
 
         .warning-id-pill:hover {
+          color: var(--burgundy-600, #9B3456);
+          background: rgba(184, 67, 106, 0.08);
+          border-color: var(--burgundy-500, #B8436A);
+        }
+
+        [data-theme="dark"] .warning-id-pill {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        [data-theme="dark"] .warning-id-pill:hover {
           color: #D4AD6A;
           background: rgba(212, 173, 106, 0.12);
         }
@@ -965,24 +1093,48 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .pill-active {
+          background: #FFFBEB;
+          border-color: #FDE68A;
+          color: #B45309;
+        }
+
+        .pill-appealed {
+          background: #F0F9FF;
+          border-color: #BAE6FD;
+          color: #0284C7;
+        }
+
+        .pill-resolved {
+          background: #ECFDF5;
+          border-color: #A7F3D0;
+          color: #047857;
+        }
+
+        .pill-suspended {
+          background: #FEF2F2;
+          border-color: #FECACA;
+          color: #B91C1C;
+        }
+
+        [data-theme="dark"] .pill-active {
           background: rgba(245, 158, 11, 0.15);
           border-color: rgba(245, 158, 11, 0.4);
           color: #fbbf24;
         }
 
-        .pill-appealed {
+        [data-theme="dark"] .pill-appealed {
           background: rgba(56, 189, 248, 0.15);
           border-color: rgba(56, 189, 248, 0.4);
           color: #38bdf8;
         }
 
-        .pill-resolved {
+        [data-theme="dark"] .pill-resolved {
           background: rgba(16, 185, 129, 0.15);
           border-color: rgba(16, 185, 129, 0.4);
           color: #34d399;
         }
 
-        .pill-suspended {
+        [data-theme="dark"] .pill-suspended {
           background: rgba(239, 68, 68, 0.15);
           border-color: rgba(239, 68, 68, 0.4);
           color: #f87171;
@@ -1297,32 +1449,65 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .btn-warn-dismiss {
+          background: #ECFDF5;
+          border: 1px solid #A7F3D0;
+          color: #047857;
+        }
+
+        .btn-warn-dismiss:hover {
+          background: #D1FAE5;
+          border-color: #6EE7B7;
+        }
+
+        [data-theme="dark"] .btn-warn-dismiss {
           background: rgba(16, 185, 129, 0.15);
           border-color: rgba(16, 185, 129, 0.4);
           color: #34d399;
         }
 
-        .btn-warn-dismiss:hover {
+        [data-theme="dark"] .btn-warn-dismiss:hover {
           background: rgba(16, 185, 129, 0.25);
         }
 
         .btn-warn-extend {
+          background: #FFFBEB;
+          border: 1px solid #FDE68A;
+          color: #B45309;
+        }
+
+        .btn-warn-extend:hover {
+          background: #FEF3C7;
+          border-color: #FCD34D;
+        }
+
+        [data-theme="dark"] .btn-warn-extend {
           background: rgba(245, 158, 11, 0.15);
           border-color: rgba(245, 158, 11, 0.4);
           color: #fbbf24;
         }
 
-        .btn-warn-extend:hover {
+        [data-theme="dark"] .btn-warn-extend:hover {
           background: rgba(245, 158, 11, 0.25);
         }
 
         .btn-warn-suspend {
+          background: #FEF2F2;
+          border: 1px solid #FECACA;
+          color: #B91C1C;
+        }
+
+        .btn-warn-suspend:hover {
+          background: #FEE2E2;
+          border-color: #FCA5A5;
+        }
+
+        [data-theme="dark"] .btn-warn-suspend {
           background: rgba(239, 68, 68, 0.15);
           border-color: rgba(239, 68, 68, 0.4);
           color: #f87171;
         }
 
-        .btn-warn-suspend:hover {
+        [data-theme="dark"] .btn-warn-suspend:hover {
           background: rgba(239, 68, 68, 0.25);
         }
 

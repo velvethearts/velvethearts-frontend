@@ -2130,13 +2130,11 @@ const adminStyles = `
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 5px;
-    background: var(--bg-surface-elevated, rgba(255, 255, 255, 0.04));
-    border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+    padding: 6px;
+    background: #FFFFFF;
+    border: 1.5px solid #E5E7EB;
     border-radius: var(--radius-full, 9999px);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   }
 
   [data-theme="dark"] .admin-tabs {
@@ -2151,7 +2149,7 @@ const adminStyles = `
     gap: 8px;
     padding: 8px 18px;
     border-radius: var(--radius-full, 9999px);
-    color: var(--text-secondary);
+    color: #4B5563;
     font-family: var(--font-ui);
     font-weight: 600;
     font-size: var(--text-body-sm, 13px);
@@ -2163,8 +2161,12 @@ const adminStyles = `
   }
 
   .admin-tab:hover {
-    color: var(--text-primary);
+    color: var(--burgundy-700, #7A2842);
     background: rgba(184, 67, 106, 0.08);
+  }
+
+  [data-theme="dark"] .admin-tab {
+    color: rgba(255, 255, 255, 0.7);
   }
 
   [data-theme="dark"] .admin-tab:hover {
@@ -2213,14 +2215,14 @@ const adminStyles = `
 
   .admin-stat-card {
     position: relative;
-    background: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
+    background: #FFFFFF;
+    border: 1.5px solid #E5E7EB;
     border-radius: var(--radius-xl, 18px);
-    padding: 16px 18px;
+    padding: 18px 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
   }
@@ -2237,8 +2239,8 @@ const adminStyles = `
 
   .admin-stat-card.interactive:hover {
     transform: translateY(-3px);
-    border-color: rgba(184, 67, 106, 0.35);
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12), 0 0 20px rgba(184, 67, 106, 0.12);
+    border-color: var(--burgundy-500, #B8436A);
+    box-shadow: 0 8px 22px rgba(184, 67, 106, 0.15);
   }
 
   [data-theme="dark"] .admin-stat-card.interactive:hover {
@@ -2271,17 +2273,25 @@ const adminStyles = `
     font-size: 2.1rem;
     font-weight: 700;
     line-height: 1.1;
-    color: var(--text-primary);
+    color: #111827;
     margin: 2px 0 0;
+  }
+
+  [data-theme="dark"] .admin-stat-value {
+    color: #FFFFFF;
   }
 
   .admin-stat-label {
     font-family: var(--font-ui);
-    font-size: 11px;
-    color: var(--text-secondary);
-    font-weight: 600;
+    font-size: 11.5px;
+    color: #4B5563;
+    font-weight: 700;
     letter-spacing: 0.03em;
     text-transform: uppercase;
+  }
+
+  [data-theme="dark"] .admin-stat-label {
+    color: rgba(255, 255, 255, 0.6);
   }
 
   .admin-stat-pill-badge {
@@ -2325,13 +2335,51 @@ const adminStyles = `
     align-items: center;
   }
 
+  .admin-action-btn {
+    padding: 10px 20px !important;
+    border-radius: var(--radius-full, 9999px) !important;
+    font-weight: 700 !important;
+    font-size: 13.5px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.2s ease !important;
+  }
+
+  /* Secondary button (Browse All Users) in light mode */
+  .vh-btn-secondary.admin-action-btn {
+    background-color: #FFFFFF !important;
+    border: 2px solid var(--burgundy-500, #B8436A) !important;
+    color: var(--burgundy-600, #9B3456) !important;
+    box-shadow: 0 2px 6px rgba(184, 67, 106, 0.1) !important;
+  }
+
+  .vh-btn-secondary.admin-action-btn:hover:not(:disabled) {
+    background-color: var(--burgundy-500, #B8436A) !important;
+    color: #FFFFFF !important;
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 16px rgba(184, 67, 106, 0.35) !important;
+  }
+
+  [data-theme="dark"] .vh-btn-secondary.admin-action-btn {
+    background-color: rgba(184, 67, 106, 0.16) !important;
+    border-color: rgba(212, 173, 106, 0.55) !important;
+    color: #FFFFFF !important;
+  }
+
+  [data-theme="dark"] .vh-btn-secondary.admin-action-btn:hover:not(:disabled) {
+    background-color: var(--burgundy-500, #B8436A) !important;
+    border-color: var(--burgundy-400, #D0607F) !important;
+    color: #FFFFFF !important;
+  }
+
   .admin-pill-counter {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 2px 8px;
     border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.25);
     color: #FFFFFF;
     font-size: 11px;
     font-weight: 700;
@@ -2340,13 +2388,21 @@ const adminStyles = `
   }
 
   .admin-pill-counter.secondary {
-    background: rgba(184, 67, 106, 0.15);
-    color: var(--burgundy-500, #B8436A);
+    background: rgba(184, 67, 106, 0.12);
+    color: var(--burgundy-600, #9B3456);
+    border: 1px solid rgba(184, 67, 106, 0.25);
+  }
+
+  .vh-btn-secondary.admin-action-btn:hover:not(:disabled) .admin-pill-counter.secondary {
+    background: rgba(255, 255, 255, 0.25);
+    color: #FFFFFF;
+    border-color: transparent;
   }
 
   [data-theme="dark"] .admin-pill-counter.secondary {
     background: rgba(212, 173, 106, 0.18);
     color: #D4AD6A;
+    border-color: rgba(212, 173, 106, 0.35);
   }
 
   /* Velvet Hearts Luxury Refresh Button */
@@ -2358,31 +2414,30 @@ const adminStyles = `
     padding: 8px 18px;
     height: 42px;
     border-radius: var(--radius-full, 9999px);
-    background: var(--bg-surface, rgba(255, 255, 255, 0.05));
-    border: 1px solid var(--border-default, rgba(255, 255, 255, 0.12));
-    color: var(--text-primary);
+    background: #FFFFFF;
+    border: 1.5px solid #D1D5DB;
+    color: #374151;
     font-family: var(--font-ui);
     font-size: var(--text-body-sm, 13px);
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .admin-refresh-button:hover:not(:disabled) {
+    background: rgba(184, 67, 106, 0.08);
+    border-color: var(--burgundy-500, #B8436A);
+    color: var(--burgundy-600, #9B3456);
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 12px rgba(184, 67, 106, 0.2);
   }
 
   [data-theme="dark"] .admin-refresh-button {
     background: rgba(36, 26, 30, 0.8);
     border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.85);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-
-  .admin-refresh-button:hover:not(:disabled) {
-    background: rgba(184, 67, 106, 0.14);
-    border-color: rgba(184, 67, 106, 0.5);
-    color: var(--rose-400, #F0A0AD);
-    transform: translateY(-1.5px);
-    box-shadow: 0 6px 16px rgba(184, 67, 106, 0.3);
   }
 
   [data-theme="dark"] .admin-refresh-button:hover:not(:disabled) {

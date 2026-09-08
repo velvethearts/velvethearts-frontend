@@ -578,20 +578,38 @@ export const ProfileDetail = ({ profile, onBack }) => {
         .detail-heart-action-btn {
           width: 100%;
           max-width: 450px;
-          border: 2px solid var(--burgundy-500);
-          background-color: transparent;
-          color: var(--burgundy-600);
+          padding: 13px 24px !important;
+          border-radius: 9999px !important;
+          background: linear-gradient(135deg, var(--burgundy-500, #B8436A) 0%, var(--burgundy-600, #8A2548) 100%) !important;
+          color: #FFFFFF !important;
+          border: none !important;
+          box-shadow: 0 4px 16px rgba(184, 67, 106, 0.4);
+          font-weight: 700 !important;
+          font-size: 15px !important;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .detail-heart-action-btn:hover:not(:disabled) {
+          background: linear-gradient(135deg, var(--burgundy-400, #CA5078) 0%, var(--burgundy-500, #B8436A) 100%) !important;
+          transform: translateY(-1.5px);
+          box-shadow: 0 6px 20px rgba(184, 67, 106, 0.55);
         }
 
         .detail-heart-action-btn.sent {
-          background-color: var(--burgundy-500);
-          color: #FFFFFF;
-          border-color: var(--burgundy-500);
+          background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+          border: none !important;
+          color: #FFFFFF !important;
+          box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
         }
 
-        .detail-heart-action-btn.sent:hover {
-          background-color: var(--burgundy-400);
-          border-color: var(--burgundy-400);
+        .detail-heart-action-btn.sent:hover:not(:disabled) {
+          background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+          transform: translateY(-1.5px);
         }
 
         .heart-beat-active {
