@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
 import {
@@ -29,7 +29,9 @@ import {
   Clock,
   Archive,
   ArrowRight,
-  BookBookmark
+  BookBookmark,
+  PushPinSimple,
+  WarningCircle
 } from '@phosphor-icons/react';
 import { EmptyState } from '../../components/UI/EmptyState';
 import { ProtectedImage } from '../../components/UI/ProtectedImage';
@@ -67,6 +69,91 @@ const formatFileSize = (bytes) => {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+/**
+ * Ensures fast image delivery on slow mobile networks by injecting Cloudinary
+ * auto-format and auto-quality transformations.
+ */
+export const getOptimizedMediaUrl = (url, maxWidth = 1200) => {
+  if (!url || typeof url !== 'string') return url;
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url;
+  if (url.includes('res.cloudinary.com') && url.includes('/image/upload/')) {
+    if (url.includes('/image/upload/f_auto') || url.includes('/image/upload/w_')) {
+      return url;
+    }
+    return url.replace('/image/upload/', `/image/upload/f_auto,q_auto:good,w_${maxWidth},c_limit/`);
+  }
+  return url;
+};
+
+/**
+ * Compresses camera photos and screenshots client-side before upload to allow
+ * instant, reliable transmission even on weak 2G/3G/4G connections.
+ */
+export const compressImageForUpload = async (file) => {
+  if (!file || !file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') {
+    return file;
+  }
+  // If file is already compact (<= 180KB), upload directly
+  if (file.size <= 180 * 1024) {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const MAX_DIM = 1600;
+          let { width, height } = img;
+          if (width > MAX_DIM || height > MAX_DIM) {
+            if (width > height) {
+              height = Math.round((height * MAX_DIM) / width);
+              width = MAX_DIM;
+            } else {
+              width = Math.round((width * MAX_DIM) / height);
+              height = MAX_DIM;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(file);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob || blob.size >= file.size) {
+                resolve(file);
+              } else {
+                const newName = file.name.replace(/\.[^/.]+$/, '.jpg');
+                const compressedFile = new File([blob], newName, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              }
+            },
+            'image/jpeg',
+            0.82
+          );
+        } catch (err) {
+          console.warn('Canvas compression error:', err);
+          resolve(file);
+        }
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
 };
 
 const VoiceNotePlayer = ({ url, isUser }) => {
@@ -419,7 +506,7 @@ const SwipeableMessageRow = ({ children, onReply, disabled, isUser, id, classNam
   );
 };
 
-export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelectProfile }) => {
+export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelectProfile, onActiveChatChange }) => {
   const { userProfile, connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages, notifications, isFeatureTourActive } = useApp();
 
   const isUserOnline = (partner) => {
@@ -448,7 +535,51 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     } else {
       sessionStorage.removeItem('vh-active-chat-id');
     }
+    if (onActiveChatChange) {
+      onActiveChatChange(id || null);
+    }
   };
+
+  useEffect(() => {
+    if (onActiveChatChange) {
+      onActiveChatChange(activeChatId);
+    }
+    return () => {
+      if (onActiveChatChange) {
+        onActiveChatChange(null);
+      }
+    };
+  }, [activeChatId, onActiveChatChange]);
+
+  // Pinned conversations (Instagram-style) stored per user in localStorage
+  const currentUserId = userProfile?.id || userProfile?.userId || 'default';
+  const [pinnedChatIds, setPinnedChatIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`vh_pinned_chats_${currentUserId}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const togglePinChat = (partnerId) => {
+    if (!partnerId) return;
+    setPinnedChatIds(prev => {
+      const isPinned = prev.includes(partnerId);
+      const next = isPinned ? prev.filter(id => id !== partnerId) : [...prev, partnerId];
+      try {
+        localStorage.setItem(`vh_pinned_chats_${currentUserId}`, JSON.stringify(next));
+      } catch (err) {
+        console.warn('Failed to save pinned chats to localStorage:', err);
+      }
+      return next;
+    });
+  };
+
+  const isPartnerPinned = useCallback((partnerId) => {
+    if (!partnerId) return false;
+    return pinnedChatIds.includes(partnerId);
+  }, [pinnedChatIds]);
 
   // Find active chat partner details
   const activePartner = connections.find(c => c.id === activeChatId || c.matchId === activeChatId || c.userId === activeChatId);
@@ -535,6 +666,15 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const [selectedAttachments, setSelectedAttachments] = useState([]);
   const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
+  const [isLightboxLoading, setIsLightboxLoading] = useState(true);
+  const [lightboxLoadError, setLightboxLoadError] = useState(false);
+
+  useEffect(() => {
+    if (lightboxImage) {
+      setIsLightboxLoading(true);
+      setLightboxLoadError(false);
+    }
+  }, [lightboxImage]);
 
   // Rewind Letter state
   const [letterStatus, setLetterStatus] = useState(null);
@@ -864,10 +1004,21 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
         const fileType = isImg ? 'IMAGE' : isVid ? 'VIDEO' : 'DOCUMENT';
         const localPreview = URL.createObjectURL(file);
 
+        // Compress images client-side before upload to drastically reduce payload on slow networks
+        let fileToUpload = file;
+        if (isImg && file.type !== 'image/gif' && file.type !== 'image/svg+xml') {
+          try {
+            fileToUpload = await compressImageForUpload(file);
+          } catch (compErr) {
+            console.warn('Image compression fallback to original:', compErr);
+            fileToUpload = file;
+          }
+        }
+
         let uploadRes = null;
         if (api.isConfigured) {
           try {
-            const res = await api.uploadFile(file);
+            const res = await api.uploadFile(fileToUpload);
             uploadRes = res;
           } catch (uploadErr) {
             console.error('File upload error:', uploadErr);
@@ -896,8 +1047,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           secureUrl: uploadRes.secureUrl,
           fileType,
           fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
+          fileSize: fileToUpload.size,
+          mimeType: fileToUpload.type,
           localPreview,
         };
 
@@ -995,6 +1146,57 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const chatPartners = isFeatureTourActive && (!connections || connections.length === 0)
     ? [DEMO_TOUR_PARTNER]
     : connections;
+
+  // Helper to determine recency timestamp for dynamic sorting
+  const getPartnerActivityTime = useCallback((partner) => {
+    if (!partner) return 0;
+    const partnerChats = chats[partner.id] || (partner.userId ? chats[partner.userId] : null) || [];
+    const lastMsg = partnerChats[partnerChats.length - 1];
+    if (lastMsg) {
+      if (lastMsg.createdAt) {
+        const time = new Date(lastMsg.createdAt).getTime();
+        if (!isNaN(time)) return time;
+      }
+      if (lastMsg.id && typeof lastMsg.id === 'string') {
+        const num = parseInt(lastMsg.id.split('-')[0], 10);
+        if (!isNaN(num) && num > 1000000000000) return num;
+      }
+    }
+    const partnerConv = conversations.find(c => 
+      c.partnerId === partner.id || 
+      c.partnerId === partner.userId || 
+      c.id === partner.id ||
+      c.partner?.id === partner.id ||
+      c.partner?.userId === partner.userId
+    );
+    if (partnerConv) {
+      if (partnerConv.lastMessageAt) {
+        const time = new Date(partnerConv.lastMessageAt).getTime();
+        if (!isNaN(time)) return time;
+      }
+      if (partnerConv.updatedAt) {
+        const time = new Date(partnerConv.updatedAt).getTime();
+        if (!isNaN(time)) return time;
+      }
+    }
+    if (partner.matchedAt) {
+      const time = new Date(partner.matchedAt).getTime();
+      if (!isNaN(time)) return time;
+    }
+    return 0;
+  }, [chats, conversations]);
+
+  // Dynamically sorted chat partners: Pinned conversations first, then sorted by newest activity (Instagram style)
+  const sortedChatPartners = useMemo(() => {
+    const list = Array.isArray(chatPartners) ? [...chatPartners] : [];
+    return list.sort((a, b) => {
+      const aPinned = isPartnerPinned(a.id) || (a.userId && isPartnerPinned(a.userId));
+      const bPinned = isPartnerPinned(b.id) || (b.userId && isPartnerPinned(b.userId));
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+      return getPartnerActivityTime(b) - getPartnerActivityTime(a);
+    });
+  }, [chatPartners, isPartnerPinned, getPartnerActivityTime]);
 
   const activeMessagesRaw = activeChatId ? (
     chats[activeChatId] ||
@@ -1324,13 +1526,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           </header>
 
           <div className="chat-partners-list">
-            {chatPartners.length > 0 ? (
-              chatPartners.map(partner => {
-                const partnerChats = chats[partner.id] || [];
+            {sortedChatPartners.length > 0 ? (
+              sortedChatPartners.map(partner => {
+                const partnerChats = chats[partner.id] || (partner.userId ? chats[partner.userId] : null) || [];
                 const lastMsg = partnerChats[partnerChats.length - 1];
                 const isActive = partner.id === activeChatId;
-                const partnerConv = conversations.find(c => c.partnerId === partner.id || c.id === partner.id);
+                const partnerConv = conversations.find(c => c.partnerId === partner.id || c.partnerId === partner.userId || c.id === partner.id);
                 const unreadCount = partnerConv?.unreadCount || 0;
+                const isPinned = isPartnerPinned(partner.id) || isPartnerPinned(partner.userId);
 
                 return (
                   <button
@@ -1348,7 +1551,18 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
 
                     <div className="partner-item-info">
                       <div className="partner-item-name-row">
-                        <span className="partner-item-name font-ui">{partner.name}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                          <span className="partner-item-name font-ui">{partner.name}</span>
+                          {isPinned && (
+                            <PushPinSimple
+                              size={13}
+                              weight="fill"
+                              className="partner-pinned-icon"
+                              style={{ color: 'var(--burgundy-500)', transform: 'rotate(45deg)', flexShrink: 0 }}
+                              title="Pinned chat"
+                            />
+                          )}
+                        </div>
                         {lastMsg && <span className="partner-item-time font-ui">{lastMsg.timestamp}</span>}
                       </div>
                       <div className="partner-item-preview-row">
@@ -1408,6 +1622,15 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <h2 className="active-header-name font-display">{activePartner.name}</h2>
+                      {(isPartnerPinned(activePartner.id) || isPartnerPinned(activePartner.userId)) && (
+                        <PushPinSimple
+                          size={15}
+                          weight="fill"
+                          className="partner-pinned-icon"
+                          style={{ color: 'var(--burgundy-500)', transform: 'rotate(45deg)', flexShrink: 0 }}
+                          title="Pinned conversation"
+                        />
+                      )}
                       {/* Header Badge */}
                       {letterStatus?.myLetter?.status === 'SEALED' && letterStatus?.receivedLetter?.status === 'SEALED' ? (
                         <button
@@ -1466,6 +1689,22 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
 
                   {showDropdown && (
                     <div className="options-dropdown font-ui" role="menu">
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false);
+                          togglePinChat(activePartner.id || activePartner.userId);
+                        }}
+                        role="menuitem"
+                        className="dropdown-item"
+                      >
+                        <PushPinSimple
+                          size={16}
+                          weight={isPartnerPinned(activePartner.id) || isPartnerPinned(activePartner.userId) ? 'fill' : 'regular'}
+                        />
+                        <span>
+                          {isPartnerPinned(activePartner.id) || isPartnerPinned(activePartner.userId) ? 'Unpin Chat' : 'Pin Chat'}
+                        </span>
+                      </button>
                       <button
                         onClick={() => {
                           setShowDropdown(false);
@@ -1743,7 +1982,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                                         onClick={() => setLightboxImage({ type: 'image', url, name: att.fileName || 'Image', messageId: msg.id, isUser })}
                                       >
                                         <ProtectedImage
-                                          src={url}
+                                          src={getOptimizedMediaUrl(url, 800)}
                                           alt={att.fileName || 'Attachment'}
                                           className="chat-attached-img-wrap"
                                           imgClassName="chat-attached-img"
@@ -2343,18 +2582,50 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
       {lightboxImage && (
         <div className="chat-lightbox-overlay" onClick={() => setLightboxImage(null)}>
           <div className="chat-lightbox-content" onClick={e => e.stopPropagation()}>
-            <button className="chat-lightbox-close" onClick={() => setLightboxImage(null)}>
+            <button className="chat-lightbox-close" onClick={() => setLightboxImage(null)} aria-label="Close image">
               <X size={24} />
             </button>
-            <ProtectedImage
-              src={lightboxImage.url}
-              alt={lightboxImage.name}
-              className="chat-lightbox-img-wrap"
-              imgClassName="chat-lightbox-img"
-              enableBlurOnFocusLoss={true}
-            />
+
+            <div className="chat-lightbox-img-container">
+              {isLightboxLoading && (
+                <div className="chat-lightbox-spinner-wrap font-ui">
+                  <Spinner size={32} className="spin-animation" />
+                  <span>Loading photo...</span>
+                </div>
+              )}
+
+              {lightboxLoadError ? (
+                <div className="chat-lightbox-error-wrap font-ui">
+                  <WarningCircle size={36} color="#ff4d4f" />
+                  <p>Could not load photo</p>
+                  <button
+                    type="button"
+                    className="chat-lightbox-retry-btn"
+                    onClick={() => {
+                      setLightboxLoadError(false);
+                      setIsLightboxLoading(true);
+                    }}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : (
+                <img
+                  src={getOptimizedMediaUrl(lightboxImage.url, 1600)}
+                  alt={lightboxImage.name || 'Photo'}
+                  className={`chat-lightbox-img ${isLightboxLoading ? 'is-loading' : 'is-loaded'}`}
+                  onLoad={() => setIsLightboxLoading(false)}
+                  onError={() => {
+                    setIsLightboxLoading(false);
+                    setLightboxLoadError(true);
+                  }}
+                  draggable={false}
+                />
+              )}
+            </div>
+
             <div className="chat-lightbox-footer font-ui">
-              <span>{lightboxImage.name}</span>
+              <span className="chat-lightbox-filename" title={lightboxImage.name}>{lightboxImage.name}</span>
               <div className="chat-lightbox-actions">
                 {lightboxImage.isUser && (
                   <button
@@ -2367,7 +2638,15 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                     <Trash size={20} />
                   </button>
                 )}
-                <a href={lightboxImage.url} target="_blank" rel="noopener noreferrer" download className="chat-lightbox-download">
+                <a
+                  href={lightboxImage.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  className="chat-lightbox-download"
+                  title="Download photo"
+                  aria-label="Download photo"
+                >
                   <DownloadSimple size={20} />
                 </a>
               </div>
@@ -3426,39 +3705,107 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           position: fixed;
           inset: 0;
           z-index: 1000;
-          background-color: rgba(0, 0, 0, 0.85);
-          backdrop-filter: blur(4px);
+          background-color: rgba(0, 0, 0, 0.88);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: var(--space-6);
+          padding: var(--space-4);
+          user-select: none;
+          -webkit-user-select: none;
         }
 
         .chat-lightbox-content {
           position: relative;
-          max-width: 90vw;
+          max-width: 94vw;
           max-height: 90vh;
           display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: center;
         }
 
         .chat-lightbox-close {
           position: absolute;
-          top: -40px;
+          top: -44px;
           right: 0;
-          background: none;
+          background: rgba(255, 255, 255, 0.15);
           border: none;
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           color: #FFFFFF;
+          cursor: pointer;
+          transition: background-color var(--duration-fast);
+          z-index: 10;
+        }
+
+        .chat-lightbox-close:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-lightbox-img-container {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 220px;
+          min-height: 220px;
+          max-width: 92vw;
+          max-height: 75vh;
+        }
+
+        .chat-lightbox-spinner-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          color: #FFFFFF;
+          font-size: 14px;
+        }
+
+        .chat-lightbox-error-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+          color: #FFFFFF;
+          font-size: 14px;
+          text-align: center;
+        }
+
+        .chat-lightbox-retry-btn {
+          padding: 6px 16px;
+          border-radius: 20px;
+          background: var(--burgundy-500);
+          color: #FFFFFF;
+          border: none;
+          font-weight: 600;
+          font-size: 13px;
           cursor: pointer;
         }
 
         .chat-lightbox-img {
-          max-width: 100%;
-          max-height: 80vh;
+          max-width: 92vw;
+          max-height: 75vh;
+          width: auto;
+          height: auto;
           border-radius: var(--radius-md);
           object-fit: contain;
-          box-shadow: var(--shadow-xl);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+          transition: opacity 0.2s ease;
+        }
+
+        .chat-lightbox-img.is-loading {
+          display: none;
+        }
+
+        .chat-lightbox-img.is-loaded {
+          display: block;
         }
 
         .chat-lightbox-footer {
@@ -3466,8 +3813,24 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           color: #FFFFFF;
           display: flex;
           align-items: center;
+          justify-content: space-between;
           gap: var(--space-4);
           font-size: var(--text-body-sm);
+          max-width: 92vw;
+          width: 100%;
+        }
+
+        .chat-lightbox-filename {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          max-width: 240px;
+        }
+
+        .partner-pinned-icon {
+          flex-shrink: 0;
+          color: var(--burgundy-500);
+          transform: rotate(45deg);
         }
 
         .message-image-attachment {

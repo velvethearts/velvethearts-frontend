@@ -90,6 +90,7 @@ function AppContent() {
   // Specific detail sub-page triggers
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [preselectedChatPartnerId, setPreselectedChatPartnerId] = useState(null);
+  const [activeChatPartnerId, setActiveChatPartnerId] = useState(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isViewingSavedProfiles, setIsViewingSavedProfiles] = useState(false);
 
@@ -299,6 +300,7 @@ function AppContent() {
             preselectedConnectionId={preselectedChatPartnerId}
             onClearPreselected={() => setPreselectedChatPartnerId(null)}
             onSelectProfile={setSelectedProfile}
+            onActiveChatChange={setActiveChatPartnerId}
           />
         );
 
@@ -432,7 +434,10 @@ function AppContent() {
 
   // 3. Authenticated and Onboarded: Layout wrapping Main Navigation
   return (
-    <Navigation isChatViewActive={activeTab === 'chat' && !selectedProfile}>
+    <Navigation
+      isChatViewActive={activeTab === 'chat' && !selectedProfile}
+      isInsideChat={activeTab === 'chat' && Boolean(activeChatPartnerId) && !selectedProfile}
+    >
       <Suspense fallback={<AuthLoadingScreen />}>
         {renderActivePage()}
       </Suspense>

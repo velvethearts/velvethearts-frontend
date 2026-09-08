@@ -4,7 +4,7 @@ import { Compass, Heart, Chats, User, ShieldCheck, Sliders, Crown, Bell } from '
 import { ThemeToggle } from './UI/ThemeToggle';
 import logo from "../assets/velvet-heart-logo.png";
 
-export const Navigation = ({ children, isChatViewActive }) => {
+export const Navigation = ({ children, isChatViewActive, isInsideChat }) => {
   const { activeTab, setActiveTab, userProfile, userRole, notificationUnreadCount, chatUnreadCount, isFeatureTourActive } = useApp();
 
   const isChatLayout = isChatViewActive !== undefined ? isChatViewActive : activeTab === 'chat';
@@ -86,12 +86,12 @@ export const Navigation = ({ children, isChatViewActive }) => {
       </aside>
 
       {/* Main Content Area */}
-      <main className={`main-content-layout ${isChatLayout ? 'chat-active-layout' : ''}`}>
+      <main className={`main-content-layout ${isChatLayout ? 'chat-active-layout' : ''} ${isInsideChat ? 'chat-inside-conversation' : ''}`}>
         {children}
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className={`mobile-bottom-nav ${isFeatureTourActive ? 'tour-nav-active' : ''}`}>
+      <nav className={`mobile-bottom-nav ${isFeatureTourActive ? 'tour-nav-active' : ''} ${isInsideChat ? 'chat-nav-hidden' : ''}`}>
         <ul>
           {navItems.map(item => {
             const Icon = item.icon;
@@ -301,22 +301,28 @@ export const Navigation = ({ children, isChatViewActive }) => {
           }
 
           /* When inside an active chat conversation on mobile, hide the bottom navigation bar and remove bottom padding so input stays anchored */
+          .mobile-bottom-nav.chat-nav-hidden,
           body.chat-active-conversation .mobile-bottom-nav,
           .main-content-layout.chat-active-layout:has(.partner-selected) + .mobile-bottom-nav,
           .main-content-layout.chat-active-layout:has(.partner-selected) ~ .mobile-bottom-nav {
             display: none !important;
           }
 
+          .main-content-layout.chat-inside-conversation,
           body.chat-active-conversation .main-content-layout.chat-active-layout,
           .main-content-layout.chat-active-layout:has(.partner-selected) {
             padding-bottom: 0 !important;
-            height: 100vh;
-            height: 100dvh;
-            min-height: 100vh;
-            min-height: 100dvh;
-            max-height: 100vh;
-            max-height: 100dvh;
+            height: 100vh !important;
+            height: 100dvh !important;
+            min-height: 100vh !important;
+            min-height: 100dvh !important;
+            max-height: 100vh !important;
+            max-height: 100dvh !important;
           }
+        }
+
+        .mobile-bottom-nav.chat-nav-hidden {
+          display: none !important;
         }
 
         .mobile-bottom-nav {
