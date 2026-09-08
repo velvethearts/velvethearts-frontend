@@ -1226,13 +1226,13 @@ export const EditProfile = ({ onBack }) => {
         onClose={() => setIsVerifyModalOpen(false)}
         primaryPhotoUrl={localProfile.photos?.[0] || null}
         onVerified={() => {
-          setLocalProfile(prev => ({ ...prev, verified: true }));
-          if (setUserProfile) setUserProfile(prev => ({ ...prev, verified: true }));
+          setLocalProfile(prev => ({ ...prev, verificationStatus: 'PENDING', verified: false }));
+          if (setUserProfile) setUserProfile(prev => ({ ...prev, verificationStatus: 'PENDING', verified: false }));
           initialPrimaryPhotoRef.current = localProfile.photos?.[0] || null;
           hasAlertedPrimaryChangeRef.current = false;
           try {
-            localStorage.setItem('vh-user-verified', 'true');
-            localStorage.setItem('vh-verification-completed', 'true');
+            localStorage.setItem('vh_manual_verification_pending', 'true');
+            localStorage.removeItem('vh-user-verified');
             localStorage.removeItem('vh_verification_snoozed_until');
           } catch (_) {}
           setIsVerifyModalOpen(false);

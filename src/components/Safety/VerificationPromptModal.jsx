@@ -102,8 +102,8 @@ export const VerificationPromptModal = () => {
 
   const handleVerifiedSuccess = () => {
     try {
-      localStorage.setItem('vh-user-verified', 'true');
-      localStorage.setItem('vh-verification-completed', 'true');
+      localStorage.setItem('vh_manual_verification_pending', 'true');
+      localStorage.removeItem('vh-user-verified');
       localStorage.removeItem(SNOOZE_KEY);
     } catch (_) {}
     setIsPhotoVerifyOpen(false);

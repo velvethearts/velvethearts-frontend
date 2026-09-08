@@ -42,8 +42,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
 
     const isAlreadyVerified = Boolean(
       userProfile?.verified === true ||
-      userProfile?.verified === 'true' ||
-      localStorage.getItem('vh-user-verified') === 'true'
+      userProfile?.verified === 'true'
     );
     if (isAlreadyVerified) return 'success';
 
@@ -117,8 +116,7 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       // Check if user is already verified
       const isAlreadyVerified = Boolean(
         userProfile?.verified === true ||
-        userProfile?.verified === 'true' ||
-        localStorage.getItem('vh-user-verified') === 'true'
+        userProfile?.verified === 'true'
       );
       if (isAlreadyVerified) {
         setStep('success');
@@ -438,30 +436,44 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
         }
       }
 
-      // 4. Call backend verification endpoint (non-blocking for onboarding/offline)
+      // 4. Submit verification selfie to backend queue for admin review
       try {
         if (api.isConfigured && api.verifyPhoto) {
           await api.verifyPhoto({
             selfie: capturedImage,
-            poseId: 'BIOMETRIC_FACE_ID'
+            poseId: 'BIOMETRIC_FACE_ID',
+            referenceUrl: referencePhoto,
+          });
+        } else if (api.isConfigured && api.submitManualVerification) {
+          await api.submitManualVerification({
+            selfie: capturedImage,
+            referenceUrl: referencePhoto,
           });
         }
       } catch (backendErr) {
-        console.warn('[PhotoVerification] Backend verification endpoint skipped or deferred:', backendErr);
+        console.warn('[PhotoVerification] Backend verification submission error:', backendErr);
       }
 
-      // 5. Update local profile state and persistent storage to verified
+      // 5. Update local state to pending admin review (Admin Approval Only)
       try {
-        localStorage.setItem('vh-user-verified', 'true');
-        localStorage.setItem('vh-verification-completed', 'true');
+        localStorage.setItem('vh_manual_verification_pending', 'true');
+        localStorage.removeItem('vh-user-verified');
         localStorage.removeItem('vh_verification_snoozed_until');
       } catch (_) {}
+
+      const pendingStatus = {
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+      };
+      setVerificationStatus(pendingStatus);
 
       if (setUserProfile) {
         setUserProfile((prev) => {
           const updated = {
             ...prev,
-            verified: true
+            verified: false,
+            verificationStatus: 'PENDING',
+            latestVerificationRequest: pendingStatus,
           };
           try {
             localStorage.setItem('vh-user-profile', JSON.stringify(updated));
@@ -471,8 +483,9 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       }
 
       setIsReverifying(false);
-      setStep('success');
-      if (onVerified) onVerified();
+      stopCamera();
+      setStep('under_review');
+      if (onVerified) onVerified({ verified: false, status: 'PENDING' });
     } catch (err) {
       console.error('Verification submission failed:', err);
       setFailureReason(err.message || 'Photo verification could not be completed. Please ensure your face is well-lit and retry.');

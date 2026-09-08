@@ -594,7 +594,7 @@ export const OnboardingFlow = () => {
                     gender: finalGender,
                     orientation: finalOrientation,
                     photos: photoPreviews.length > 0 ? photoPreviews : [getDefaultAvatar(finalGender)],
-                    verified: Boolean(formData.verified)
+                    verified: false
                 });
                 try {
                     localStorage.removeItem(DRAFT_KEY);
@@ -1121,32 +1121,33 @@ export const OnboardingFlow = () => {
                                             <div className="onboarding-verify-title">
                                                 {formData.verified
                                                     ? 'Photo Verification Complete ✓'
-                                                    : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                                                    : (formData.verificationPending || userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
                                                     ? 'Manual Verification Under Review ⏳'
-                                                    : 'Get Verified Badge (Recommended)'}
+                                                    : 'Submit for Verification (Admin Review)'}
                                             </div>
                                             <p className="onboarding-verify-desc font-body">
                                                 {formData.verified
-                                                    ? 'Your live pose selfie was confirmed. You’ll launch with the official Verified Badge!'
-                                                    : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
-                                                    ? 'Your photos are under review by our moderation team. You can continue onboarding while we verify your profile.'
-                                                    : 'Prove you are real with a quick 1-handed pose selfie to get 3x more meaningful connections.'}
+                                                    ? 'Your profile is officially verified with the rosette badge.'
+                                                    : (formData.verificationPending || userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                                                    ? 'Your verification selfie has been submitted and is currently queued for admin approval. You can complete onboarding now!'
+                                                    : 'Take a quick face scan to submit for admin verification and earn the official Verified Rosette.'}
                                             </p>
                                         </div>
                                     </div>
                                     <Button
                                         type="button"
-                                        variant={formData.verified ? 'secondary' : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true') ? 'secondary' : 'primary'}
+                                        variant={formData.verified ? 'secondary' : (formData.verificationPending || userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true') ? 'secondary' : 'primary'}
                                         size="sm"
                                         onClick={() => {
                                             const isPending = Boolean(
+                                                formData.verificationPending ||
                                                 userProfile?.verificationStatus === 'PENDING' ||
                                                 localStorage.getItem('vh_manual_verification_pending') === 'true'
                                             );
                                             if (isPending) {
                                                 showAlert?.({
                                                     title: 'Verification Under Review',
-                                                    message: 'Your photo verification has already been sent for manual review. Our team is currently reviewing your profile. Please wait.',
+                                                    message: 'Your photo verification has already been sent for manual review. Our moderation team reviews every profile before granting the verified badge. Please wait.',
                                                 });
                                             }
                                             if (formData.verified) {
@@ -1160,7 +1161,7 @@ export const OnboardingFlow = () => {
                                     >
                                         {formData.verified
                                             ? 'Re-verify'
-                                            : (userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
+                                            : (formData.verificationPending || userProfile?.verificationStatus === 'PENDING' || localStorage.getItem('vh_manual_verification_pending') === 'true')
                                             ? 'Check Status'
                                             : 'Verify Now'}
                                     </Button>
@@ -2116,11 +2117,10 @@ export const OnboardingFlow = () => {
                 }}
                 primaryPhotoUrl={photoPreviews[0] || null}
                 onVerified={() => {
-                    setFormData(prev => ({ ...prev, verified: true }));
+                    setFormData(prev => ({ ...prev, verified: false, verificationPending: true }));
                     try {
-                        localStorage.setItem('vh-user-verified', 'true');
-                        localStorage.setItem('vh-verification-completed', 'true');
-                        localStorage.removeItem('vh_verification_snoozed_until');
+                        localStorage.setItem('vh_manual_verification_pending', 'true');
+                        localStorage.removeItem('vh-user-verified');
                     } catch (_) {}
                     setIsVerifyModalOpen(false);
                     setIsReverifyMode(false);
