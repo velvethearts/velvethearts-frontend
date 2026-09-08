@@ -15,7 +15,7 @@ export const Navigation = ({ children, isChatViewActive, isInsideChat }) => {
     { id: 'discover', label: 'Discover', icon: Compass },
     { id: 'matches', label: 'Matches', icon: Heart },
     { id: 'notifications', label: 'Notifications', icon: Bell, badge: notificationUnreadCount },
-    { id: 'chat', label: 'Chat', icon: Chats, badge: chatUnreadCount },
+    { id: 'chat', label: 'Chat', icon: Chats, badge: (activeTab === 'chat' && isInsideChat) ? 0 : chatUnreadCount },
     { id: 'profile', label: 'You', icon: User },
     ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: Crown }] : []),
   ];

@@ -108,6 +108,7 @@ function AppContent() {
   // Helper when user selects a match connection to chat with
   const handleSelectConnection = (connection) => {
     setPreselectedChatPartnerId(connection.id);
+    setActiveChatPartnerId(connection.id);
     setActiveTab('chat');
   };
 
@@ -117,6 +118,7 @@ function AppContent() {
   React.useEffect(() => {
     if (deepLinkConversationId) {
       setPreselectedChatPartnerId(deepLinkConversationId);
+      setActiveChatPartnerId(deepLinkConversationId);
       setActiveTab('chat');
       // Clear the deep link so subsequent navigations don't re-trigger automatically
       setDeepLinkConversationId(null);
@@ -442,7 +444,7 @@ function AppContent() {
   return (
     <Navigation
       isChatViewActive={activeTab === 'chat' && !selectedProfile}
-      isInsideChat={activeTab === 'chat' && Boolean(activeChatPartnerId) && !selectedProfile}
+      isInsideChat={activeTab === 'chat' && Boolean(activeChatPartnerId || preselectedChatPartnerId) && !selectedProfile}
     >
       <Suspense fallback={<AuthLoadingScreen />}>
         {renderActivePage()}

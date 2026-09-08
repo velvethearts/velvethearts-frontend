@@ -1128,6 +1128,15 @@ export const AppProvider = ({ children }) => {
                             };
                         });
 
+                        // Check if user is currently chatting with this partner
+                        const activeTabCur = sessionStorage.getItem('vh-active-tab');
+                        const activeChatCur = sessionStorage.getItem('vh-active-chat-id');
+                        const isCurrentlyChatting = activeTabCur === 'chat' && (
+                            activeChatCur === partnerId ||
+                            activeChatCur === conversationId ||
+                            (partnerConn && (activeChatCur === partnerConn.id || activeChatCur === partnerConn.userId))
+                        );
+
                         // Update conversation preview and unread count in conversations state
                         setConversations(prevConvs => {
                             const exists = prevConvs.some(c => c.id === conversationId || c.partnerId === partnerId);
@@ -1144,7 +1153,7 @@ export const AppProvider = ({ children }) => {
                                             ...c,
                                             lastMessage: displayLastMsg,
                                             lastMessageTime: message.createdAt || new Date().toISOString(),
-                                            unreadCount: isPartnerSender ? (c.unreadCount || 0) + 1 : (c.unreadCount || 0)
+                                            unreadCount: isCurrentlyChatting ? 0 : (isPartnerSender ? (c.unreadCount || 0) + 1 : (c.unreadCount || 0))
                                         };
                                     }
                                     return c;
@@ -1155,17 +1164,17 @@ export const AppProvider = ({ children }) => {
                             }
                         });
 
-                        // Trigger Toast notification if message is from partner and user is not actively chatting with them
-                        if (isFromPartner) {
-                            const activeTabCur = sessionStorage.getItem('vh-active-tab');
-                            const activeChatCur = sessionStorage.getItem('vh-active-chat-id');
-                            const isCurrentlyChatting = activeTabCur === 'chat' && (
-                                activeChatCur === partnerId ||
-                                activeChatCur === conversationId ||
-                                (partnerConn && (activeChatCur === partnerConn.id || activeChatCur === partnerConn.userId))
-                            );
+                        // If user is actively chatting with them right now, immediately mark seen
+                        if (isCurrentlyChatting && conversationId) {
+                            emitMarkSeen(conversationId);
+                            if (api.isConfigured) {
+                                api.markSeen(conversationId).catch(() => {});
+                            }
+                        }
 
-                            if (!isCurrentlyChatting && notificationsRef.current?.chatNotifs !== false) {
+                        // Trigger Toast notification if message is from partner and user is not actively chatting with them
+                        if (isFromPartner && !isCurrentlyChatting) {
+                            if (notificationsRef.current?.chatNotifs !== false) {
                                 addToast({
                                     partnerId,
                                     conversationId,
@@ -2315,18 +2324,25 @@ export const AppProvider = ({ children }) => {
     const markConversationSeen = useCallback(async (targetId) => {
         if (!targetId) return;
 
-        const conversation = conversationsRef.current.find(c =>
+        const partnerConn = connectionsRef.current.find(c =>
             c.id === targetId ||
-            c.partnerId === targetId ||
+            c.userId === targetId ||
             c.matchId === targetId
         );
 
-        const convId = conversation?.id || targetId;
-        const partnerId = conversation?.partnerId || targetId;
+        const conversation = conversationsRef.current.find(c =>
+            c.id === targetId ||
+            c.partnerId === targetId ||
+            c.matchId === targetId ||
+            (partnerConn && (c.partnerId === partnerConn.id || c.partnerId === partnerConn.userId))
+        );
+
+        const convId = conversation?.id || (typeof targetId === 'string' && targetId.startsWith('conv-') ? targetId : null);
+        const partnerId = conversation?.partnerId || partnerConn?.userId || partnerConn?.id || targetId;
 
         // Reset unread count for this conversation in local state
         setConversations(prev => prev.map(c =>
-            (c.id === convId || c.partnerId === partnerId)
+            (c.id === convId || c.partnerId === partnerId || (partnerConn && (c.partnerId === partnerConn.id || c.partnerId === partnerConn.userId)))
                 ? { ...c, unreadCount: 0 }
                 : c
         ));

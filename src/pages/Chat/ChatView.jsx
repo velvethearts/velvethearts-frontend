@@ -1324,6 +1324,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     }
   }, [conversationId, activeChatId, markConversationSeen]);
 
+  // When actively viewing a chat, automatically clear unread badge as new messages arrive
+  useEffect(() => {
+    if (activeChatId) {
+      if (conversationId) {
+        markConversationSeen(conversationId);
+      } else {
+        markConversationSeen(activeChatId);
+      }
+    }
+  }, [activeMessages.length, conversationId, activeChatId, markConversationSeen]);
+
   // Fetch fresh messages (including attachments) whenever the active conversation changes.
   // This ensures messages are never stale after a page refresh or re-entering a chat.
   useEffect(() => {
