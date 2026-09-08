@@ -15,7 +15,7 @@ import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 import { StateSelectDropdown } from '../../components/UI/StateSelectDropdown';
 
 export const OnboardingFlow = () => {
-    const { completeOnboarding, logout, showConfirm, showAlert } = useApp();
+    const { completeOnboarding, logout, showConfirm, showAlert, userProfile } = useApp();
 
     const DRAFT_KEY = 'vh-onboarding-draft';
 
