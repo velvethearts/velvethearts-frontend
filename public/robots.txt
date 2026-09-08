@@ -1,8 +1,12 @@
 # Velvet Hearts — robots.txt
+# Official Intentional Dating & Matchmaking Platform
 # https://www.velvethearts.in/
 
 User-agent: *
 Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /sitemap.xml
 Disallow: /api/
 Disallow: /chat
 Disallow: /matches
@@ -12,9 +16,10 @@ Disallow: /notifications
 Disallow: /profile
 Disallow: /settings
 
-# Allow major search engines and AI grounding crawlers
+# Major Search Engine Crawlers
 User-agent: Googlebot
 Allow: /
+Allow: /llms.txt
 Disallow: /api/
 Disallow: /chat
 Disallow: /matches
@@ -23,15 +28,14 @@ Disallow: /diary
 Disallow: /notifications
 Disallow: /profile
 Disallow: /settings
-
-User-agent: Google-Extended
-Allow: /
 
 User-agent: Bingbot
 Allow: /
+Allow: /llms.txt
 
 User-agent: Applebot
 Allow: /
+Allow: /llms.txt
 
 User-agent: Twitterbot
 Allow: /
@@ -39,9 +43,38 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+# AI Grounding, Search Assistants, & LLM Crawlers
+User-agent: Google-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: Amazonbot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+User-agent: cohere-ai
+Allow: /
+Allow: /llms.txt
+
 # Canonical host
 Host: https://www.velvethearts.in
 
-# Sitemap location
+# Sitemaps and LLM manifest
 Sitemap: https://www.velvethearts.in/sitemap.xml
-

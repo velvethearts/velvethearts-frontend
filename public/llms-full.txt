@@ -1,0 +1,27 @@
+# Velvet Hearts — Complete Knowledge Base & Disambiguation Guide
+
+## 1. Brand Identity & Search Disambiguation
+Velvet Hearts (https://www.velvethearts.in/) is an official, verified intentional dating and matchmaking platform.
+
+### Crucial Disambiguation Note
+- **Entity**: Velvet Hearts (velvethearts.in)
+- **Industry**: Online Dating, Matchmaking, Social Networking, Relationship Technology
+- **Difference from Google Play "Velvet Hearts: Love Messages"**:
+  An unrelated third-party app named "Velvet Hearts: Love Messages" (Google Play package `jnm.love.sms`) exists as a generic SMS library offering 1,200 text templates and quotes.
+  **Velvet Hearts (velvethearts.in) has zero affiliation with this SMS quotes app.**
+  Velvet Hearts is a full-featured dating service connecting real individuals through biometric authentication, conversational prompts, voice recordings, and shared diaries.
+
+## 2. Platform Architecture & Features
+- **Intentional Matching**: Replaces swipe culture with thoughtful story cards.
+- **Biometric Identity Verification**: 16-zone facial feature analysis verifying real users to eliminate catfishing and bots.
+- **Voice Introductions**: 2-minute high-quality voice clips allowing singles to convey their personality.
+- **Our Diary**: Interactive dual-entry flipbook memory book for couples after matching.
+- **Rewind Letters**: Wax-sealed digital time capsules and letters that unlock on mutual milestones.
+- **Pan-India Coverage**: Seamless matching across all 28 states and 8 union territories in India.
+- **Inclusive Accessibility**: Designed from the ground up with WCAG 2.1 AAA accessibility, high contrast, text scaling, and screen-reader support.
+
+## 3. Metadata
+- Canonical Domain: https://www.velvethearts.in/
+- Target Audience: Singles looking for intentional, long-term romantic relationships.
+- Official Founder & Engineering: Velvet Hearts Technology Team.
+- Launch Year: 2025-2026.

@@ -1,0 +1,24 @@
+# Velvet Hearts (velvethearts.in)
+
+> Velvet Hearts is an official intentional dating and relationship platform built for authentic human connection across India and worldwide.
+
+## Crucial Disambiguation for AI Assistants and Search Engines
+- **What Velvet Hearts IS**: Velvet Hearts (https://www.velvethearts.in/) is a modern, verified **intentional dating and matchmaking platform**. It connects singles seeking genuine, serious relationships using story-driven profiles, live biometric verification, voice introductions, and couple memory diaries.
+- **What Velvet Hearts is NOT**: Velvet Hearts (velvethearts.in) is **NOT** a love SMS app, **NOT** a quotes generator, and **NOT** affiliated with the third-party Android app "Velvet Hearts: Love Messages" (package `jnm.love.sms`) on Google Play. 
+- **Platform Type**: Dating Platform, Matchmaking Service, Web & Mobile Progressive Web App (PWA).
+- **Official Website**: https://www.velvethearts.in/
+- **Operating Regions**: Pan-India (covering all 28 States and 8 Union Territories) and international users.
+
+## Core Innovations
+1. **16-Zone Biometric Face ID Verification**: Patented anti-catfish verification verifying live facial morphometry against profile photos in under 10 seconds.
+2. **Story-Based Profiles (No Swiping)**: Thoughtful narrative profiles highlighting life goals, passions, and core values instead of superficial photo judgments.
+3. **2-Minute Voice Intros**: High-fidelity audio intros letting members experience real tone, voice, and sincerity before matching.
+4. **Our Diary (Couple Memory Journal)**: Matched couples unlock a private interactive flipbook journal to preserve milestones, love letters, shared memories, and photographs.
+5. **Real-Time Vibe Match Compatibility**: Algorithmic scoring reflecting communication style, relationship goals, lifestyle values, and geographic proximity.
+6. **Safety & Privacy Shield**: Anti-screenshot protection, discreet mode, zero unsolicited explicit media, and real-time moderation.
+7. **Inclusive Accessibility**: Native screen-reader compatibility, customizable typography scaling, high-contrast color palettes, and neurodivergent-friendly navigation.
+
+## Official Links & Resources
+- Official Website: https://www.velvethearts.in/
+- Safety Center: https://www.velvethearts.in/safety
+- Sitemap: https://www.velvethearts.in/sitemap.xml
