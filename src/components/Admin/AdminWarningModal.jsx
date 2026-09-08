@@ -73,6 +73,11 @@ export const AdminWarningModal = ({ isOpen, onClose, user, onSuccess }) => {
         autoSuspend,
       });
 
+      // Notify WarningsTab and admin metrics across the application
+      try {
+        window.dispatchEvent(new CustomEvent('vh:warning_issued', { detail: { userId: targetUserId } }));
+      } catch (_) {}
+
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {

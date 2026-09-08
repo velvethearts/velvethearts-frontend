@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../../lib/api';
+import { getSocket } from '../../lib/socket';
 import {
   Warning,
   ArrowsClockwise,
@@ -33,7 +34,8 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
     try {
       setLoading(true);
       const res = await api.admin.getWarnings(statusFilter !== 'ALL' ? statusFilter : undefined);
-      setWarnings(res?.data || []);
+      const list = Array.isArray(res) ? res : (res?.data || res?.warnings || []);
+      setWarnings(list);
     } catch (err) {
       console.error('Failed to fetch warnings:', err);
       showAlert?.(err?.response?.data?.message || err?.message || 'Failed to load warnings.', 'error');
@@ -44,6 +46,33 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
   useEffect(() => {
     fetchWarnings();
+  }, [fetchWarnings]);
+
+  // Real-time synchronization: listen to local dispatch events and backend web socket broadcasts
+  useEffect(() => {
+    const handleRefresh = () => {
+      fetchWarnings();
+    };
+
+    window.addEventListener('vh:warning_issued', handleRefresh);
+    window.addEventListener('vh:warning_updated', handleRefresh);
+
+    const socket = getSocket();
+    if (socket) {
+      socket.on('admin_warning_updated', handleRefresh);
+      socket.on('warning_issued', handleRefresh);
+      socket.on('appeal_submitted', handleRefresh);
+    }
+
+    return () => {
+      window.removeEventListener('vh:warning_issued', handleRefresh);
+      window.removeEventListener('vh:warning_updated', handleRefresh);
+      if (socket) {
+        socket.off('admin_warning_updated', handleRefresh);
+        socket.off('warning_issued', handleRefresh);
+        socket.off('appeal_submitted', handleRefresh);
+      }
+    };
   }, [fetchWarnings]);
 
   const handleResolve = async (warningId, action, note) => {
