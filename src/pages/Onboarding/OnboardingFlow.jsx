@@ -13,6 +13,7 @@ import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageF
 import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
 import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 import { StateSelectDropdown } from '../../components/UI/StateSelectDropdown';
+import { validatePrimaryProfilePhoto, detectFacePresenceInImage, compareFaceBiometrics } from '../../utils/faceBiometrics';
 
 export const OnboardingFlow = () => {
     const { completeOnboarding, logout, showConfirm, showAlert, userProfile } = useApp();
@@ -196,7 +197,45 @@ export const OnboardingFlow = () => {
                     continue;
                 }
 
-                // 2. Upload to Cloudinary via the backend and store only the returned secure URL
+                // 2. Read file to data URL for client-side face validation
+                const fileDataUrl = await new Promise((res) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => res(reader.result);
+                    reader.readAsDataURL(file);
+                });
+
+                // 3. If this is Photo #1 (Primary Photo), enforce a real, clear human face
+                if (currentPreviews.length === 0) {
+                    const faceValidation = await validatePrimaryProfilePhoto(fileDataUrl);
+                    if (!faceValidation.isValid) {
+                        setPhotoUploadError(faceValidation.reason);
+                        if (showAlert) {
+                            showAlert({
+                                title: 'Clear Face Required',
+                                message: faceValidation.reason,
+                                okText: 'Select Another Photo'
+                            });
+                        }
+                        continue;
+                    }
+                } else if (currentPreviews[0]) {
+                    // Secondary photos check: if it contains an unmatching face, warn the user
+                    detectFacePresenceInImage(fileDataUrl).then((facePresence) => {
+                        if (facePresence?.hasFace) {
+                            compareFaceBiometrics(fileDataUrl, currentPreviews[0]).then((comp) => {
+                                if (comp?.isMismatch) {
+                                    showAlert?.({
+                                        title: 'Different Person Detected',
+                                        message: `Photo #${currentPreviews.length + 1} appears to show someone else or a group photo. Please make sure your photos clearly show you.`,
+                                        okText: 'Understood'
+                                    });
+                                }
+                            }).catch(() => {});
+                        }
+                    }).catch(() => {});
+                }
+
+                // 4. Upload to Cloudinary via the backend and store only the returned secure URL
                 const result = await api.uploadPhoto(file);
                 currentPreviews = [...currentPreviews, result.secureUrl].slice(0, 6);
                 setPhotoPreviews(currentPreviews);

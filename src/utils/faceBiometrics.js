@@ -790,3 +790,93 @@ export const analyzeSecondaryPhotos = async (profilePhotos = [], primaryPhotoUrl
     hasDifferentFace: differentFaceCount > 0
   };
 };
+
+/**
+ * Strict validator for Photo #1 (Primary Profile Photo).
+ * Enforces that every member's main photo clearly depicts a real, un-occluded human face.
+ * Rejects memes, cartoons, animals, scenery, and heavily distorted/occluded face images.
+ */
+export const validatePrimaryProfilePhoto = async (imageSource) => {
+  if (!imageSource) return { isValid: false, reason: 'Please select a photo.' };
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      try {
+        const size = 100;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve({ isValid: true });
+
+        ctx.drawImage(img, 0, 0, size, size);
+        const data = ctx.getImageData(0, 0, size, size).data;
+
+        // 1. Lighting quality check
+        const lightCheck = detectLightingQuality(data, size);
+        if (lightCheck.isBadLighting) {
+          return resolve({ isValid: false, reason: lightCheck.reason });
+        }
+
+        // 2. Blur / sharpness check
+        const blurCheck = detectImageBlur(data, size);
+        if (blurCheck.isBlurry) {
+          return resolve({ isValid: false, reason: blurCheck.reason });
+        }
+
+        // 3. Facial Occlusion check (sunglasses, masks, hands covering face)
+        const occlusionCheck = detectFacialOcclusion(data, size);
+        if (occlusionCheck.isOccluded) {
+          return resolve({ isValid: false, reason: occlusionCheck.reason });
+        }
+
+        // 4. Center portrait quadrant face presence check
+        let facePixels = 0;
+        let total = 0;
+        let edgeSum = 0;
+
+        for (let y = 18; y < 82; y += 2) {
+          for (let x = 18; x < 82; x += 2) {
+            const idx = (y * size + x) * 4;
+            const r = data[idx];
+            const g = data[idx + 1];
+            const b = data[idx + 2];
+            total++;
+            if (isSkinOrFacePixel(r, g, b)) facePixels++;
+            edgeSum += computeSobelEdgeMagnitude(data, size, size, x, y);
+          }
+        }
+
+        const faceRatio = facePixels / Math.max(1, total);
+        const avgEdge = edgeSum / Math.max(1, total);
+
+        // If very little skin/face chrominance in center (e.g. landscape, car, object, pet, meme)
+        if (faceRatio < 0.055 || avgEdge < 1.6) {
+          return resolve({
+            isValid: false,
+            reason: 'A clear photo of your face is required for your primary profile picture. Scenery, memes, and non-face photos are not permitted as your first photo.'
+          });
+        }
+
+        // 5. Head Pose Angle check (profile / turned away)
+        const poseCheck = detectHeadPoseAngle(data, size);
+        if (poseCheck.isSideAngle) {
+          return resolve({
+            isValid: false,
+            reason: 'Please use a photo facing forward towards the camera. Extreme side angles are not permitted for your primary photo.'
+          });
+        }
+
+        resolve({ isValid: true });
+      } catch (e) {
+        resolve({ isValid: true });
+      }
+    };
+
+    img.onerror = () => resolve({ isValid: false, reason: 'Could not load photo. Please try another image file.' });
+    img.src = typeof imageSource === 'string' ? imageSource : (imageSource.toDataURL ? imageSource.toDataURL() : '');
+  });
+};

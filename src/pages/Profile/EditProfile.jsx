@@ -14,7 +14,7 @@ import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageF
 import { StateSelectDropdown } from '../../components/UI/StateSelectDropdown';
 import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
 import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
-import { compareFaceBiometrics, analyzeLiveFaceStructure, detectFacePresenceInImage } from '../../utils/faceBiometrics';
+import { compareFaceBiometrics, analyzeLiveFaceStructure, detectFacePresenceInImage, validatePrimaryProfilePhoto } from '../../utils/faceBiometrics';
 
 export const EditProfile = ({ onBack }) => {
   const { userProfile, setUserProfile, updateUserProfile, showAlert } = useApp();
@@ -323,6 +323,24 @@ export const EditProfile = ({ onBack }) => {
         });
       }
 
+      // If uploading to slot 0 (Primary Photo), enforce a real, clear human face
+      if (index === 0) {
+        const faceValidation = await validatePrimaryProfilePhoto(finalUrl);
+        if (!faceValidation.isValid) {
+          if (showAlert) {
+            showAlert({
+              title: 'Clear Face Required',
+              message: faceValidation.reason,
+              okText: 'Select Another Photo'
+            });
+          } else {
+            alert(faceValidation.reason);
+          }
+          if (e.target) e.target.value = '';
+          return;
+        }
+      }
+
       setUploadProgress({ index, percent: 100 });
       const isPrimaryUpload = (index === 0 && finalUrl !== initialPrimaryPhotoRef.current);
       setLocalProfile(prev => {
@@ -386,9 +404,23 @@ export const EditProfile = ({ onBack }) => {
     });
   };
 
-  const handleMovePhoto = (index, direction) => {
+  const handleMovePhoto = async (index, direction) => {
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= (localProfile.photos || []).length) return;
+
+    // If moving a photo into Slot 1 (Primary Photo), verify that it clearly depicts a face
+    const candidatePhoto = (localProfile.photos || [])[index];
+    if (newIndex === 0 && candidatePhoto) {
+      const faceValidation = await validatePrimaryProfilePhoto(candidatePhoto);
+      if (!faceValidation.isValid) {
+        showAlert?.({
+          title: 'Clear Face Required',
+          message: 'Your primary profile photo must clearly show your face. Scenery, memes, or non-face photos cannot be set as your main photo.',
+          okText: 'Keep As Secondary'
+        });
+        return;
+      }
+    }
 
     setLocalProfile(prev => {
       const nextPhotos = [...(prev.photos || [])];
