@@ -553,6 +553,21 @@ const DashboardStatsTab = ({ onNavigateTab, onViewUser, showAlert }) => {
     fetchStats();
   }, [fetchStats]);
 
+  // Real-time socket listener: refresh metrics when verification requests are submitted
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleNewVerification = () => {
+      fetchStats();
+    };
+
+    socket.on('verification_request_submitted', handleNewVerification);
+    return () => {
+      socket.off('verification_request_submitted', handleNewVerification);
+    };
+  }, [fetchStats]);
+
   if (loading) {
     return (
       <div className="admin-loading">
@@ -841,6 +856,21 @@ const VerificationRequestsTab = ({ showAlert, onViewUser }) => {
 
   useEffect(() => {
     fetchRequests();
+  }, [fetchRequests]);
+
+  // Real-time socket listener: refresh queue immediately when any user submits a verification scan
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleNewVerification = () => {
+      fetchRequests();
+    };
+
+    socket.on('verification_request_submitted', handleNewVerification);
+    return () => {
+      socket.off('verification_request_submitted', handleNewVerification);
+    };
   }, [fetchRequests]);
 
   const handleApprove = async (id) => {
@@ -1634,6 +1664,23 @@ const PendingUsersTab = ({ showAlert, onViewUser }) => {
 
   useEffect(() => {
     fetchAllPending();
+  }, [fetchAllPending]);
+
+  // Real-time socket listener: refresh pending queue when new verification requests or registrations arrive
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleNewPending = () => {
+      fetchAllPending();
+    };
+
+    socket.on('verification_request_submitted', handleNewPending);
+    socket.on('profile_onboarding_completed', handleNewPending);
+    return () => {
+      socket.off('verification_request_submitted', handleNewPending);
+      socket.off('profile_onboarding_completed', handleNewPending);
+    };
   }, [fetchAllPending]);
 
   // Handle User Registration Approvals

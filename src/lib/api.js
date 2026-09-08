@@ -62,7 +62,7 @@ const request = async (path, options = {}, isRetry = false) => {
         ...options,
         headers,
         credentials: 'include',
-        body: hasBody ? JSON.stringify(options.body) : options.body
+        body: hasBody ? (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : options.body
     });
 
     // Handle token expiration automatically
@@ -467,7 +467,7 @@ export const api = {
     verifyPhoto(data) {
         return request('/api/v1/profile/verify-photo', {
             method: 'POST',
-            body: JSON.stringify(data)
+            body: data
         });
     },
 

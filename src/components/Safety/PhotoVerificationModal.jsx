@@ -425,7 +425,8 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
       }
 
       // 3. Run anti-catfish face comparison against uploaded profile photo
-      const referencePhoto = primaryPhotoUrl || userProfile?.photos?.[0];
+      const rawPhoto = primaryPhotoUrl || userProfile?.photos?.[0];
+      const referencePhoto = typeof rawPhoto === 'object' ? (rawPhoto?.secureUrl || rawPhoto?.url || null) : rawPhoto;
       if (referencePhoto) {
         const faceAnalysis = await compareFaceBiometrics(capturedImage, referencePhoto);
         if (!faceAnalysis.isValid) {
@@ -451,7 +452,20 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
           });
         }
       } catch (backendErr) {
-        console.warn('[PhotoVerification] Backend verification submission error:', backendErr);
+        console.warn('[PhotoVerification] Primary verifyPhoto failed, attempting manual review fallback:', backendErr);
+        try {
+          if (api.isConfigured && api.submitManualVerification) {
+            await api.submitManualVerification({
+              selfie: capturedImage,
+              referenceUrl: referencePhoto,
+            });
+          } else {
+            throw backendErr;
+          }
+        } catch (manualErr) {
+          console.error('[PhotoVerification] Both verification submissions failed:', manualErr);
+          throw new Error(manualErr?.message || backendErr?.message || 'Failed to submit verification to server. Please try again.');
+        }
       }
 
       // 5. Update local state to pending admin review (Admin Approval Only)
@@ -499,7 +513,8 @@ export const PhotoVerificationModal = ({ isOpen, onClose, onVerified, primaryPho
     if (!capturedImage || manualReviewLoading) return;
     setManualReviewLoading(true);
     try {
-      const referenceUrl = primaryPhotoUrl || userProfile?.photos?.[0] || null;
+      const rawPhoto = primaryPhotoUrl || userProfile?.photos?.[0];
+      const referenceUrl = typeof rawPhoto === 'object' ? (rawPhoto?.secureUrl || rawPhoto?.url || null) : (rawPhoto || null);
       await api.submitManualVerification({
         selfie: capturedImage,
         referenceUrl,
