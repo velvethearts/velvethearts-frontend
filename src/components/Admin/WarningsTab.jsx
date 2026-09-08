@@ -920,8 +920,8 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           border-radius: var(--radius-xl, 20px);
           padding: 22px 24px;
           background: var(--bg-surface, #FFFFFF);
-          border: 1px solid var(--border-subtle, #E5E7EB);
-          box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
+          border: 1.5px solid #E2E8F0;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
           transition: all 0.2s ease;
           display: flex;
           flex-direction: column;
@@ -930,7 +930,7 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
         .warning-item-card:hover {
           border-color: var(--burgundy-500, #B8436A);
-          box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
+          box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
         }
 
         [data-theme="dark"] .warning-item-card {
@@ -945,19 +945,28 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .status-card-appealed {
-          border-color: rgba(56, 189, 248, 0.35);
+          border-color: #38BDF8 !important;
         }
 
         [data-theme="dark"] .status-card-appealed {
           background: linear-gradient(165deg, rgba(14, 25, 45, 0.95) 0%, rgba(10, 14, 25, 0.98) 100%);
+          border-color: rgba(56, 189, 248, 0.35) !important;
         }
 
         .status-card-resolved {
-          border-color: rgba(16, 185, 129, 0.3);
+          border-color: #34D399 !important;
+        }
+
+        [data-theme="dark"] .status-card-resolved {
+          border-color: rgba(16, 185, 129, 0.3) !important;
         }
 
         .status-card-suspended {
-          border-color: rgba(239, 68, 68, 0.3);
+          border-color: #F87171 !important;
+        }
+
+        [data-theme="dark"] .status-card-suspended {
+          border-color: rgba(239, 68, 68, 0.3) !important;
         }
 
         /* Card Header */
@@ -967,8 +976,12 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           justify-content: space-between;
           gap: 16px;
           padding-bottom: 16px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          border-bottom: 1.5px solid #E5E7EB;
           flex-wrap: wrap;
+        }
+
+        [data-theme="dark"] .warning-card-header {
+          border-bottom-color: rgba(255, 255, 255, 0.08);
         }
 
         .warning-user-cell {
@@ -981,8 +994,8 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           width: 46px;
           height: 46px;
           border-radius: 14px;
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.14);
+          background: #F3F4F6;
+          border: 1px solid #D1D5DB;
           overflow: hidden;
           display: flex;
           align-items: center;
@@ -997,6 +1010,15 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .warning-avatar-fallback {
+          color: #9CA3AF;
+        }
+
+        [data-theme="dark"] .warning-avatar-wrap {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        [data-theme="dark"] .warning-avatar-fallback {
           color: rgba(255, 255, 255, 0.6);
         }
 
@@ -1008,8 +1030,8 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
         .warning-user-name {
           font-size: 16px;
-          font-weight: 700;
-          color: var(--text-primary, #111827);
+          font-weight: 800;
+          color: #111827;
           margin: 0;
         }
 
@@ -1018,31 +1040,32 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .warning-violation-badge {
-          font-size: 10px;
+          font-size: 10.5px;
           font-weight: 800;
           text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 3px 9px;
+          letter-spacing: 0.05em;
+          padding: 3px 10px;
           border-radius: 999px;
-          border: 1px solid transparent;
+          border-width: 1.5px;
+          border-style: solid;
         }
 
         .violation-name {
           background: #F3E8FF;
-          border-color: #D8B4FE;
+          border-color: #C084FC;
           color: #7E22CE;
         }
 
         .violation-photo {
           background: #FFE4E6;
-          border-color: #FDA4AF;
+          border-color: #FB7185;
           color: #BE123C;
         }
 
         .violation-policy {
           background: #FEF3C7;
-          border-color: #FCD34D;
-          color: #B45309;
+          border-color: #FBBF24;
+          color: #92400E;
         }
 
         [data-theme="dark"] .violation-name {
@@ -1069,32 +1092,33 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           gap: 8px;
           font-size: 12px;
           color: #4B5563;
+          font-weight: 500;
           margin-top: 4px;
           flex-wrap: wrap;
         }
 
         [data-theme="dark"] .warning-user-meta-row {
-          color: rgba(255, 255, 255, 0.5);
+          color: rgba(255, 255, 255, 0.6);
         }
 
         .warning-id-pill {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          padding: 2px 7px;
+          padding: 3px 8px;
           background: #F3F4F6;
-          border: 1px solid #E5E7EB;
+          border: 1px solid #D1D5DB;
           border-radius: 6px;
           cursor: pointer;
           color: #374151;
-          font-weight: 500;
+          font-weight: 600;
           transition: all 0.2s ease;
         }
 
         .warning-id-pill:hover {
-          color: var(--burgundy-600, #9B3456);
-          background: rgba(184, 67, 106, 0.08);
-          border-color: var(--burgundy-500, #B8436A);
+          color: #9B3456;
+          background: #FDF2F4;
+          border-color: #B8436A;
         }
 
         [data-theme="dark"] .warning-id-pill {
@@ -1113,60 +1137,68 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          padding: 6px 12px;
+          padding: 6px 14px;
           border-radius: 12px;
-          font-size: 11.5px;
-          font-weight: 700;
+          font-size: 12px;
+          font-weight: 800;
           letter-spacing: 0.02em;
-          border: 1px solid transparent;
+          border: 1.5px solid transparent;
         }
 
         .pill-active {
           background: #FFFBEB;
-          border-color: #FDE68A;
-          color: #B45309;
+          border-color: #F59E0B;
+          color: #92400E;
+          box-shadow: 0 1px 3px rgba(245, 158, 11, 0.12);
         }
 
         .pill-appealed {
           background: #F0F9FF;
-          border-color: #BAE6FD;
-          color: #0284C7;
+          border-color: #38BDF8;
+          color: #0369A1;
+          box-shadow: 0 1px 3px rgba(56, 189, 248, 0.12);
         }
 
         .pill-resolved {
           background: #ECFDF5;
-          border-color: #A7F3D0;
-          color: #047857;
+          border-color: #34D399;
+          color: #065F46;
+          box-shadow: 0 1px 3px rgba(16, 185, 129, 0.12);
         }
 
         .pill-suspended {
           background: #FEF2F2;
-          border-color: #FECACA;
-          color: #B91C1C;
+          border-color: #F87171;
+          color: #991B1B;
+          box-shadow: 0 1px 3px rgba(239, 68, 68, 0.12);
         }
 
         [data-theme="dark"] .pill-active {
           background: rgba(245, 158, 11, 0.15);
           border-color: rgba(245, 158, 11, 0.4);
           color: #fbbf24;
+          box-shadow: none;
         }
 
         [data-theme="dark"] .pill-appealed {
           background: rgba(56, 189, 248, 0.15);
           border-color: rgba(56, 189, 248, 0.4);
           color: #38bdf8;
+          box-shadow: none;
         }
 
         [data-theme="dark"] .pill-resolved {
           background: rgba(16, 185, 129, 0.15);
           border-color: rgba(16, 185, 129, 0.4);
           color: #34d399;
+          box-shadow: none;
         }
 
         [data-theme="dark"] .pill-suspended {
           background: rgba(239, 68, 68, 0.15);
           border-color: rgba(239, 68, 68, 0.4);
           color: #f87171;
+          box-shadow: none;
         }
 
         /* Content Grid */
@@ -1190,20 +1222,25 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
         .warning-section-title {
           font-size: 11px;
-          font-weight: 700;
+          font-weight: 800;
           text-transform: uppercase;
           letter-spacing: 0.05em;
+          color: #6B7280;
+        }
+
+        [data-theme="dark"] .warning-section-title {
           color: rgba(255, 255, 255, 0.5);
         }
 
         .warning-message-box {
-          padding: 12px 14px;
+          padding: 14px 16px;
           border-radius: var(--radius-md, 12px);
-          background: var(--bg-surface-warm, #FFF8F0);
-          border: 1px solid var(--border-subtle, #E5E7EB);
-          color: var(--text-primary, #111827);
-          font-size: 12.5px;
-          line-height: 1.55;
+          background: #FAF8F5;
+          border: 1.5px solid #E5E7EB;
+          color: #1F2937;
+          font-size: 13px;
+          font-weight: 500;
+          line-height: 1.6;
         }
 
         [data-theme="dark"] .warning-message-box {
@@ -1213,12 +1250,12 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .warning-resolution-box {
-          padding: 10px 12px;
+          padding: 10px 14px;
           border-radius: var(--radius-sm, 10px);
-          background: var(--bg-surface-warm, #F3F4F6);
-          border: 1px solid var(--border-subtle, #E5E7EB);
-          font-size: 11.5px;
-          color: var(--text-secondary, #4B5563);
+          background: #F3F4F6;
+          border: 1.5px solid #E5E7EB;
+          font-size: 12px;
+          color: #374151;
         }
 
         [data-theme="dark"] .warning-resolution-box {
@@ -1228,14 +1265,14 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .warning-diff-box {
-          padding: 12px 14px;
+          padding: 14px 16px;
           border-radius: var(--radius-md, 12px);
-          background: var(--bg-surface-warm, #FFF8F0);
-          border: 1px solid var(--border-subtle, #E5E7EB);
+          background: #FAF8F5;
+          border: 1.5px solid #E5E7EB;
           display: flex;
           flex-direction: column;
-          gap: 8px;
-          font-size: 12px;
+          gap: 10px;
+          font-size: 12.5px;
         }
 
         [data-theme="dark"] .warning-diff-box {
@@ -1250,7 +1287,8 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .diff-label {
-          color: var(--text-muted, #6B7280);
+          color: #4B5563;
+          font-weight: 600;
         }
 
         [data-theme="dark"] .diff-label {
@@ -1258,8 +1296,9 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .diff-val-old {
-          color: #d97706;
-          font-weight: 600;
+          color: #B45309;
+          font-weight: 700;
+          font-family: inherit;
         }
 
         [data-theme="dark"] .diff-val-old {
@@ -1267,8 +1306,9 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .diff-val-new {
-          color: var(--text-primary, #111827);
-          font-weight: 600;
+          color: #111827;
+          font-weight: 700;
+          font-family: inherit;
         }
 
         [data-theme="dark"] .diff-val-new {
@@ -1279,27 +1319,43 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           display: flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 10px;
+          padding: 10px 12px;
           border-radius: 8px;
-          font-size: 11.5px;
-          font-weight: 600;
+          font-size: 12px;
+          font-weight: 700;
         }
 
         .diff-alert-success {
+          background: #D1FAE5;
+          border: 1.5px solid #10B981;
+          color: #065F46;
+        }
+
+        [data-theme="dark"] .diff-alert-success {
           background: rgba(16, 185, 129, 0.15);
-          border: 1px solid rgba(16, 185, 129, 0.35);
+          border-color: rgba(16, 185, 129, 0.35);
           color: #34d399;
         }
 
         .diff-alert-pending {
-          background: rgba(245, 158, 11, 0.1);
-          border: 1px solid rgba(245, 158, 11, 0.25);
+          background: #FEF3C7;
+          border: 1.5px solid #F59E0B;
+          color: #92400E;
+        }
+
+        [data-theme="dark"] .diff-alert-pending {
+          background: rgba(245, 158, 11, 0.15);
+          border-color: rgba(245, 158, 11, 0.35);
           color: #fcd34d;
         }
 
         .text-muted-box {
-          color: rgba(255, 255, 255, 0.6);
+          color: #4B5563;
           line-height: 1.5;
+        }
+
+        [data-theme="dark"] .text-muted-box {
+          color: rgba(255, 255, 255, 0.6);
         }
 
         /* Appeal Section */
@@ -1307,11 +1363,16 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           margin-top: 4px;
           padding: 16px;
           border-radius: 14px;
-          background: rgba(14, 25, 45, 0.6);
-          border: 1px solid rgba(56, 189, 248, 0.3);
+          background: #F0F9FF;
+          border: 1.5px solid #7DD3FC;
           display: flex;
           flex-direction: column;
           gap: 12px;
+        }
+
+        [data-theme="dark"] .warning-appeal-section {
+          background: rgba(14, 25, 45, 0.6);
+          border-color: rgba(56, 189, 248, 0.3);
         }
 
         .appeal-header {
@@ -1328,11 +1389,19 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.04em;
+          color: #0284C7;
+        }
+
+        [data-theme="dark"] .appeal-header-left {
           color: #38bdf8;
         }
 
         .appeal-timestamp {
           font-size: 11px;
+          color: #0369A1;
+        }
+
+        [data-theme="dark"] .appeal-timestamp {
           color: rgba(56, 189, 248, 0.6);
         }
 
@@ -1340,12 +1409,19 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           margin: 0;
           padding: 12px 14px;
           border-radius: 10px;
-          background: rgba(0, 0, 0, 0.4);
-          border: 1px solid rgba(56, 189, 248, 0.2);
-          color: #e0f2fe;
+          background: #FFFFFF;
+          border: 1.5px solid #BAE6FD;
+          color: #0C4A6E;
           font-size: 12.5px;
           line-height: 1.6;
           white-space: pre-wrap;
+          font-weight: 500;
+        }
+
+        [data-theme="dark"] .appeal-text-quote {
+          background: rgba(0, 0, 0, 0.4);
+          border-color: rgba(56, 189, 248, 0.2);
+          color: #e0f2fe;
         }
 
         .appeal-photos-wrap {
@@ -1358,6 +1434,10 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           font-size: 11px;
           font-weight: 700;
           text-transform: uppercase;
+          color: #0284C7;
+        }
+
+        [data-theme="dark"] .appeal-photos-title {
           color: #38bdf8;
         }
 
@@ -1373,13 +1453,17 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           height: 76px;
           border-radius: 12px;
           overflow: hidden;
-          border: 1px solid rgba(56, 189, 248, 0.4);
+          border: 1.5px solid #7DD3FC;
           cursor: pointer;
           transition: transform 0.2s ease;
         }
 
         .appeal-thumb-card:hover {
           transform: scale(1.05);
+        }
+
+        [data-theme="dark"] .appeal-thumb-card {
+          border-color: rgba(56, 189, 248, 0.4);
         }
 
         .appeal-thumb-img {
@@ -1409,8 +1493,8 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding-top: 14px;
-          border-top: 1px solid var(--border-subtle, #E5E7EB);
+          padding-top: 16px;
+          border-top: 1.5px solid #E5E7EB;
           gap: 12px;
           flex-wrap: wrap;
         }
@@ -1420,16 +1504,20 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .warning-issued-by {
-          font-size: 11.5px;
-          color: var(--text-muted, #6B7280);
+          font-size: 12px;
+          color: #6B7280;
         }
 
         .warning-issued-by strong {
-          color: var(--text-primary, #111827);
+          color: #111827;
+        }
+
+        [data-theme="dark"] .warning-issued-by {
+          color: rgba(255, 255, 255, 0.5);
         }
 
         [data-theme="dark"] .warning-issued-by strong {
-          color: rgba(255, 255, 255, 0.8);
+          color: rgba(255, 255, 255, 0.88);
         }
 
         .warning-actions-group {
@@ -1445,31 +1533,34 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         .btn-warn-suspend {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          padding: 8px 14px;
+          gap: 7px;
+          padding: 8px 16px;
           border-radius: var(--radius-md, 10px);
-          font-size: 12px;
+          font-size: 12.5px;
           font-weight: 700;
           cursor: pointer;
           transition: all 0.2s ease;
-          border: 1px solid transparent;
+          border: 1.5px solid transparent;
         }
 
         .btn-warn-inspect {
-          background: var(--bg-surface-warm, #F3F4F6);
-          border-color: var(--border-subtle, #E5E7EB);
-          color: var(--text-secondary, #374151);
+          background: #FFFFFF;
+          border-color: #D1D5DB;
+          color: #374151;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .btn-warn-inspect:hover {
-          background: var(--bg-muted, #E5E7EB);
-          color: var(--text-primary, #111827);
+          background: #F3F4F6;
+          border-color: #9CA3AF;
+          color: #111827;
         }
 
         [data-theme="dark"] .btn-warn-inspect {
           background: rgba(255, 255, 255, 0.06);
-          border-color: rgba(255, 255, 255, 0.12);
-          color: rgba(255, 255, 255, 0.8);
+          border-color: rgba(255, 255, 255, 0.14);
+          color: rgba(255, 255, 255, 0.85);
+          box-shadow: none;
         }
 
         [data-theme="dark"] .btn-warn-inspect:hover {
@@ -1479,65 +1570,83 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
         .btn-warn-dismiss {
           background: #ECFDF5;
-          border: 1px solid #A7F3D0;
-          color: #047857;
+          border-color: #34D399;
+          color: #065F46;
+          box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
         }
 
         .btn-warn-dismiss:hover {
           background: #D1FAE5;
-          border-color: #6EE7B7;
+          border-color: #10B981;
+          color: #064E3B;
+          transform: translateY(-1px);
         }
 
         [data-theme="dark"] .btn-warn-dismiss {
           background: rgba(16, 185, 129, 0.15);
           border-color: rgba(16, 185, 129, 0.4);
           color: #34d399;
+          box-shadow: none;
         }
 
         [data-theme="dark"] .btn-warn-dismiss:hover {
           background: rgba(16, 185, 129, 0.25);
+          border-color: rgba(16, 185, 129, 0.6);
+          color: #6ee7b7;
         }
 
         .btn-warn-extend {
           background: #FFFBEB;
-          border: 1px solid #FDE68A;
-          color: #B45309;
+          border-color: #FBBF24;
+          color: #92400E;
+          box-shadow: 0 1px 3px rgba(245, 158, 11, 0.15);
         }
 
         .btn-warn-extend:hover {
           background: #FEF3C7;
-          border-color: #FCD34D;
+          border-color: #F59E0B;
+          color: #78350F;
+          transform: translateY(-1px);
         }
 
         [data-theme="dark"] .btn-warn-extend {
           background: rgba(245, 158, 11, 0.15);
           border-color: rgba(245, 158, 11, 0.4);
           color: #fbbf24;
+          box-shadow: none;
         }
 
         [data-theme="dark"] .btn-warn-extend:hover {
           background: rgba(245, 158, 11, 0.25);
+          border-color: rgba(245, 158, 11, 0.6);
+          color: #fde68a;
         }
 
         .btn-warn-suspend {
           background: #FEF2F2;
-          border: 1px solid #FECACA;
-          color: #B91C1C;
+          border-color: #F87171;
+          color: #991B1B;
+          box-shadow: 0 1px 3px rgba(239, 68, 68, 0.15);
         }
 
         .btn-warn-suspend:hover {
           background: #FEE2E2;
-          border-color: #FCA5A5;
+          border-color: #EF4444;
+          color: #7F1D1D;
+          transform: translateY(-1px);
         }
 
         [data-theme="dark"] .btn-warn-suspend {
           background: rgba(239, 68, 68, 0.15);
           border-color: rgba(239, 68, 68, 0.4);
           color: #f87171;
+          box-shadow: none;
         }
 
         [data-theme="dark"] .btn-warn-suspend:hover {
           background: rgba(239, 68, 68, 0.25);
+          border-color: rgba(239, 68, 68, 0.6);
+          color: #fca5a5;
         }
 
         /* ── Lightbox Modal ── */
