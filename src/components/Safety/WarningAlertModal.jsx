@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
 import { getSocket } from '../../lib/socket';
 import {
@@ -18,6 +19,7 @@ import {
 
 export const WarningAlertModal = () => {
   const navigate = useNavigate();
+  const { isFeatureTourActive } = useApp();
   const [warning, setWarning] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'appeal'
@@ -169,6 +171,8 @@ export const WarningAlertModal = () => {
       setSubmittingAppeal(false);
     }
   };
+
+  if (!isOpen || !warning || isFeatureTourActive) return null;
 
   const isAppealed = warning.status === 'APPEALED';
 

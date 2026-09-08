@@ -9,15 +9,25 @@ const SNOOZE_KEY = 'vh_verification_snoozed_until';
 const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
 
 export const VerificationPromptModal = () => {
-  const { userProfile, isLoggedIn, isOnboarded, activeTab, setUserProfile } = useApp();
+  const { userProfile, isLoggedIn, isOnboarded, activeTab, isFeatureTourActive, setUserProfile } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [isPhotoVerifyOpen, setIsPhotoVerifyOpen] = useState(false);
 
   useEffect(() => {
-    // Only check for logged-in, onboarded users on general browsing tabs (never while viewing/editing profile)
-    if (!isLoggedIn || !isOnboarded || !userProfile || activeTab === 'profile') {
+    // 1. NEVER show verification prompt while the guided feature tour is active
+    if (!isLoggedIn || !isOnboarded || !userProfile || activeTab === 'profile' || isFeatureTourActive) {
       setIsOpen(false);
       return;
+    }
+
+    // 2. If the user has not completed or dismissed the onboarding feature tour yet, DO NOT show
+    const uid = userProfile?.id || userProfile?.uid || userProfile?.userId;
+    if (uid) {
+      const tourCompleted = localStorage.getItem(`vh-tour-completed-${uid}`);
+      if (!tourCompleted) {
+        setIsOpen(false);
+        return;
+      }
     }
 
     // Check if verified across state, profile properties, or persistent storage
@@ -56,10 +66,15 @@ export const VerificationPromptModal = () => {
       }
     } catch (_) {}
 
-    // Gentle delay after loading so it feels natural and smooth
+    // Generous delay after loading and after tour so it feels natural and never interrupts navigation
     const timer = setTimeout(() => {
-      // Re-verify immediately before opening in case status or tab changed
-      if (activeTab === 'profile') {
+      // Re-verify immediately before opening in case status, tour, or tab changed
+      if (activeTab === 'profile' || isFeatureTourActive) {
+        setIsOpen(false);
+        return;
+      }
+
+      if (uid && !localStorage.getItem(`vh-tour-completed-${uid}`)) {
         setIsOpen(false);
         return;
       }
@@ -82,10 +97,10 @@ export const VerificationPromptModal = () => {
       if (!checkVerifiedAgain) {
         setIsOpen(true);
       }
-    }, 1500);
+    }, 10000);
 
     return () => clearTimeout(timer);
-  }, [isLoggedIn, isOnboarded, userProfile?.verified, userProfile?.verificationStatus, activeTab]);
+  }, [isLoggedIn, isOnboarded, userProfile?.verified, userProfile?.verificationStatus, activeTab, isFeatureTourActive]);
 
   const handleMaybeLater = () => {
     try {

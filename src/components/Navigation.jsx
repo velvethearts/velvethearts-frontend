@@ -5,7 +5,7 @@ import { ThemeToggle } from './UI/ThemeToggle';
 import logo from "../assets/velvet-heart-logo.png";
 
 export const Navigation = ({ children, isChatViewActive }) => {
-  const { activeTab, setActiveTab, userProfile, userRole, notificationUnreadCount, chatUnreadCount } = useApp();
+  const { activeTab, setActiveTab, userProfile, userRole, notificationUnreadCount, chatUnreadCount, isFeatureTourActive } = useApp();
 
   const isChatLayout = isChatViewActive !== undefined ? isChatViewActive : activeTab === 'chat';
 
@@ -23,7 +23,7 @@ export const Navigation = ({ children, isChatViewActive }) => {
   return (
     <div className="app-container">
       {/* Desktop Left Sidebar */}
-      <aside className="desktop-sidebar">
+      <aside className={`desktop-sidebar ${isFeatureTourActive ? 'tour-nav-active' : ''}`}>
       <div className="sidebar-logo">
       <img src={logo} alt="Velvet Hearts" className="logo-image" />
       </div>
@@ -91,7 +91,7 @@ export const Navigation = ({ children, isChatViewActive }) => {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="mobile-bottom-nav">
+      <nav className={`mobile-bottom-nav ${isFeatureTourActive ? 'tour-nav-active' : ''}`}>
         <ul>
           {navItems.map(item => {
             const Icon = item.icon;
@@ -313,6 +313,11 @@ export const Navigation = ({ children, isChatViewActive }) => {
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .mobile-bottom-nav.tour-nav-active,
+        .desktop-sidebar.tour-nav-active {
+          z-index: 999999 !important;
         }
 
         .mobile-bottom-nav ul {
