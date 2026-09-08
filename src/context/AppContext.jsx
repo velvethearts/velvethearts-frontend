@@ -171,7 +171,7 @@ export const AppProvider = ({ children }) => {
                 message: config.message || '',
                 okText: config.okText || 'OK',
                 cancelText: config.cancelText || 'Cancel',
-                showCancel: config.showCancel ?? true,
+                showCancel: config.showCancel === true,
                 onConfirm: () => {
                     setDialogConfig(null);
                     resolve(true);

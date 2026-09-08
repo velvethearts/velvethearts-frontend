@@ -543,9 +543,9 @@ export const FeatureTourGuide = () => {
       }
       const allUids = [userProfile?.id, userProfile?.uid, userProfile?.userId].filter(Boolean);
       allUids.forEach(u => {
-        try { localStorage.setItem(`vh-tour-completed-${u}`, 'true'); } catch (_) {}
+        try { localStorage.setItem(`vh-tour-completed-${u}`, 'true'); } catch (_) { }
       });
-    } catch (_) {}
+    } catch (_) { }
     setIsFeatureTourActive(false);
     setIsVisible(false);
     setActiveTab('discover');
@@ -669,9 +669,9 @@ export const FeatureTourGuide = () => {
                 type="button"
                 onClick={handleNext}
                 className="vh-tour-btn vh-tour-btn-next font-ui"
-                aria-label={isLastStep ? 'Complete tour and begin' : 'Next step'}
+                aria-label={isLastStep ? 'Complete tour and begin' : 'Next'}
               >
-                <span>{isLastStep ? 'Start Discovering' : isFirstStep ? 'Begin Tour' : 'Next Step'}</span>
+                <span>{isLastStep ? 'Start Discovering' : isFirstStep ? 'Begin Tour' : 'Next'}</span>
                 {!isLastStep && <CaretRight size={16} weight="bold" />}
               </button>
             </div>

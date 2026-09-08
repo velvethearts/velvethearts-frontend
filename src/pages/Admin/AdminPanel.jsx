@@ -103,23 +103,59 @@ const AdminPhotoDisplay = ({ src, alt = '', placeholderText = 'No user image add
 };
 
 // ─── ADMIN PROFILE INSPECTOR VIEW ───
-const AdminProfileInspector = ({ user, onBack, showAlert }) => {
+const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert }) => {
   const [currentUser, setCurrentUser] = useState(user);
   const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    setCurrentUser(user);
+  }, [user]);
 
   const handleToggleVerif = async () => {
     setActionLoading(true);
     try {
       const nextVerified = !currentUser.verified;
       await api.admin.toggleUserVerification(currentUser.id, nextVerified);
-      setCurrentUser(prev => ({
-        ...prev,
+      const updated = {
+        ...currentUser,
         verified: nextVerified,
-        profile: prev.profile ? { ...prev.profile, verified: nextVerified } : null,
-      }));
+        profile: currentUser.profile ? { ...currentUser.profile, verified: nextVerified } : null,
+      };
+      setCurrentUser(updated);
+      onUserUpdated?.(updated);
       showAlert?.(`User verification status changed to ${nextVerified ? 'VERIFIED' : 'UNVERIFIED'}.`, 'success');
     } catch (err) {
-      showAlert?.(err?.response?.data?.message || 'Failed to update verification status.', 'error');
+      showAlert?.(err?.response?.data?.message || err?.message || 'Failed to update verification status.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleApproveRegistration = async () => {
+    setActionLoading(true);
+    try {
+      await api.admin.approve(currentUser.id);
+      const updated = { ...currentUser, approvalStatus: 'APPROVED' };
+      setCurrentUser(updated);
+      onUserUpdated?.(updated);
+      showAlert?.('User registration has been APPROVED.', 'success');
+    } catch (err) {
+      showAlert?.(err?.response?.data?.message || err?.message || 'Failed to approve registration.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectRegistration = async () => {
+    setActionLoading(true);
+    try {
+      await api.admin.reject(currentUser.id);
+      const updated = { ...currentUser, approvalStatus: 'REJECTED' };
+      setCurrentUser(updated);
+      onUserUpdated?.(updated);
+      showAlert?.('User registration has been REJECTED.', 'info');
+    } catch (err) {
+      showAlert?.(err?.response?.data?.message || err?.message || 'Failed to reject registration.', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -131,11 +167,15 @@ const AdminProfileInspector = ({ user, onBack, showAlert }) => {
       const isCurrentlySuspended = currentUser.status === 'SUSPENDED' || currentUser.status === 'DELETED';
       if (isCurrentlySuspended) {
         await api.admin.restoreUser(currentUser.id);
-        setCurrentUser(prev => ({ ...prev, status: 'ACTIVE' }));
+        const updated = { ...currentUser, status: 'ACTIVE' };
+        setCurrentUser(updated);
+        onUserUpdated?.(updated);
         showAlert?.('User account restored to ACTIVE.', 'success');
       } else {
         await api.admin.suspendUser(currentUser.id);
-        setCurrentUser(prev => ({ ...prev, status: 'SUSPENDED' }));
+        const updated = { ...currentUser, status: 'SUSPENDED' };
+        setCurrentUser(updated);
+        onUserUpdated?.(updated);
         showAlert?.('User account SUSPENDED.', 'info');
       }
     } catch (err) {
@@ -150,7 +190,9 @@ const AdminProfileInspector = ({ user, onBack, showAlert }) => {
     setActionLoading(true);
     try {
       await api.admin.deleteUser(currentUser.id);
-      setCurrentUser(prev => ({ ...prev, status: 'DELETED' }));
+      const updated = { ...currentUser, status: 'DELETED' };
+      setCurrentUser(updated);
+      onUserUpdated?.(updated);
       showAlert?.('User account marked as DELETED.', 'info');
     } catch (err) {
       showAlert?.(err?.message || 'Failed to delete user.', 'error');
@@ -224,6 +266,34 @@ const AdminProfileInspector = ({ user, onBack, showAlert }) => {
 
         {/* Quick Admin Actions in Header */}
         <div className="admin-inspector-actions">
+          {currentUser.approvalStatus !== 'APPROVED' && (
+            <button
+              type="button"
+              onClick={handleApproveRegistration}
+              disabled={actionLoading}
+              className="admin-btn admin-btn-sm admin-btn-primary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 12px', fontSize: '13px' }}
+              title="Approve user registration"
+            >
+              <CheckCircle size={16} weight="bold" />
+              <span>Approve</span>
+            </button>
+          )}
+
+          {currentUser.approvalStatus !== 'REJECTED' && currentUser.role !== 'ADMIN' && (
+            <button
+              type="button"
+              onClick={handleRejectRegistration}
+              disabled={actionLoading}
+              className="admin-btn admin-btn-sm admin-btn-danger"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 12px', fontSize: '13px' }}
+              title="Reject user registration"
+            >
+              <XCircle size={16} weight="bold" />
+              <span>Reject</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleToggleVerif}
@@ -341,6 +411,12 @@ export const AdminPanel = () => {
   const { showAlert, userRole } = useApp();
   const [activeTab, setActiveTab] = useState('stats');
   const [inspectingUser, setInspectingUser] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleUserUpdated = (updatedUser) => {
+    setInspectingUser(updatedUser);
+    setRefreshKey(k => k + 1);
+  };
 
   const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
@@ -359,7 +435,11 @@ export const AdminPanel = () => {
       <div className="admin-panel">
         <AdminProfileInspector
           user={inspectingUser}
-          onBack={() => setInspectingUser(null)}
+          onBack={() => {
+            setInspectingUser(null);
+            setRefreshKey(k => k + 1);
+          }}
+          onUserUpdated={handleUserUpdated}
           showAlert={showAlert}
         />
         <style>{adminStyles}</style>
@@ -397,7 +477,7 @@ export const AdminPanel = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="admin-tab-content">
+      <div className="admin-tab-content" key={refreshKey}>
         {activeTab === 'stats' && <DashboardStatsTab onNavigateTab={setActiveTab} onViewUser={setInspectingUser} showAlert={showAlert} />}
         {activeTab === 'verifications' && <VerificationRequestsTab showAlert={showAlert} onViewUser={setInspectingUser} />}
         {activeTab === 'users' && <UsersDirectoryTab showAlert={showAlert} onViewUser={setInspectingUser} />}
@@ -1073,6 +1153,12 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
     try {
       const nextState = !currentVerified;
       await api.admin.toggleUserVerification(userId, nextState);
+      setUsers(prev => prev.map(u => u.id === userId ? {
+        ...u,
+        verified: nextState,
+        profile: u.profile ? { ...u.profile, verified: nextState } : null
+      } : u));
+
       if (!user.hasProfile && nextState) {
         showAlert?.(
           `Pre-approved verification for ${user.name || 'user'}! Badge will automatically activate once profile onboarding is completed.`,
@@ -1095,15 +1181,32 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
     try {
       if (currentStatus === 'SUSPENDED' || currentStatus === 'DELETED') {
         await api.admin.restoreUser(userId);
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'ACTIVE' } : u));
         showAlert?.('User account restored successfully.', 'success');
       } else {
         await api.admin.suspendUser(userId);
+        setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'SUSPENDED' } : u));
         showAlert?.('User account suspended.', 'info');
       }
       fetchUsers();
       fetchDirStats();
     } catch (err) {
       showAlert?.('Failed to update account status.', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleApproveRegistration = async (userId) => {
+    setActionLoading(userId);
+    try {
+      await api.admin.approve(userId);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, approvalStatus: 'APPROVED' } : u));
+      showAlert?.('User registration approved.', 'success');
+      fetchUsers();
+      fetchDirStats();
+    } catch (err) {
+      showAlert?.(err?.response?.data?.message || err?.message || 'Failed to approve registration.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -1354,6 +1457,20 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
 
                 {/* Row Action Controls */}
                 <div className="admin-user-row-actions">
+                  {u.approvalStatus === 'PENDING' && (
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn-sm admin-btn-primary"
+                      onClick={() => handleApproveRegistration(u.id)}
+                      disabled={actionLoading === u.id}
+                      style={{ padding: '4px 10px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      title="Approve user registration"
+                    >
+                      <CheckCircle size={15} weight="bold" />
+                      <span>Approve</span>
+                    </button>
+                  )}
+
                   <button
                     className={`admin-verify-toggle-btn ${u.verified ? 'is-verified' : ''}`}
                     onClick={() => handleToggleVerification(u)}
