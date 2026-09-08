@@ -103,7 +103,9 @@ const AdminPhotoDisplay = ({ src, alt = '', placeholderText = 'No user image add
 };
 
 // ─── ADMIN PROFILE INSPECTOR VIEW ───
-const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert }) => {
+const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert: propShowAlert }) => {
+  const { showAlert: appShowAlert, showConfirm } = useApp();
+  const showAlert = propShowAlert || appShowAlert;
   const [currentUser, setCurrentUser] = useState(user);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -162,6 +164,10 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert }) => {
   };
 
   const handleToggleSusp = async () => {
+    if (currentUser.role === 'ADMIN') {
+      showAlert?.('Admin accounts cannot be suspended.', 'error');
+      return;
+    }
     setActionLoading(true);
     try {
       const isCurrentlySuspended = currentUser.status === 'SUSPENDED' || currentUser.status === 'DELETED';
@@ -179,14 +185,26 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert }) => {
         showAlert?.('User account SUSPENDED.', 'info');
       }
     } catch (err) {
-      showAlert?.('Failed to update account status.', 'error');
+      showAlert?.(err?.response?.data?.message || err?.message || 'Failed to update account status.', 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to mark account "${currentUser.name || 'this user'}" as DELETED?`)) return;
+    if (currentUser.role === 'ADMIN') {
+      showAlert?.('Admin accounts cannot be deleted.', 'error');
+      return;
+    }
+    const confirmed = await showConfirm({
+      title: 'Confirm Account Deletion',
+      message: `Are you sure you want to mark account "${currentUser.name || 'this user'}" as DELETED? The account will be deactivated and marked as deleted.`,
+      okText: 'Delete Account',
+      cancelText: 'Keep Account',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
     setActionLoading(true);
     try {
       await api.admin.deleteUser(currentUser.id);
@@ -195,7 +213,7 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert }) => {
       onUserUpdated?.(updated);
       showAlert?.('User account marked as DELETED.', 'info');
     } catch (err) {
-      showAlert?.(err?.message || 'Failed to delete user.', 'error');
+      showAlert?.(err?.response?.data?.message || err?.message || 'Failed to delete user.', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -310,7 +328,16 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert }) => {
             onClick={handleToggleSusp}
             disabled={actionLoading || currentUser.role === 'ADMIN'}
             className={`admin-suspend-toggle-btn ${currentUser.status === 'SUSPENDED' || currentUser.status === 'DELETED' ? 'is-suspended' : ''}`}
-            title={currentUser.status === 'SUSPENDED' ? 'Restore account' : 'Suspend account'}
+            title={
+              currentUser.role === 'ADMIN'
+                ? 'Admin accounts cannot be suspended'
+                : currentUser.status === 'DELETED'
+                ? 'Restore deleted account'
+                : currentUser.status === 'SUSPENDED'
+                ? 'Restore account'
+                : 'Suspend account'
+            }
+            style={currentUser.role === 'ADMIN' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           >
             {currentUser.status === 'SUSPENDED' || currentUser.status === 'DELETED' ? (
               <>
@@ -325,13 +352,18 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert }) => {
             )}
           </button>
 
-          {currentUser.status !== 'DELETED' && currentUser.role !== 'ADMIN' && (
+          {currentUser.status !== 'DELETED' && (
             <button
               type="button"
               onClick={handleDelete}
-              disabled={actionLoading}
+              disabled={actionLoading || currentUser.role === 'ADMIN'}
               className="admin-delete-toggle-btn"
-              title="Mark account as Deleted"
+              title={
+                currentUser.role === 'ADMIN'
+                  ? 'Admin accounts cannot be deleted'
+                  : 'Mark account as Deleted'
+              }
+              style={currentUser.role === 'ADMIN' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
             >
               <Trash size={15} weight="bold" />
               <span>Delete</span>
@@ -1045,7 +1077,9 @@ const VerificationRequestsTab = ({ showAlert, onViewUser }) => {
 };
 
 // ─── 3. USERS DIRECTORY TAB ───
-const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
+const UsersDirectoryTab = ({ showAlert: propShowAlert, onViewUser }) => {
+  const { showAlert: appShowAlert, showConfirm } = useApp();
+  const showAlert = propShowAlert || appShowAlert;
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -1069,73 +1103,52 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
 
   const fetchDirStats = useCallback(async () => {
     try {
-      const res = await api.admin.getStats();
-      const s = res?.stats || res?.data?.stats || null;
-      if (s) setDirStats(s);
-    } catch (e) {
-      console.warn('Failed to fetch directory stats:', e);
+      const stats = await api.admin.getDashboardStats();
+      const st = stats?.data || stats;
+      if (st) setDirStats(st);
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
     }
   }, []);
-
-  useEffect(() => {
-    fetchDirStats();
-  }, [fetchDirStats]);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.admin.getUsers({
-        searchQuery: search.trim() || undefined,
-        role: roleFilter || undefined,
-        status: statusFilter || undefined,
-        approvalStatus: approvalFilter || undefined,
-        profileStatus: profileFilter || undefined,
+        searchQuery: search,
+        role: roleFilter,
+        status: statusFilter,
+        approvalStatus: approvalFilter,
+        profileStatus: profileFilter,
         page,
         limit: pageSize,
       });
 
-      const list = Array.isArray(res?.users)
-        ? res.users
-        : Array.isArray(res?.data?.users)
-        ? res.data.users
-        : Array.isArray(res?.data)
-        ? res.data
-        : Array.isArray(res)
-        ? res
-        : [];
+      const userList = res?.data?.users || res?.users || [];
+      const pagination = res?.data?.pagination || res?.pagination || {};
 
-      const p = res?.pagination || res?.data?.pagination || null;
-      setUsers(list);
-
-      if (p) {
-        setTotalPages(p.pages || 1);
-        setTotalUsers(p.total || list.length);
-      } else {
-        setTotalPages(Math.ceil(list.length / pageSize) || 1);
-        setTotalUsers(list.length);
-      }
+      setUsers(userList);
+      setTotalPages(pagination.pages || 1);
+      setTotalUsers(pagination.total || userList.length);
     } catch (err) {
-      console.error('Failed to fetch users:', err);
-      showAlert?.('Failed to fetch users directory.', 'error');
+      console.error('Failed to fetch users directory:', err);
+      showAlert?.(err?.message || 'Failed to fetch users list.', 'error');
     } finally {
       setLoading(false);
     }
   }, [search, roleFilter, statusFilter, approvalFilter, profileFilter, page, showAlert]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchUsers();
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [fetchUsers]);
+    fetchUsers();
+    fetchDirStats();
+  }, [fetchUsers, fetchDirStats]);
 
-  // Real-time socket listener: update instantly when a user completes onboarding!
+  // Real-time listener: refresh directory when any member completes onboarding
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
 
-    const handleOnboardingCompleted = (payload) => {
-      showAlert?.(`🎉 ${payload?.name || 'A user'} just completed profile onboarding!`, 'info');
+    const handleOnboardingCompleted = () => {
       fetchUsers();
       fetchDirStats();
     };
@@ -1144,7 +1157,7 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
     return () => {
       socket.off('profile_onboarding_completed', handleOnboardingCompleted);
     };
-  }, [fetchUsers, fetchDirStats, showAlert]);
+  }, [fetchUsers, fetchDirStats]);
 
   const handleToggleVerification = async (user) => {
     const userId = user.id;
@@ -1176,7 +1189,13 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
     }
   };
 
-  const handleToggleSuspend = async (userId, currentStatus) => {
+  const handleToggleSuspend = async (user) => {
+    if (user.role === 'ADMIN') {
+      showAlert?.('Admin accounts cannot be suspended.', 'error');
+      return;
+    }
+    const userId = user.id;
+    const currentStatus = user.status;
     setActionLoading(userId);
     try {
       if (currentStatus === 'SUSPENDED' || currentStatus === 'DELETED') {
@@ -1191,7 +1210,7 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
       fetchUsers();
       fetchDirStats();
     } catch (err) {
-      showAlert?.('Failed to update account status.', 'error');
+      showAlert?.(err?.response?.data?.message || err?.message || 'Failed to update account status.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -1212,18 +1231,32 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
     }
   };
 
-  const handleDeleteUser = async (userId, userName) => {
-    if (!window.confirm(`Are you sure you want to mark the account for "${userName || 'this user'}" as DELETED? The account will be moved to Deleted accounts.`)) {
+  const handleDeleteUser = async (user) => {
+    if (user.role === 'ADMIN') {
+      showAlert?.('Admin accounts cannot be deleted.', 'error');
+      return;
+    }
+    const userId = user.id;
+    const userName = user.name;
+    const confirmed = await showConfirm({
+      title: 'Confirm Account Deletion',
+      message: `Are you sure you want to mark the account for "${userName || 'this user'}" as DELETED? The account will be deactivated and moved to Deleted accounts.`,
+      okText: 'Delete Account',
+      cancelText: 'Keep Account',
+      variant: 'danger',
+    });
+    if (!confirmed) {
       return;
     }
     setActionLoading(userId);
     try {
       await api.admin.deleteUser(userId);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: 'DELETED' } : u));
       showAlert?.('User account marked as deleted.', 'info');
       fetchUsers();
       fetchDirStats();
     } catch (err) {
-      showAlert?.(err?.message || 'Failed to delete user account.', 'error');
+      showAlert?.(err?.response?.data?.message || err?.message || 'Failed to delete user account.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -1483,9 +1516,18 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
 
                   <button
                     className={`admin-suspend-toggle-btn ${u.status === 'SUSPENDED' || u.status === 'DELETED' ? 'is-suspended' : ''}`}
-                    onClick={() => handleToggleSuspend(u.id, u.status)}
+                    onClick={() => handleToggleSuspend(u)}
                     disabled={actionLoading === u.id || u.role === 'ADMIN'}
-                    title={u.status === 'DELETED' ? 'Restore deleted account' : u.status === 'SUSPENDED' ? 'Restore suspended account' : 'Suspend user account'}
+                    title={
+                      u.role === 'ADMIN'
+                        ? 'Admin accounts cannot be suspended'
+                        : u.status === 'DELETED'
+                        ? 'Restore deleted account'
+                        : u.status === 'SUSPENDED'
+                        ? 'Restore suspended account'
+                        : 'Suspend user account'
+                    }
+                    style={u.role === 'ADMIN' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                   >
                     {u.status === 'SUSPENDED' || u.status === 'DELETED' ? (
                       <>
@@ -1500,12 +1542,17 @@ const UsersDirectoryTab = ({ showAlert, onViewUser }) => {
                     )}
                   </button>
 
-                  {u.status !== 'DELETED' && u.role !== 'ADMIN' && (
+                  {u.status !== 'DELETED' && (
                     <button
                       className="admin-delete-toggle-btn"
-                      onClick={() => handleDeleteUser(u.id, u.name)}
-                      disabled={actionLoading === u.id}
-                      title="Mark user account as Deleted"
+                      onClick={() => handleDeleteUser(u)}
+                      disabled={actionLoading === u.id || u.role === 'ADMIN'}
+                      title={
+                        u.role === 'ADMIN'
+                          ? 'Admin accounts cannot be deleted'
+                          : 'Mark user account as Deleted'
+                      }
+                      style={u.role === 'ADMIN' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                     >
                       <Trash size={16} weight="bold" />
                       <span>Delete</span>

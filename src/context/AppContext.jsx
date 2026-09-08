@@ -184,16 +184,12 @@ export const AppProvider = ({ children }) => {
         });
     }, []);
 
-    // Intercept native browser alert and confirm calls as a global safety net
+    // Intercept native browser alert calls as a global safety net
     useEffect(() => {
         window.alert = (msg) => {
             showAlert({ title: 'Notice', message: String(msg) });
         };
-        window.confirm = (msg) => {
-            showConfirm({ title: 'Confirmation', message: String(msg) });
-            return true;
-        };
-    }, [showAlert, showConfirm]);
+    }, [showAlert]);
 
 
     // --- Auth & Onboarding ---
