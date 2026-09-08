@@ -581,6 +581,58 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     return pinnedChatIds.includes(partnerId);
   }, [pinnedChatIds]);
 
+  // Instagram-style Pinned Message inside active conversation
+  const [pinnedMessage, setPinnedMessage] = useState(null);
+
+  useEffect(() => {
+    if (!activeChatId) {
+      setPinnedMessage(null);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(`vh_pinned_msg_${currentUserId}_${activeChatId}`);
+      setPinnedMessage(raw ? JSON.parse(raw) : null);
+    } catch {
+      setPinnedMessage(null);
+    }
+  }, [activeChatId, currentUserId]);
+
+  const handleTogglePinMessage = (msg) => {
+    if (!activeChatId || !msg) return;
+    if (pinnedMessage?.id === msg.id) {
+      // Unpin
+      setPinnedMessage(null);
+      try {
+        localStorage.removeItem(`vh_pinned_msg_${currentUserId}_${activeChatId}`);
+      } catch (_) {}
+    } else {
+      // Pin this message
+      const toPin = {
+        id: msg.id,
+        text: msg.text || '',
+        sender: msg.sender,
+        timestamp: msg.timestamp,
+        attachments: msg.attachments || [],
+      };
+      setPinnedMessage(toPin);
+      try {
+        localStorage.setItem(`vh_pinned_msg_${currentUserId}_${activeChatId}`, JSON.stringify(toPin));
+      } catch (_) {}
+    }
+  };
+
+  const handleUnpinMessage = () => {
+    if (!activeChatId) return;
+    setPinnedMessage(null);
+    try {
+      localStorage.removeItem(`vh_pinned_msg_${currentUserId}_${activeChatId}`);
+    } catch (_) {}
+  };
+
+  const isMessagePinned = useCallback((msgId) => {
+    return Boolean(pinnedMessage && pinnedMessage.id === msgId);
+  }, [pinnedMessage]);
+
   // Find active chat partner details
   const activePartner = connections.find(c => c.id === activeChatId || c.matchId === activeChatId || c.userId === activeChatId);
 
@@ -1774,6 +1826,41 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                 </div>
               </header>
 
+              {/* Instagram-style Pinned Message Banner */}
+              {pinnedMessage && (
+                <div
+                  className="chat-pinned-message-banner font-ui"
+                  onClick={() => scrollToMessage(pinnedMessage.id)}
+                  title="Click to jump to message"
+                >
+                  <div className="pinned-banner-content">
+                    <PushPinSimple size={15} weight="fill" className="pinned-banner-icon" />
+                    <div className="pinned-banner-text-wrap">
+                      <span className="pinned-banner-title">
+                        Pinned Message • {pinnedMessage.sender === 'user' ? 'You' : activePartner.name}
+                      </span>
+                      <span className="pinned-banner-snippet">
+                        {pinnedMessage.text
+                          ? (pinnedMessage.text.length > 55 ? `${pinnedMessage.text.slice(0, 55)}…` : pinnedMessage.text)
+                          : (Array.isArray(pinnedMessage.attachments) && pinnedMessage.attachments.length > 0 ? '📷 Attachment' : 'Message')}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="pinned-banner-unpin-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUnpinMessage();
+                    }}
+                    title="Unpin message"
+                    aria-label="Unpin message"
+                  >
+                    <X size={14} weight="bold" />
+                  </button>
+                </div>
+              )}
+
               {/* In-chat Rewind Letter Prompt banner */}
               {notifications?.rewindLettersEnabled !== false &&
                 !letterStatus?.myLetter &&
@@ -2150,6 +2237,16 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                               <div className="message-bubble-actions">
                                 <button
                                   type="button"
+                                  className={`message-action-btn pin ${isMessagePinned(msg.id) ? 'active' : ''}`}
+                                  onClick={() => handleTogglePinMessage(msg)}
+                                  aria-label={isMessagePinned(msg.id) ? 'Unpin message' : 'Pin message to top'}
+                                  title={isMessagePinned(msg.id) ? 'Unpin message' : 'Pin message to top'}
+                                >
+                                  <PushPinSimple size={14} weight={isMessagePinned(msg.id) ? 'fill' : 'regular'} />
+                                </button>
+
+                                <button
+                                  type="button"
                                   className="message-action-btn diary"
                                   onClick={() => handleOpenSaveToDiary(msg)}
                                   aria-label="Save to Our Diary"
@@ -2195,6 +2292,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                             )}
                             <div className="message-bubble-footer font-ui">
                               <span className="message-bubble-time">{msg.timestamp}</span>
+                              {isMessagePinned(msg.id) && (
+                                <span className="message-pinned-tag" title="Pinned message">
+                                  <PushPinSimple size={11} weight="fill" /> Pinned
+                                </span>
+                              )}
                               {msg.isEdited && !msg.isDeleted && (
                                 <span className="edited-status-text">• Edited</span>
                               )}
@@ -3200,6 +3302,108 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           color: var(--burgundy-300);
           border-color: var(--burgundy-400);
           background-color: #27171d;
+        }
+
+        .message-action-btn.pin:hover,
+        .message-action-btn.pin.active {
+          color: var(--burgundy-300);
+          border-color: var(--burgundy-400);
+          background-color: #27171d;
+        }
+
+        .message-pinned-tag {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          color: var(--burgundy-500);
+          font-size: 11px;
+          font-weight: 600;
+          margin-left: 6px;
+        }
+
+        .message-pinned-tag svg {
+          transform: rotate(45deg);
+        }
+
+        /* Instagram-style Pinned Message Banner */
+        .chat-pinned-message-banner {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 16px;
+          background: var(--bg-surface);
+          border-bottom: 1px solid var(--border-subtle);
+          border-left: 3px solid var(--burgundy-500);
+          cursor: pointer;
+          transition: background-color var(--duration-fast);
+          z-index: 10;
+          animation: slideDown 0.2s ease-out;
+          flex-shrink: 0;
+        }
+
+        .chat-pinned-message-banner:hover {
+          background-color: var(--bg-muted);
+        }
+
+        .pinned-banner-content {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          overflow: hidden;
+          min-width: 0;
+        }
+
+        .pinned-banner-icon {
+          color: var(--burgundy-500);
+          transform: rotate(45deg);
+          flex-shrink: 0;
+        }
+
+        .pinned-banner-text-wrap {
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          min-width: 0;
+        }
+
+        .pinned-banner-title {
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--burgundy-500);
+          letter-spacing: 0.02em;
+          line-height: 1.2;
+        }
+
+        .pinned-banner-snippet {
+          font-size: 13px;
+          color: var(--text-secondary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .pinned-banner-unpin-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-tertiary);
+          cursor: pointer;
+          padding: 6px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all var(--duration-fast);
+          flex-shrink: 0;
+          margin-left: 8px;
+        }
+
+        .pinned-banner-unpin-btn:hover {
+          color: var(--text-primary);
+          background-color: rgba(0, 0, 0, 0.06);
+        }
+
+        [data-theme="dark"] .pinned-banner-unpin-btn:hover {
+          background-color: rgba(255, 255, 255, 0.1);
         }
 
         /* Tactile Quoted Reply Card inside Message Bubble */
