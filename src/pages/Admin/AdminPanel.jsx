@@ -8,6 +8,8 @@ import { EmptyState } from '../../components/UI/EmptyState';
 import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 import { ProfileDetail } from '../ProfileDetail/ProfileDetail';
 import { AdminVerificationRecommendation } from '../../components/Admin/AdminVerificationRecommendation';
+import { AdminWarningModal } from '../../components/Admin/AdminWarningModal';
+import { WarningsTab } from '../../components/Admin/WarningsTab';
 import {
   ShieldCheck,
   CheckCircle,
@@ -109,6 +111,7 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert: propSho
   const showAlert = propShowAlert || appShowAlert;
   const [currentUser, setCurrentUser] = useState(user);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
 
   useEffect(() => {
     setCurrentUser(user);
@@ -324,6 +327,32 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert: propSho
             <span>{actionLoading ? 'Saving…' : currentUser.verified ? 'Verified' : 'Verify'}</span>
           </button>
 
+          {currentUser.role !== 'ADMIN' && (
+            <button
+              type="button"
+              onClick={() => setShowWarningModal(true)}
+              className="admin-warn-toggle-btn"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '7px 12px',
+                fontSize: '12.5px',
+                fontWeight: '600',
+                borderRadius: '8px',
+                background: 'rgba(245, 158, 11, 0.15)',
+                border: '1px solid rgba(245, 158, 11, 0.4)',
+                color: '#fbbf24',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              title="Issue a formal compliance warning (Name, Photo, or Policy)"
+            >
+              <Warning size={16} weight="bold" />
+              <span>Warn</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleToggleSusp}
@@ -428,6 +457,17 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert: propSho
           </div>
         </div>
       )}
+
+      {/* Admin Warning Modal */}
+      <AdminWarningModal
+        isOpen={showWarningModal}
+        onClose={() => setShowWarningModal(false)}
+        user={currentUser}
+        onSuccess={() => {
+          showAlert?.('Compliance warning successfully issued to user.', 'success');
+          onUserUpdated?.(currentUser);
+        }}
+      />
     </div>
   );
 };
@@ -436,6 +476,7 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert: propSho
 const TABS = [
   { id: 'stats', label: 'Dashboard', icon: ChartBar },
   { id: 'verifications', label: 'Verification Requests', icon: IdentificationBadge },
+  { id: 'warnings', label: 'Warnings & Appeals', icon: Warning },
   { id: 'users', label: 'Users Directory', icon: Users },
   { id: 'pending', label: 'Pending Approvals', icon: Clock },
 ];
@@ -513,6 +554,7 @@ export const AdminPanel = () => {
       <div className="admin-tab-content" key={refreshKey}>
         {activeTab === 'stats' && <DashboardStatsTab onNavigateTab={setActiveTab} onViewUser={setInspectingUser} showAlert={showAlert} />}
         {activeTab === 'verifications' && <VerificationRequestsTab showAlert={showAlert} onViewUser={setInspectingUser} />}
+        {activeTab === 'warnings' && <WarningsTab showAlert={showAlert} onViewUser={setInspectingUser} />}
         {activeTab === 'users' && <UsersDirectoryTab showAlert={showAlert} onViewUser={setInspectingUser} />}
         {activeTab === 'pending' && <PendingUsersTab showAlert={showAlert} onViewUser={setInspectingUser} />}
       </div>

@@ -607,6 +607,38 @@ export const api = {
             return request('/api/v1/admin/verifications/demo', {
                 method: 'POST'
             });
+        },
+
+        issueWarning(userId, data) {
+            return request(`/api/v1/admin/users/${userId}/warn`, {
+                method: 'POST',
+                body: data
+            });
+        },
+
+        getWarnings(status) {
+            const params = status && status !== 'ALL' ? `?status=${encodeURIComponent(status)}` : '';
+            return request(`/api/v1/admin/warnings${params}`);
+        },
+
+        resolveWarning(warningId, data) {
+            return request(`/api/v1/admin/warnings/${warningId}/resolve`, {
+                method: 'POST',
+                body: data
+            });
+        }
+    },
+
+    warnings: {
+        getActive() {
+            return request('/api/v1/warnings/active');
+        },
+
+        submitAppeal(warningId, data) {
+            return request(`/api/v1/warnings/${warningId}/appeal`, {
+                method: 'POST',
+                body: data
+            });
         }
     }
 };

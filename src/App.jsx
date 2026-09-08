@@ -28,6 +28,7 @@ const SettingsPage = lazy(() => import('./pages/Settings/SettingsPage').then(m =
 const SafetyCenter = lazy(() => import('./pages/Safety/SafetyCenter').then(m => ({ default: m.SafetyCenter })));
 const NotificationsPage = lazy(() => import('./pages/Notifications/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const VerificationPromptModal = lazy(() => import('./components/Safety/VerificationPromptModal').then(m => ({ default: m.VerificationPromptModal })));
+const WarningAlertModal = lazy(() => import('./components/Safety/WarningAlertModal').then(m => ({ default: m.WarningAlertModal })));
 const AdminPanel = lazy(() => import('./pages/Admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
 const NotFoundPage = lazy(() => import('./pages/NotFound/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
@@ -437,6 +438,7 @@ function AppContent() {
       </Suspense>
       <FeatureTourGuide />
       <VerificationPromptModal />
+      <WarningAlertModal />
     </Navigation>
   );
 }
