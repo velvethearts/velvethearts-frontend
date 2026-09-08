@@ -834,14 +834,34 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const photoInputRef = useRef(null);
   const chatPageRef = useRef(null);
   const textInputRef = useRef(null);
+  const chatLogContainerRef = useRef(null);
   const [viewportHeight, setViewportHeight] = useState(null);
+
+  // Smoothly scroll only the chat messages log container without shifting the browser window
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
+    if (chatLogContainerRef.current) {
+      chatLogContainerRef.current.scrollTo({
+        top: chatLogContainerRef.current.scrollHeight,
+        behavior: behavior
+      });
+    }
+    // Prevent browser window from scrolling up and hiding header / creating bottom gap
+    if (typeof window !== 'undefined' && window.scrollY !== 0) {
+      window.scrollTo(0, 0);
+    }
+  }, []);
 
   // Dynamic mobile viewport & keyboard tracking: ensures input bar is never covered by virtual keyboard
   useEffect(() => {
     if (activeChatId) {
       document.body.classList.add('chat-active-conversation');
+      document.documentElement.classList.add('chat-conversation-open');
+      if (typeof window !== 'undefined') {
+        window.scrollTo(0, 0);
+      }
     } else {
       document.body.classList.remove('chat-active-conversation');
+      document.documentElement.classList.remove('chat-conversation-open');
     }
 
     if (typeof window === 'undefined' || !window.visualViewport) return;
@@ -858,11 +878,15 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
 
       if (isKeyboardOpen) {
         setViewportHeight(vv.height);
-        if (activeChatId && messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        if (activeChatId) {
+          scrollToBottom('smooth');
         }
       } else {
         setViewportHeight(null);
+      }
+
+      if (typeof window !== 'undefined' && window.scrollY !== 0) {
+        window.scrollTo(0, 0);
       }
     };
 
@@ -871,20 +895,19 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
 
     return () => {
       document.body.classList.remove('chat-active-conversation');
+      document.documentElement.classList.remove('chat-conversation-open');
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleVisualViewportChange);
         window.visualViewport.removeEventListener('scroll', handleVisualViewportChange);
       }
     };
-  }, [activeChatId]);
+  }, [activeChatId, scrollToBottom]);
 
   const handleInputFocus = () => {
     setTimeout(() => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
-      if (textInputRef.current) {
-        textInputRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      scrollToBottom('smooth');
+      if (typeof window !== 'undefined' && window.scrollY !== 0) {
+        window.scrollTo(0, 0);
       }
     }, 150);
   };
@@ -892,6 +915,9 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const handleInputBlur = () => {
     setTimeout(() => {
       setViewportHeight(null);
+      if (typeof window !== 'undefined' && window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
     }, 100);
   };
 
@@ -1294,7 +1320,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     if (isNewChat) {
       isNearBottomRef.current = true;
       prevMessageCountRef.current = activeMessages.length;
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      scrollToBottom('auto');
       return;
     }
 
@@ -1306,10 +1332,10 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
       const isSentByMe = lastMsg?.sender === 'user';
 
       if (isNearBottomRef.current || isSentByMe) {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        scrollToBottom('smooth');
       }
     }
-  }, [activeChatId, activeMessages.length]);
+  }, [activeChatId, activeMessages.length, scrollToBottom]);
 
   // Join/Leave conversation rooms & Mark conversation as seen
   useEffect(() => {
@@ -1590,6 +1616,9 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const handleBackToList = () => {
     setActiveChatId(null);
     if (onClearPreselected) onClearPreselected();
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
   };
 
   return (
@@ -1901,7 +1930,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                 )}
 
               {/* Chat Log */}
-              <div className="chat-log-container">
+              <div ref={chatLogContainerRef} className="chat-log-container">
                 <div className="chat-log-scroll" onScroll={handleChatScroll}>
                   {/* Top Banners for Sealed / Delivered Rewind Letters */}
                   {letterStatus?.receivedLetter?.status === 'SEALED' && (
@@ -3021,26 +3050,46 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           flex-direction: column;
           height: 100%;
           width: 100%;
+          overflow: hidden;
+          position: relative;
         }
 
         .active-chat-header {
           display: flex;
           align-items: center;
-          padding: var(--space-4) var(--space-6);
+          padding: var(--space-3) var(--space-6);
+          padding-top: max(var(--space-3), env(safe-area-inset-top, 0px));
           background-color: var(--bg-surface);
           border-bottom: 1px solid var(--border-subtle);
-          position: relative;
-          z-index: 10;
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          flex-shrink: 0;
+          width: 100%;
         }
 
         .chat-mobile-back-btn {
           display: none;
           align-items: center;
-          margin-right: var(--space-4);
-          color: var(--text-secondary);
-          background: none;
-          border: none;
+          justify-content: center;
+          width: 38px;
+          height: 38px;
+          min-width: 38px;
+          min-height: 38px;
+          border-radius: 50%;
+          background-color: var(--bg-surface-warm);
+          border: 1px solid var(--border-subtle);
+          margin-right: var(--space-3);
+          color: var(--text-primary);
           cursor: pointer;
+          flex-shrink: 0;
+          z-index: 60;
+          transition: background-color var(--duration-fast);
+        }
+
+        .chat-mobile-back-btn:hover {
+          background-color: var(--bg-muted);
+          color: var(--burgundy-500);
         }
 
         .active-chat-meta {
@@ -4561,7 +4610,15 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           }
           .active-chat-header {
             flex-shrink: 0;
-            padding: var(--space-3) var(--space-4);
+            padding: var(--space-2) var(--space-3);
+            padding-top: max(var(--space-2), env(safe-area-inset-top, 0px));
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            width: 100%;
+          }
+          .chat-mobile-back-btn {
+            display: flex !important;
           }
           .chat-log-container {
             flex: 1;

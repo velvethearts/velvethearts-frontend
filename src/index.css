@@ -236,6 +236,22 @@ body {
   color: var(--text-primary);
 }
 
+/* Strict mobile chat viewport lock: prevent outer window scrolling so header & input stay 100% pinned */
+html.chat-conversation-open,
+body.chat-active-conversation {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
 /* Noise texture overlay on body */
 body::before {
   content: '';
