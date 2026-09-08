@@ -10,6 +10,7 @@ import { ProfileDetail } from '../ProfileDetail/ProfileDetail';
 import { AdminVerificationRecommendation } from '../../components/Admin/AdminVerificationRecommendation';
 import { AdminWarningModal } from '../../components/Admin/AdminWarningModal';
 import { WarningsTab } from '../../components/Admin/WarningsTab';
+import { ThemeToggle } from '../../components/UI/ThemeToggle';
 import {
   ShieldCheck,
   CheckCircle,
@@ -288,6 +289,7 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert: propSho
 
         {/* Quick Admin Actions in Header */}
         <div className="admin-inspector-actions">
+          <ThemeToggle className="admin-header-theme-toggle" />
           {currentUser.approvalStatus !== 'APPROVED' && (
             <button
               type="button"
@@ -526,6 +528,7 @@ export const AdminPanel = () => {
       <PageHeader 
         title="Admin Control Center" 
         subtitle="Manage user verifications, view registered members, and oversee platform health"
+        actions={<ThemeToggle />}
       />
 
       {/* Luxury Segmented Tab Navigation Rail */}

@@ -505,7 +505,8 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           display: flex;
           flex-direction: column;
           gap: 24px;
-          color: #ffffff;
+          color: var(--text-primary, #111827);
+          transition: color 0.3s ease;
         }
 
         /* ── Metric Cards Grid ── */
@@ -529,17 +530,29 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
         .warnings-metric-card {
           padding: 18px 20px;
-          border-radius: 18px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: var(--radius-lg, 18px);
+          background: var(--bg-surface, #FFFFFF);
+          border: 1px solid var(--border-subtle, #E5E7EB);
+          box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.05));
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
+        [data-theme="dark"] .warnings-metric-card {
+          background: rgba(255, 255, 255, 0.03);
+          border-color: rgba(255, 255, 255, 0.08);
+          box-shadow: none;
+        }
+
         .warnings-metric-card:hover {
+          background: var(--bg-surface-warm, #FFF8F0);
+          border-color: var(--border-default, #D1D5DB);
+          transform: translateY(-2px);
+        }
+
+        [data-theme="dark"] .warnings-metric-card:hover {
           background: rgba(255, 255, 255, 0.06);
           border-color: rgba(255, 255, 255, 0.16);
-          transform: translateY(-2px);
         }
 
         .warnings-metric-card.selected.card-active {
@@ -579,22 +592,31 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           letter-spacing: 0.05em;
         }
 
-        .text-active { color: #fbbf24; }
-        .text-appealed { color: #38bdf8; }
-        .text-resolved { color: #34d399; }
-        .text-suspended { color: #f87171; }
+        .text-active { color: #d97706; }
+        .text-appealed { color: #0284c7; }
+        .text-resolved { color: #16a34a; }
+        .text-suspended { color: #dc2626; }
+
+        [data-theme="dark"] .text-active { color: #fbbf24; }
+        [data-theme="dark"] .text-appealed { color: #38bdf8; }
+        [data-theme="dark"] .text-resolved { color: #34d399; }
+        [data-theme="dark"] .text-suspended { color: #f87171; }
 
         .metric-value {
           font-size: 28px;
           font-weight: 800;
-          color: #ffffff;
+          color: var(--text-primary, #111827);
           margin: 10px 0 2px;
           line-height: 1;
         }
 
+        [data-theme="dark"] .metric-value {
+          color: #ffffff;
+        }
+
         .metric-sub {
           font-size: 11.5px;
-          color: rgba(255, 255, 255, 0.5);
+          color: var(--text-muted, #6B7280);
           margin: 0;
         }
 
@@ -605,10 +627,17 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           justify-content: space-between;
           gap: 12px;
           padding: 12px 16px;
-          border-radius: 16px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: var(--radius-lg, 16px);
+          background: var(--bg-surface, #FFFFFF);
+          border: 1px solid var(--border-subtle, #E5E7EB);
+          box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
           flex-wrap: wrap;
+        }
+
+        [data-theme="dark"] .warnings-toolbar {
+          background: rgba(255, 255, 255, 0.03);
+          border-color: rgba(255, 255, 255, 0.08);
+          box-shadow: none;
         }
 
         .warnings-search-wrap {
@@ -622,24 +651,34 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           left: 14px;
           top: 50%;
           transform: translateY(-50%);
-          color: rgba(255, 255, 255, 0.4);
+          color: var(--text-muted, #9CA3AF);
           pointer-events: none;
         }
 
         .warnings-search-input {
           width: 100%;
           padding: 9px 14px 9px 38px;
-          border-radius: 12px;
-          background: rgba(0, 0, 0, 0.4);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          color: #ffffff;
+          border-radius: var(--radius-md, 12px);
+          background: var(--bg-input, #FFF8F0);
+          border: 1px solid var(--border-default, #D1D5DB);
+          color: var(--text-primary, #111827);
           font-size: 13px;
           outline: none;
           transition: all 0.2s ease;
           box-sizing: border-box;
         }
 
+        [data-theme="dark"] .warnings-search-input {
+          background: rgba(0, 0, 0, 0.4);
+          border-color: rgba(255, 255, 255, 0.12);
+          color: #ffffff;
+        }
+
         .warnings-search-input:focus {
+          border-color: var(--burgundy-500, #B8436A);
+        }
+
+        [data-theme="dark"] .warnings-search-input:focus {
           border-color: #D4AD6A;
           background: rgba(0, 0, 0, 0.6);
         }
@@ -652,25 +691,35 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
         .warnings-select-filter {
           padding: 9px 14px;
-          border-radius: 12px;
-          background: rgba(0, 0, 0, 0.4);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          color: #ffffff;
+          border-radius: var(--radius-md, 12px);
+          background: var(--bg-input, #FFF8F0);
+          border: 1px solid var(--border-default, #D1D5DB);
+          color: var(--text-primary, #111827);
           font-size: 12.5px;
           outline: none;
           cursor: pointer;
         }
 
+        [data-theme="dark"] .warnings-select-filter {
+          background: rgba(0, 0, 0, 0.4);
+          border-color: rgba(255, 255, 255, 0.12);
+          color: #ffffff;
+        }
+
         .warnings-select-filter:focus {
+          border-color: var(--burgundy-500, #B8436A);
+        }
+
+        [data-theme="dark"] .warnings-select-filter:focus {
           border-color: #D4AD6A;
         }
 
         .warnings-refresh-btn {
           padding: 9px;
-          border-radius: 12px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          color: rgba(255, 255, 255, 0.8);
+          border-radius: var(--radius-md, 12px);
+          background: var(--bg-surface-warm, #F3F4F6);
+          border: 1px solid var(--border-subtle, #E5E7EB);
+          color: var(--text-secondary, #4B5563);
           cursor: pointer;
           display: flex;
           align-items: center;
@@ -679,6 +728,17 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .warnings-refresh-btn:hover {
+          background: var(--bg-muted, #E5E7EB);
+          color: var(--text-primary, #111827);
+        }
+
+        [data-theme="dark"] .warnings-refresh-btn {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.12);
+          color: rgba(255, 255, 255, 0.8);
+        }
+
+        [data-theme="dark"] .warnings-refresh-btn:hover {
           background: rgba(255, 255, 255, 0.12);
           color: #ffffff;
         }
@@ -688,30 +748,46 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         .warnings-empty-box {
           padding: 48px 24px;
           text-align: center;
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: var(--radius-xl, 20px);
+          background: var(--bg-surface, #FFFFFF);
+          border: 1px solid var(--border-subtle, #E5E7EB);
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 10px;
+          color: var(--text-secondary, #4B5563);
+        }
+
+        [data-theme="dark"] .warnings-loading-box,
+        [data-theme="dark"] .warnings-empty-box {
+          background: rgba(255, 255, 255, 0.02);
+          border-color: rgba(255, 255, 255, 0.06);
           color: rgba(255, 255, 255, 0.6);
         }
 
         .empty-icon {
+          color: var(--text-muted, #9CA3AF);
+        }
+
+        [data-theme="dark"] .empty-icon {
           color: rgba(255, 255, 255, 0.25);
         }
 
         .empty-title {
-          font-size: 16px;
+          font-family: var(--font-display, 'DM Serif Display', serif);
+          font-size: 18px;
           font-weight: 700;
-          color: #ffffff;
+          color: var(--text-primary, #111827);
           margin: 0;
+        }
+
+        [data-theme="dark"] .empty-title {
+          color: #ffffff;
         }
 
         .empty-desc {
           font-size: 12.5px;
-          color: rgba(255, 255, 255, 0.45);
+          color: var(--text-muted, #6B7280);
           margin: 0;
           max-width: 440px;
         }
@@ -724,10 +800,11 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .warning-item-card {
-          border-radius: 20px;
+          border-radius: var(--radius-xl, 20px);
           padding: 22px 24px;
-          background: linear-gradient(165deg, rgba(28, 20, 24, 0.95) 0%, rgba(14, 10, 12, 0.98) 100%);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: var(--bg-surface, #FFFFFF);
+          border: 1px solid var(--border-subtle, #E5E7EB);
+          box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
           transition: all 0.2s ease;
           display: flex;
           flex-direction: column;
@@ -735,12 +812,26 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .warning-item-card:hover {
+          border-color: var(--burgundy-500, #B8436A);
+          box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.08));
+        }
+
+        [data-theme="dark"] .warning-item-card {
+          background: linear-gradient(165deg, rgba(28, 20, 24, 0.95) 0%, rgba(14, 10, 12, 0.98) 100%);
+          border-color: rgba(255, 255, 255, 0.1);
+          box-shadow: none;
+        }
+
+        [data-theme="dark"] .warning-item-card:hover {
           border-color: rgba(212, 173, 106, 0.35);
           box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
         }
 
         .status-card-appealed {
           border-color: rgba(56, 189, 248, 0.35);
+        }
+
+        [data-theme="dark"] .status-card-appealed {
           background: linear-gradient(165deg, rgba(14, 25, 45, 0.95) 0%, rgba(10, 14, 25, 0.98) 100%);
         }
 
@@ -926,32 +1017,49 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
         .warning-message-box {
           padding: 12px 14px;
-          border-radius: 12px;
-          background: rgba(0, 0, 0, 0.35);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          color: rgba(255, 255, 255, 0.88);
+          border-radius: var(--radius-md, 12px);
+          background: var(--bg-surface-warm, #FFF8F0);
+          border: 1px solid var(--border-subtle, #E5E7EB);
+          color: var(--text-primary, #111827);
           font-size: 12.5px;
           line-height: 1.55;
         }
 
+        [data-theme="dark"] .warning-message-box {
+          background: rgba(0, 0, 0, 0.35);
+          border-color: rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.88);
+        }
+
         .warning-resolution-box {
           padding: 10px 12px;
-          border-radius: 10px;
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: var(--radius-sm, 10px);
+          background: var(--bg-surface-warm, #F3F4F6);
+          border: 1px solid var(--border-subtle, #E5E7EB);
           font-size: 11.5px;
+          color: var(--text-secondary, #4B5563);
+        }
+
+        [data-theme="dark"] .warning-resolution-box {
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(255, 255, 255, 0.08);
           color: rgba(255, 255, 255, 0.7);
         }
 
         .warning-diff-box {
           padding: 12px 14px;
-          border-radius: 12px;
-          background: rgba(0, 0, 0, 0.35);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: var(--radius-md, 12px);
+          background: var(--bg-surface-warm, #FFF8F0);
+          border: 1px solid var(--border-subtle, #E5E7EB);
           display: flex;
           flex-direction: column;
           gap: 8px;
           font-size: 12px;
+        }
+
+        [data-theme="dark"] .warning-diff-box {
+          background: rgba(0, 0, 0, 0.35);
+          border-color: rgba(255, 255, 255, 0.08);
         }
 
         .diff-row {
@@ -961,17 +1069,29 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .diff-label {
+          color: var(--text-muted, #6B7280);
+        }
+
+        [data-theme="dark"] .diff-label {
           color: rgba(255, 255, 255, 0.55);
         }
 
         .diff-val-old {
-          color: #fbbf24;
+          color: #d97706;
           font-weight: 600;
         }
 
+        [data-theme="dark"] .diff-val-old {
+          color: #fbbf24;
+        }
+
         .diff-val-new {
-          color: #ffffff;
+          color: var(--text-primary, #111827);
           font-weight: 600;
+        }
+
+        [data-theme="dark"] .diff-val-new {
+          color: #ffffff;
         }
 
         .diff-alert {
@@ -1109,17 +1229,25 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           align-items: center;
           justify-content: space-between;
           padding-top: 14px;
-          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          border-top: 1px solid var(--border-subtle, #E5E7EB);
           gap: 12px;
           flex-wrap: wrap;
         }
 
+        [data-theme="dark"] .warning-card-footer {
+          border-top-color: rgba(255, 255, 255, 0.08);
+        }
+
         .warning-issued-by {
           font-size: 11.5px;
-          color: rgba(255, 255, 255, 0.45);
+          color: var(--text-muted, #6B7280);
         }
 
         .warning-issued-by strong {
+          color: var(--text-primary, #111827);
+        }
+
+        [data-theme="dark"] .warning-issued-by strong {
           color: rgba(255, 255, 255, 0.8);
         }
 
@@ -1138,7 +1266,7 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
           align-items: center;
           gap: 6px;
           padding: 8px 14px;
-          border-radius: 10px;
+          border-radius: var(--radius-md, 10px);
           font-size: 12px;
           font-weight: 700;
           cursor: pointer;
@@ -1147,12 +1275,23 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
         }
 
         .btn-warn-inspect {
+          background: var(--bg-surface-warm, #F3F4F6);
+          border-color: var(--border-subtle, #E5E7EB);
+          color: var(--text-secondary, #374151);
+        }
+
+        .btn-warn-inspect:hover {
+          background: var(--bg-muted, #E5E7EB);
+          color: var(--text-primary, #111827);
+        }
+
+        [data-theme="dark"] .btn-warn-inspect {
           background: rgba(255, 255, 255, 0.06);
           border-color: rgba(255, 255, 255, 0.12);
           color: rgba(255, 255, 255, 0.8);
         }
 
-        .btn-warn-inspect:hover {
+        [data-theme="dark"] .btn-warn-inspect:hover {
           background: rgba(255, 255, 255, 0.12);
           color: #ffffff;
         }
