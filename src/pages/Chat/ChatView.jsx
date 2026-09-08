@@ -636,6 +636,55 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
   const photoInputRef = useRef(null);
+  const chatPageRef = useRef(null);
+  const textInputRef = useRef(null);
+  const [viewportHeight, setViewportHeight] = useState(null);
+
+  // Dynamic mobile viewport & keyboard tracking: ensures input bar is never covered by virtual keyboard
+  useEffect(() => {
+    if (activeChatId) {
+      document.body.classList.add('chat-active-conversation');
+    } else {
+      document.body.classList.remove('chat-active-conversation');
+    }
+
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+
+    const handleVisualViewportChange = () => {
+      const vv = window.visualViewport;
+      if (!vv) return;
+
+      // When the mobile virtual keyboard opens, vv.height drops to the visible screen height
+      setViewportHeight(vv.height);
+
+      // Keep messages view scrolled to the bottom so the user sees the conversation above the keyboard
+      if (activeChatId && messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+
+    window.visualViewport.addEventListener('resize', handleVisualViewportChange);
+    window.visualViewport.addEventListener('scroll', handleVisualViewportChange);
+
+    return () => {
+      document.body.classList.remove('chat-active-conversation');
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleVisualViewportChange);
+        window.visualViewport.removeEventListener('scroll', handleVisualViewportChange);
+      }
+    };
+  }, [activeChatId]);
+
+  const handleInputFocus = () => {
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+      if (textInputRef.current) {
+        textInputRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }, 150);
+  };
 
   // Voice note recording hooks
   const [isRecording, setIsRecording] = useState(false);
@@ -1262,7 +1311,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   };
 
   return (
-    <div className="chat-page page-enter">
+    <div
+      ref={chatPageRef}
+      className="chat-page page-enter"
+      style={{ height: viewportHeight ? `${viewportHeight}px` : undefined }}
+    >
       <div className={`chat-layout ${activeChatId ? 'partner-selected' : ''}`}>
         {/* Left Side Pane: Connection List */}
         <div className="chat-sidebar-pane">
@@ -2065,10 +2118,12 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                   </button>
 
                   <input
+                    ref={textInputRef}
                     type="text"
                     placeholder={`Send a warm message to ${activePartner.name}...`}
                     value={messageText}
                     onChange={handleInputChange}
+                    onFocus={handleInputFocus}
                     className="chat-text-input font-body"
                   />
 
@@ -2324,6 +2379,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
       <style>{`
         .chat-page {
           height: 100vh;
+          height: 100dvh;
+          max-height: 100dvh;
           width: 100%;
           padding: 0;
           background-color: var(--bg-page);
@@ -3826,6 +3883,16 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
         @media (max-width: 767px) {
           .chat-page {
             height: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+          }
+          .chat-layout {
+            height: 100%;
+            flex: 1;
+            overflow: hidden;
           }
           .active-chat-wrapper {
             display: flex;
@@ -3833,6 +3900,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
             height: 100%;
             flex: 1;
             overflow: hidden;
+            position: relative;
           }
           .active-chat-header {
             flex-shrink: 0;
@@ -3840,9 +3908,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           }
           .chat-log-container {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: var(--space-3) var(--space-4);
+            overscroll-behavior: contain;
           }
           .chat-pending-attachments-bar {
             flex-shrink: 0;
@@ -3851,13 +3921,17 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           .chat-input-footer {
             flex-shrink: 0;
             padding: var(--space-2) var(--space-3);
+            padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
             gap: var(--space-2);
             background-color: var(--bg-surface);
             border-top: 1px solid var(--border-subtle);
+            position: sticky;
+            bottom: 0;
+            z-index: 20;
           }
           .chat-text-input {
-            font-size: 14px;
-            padding: 8px 14px;
+            font-size: 15px;
+            padding: 9px 14px;
           }
           .chat-send-btn {
             width: 36px;

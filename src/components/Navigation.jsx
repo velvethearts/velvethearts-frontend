@@ -278,7 +278,9 @@ export const Navigation = ({ children, isChatViewActive }) => {
 
         .main-content-layout.chat-active-layout {
           height: 100vh;
+          height: 100dvh;
           min-height: 100vh;
+          min-height: 100dvh;
           padding-bottom: var(--bottom-nav-height);
           overflow: hidden;
         }
@@ -296,6 +298,24 @@ export const Navigation = ({ children, isChatViewActive }) => {
             overflow: hidden;
             display: flex;
             flex-direction: column;
+          }
+
+          /* When inside an active chat conversation on mobile, hide the bottom navigation bar and remove bottom padding so input stays anchored */
+          body.chat-active-conversation .mobile-bottom-nav,
+          .main-content-layout.chat-active-layout:has(.partner-selected) + .mobile-bottom-nav,
+          .main-content-layout.chat-active-layout:has(.partner-selected) ~ .mobile-bottom-nav {
+            display: none !important;
+          }
+
+          body.chat-active-conversation .main-content-layout.chat-active-layout,
+          .main-content-layout.chat-active-layout:has(.partner-selected) {
+            padding-bottom: 0 !important;
+            height: 100vh;
+            height: 100dvh;
+            min-height: 100vh;
+            min-height: 100dvh;
+            max-height: 100vh;
+            max-height: 100dvh;
           }
         }
 
