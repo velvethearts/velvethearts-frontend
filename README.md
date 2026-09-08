@@ -1,6 +1,6 @@
 # Velvet Hearts Frontend
 
-Last updated: August 22nd, 2026 (v1.1.0 Release)  
+Last updated: September 8th, 2026 (v1.2.0 Release)  
 Source of truth: `/docs/Administrator_Manual.docx` and `/docs/User_Manual.docx`
 
 This folder contains the Velvet Hearts browser application. It is a Vite + React single-page application that serves the public landing page, registration/login flow, onboarding, discover, matching, chat, profile, settings, safety center, and admin UI surfaces.
@@ -17,20 +17,24 @@ Velvet Hearts is a safety-oriented dating and connection platform. The frontend 
 | `src/lib/firebase.js` | Firebase Web SDK initialization and Google popup sign-in helper. |
 | `src/lib/socket.js` | Socket.IO client setup and helpers for joining/leaving conversations and typing events. |
 | `src/pages/Auth` | Phone number entry, Google account linking, and Google sign-in screens. |
-| `src/pages/Onboarding` | Multi-step profile setup flow including Step 4 2-minute voice snippet recording. |
+| `src/pages/Onboarding` | Multi-step profile setup flow including Step 4 2-minute voice snippet recording and mandatory face quality validation. |
 | `src/pages/Discover` | Discover feed, profile search/filtering, deck/grid view modes (with `Invite Sent ✓` retention in grid view), and discover preferences. |
 | `src/pages/Matches` | Mutual connections carousel, Instagram-style floating Spark Notes (20-char limit, vertical multi-line stacking, interactive 1-tap note replies), 24h spark countdown ring, 3s long press voice playback, sound equalizer, and sent interests. Injects tour demo items during guided walkthrough. |
-| `src/pages/Chat` | Chat list, conversation view, typing events, block/report actions. |
-| `src/pages/Profile`, `src/pages/ProfileDetail` | Own-profile view/editing, 2-minute voice intro management (play, 1-tap delete, re-record), and profile detail views. |
+| `src/pages/Chat` | Chat list with conversation pinning, conversation view with individual message pinning, typing events, slow-connection image compression, and block/report actions. |
+| `src/pages/Profile`, `src/pages/ProfileDetail` | Own-profile view/editing, 2-minute voice intro management (play, 1-tap delete, re-record), face cross-referencing, and profile detail views. |
 | `src/pages/Settings` | Theme, accessibility, notification preferences, interactive app tour replay trigger, and account deletion. |
 | `src/pages/Safety` | Safety center, blocked users, report history, and support entry. |
-| `src/pages/Admin` | Admin dashboard, pending verification queue, and phone/audit history UI. |
+| `src/pages/Admin` | Admin dashboard, pending registration and photo verification queues, warning manager, and phone/audit history UI. |
 | `src/components/UI/FeatureTourGuide.jsx` | Multi-page 12-step interactive onboarding tour guide with transparent spotlight masks, keyboard trapping, smart viewport visibility, and account-scoped persistence. |
+| `src/components/UI/WarningAlertModal.jsx` | User-facing compliance warning modal displaying violation details, severity tags, 24h countdown deadline, and appeal submission with proof image upload. |
+| `src/components/UI/PhotoVerificationModal.jsx` | Biometric pose selfie capture modal submitting photo verification requests to the admin queue. |
 | `src/components/UI/VoiceRecorder.jsx` | HTML5 MediaRecorder 2-minute voice snippet recorder component. |
 | `src/components/UI/PWAInstallModal.jsx` | PWA install prompt modal with custom pill-shaped action buttons. |
+| `src/utils/faceBiometrics.js` & `src/utils/imageFingerprint.js` | Client-side face detection, primary photo quality gate, secondary photo cross-referencing, and perceptual duplicate image hash detection. |
 | `src/components` | Shared UI and app components. |
 | `src/assets` | Static images used by the app. |
-| `public/robots.txt` & `public/sitemap.xml` | Search engine indexing and crawler directive files. |
+| `public/llms.txt` & `public/llms-full.txt` | Standardized LLM grounding files (llmstxt.org) establishing brand identity and entity disambiguation for AI search engines. |
+| `public/robots.txt` & `public/sitemap.xml` | Search engine indexing, AI crawler permissions (`GPTBot`, `PerplexityBot`, `ClaudeBot`), and directive files. |
 | `public` | Public static assets such as favicon, icons, manifest, and service worker. |
 | `.env.example` | Example frontend environment variable names. Values are placeholders only. |
 | `package.json` | Frontend scripts and dependencies. |
@@ -233,7 +237,7 @@ Collects profile information used for approval and discovery:
 - Story/about section.
 - 2-Minute Voice Intro Snippet recording option (Step 4).
 - Disability information and visibility preference.
-- Photos.
+- **Photos & Mandatory Face Quality Gate**: Requires a clear, single human face on Primary Photo (Slot #1) validated via client-side face biometrics before submission can proceed. Rejects obscured, group, or non-human primary photos. Secondary photos (slots 2-6) provide real-time cross-reference similarity cues. Duplicate image hash detection prevents identical photo uploads.
 
 ### Approval gate
 
@@ -260,15 +264,25 @@ Approved users can:
 ### Chat
 
 Approved matched users can chat. The frontend uses REST for persisted messages and Socket.IO helpers for room/typing behavior.
-- **Message Replies**: quoted replies, active glassmorphic reply banner, quoted cards inside message bubbles, and smooth scroll-to-quoted-message with rounded pulse highlight animation (`.voice-note-player`, `.message-bubble-text`, `.message-image-attachment`, `.message-video-attachment-wrapper`, `.message-file-attachment`, `.quoted-reply-card`).
+- **Individual Message Pinning (Instagram-Style)**: Pin or unpin any individual message bubble. Displays a sticky pinned message banner below the active chat header with sender attribution and snippet preview. Tapping the banner smoothly scrolls to the message and highlights it with an ambient pulse animation; single-tap unpinning via banner or message action button. Persisted per conversation in `localStorage`.
+- **Conversation Pinning**: Direct pin/unpin action buttons on conversation list items and within the 3-dots chat header options menu. Pinned conversations dynamically float to the top of the conversation list.
+- **Message Replies**: Quoted replies, active glassmorphic reply banner, quoted cards inside message bubbles, and smooth scroll-to-quoted-message with rounded pulse highlight animation (`.voice-note-player`, `.message-bubble-text`, `.message-image-attachment`, `.message-video-attachment-wrapper`, `.message-file-attachment`, `.quoted-reply-card`).
+- **Mobile Viewport & Layout Ergonomics**:
+  - Completely eliminated bottom gaps below the chat input box across all screens via dynamic `100dvh` layout sizing.
+  - Replaced `scrollIntoView()` with container-only scrolling (`chatLogContainerRef.current.scrollTo`), preventing mobile window scroll displacement and ensuring the chat back button is never obscured.
+  - Locked viewport scrolling (`body.chat-active-conversation`) and automatically hid the bottom navigation bar while inside active conversations.
+  - Instant unread badge clearing upon viewing a conversation without requiring navigation away and back.
+- **Slow-Connection Client Compression**: Camera photos (4MB–12MB) are automatically compressed client-side to ~150KB–250KB before upload, ensuring instantaneous delivery even on weak mobile data connections.
+- **Lightbox Media Viewer**: Fullscreen image preview with loading spinners, retry controls, and auto-dismiss on background tap.
 - **Low-Latency Messaging**: Optimized in-memory conversation target resolution (eliminating blocking `await api.getConversations()` calls) and non-blocking background push notification dispatching.
 
 ### Profile management
 
 Users can:
 - Review public profile details and photos.
-- Edit profile attributes.
+- Edit profile attributes with real-time secondary photo face cross-referencing against the primary profile photo.
 - Manage 2-minute Voice Intro Snippets (play, 1-tap delete, or re-record) with direct database persistence.
+- **Pose Selfie Photo Verification**: In-app photo verification modal capturing live pose selfies, generating biometric comparison metrics, and submitting verification requests to the admin review queue.
 - **Deleted Account Fail-Safe Protection**: Global `handleUserNotFound(profileId)` auto-purges deleted accounts from local state/cache and alerts `"This user no longer exists or has deleted their account."` when attempting to interact with a non-existent account.
 
 ### PWA and Installation
@@ -289,11 +303,13 @@ Users can:
 - **LCP Preloading & DNS Prefetch**: `velvet-heart-logo.png` preloaded in `index.html` head (`fetchpriority="high"`). DNS prefetch links for Firebase Auth and identity endpoints.
 - **Bundle Code Splitting**: Rollup `manualChunks` in `vite.config.js` (`vendor-react`, `vendor-icons`, `vendor-utils`) and route-level `React.lazy()` code splitting with `<Suspense>` fallbacks in `App.jsx`.
 - **Production Console Drop**: `esbuild: { drop: ['console', 'debugger'] }` strips logging statements in production builds to optimize main thread CPU performance.
-- **SEO & Search Indexing**:
-  - Full `<noscript>` fallback content in `index.html` allowing JS-disabled search engines to index platform features and FAQs.
+- **SEO, Search Indexing & Generative Engine Optimization (GEO)**:
+  - **AI Entity Grounding (`llms.txt` & `llms-full.txt`)**: Standardized AI scraper manifests (llmstxt.org) providing canonical context and disambiguating Velvet Hearts (`https://www.velvethearts.in`) from unrelated SMS/text quote mobile apps (`jnm.love.sms`).
+  - **AI Crawler Permissions**: Explicit `Allow: /` rules in `robots.txt` for `GPTBot`, `PerplexityBot`, `ClaudeBot`, `Google-Extended`, `Amazonbot`, and `cohere-ai`.
+  - Full `<noscript>` fallback content in `index.html` allowing JS-disabled search engines and LLM indexers to parse platform features and FAQs.
   - Dynamic `document.title` routing per active tab state.
-  - Multi-schema JSON-LD structured data (`WebApplication`, `Organization`, `FAQPage`, `BreadcrumbList`).
-  - Canonical links (`https://velvethearts.app/`), OpenGraph 1200x630 sharing cards, and Twitter summary cards.
+  - Multi-schema JSON-LD structured data (`WebApplication`, `Organization`, `Brand`, `FAQPage`, `BreadcrumbList`) with explicit `disambiguatingDescription`.
+  - Canonical links (`https://www.velvethearts.in/`), OpenGraph 1200x630 sharing cards, and Twitter summary cards.
   - Expanded `public/sitemap.xml` with 8 crawlable routes and priority hierarchy.
   - Crawler-friendly `public/robots.txt` with `Disallow: /assets/` and `Crawl-delay: 1`.
   - Semantic HTML5 landmarks, section `id`s, `aria-labelledby`, and `aria-controls` bindings on Landing Page.
@@ -305,6 +321,7 @@ Users can:
 - Block users.
 - Report users.
 - Submit support-ticket-style entries from the Safety Center.
+- **Compliance Warnings & Appeals**: Receive official compliance warnings (`WarningAlertModal.jsx`) detailing specific violation rules, severity levels (`LOW`, `MEDIUM`, `HIGH`), and a 24-hour compliance deadline countdown. Users can acknowledge the warning or submit an appeal with optional proof image attachments.
 - Change theme, motion, contrast, text size, and notification preferences.
 - Delete their account.
 
@@ -312,8 +329,10 @@ Users can:
 
 Admin users can access:
 
-- Dashboard.
-- Pending verification queue.
+- Dashboard stats with real-time counters.
+- Pending registration verification queue.
+- **Photo Verification Queue**: Side-by-side inspection of live pose selfie vs. primary profile photo with 1-tap Approve/Reject decisions and automatic badge assignment.
+- **Warnings & Compliance Manager**: Issue warnings with preset violation templates, review user appeals and uploaded proof images, track 24h compliance statuses, and resolve warnings with real-time Socket.IO synchronization (`admin_warning_updated`).
 - User approval/rejection controls.
 - Phone/audit history surfaces.
 
