@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
 import { getSocket } from '../../lib/socket';
@@ -18,11 +17,10 @@ import {
 } from '@phosphor-icons/react';
 
 export const WarningAlertModal = () => {
-  const navigate = useNavigate();
-  const { isFeatureTourActive } = useApp();
+  const { isFeatureTourActive, setActiveTab } = useApp();
   const [warning, setWarning] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'appeal'
+  const [modalTab, setModalTab] = useState('overview'); // 'overview' | 'appeal'
   const [appealText, setAppealText] = useState('');
   const [appealPhotos, setAppealPhotos] = useState([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -266,9 +264,9 @@ export const WarningAlertModal = () => {
             <div className="flex rounded-xl bg-white/5 p-1 border border-white/10">
               <button
                 type="button"
-                onClick={() => setActiveTab('overview')}
+                onClick={() => setModalTab('overview')}
                 className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                  activeTab === 'overview'
+                  modalTab === 'overview'
                     ? 'bg-amber-500 text-black shadow-md'
                     : 'text-white/70 hover:text-white'
                 }`}
@@ -277,9 +275,9 @@ export const WarningAlertModal = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('appeal')}
+                onClick={() => setModalTab('appeal')}
                 className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                  activeTab === 'appeal'
+                  modalTab === 'appeal'
                     ? 'bg-amber-500 text-black shadow-md'
                     : 'text-white/70 hover:text-white'
                 }`}
@@ -290,7 +288,7 @@ export const WarningAlertModal = () => {
           )}
 
           {/* Tab 1: Direct Profile Update guidance */}
-          {activeTab === 'overview' && !isAppealed && (
+          {modalTab === 'overview' && !isAppealed && (
             <div className="p-4 bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl space-y-3">
               <p className="text-xs text-white/80 leading-relaxed">
                 If the notice is accurate, simply update your profile name or photos. The system will automatically detect the correction and resolve this warning immediately.
@@ -299,7 +297,7 @@ export const WarningAlertModal = () => {
                 type="button"
                 onClick={() => {
                   handleDismiss();
-                  navigate('/profile');
+                  setActiveTab('profile');
                 }}
                 className="w-full py-3 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-rose-500/20 transition-all flex items-center justify-center gap-2"
               >
@@ -310,7 +308,7 @@ export const WarningAlertModal = () => {
           )}
 
           {/* Tab 2: Appeal Form with Proof Images */}
-          {(activeTab === 'appeal' || isAppealed) && (
+          {(modalTab === 'appeal' || isAppealed) && (
             <div className="space-y-4 pt-1">
               {isAppealed ? (
                 <div className="space-y-3">
