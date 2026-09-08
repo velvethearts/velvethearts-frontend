@@ -89,7 +89,7 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
   const formatRemainingTime = (warning) => {
     if (warning.status === 'APPEALED') {
-      return 'Paused (Appeal Submitted)';
+      return 'Paused (Appeal In Review)';
     }
     if (warning.status !== 'ACTIVE') {
       return warning.status;
@@ -104,92 +104,76 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
   };
 
   return (
-    <div className="space-y-6 page-enter font-ui text-white">
+    <div className="warnings-tab-container font-ui">
       {/* Top Metrics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+      <div className="warnings-metrics-grid">
         <div
           onClick={() => setStatusFilter('ACTIVE')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-            statusFilter === 'ACTIVE'
-              ? 'bg-amber-500/20 border-amber-400 shadow-lg shadow-amber-500/10'
-              : 'bg-white/5 border-white/10 hover:bg-white/[0.08]'
-          }`}
+          className={`warnings-metric-card card-active ${statusFilter === 'ACTIVE' ? 'selected' : ''}`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-300 uppercase tracking-wider">Active Warnings</span>
-            <Warning size={20} weight="fill" className="text-amber-400" />
+          <div className="metric-header">
+            <span className="metric-label text-active">Active Warnings</span>
+            <Warning size={20} weight="fill" className="metric-icon text-active" />
           </div>
-          <p className="text-2xl font-bold text-white mt-2">{activeCount}</p>
-          <p className="text-[11px] text-white/50 mt-0.5">Under 24h compliance countdown</p>
+          <p className="metric-value">{activeCount}</p>
+          <p className="metric-sub">Under 24h compliance countdown</p>
         </div>
 
         <div
           onClick={() => setStatusFilter('APPEALED')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-            statusFilter === 'APPEALED'
-              ? 'bg-blue-500/20 border-blue-400 shadow-lg shadow-blue-500/10'
-              : 'bg-white/5 border-white/10 hover:bg-white/[0.08]'
-          }`}
+          className={`warnings-metric-card card-appealed ${statusFilter === 'APPEALED' ? 'selected' : ''}`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">Appeals Pending</span>
-            <HourglassMedium size={20} weight="fill" className="text-blue-400" />
+          <div className="metric-header">
+            <span className="metric-label text-appealed">Appeals Pending</span>
+            <HourglassMedium size={20} weight="fill" className="metric-icon text-appealed" />
           </div>
-          <p className="text-2xl font-bold text-white mt-2">{appealedCount}</p>
-          <p className="text-[11px] text-white/50 mt-0.5">Proof attached, timer paused</p>
+          <p className="metric-value">{appealedCount}</p>
+          <p className="metric-sub">Proof attached, timer paused</p>
         </div>
 
         <div
           onClick={() => setStatusFilter('RESOLVED')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-            statusFilter === 'RESOLVED'
-              ? 'bg-emerald-500/20 border-emerald-400 shadow-lg shadow-emerald-500/10'
-              : 'bg-white/5 border-white/10 hover:bg-white/[0.08]'
-          }`}
+          className={`warnings-metric-card card-resolved ${statusFilter === 'RESOLVED' ? 'selected' : ''}`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">Auto-Resolved</span>
-            <CheckCircle size={20} weight="fill" className="text-emerald-400" />
+          <div className="metric-header">
+            <span className="metric-label text-resolved">Auto-Resolved</span>
+            <CheckCircle size={20} weight="fill" className="metric-icon text-resolved" />
           </div>
-          <p className="text-2xl font-bold text-white mt-2">{resolvedCount}</p>
-          <p className="text-[11px] text-white/50 mt-0.5">User made required changes</p>
+          <p className="metric-value">{resolvedCount}</p>
+          <p className="metric-sub">User made required changes</p>
         </div>
 
         <div
           onClick={() => setStatusFilter('SUSPENDED')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-            statusFilter === 'SUSPENDED'
-              ? 'bg-red-500/20 border-red-400 shadow-lg shadow-red-500/10'
-              : 'bg-white/5 border-white/10 hover:bg-white/[0.08]'
-          }`}
+          className={`warnings-metric-card card-suspended ${statusFilter === 'SUSPENDED' ? 'selected' : ''}`}
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-red-300 uppercase tracking-wider">Suspended</span>
-            <Prohibit size={20} weight="fill" className="text-red-400" />
+          <div className="metric-header">
+            <span className="metric-label text-suspended">Suspended</span>
+            <Prohibit size={20} weight="fill" className="metric-icon text-suspended" />
           </div>
-          <p className="text-2xl font-bold text-white mt-2">{suspendedCount}</p>
-          <p className="text-[11px] text-white/50 mt-0.5">Non-compliant accounts</p>
+          <p className="metric-value">{suspendedCount}</p>
+          <p className="metric-sub">Non-compliant accounts</p>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between p-3.5 bg-white/5 border border-white/10 rounded-2xl">
-        <div className="relative flex-1 w-full">
-          <MagnifyingGlass size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+      <div className="warnings-toolbar">
+        <div className="warnings-search-wrap">
+          <MagnifyingGlass size={16} className="warnings-search-icon" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by user name, phone, email, ID, or appeal text..."
-            className="w-full pl-10 pr-4 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white placeholder-white/40 focus:outline-none focus:border-amber-400"
+            placeholder="Search by user name, phone, email, ID, or appeal..."
+            className="warnings-search-input"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="warnings-toolbar-actions">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-black/40 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400"
+            className="warnings-select-filter"
           >
             <option value="ALL">All Statuses</option>
             <option value="ACTIVE">Active (Countdown)</option>
@@ -203,74 +187,64 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
             type="button"
             onClick={fetchWarnings}
             disabled={loading}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white border border-white/10 transition-colors"
+            className="warnings-refresh-btn"
             title="Refresh list"
           >
-            <ArrowsClockwise size={16} className={loading ? 'animate-spin' : ''} />
+            <ArrowsClockwise size={16} className={loading ? 'icon-spin' : ''} />
           </button>
         </div>
       </div>
 
       {/* Warnings List */}
       {loading ? (
-        <div className="p-12 text-center text-white/50 flex flex-col items-center gap-3">
-          <HourglassMedium size={32} className="animate-spin text-amber-400" />
-          <p className="text-sm">Loading compliance warnings...</p>
+        <div className="warnings-loading-box">
+          <HourglassMedium size={36} className="icon-spin text-active" />
+          <p>Loading compliance warnings...</p>
         </div>
       ) : filteredWarnings.length === 0 ? (
-        <div className="p-12 text-center bg-white/[0.02] border border-white/5 rounded-2xl text-white/50 space-y-2">
-          <ShieldCheck size={40} className="mx-auto text-white/30" />
-          <p className="text-base font-semibold text-white/70">No warnings match your criteria</p>
-          <p className="text-xs text-white/40">Use the "⚠️ Warn" button in the User Inspector to issue a compliance notice.</p>
+        <div className="warnings-empty-box">
+          <ShieldCheck size={44} className="empty-icon" />
+          <h4 className="empty-title">No warnings match your criteria</h4>
+          <p className="empty-desc">
+            Use the "⚠️ Warn" button in the User Inspector to issue a compliance notice.
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="warnings-list">
           {filteredWarnings.map((w) => {
             const isLoading = actionLoadingId === w.id;
             const isAppealed = w.status === 'APPEALED';
             const isResolved = w.status === 'RESOLVED';
             const isSuspended = w.status === 'SUSPENDED';
 
+            let cardStatusClass = 'status-card-active';
+            if (isAppealed) cardStatusClass = 'status-card-appealed';
+            else if (isResolved) cardStatusClass = 'status-card-resolved';
+            else if (isSuspended) cardStatusClass = 'status-card-suspended';
+
             return (
-              <div
-                key={w.id}
-                className={`p-5 rounded-2xl border transition-all ${
-                  isAppealed
-                    ? 'bg-gradient-to-br from-blue-950/30 to-black/40 border-blue-500/30 shadow-lg shadow-blue-500/5'
-                    : isResolved
-                    ? 'bg-gradient-to-br from-emerald-950/20 to-black/40 border-emerald-500/30'
-                    : isSuspended
-                    ? 'bg-gradient-to-br from-red-950/20 to-black/40 border-red-500/30'
-                    : 'bg-gradient-to-br from-white/[0.04] to-black/40 border-white/10 hover:border-amber-500/30'
-                }`}
-              >
+              <div key={w.id} className={`warning-item-card ${cardStatusClass}`}>
                 {/* Header Row */}
-                <div className="flex flex-wrap items-start justify-between gap-3 pb-3.5 border-b border-white/10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-white/10 border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
+                <div className="warning-card-header">
+                  <div className="warning-user-cell">
+                    <div className="warning-avatar-wrap">
                       {w.currentPhotos?.[0] ? (
-                        <img src={w.currentPhotos[0]} alt={w.userName} className="w-full h-full object-cover" />
+                        <img src={w.currentPhotos[0]} alt={w.userName} className="warning-avatar-img" />
                       ) : (
-                        <User size={22} className="text-white/60" />
+                        <User size={22} className="warning-avatar-fallback" />
                       )}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-base text-white">{w.userName}</h3>
-                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${
-                          w.violationType === 'NAME'
-                            ? 'bg-purple-500/20 border-purple-400/40 text-purple-300'
-                            : w.violationType === 'PHOTO'
-                            ? 'bg-pink-500/20 border-pink-400/40 text-pink-300'
-                            : 'bg-amber-500/20 border-amber-400/40 text-amber-300'
-                        }`}>
+                      <div className="warning-user-name-row">
+                        <h3 className="warning-user-name">{w.userName}</h3>
+                        <span className={`warning-violation-badge violation-${w.violationType?.toLowerCase()}`}>
                           {w.violationType}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-white/50 mt-0.5">
+                      <div className="warning-user-meta-row">
                         <span
                           onClick={() => copyText(w.userId, 'User ID')}
-                          className="hover:text-amber-300 cursor-pointer flex items-center gap-1"
+                          className="warning-id-pill"
                           title="Click to copy User ID"
                         >
                           <code>{w.userId.slice(0, 10)}...</code>
@@ -283,19 +257,11 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
                   </div>
 
                   {/* Status Badges & Timer */}
-                  <div className="flex items-center gap-2">
-                    <div className={`px-3 py-1 rounded-xl border text-xs font-bold flex items-center gap-1.5 ${
-                      isAppealed
-                        ? 'bg-blue-500/20 border-blue-400 text-blue-300'
-                        : isResolved
-                        ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300'
-                        : isSuspended
-                        ? 'bg-red-500/20 border-red-400 text-red-300'
-                        : 'bg-amber-500/20 border-amber-400 text-amber-300'
-                    }`}>
+                  <div className="warning-status-pill-wrap">
+                    <div className={`warning-status-pill pill-${w.status?.toLowerCase()}`}>
                       {isAppealed ? (
                         <>
-                          <HourglassMedium size={14} weight="fill" className="animate-pulse" />
+                          <HourglassMedium size={14} weight="fill" className="icon-pulse" />
                           <span>APPEAL SUBMITTED</span>
                         </>
                       ) : isResolved ? (
@@ -319,47 +285,47 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
                 </div>
 
                 {/* Notice & Change Detection Body */}
-                <div className="py-3.5 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="warning-content-grid">
                   {/* Left Column: Admin Message */}
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-white/50 block">
+                  <div className="warning-col">
+                    <span className="warning-section-title">
                       Warning Notice Sent ({new Date(w.createdAt).toLocaleDateString()})
                     </span>
-                    <div className="p-3 bg-black/40 border border-white/10 rounded-xl text-white/90 leading-relaxed">
+                    <div className="warning-message-box">
                       {w.message}
                     </div>
                     {w.resolutionNote && (
-                      <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl text-[11px] text-white/70">
-                        <strong className="text-white">Resolution Note:</strong> {w.resolutionNote}
+                      <div className="warning-resolution-box">
+                        <strong>Resolution Note:</strong> {w.resolutionNote}
                       </div>
                     )}
                   </div>
 
                   {/* Right Column: Automated Change Detection */}
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-white/50 block">
+                  <div className="warning-col">
+                    <span className="warning-section-title">
                       Automated Change Verification
                     </span>
 
                     {w.violationType === 'NAME' && (
-                      <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-white/60">Snapshot at Warning:</span>
-                          <code className="text-amber-300 font-semibold">{w.snapshot?.name || '—'}</code>
+                      <div className="warning-diff-box">
+                        <div className="diff-row">
+                          <span className="diff-label">Snapshot at Warning:</span>
+                          <code className="diff-val-old">{w.snapshot?.name || '—'}</code>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-white/60">Current Live Name:</span>
-                          <code className="text-white font-semibold">{w.currentName || '—'}</code>
+                        <div className="diff-row">
+                          <span className="diff-label">Current Live Name:</span>
+                          <code className="diff-val-new">{w.currentName || '—'}</code>
                         </div>
 
                         {w.nameChanged ? (
-                          <div className="p-2 bg-emerald-500/20 border border-emerald-400/40 rounded-lg text-emerald-300 font-medium flex items-center gap-1.5">
-                            <CheckCircle size={14} weight="fill" />
+                          <div className="diff-alert diff-alert-success">
+                            <CheckCircle size={15} weight="fill" />
                             <span>Name updated by user! (Compliance satisfied)</span>
                           </div>
                         ) : (
-                          <div className="p-2 bg-amber-500/10 border border-amber-400/20 rounded-lg text-amber-200/80 flex items-center gap-1.5">
-                            <Clock size={14} />
+                          <div className="diff-alert diff-alert-pending">
+                            <Clock size={15} />
                             <span>User has not changed name yet.</span>
                           </div>
                         )}
@@ -367,24 +333,24 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
                     )}
 
                     {w.violationType === 'PHOTO' && (
-                      <div className="p-3 bg-black/40 border border-white/10 rounded-xl space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-white/60">Photos at Warning:</span>
-                          <span className="text-amber-300 font-semibold">{w.snapshot?.photos?.length || 0} photos</span>
+                      <div className="warning-diff-box">
+                        <div className="diff-row">
+                          <span className="diff-label">Photos at Warning:</span>
+                          <span className="diff-val-old">{w.snapshot?.photos?.length || 0} photos</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-white/60">Current Live Photos:</span>
-                          <span className="text-white font-semibold">{w.currentPhotos?.length || 0} photos</span>
+                        <div className="diff-row">
+                          <span className="diff-label">Current Live Photos:</span>
+                          <span className="diff-val-new">{w.currentPhotos?.length || 0} photos</span>
                         </div>
 
                         {w.photosChanged ? (
-                          <div className="p-2 bg-emerald-500/20 border border-emerald-400/40 rounded-lg text-emerald-300 font-medium flex items-center gap-1.5">
-                            <CheckCircle size={14} weight="fill" />
+                          <div className="diff-alert diff-alert-success">
+                            <CheckCircle size={15} weight="fill" />
                             <span>Photos updated by user! (Compliance satisfied)</span>
                           </div>
                         ) : (
-                          <div className="p-2 bg-amber-500/10 border border-amber-400/20 rounded-lg text-amber-200/80 flex items-center gap-1.5">
-                            <Clock size={14} />
+                          <div className="diff-alert diff-alert-pending">
+                            <Clock size={15} />
                             <span>User has not modified photos yet.</span>
                           </div>
                         )}
@@ -392,8 +358,8 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
                     )}
 
                     {w.violationType !== 'NAME' && w.violationType !== 'PHOTO' && (
-                      <div className="p-3 bg-black/40 border border-white/10 rounded-xl text-white/70">
-                        Profile policy monitoring active. Auto-suspends if unaddressed.
+                      <div className="warning-diff-box text-muted-box">
+                        Profile policy monitoring active. Account will auto-suspend if unaddressed by deadline.
                       </div>
                     )}
                   </div>
@@ -401,39 +367,40 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
 
                 {/* Appeal & Proof Section if user submitted reply */}
                 {w.appealText && (
-                  <div className="mt-2 pt-3 border-t border-blue-500/30 bg-blue-950/20 p-4 rounded-xl space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-blue-300 font-bold text-xs uppercase tracking-wider">
+                  <div className="warning-appeal-section">
+                    <div className="appeal-header">
+                      <div className="appeal-header-left">
                         <ChatCircleText size={16} weight="fill" />
                         <span>User Appeal & Explanation</span>
                       </div>
                       {w.appealedAt && (
-                        <span className="text-[11px] text-blue-200/60">
+                        <span className="appeal-timestamp">
                           Submitted {new Date(w.appealedAt).toLocaleString()}
                         </span>
                       )}
                     </div>
 
-                    <p className="text-xs text-blue-100 leading-relaxed bg-black/40 p-3 rounded-lg border border-blue-500/20 whitespace-pre-wrap">
+                    <p className="appeal-text-quote">
                       "{w.appealText}"
                     </p>
 
                     {/* Attached Proof Images Preview */}
                     {w.appealPhotos && w.appealPhotos.length > 0 && (
-                      <div className="space-y-1.5">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-blue-300">
+                      <div className="appeal-photos-wrap">
+                        <span className="appeal-photos-title">
                           Attached Proof Images ({w.appealPhotos.length}) - Click to enlarge:
                         </span>
-                        <div className="flex flex-wrap gap-2.5">
+                        <div className="appeal-thumbnails-row">
                           {w.appealPhotos.map((imgUrl, imgIdx) => (
                             <div
                               key={imgIdx}
                               onClick={() => setSelectedProofImage(imgUrl)}
-                              className="relative w-20 h-20 rounded-xl overflow-hidden border border-blue-400/40 cursor-pointer group hover:scale-105 transition-transform"
+                              className="appeal-thumb-card"
+                              title="Click to view full image"
                             >
-                              <img src={imgUrl} alt={`Proof ${imgIdx + 1}`} className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                <Eye size={18} className="text-white" />
+                              <img src={imgUrl} alt={`Proof ${imgIdx + 1}`} className="appeal-thumb-img" />
+                              <div className="appeal-thumb-overlay">
+                                <Eye size={18} />
                               </div>
                             </div>
                           ))}
@@ -444,17 +411,17 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
                 )}
 
                 {/* Action Controls */}
-                <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-[11px] text-white/40">
-                    Issued by <span className="text-white/70 font-medium">{w.adminName}</span>
+                <div className="warning-card-footer">
+                  <div className="warning-issued-by">
+                    Issued by <strong>{w.adminName}</strong>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="warning-actions-group">
                     {onViewUser && (
                       <button
                         type="button"
                         onClick={() => onViewUser({ id: w.userId, name: w.userName })}
-                        className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-white/80 hover:text-white transition-colors flex items-center gap-1.5"
+                        className="btn-warn-inspect"
                       >
                         <Eye size={14} />
                         <span>Inspect Profile</span>
@@ -467,7 +434,7 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
                           type="button"
                           onClick={() => handleResolve(w.id, 'DISMISS')}
                           disabled={isLoading}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-xs font-semibold text-emerald-300 transition-colors flex items-center gap-1.5"
+                          className="btn-warn-dismiss"
                         >
                           <CheckCircle size={14} weight="bold" />
                           <span>Clear / Dismiss</span>
@@ -477,7 +444,7 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
                           type="button"
                           onClick={() => handleResolve(w.id, 'EXTEND')}
                           disabled={isLoading}
-                          className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-semibold text-amber-300 transition-colors flex items-center gap-1.5"
+                          className="btn-warn-extend"
                         >
                           <Clock size={14} weight="bold" />
                           <span>Extend (+24h)</span>
@@ -487,7 +454,7 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
                           type="button"
                           onClick={() => handleResolve(w.id, 'SUSPEND')}
                           disabled={isLoading}
-                          className="px-3 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-xs font-semibold text-red-300 transition-colors flex items-center gap-1.5"
+                          className="btn-warn-suspend"
                         >
                           <Prohibit size={14} weight="bold" />
                           <span>Suspend Account</span>
@@ -505,32 +472,821 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
       {/* Proof Lightbox Modal for Admins to view ID/Proof full size */}
       {selectedProofImage && (
         <div
-          className="fixed inset-0 z-[1050] bg-black/95 flex items-center justify-center p-4 animate-fadeIn"
+          className="admin-lightbox-overlay"
           onClick={() => setSelectedProofImage(null)}
         >
           <div
-            className="relative max-w-4xl max-h-[90vh] bg-black rounded-2xl border border-white/20 overflow-hidden shadow-2xl"
+            className="admin-lightbox-card"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-3 bg-white/5 border-b border-white/10 flex items-center justify-between text-xs text-white/80">
-              <span className="font-semibold">User Appeal Proof Document (High Resolution)</span>
+            <div className="admin-lightbox-header">
+              <span className="admin-lightbox-title">User Appeal Proof Document (High Resolution)</span>
               <button
+                type="button"
                 onClick={() => setSelectedProofImage(null)}
-                className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10"
+                className="admin-lightbox-close"
               >
                 <X size={18} />
               </button>
             </div>
-            <div className="p-2 flex items-center justify-center">
+            <div className="admin-lightbox-body">
               <img
                 src={selectedProofImage}
                 alt="Enlarged Proof"
-                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                className="admin-lightbox-img"
               />
             </div>
           </div>
         </div>
       )}
+
+      <style>{`
+        .warnings-tab-container {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          color: #ffffff;
+        }
+
+        /* ── Metric Cards Grid ── */
+        .warnings-metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 14px;
+        }
+
+        @media (max-width: 900px) {
+          .warnings-metrics-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 480px) {
+          .warnings-metrics-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .warnings-metric-card {
+          padding: 18px 20px;
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .warnings-metric-card:hover {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.16);
+          transform: translateY(-2px);
+        }
+
+        .warnings-metric-card.selected.card-active {
+          background: rgba(245, 158, 11, 0.12);
+          border-color: rgba(245, 158, 11, 0.5);
+          box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
+        }
+
+        .warnings-metric-card.selected.card-appealed {
+          background: rgba(56, 189, 248, 0.12);
+          border-color: rgba(56, 189, 248, 0.5);
+          box-shadow: 0 4px 20px rgba(56, 189, 248, 0.15);
+        }
+
+        .warnings-metric-card.selected.card-resolved {
+          background: rgba(16, 185, 129, 0.12);
+          border-color: rgba(16, 185, 129, 0.5);
+          box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
+        }
+
+        .warnings-metric-card.selected.card-suspended {
+          background: rgba(239, 68, 68, 0.12);
+          border-color: rgba(239, 68, 68, 0.5);
+          box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+        }
+
+        .metric-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .metric-label {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .text-active { color: #fbbf24; }
+        .text-appealed { color: #38bdf8; }
+        .text-resolved { color: #34d399; }
+        .text-suspended { color: #f87171; }
+
+        .metric-value {
+          font-size: 28px;
+          font-weight: 800;
+          color: #ffffff;
+          margin: 10px 0 2px;
+          line-height: 1;
+        }
+
+        .metric-sub {
+          font-size: 11.5px;
+          color: rgba(255, 255, 255, 0.5);
+          margin: 0;
+        }
+
+        /* ── Search & Filter Toolbar ── */
+        .warnings-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 12px 16px;
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          flex-wrap: wrap;
+        }
+
+        .warnings-search-wrap {
+          position: relative;
+          flex: 1;
+          min-width: 260px;
+        }
+
+        .warnings-search-icon {
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: rgba(255, 255, 255, 0.4);
+          pointer-events: none;
+        }
+
+        .warnings-search-input {
+          width: 100%;
+          padding: 9px 14px 9px 38px;
+          border-radius: 12px;
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: #ffffff;
+          font-size: 13px;
+          outline: none;
+          transition: all 0.2s ease;
+          box-sizing: border-box;
+        }
+
+        .warnings-search-input:focus {
+          border-color: #D4AD6A;
+          background: rgba(0, 0, 0, 0.6);
+        }
+
+        .warnings-toolbar-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .warnings-select-filter {
+          padding: 9px 14px;
+          border-radius: 12px;
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: #ffffff;
+          font-size: 12.5px;
+          outline: none;
+          cursor: pointer;
+        }
+
+        .warnings-select-filter:focus {
+          border-color: #D4AD6A;
+        }
+
+        .warnings-refresh-btn {
+          padding: 9px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: rgba(255, 255, 255, 0.8);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        }
+
+        .warnings-refresh-btn:hover {
+          background: rgba(255, 255, 255, 0.12);
+          color: #ffffff;
+        }
+
+        /* ── Loading / Empty States ── */
+        .warnings-loading-box,
+        .warnings-empty-box {
+          padding: 48px 24px;
+          text-align: center;
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .empty-icon {
+          color: rgba(255, 255, 255, 0.25);
+        }
+
+        .empty-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: #ffffff;
+          margin: 0;
+        }
+
+        .empty-desc {
+          font-size: 12.5px;
+          color: rgba(255, 255, 255, 0.45);
+          margin: 0;
+          max-width: 440px;
+        }
+
+        /* ── Warnings List & Cards ── */
+        .warnings-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .warning-item-card {
+          border-radius: 20px;
+          padding: 22px 24px;
+          background: linear-gradient(165deg, rgba(28, 20, 24, 0.95) 0%, rgba(14, 10, 12, 0.98) 100%);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.2s ease;
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+        }
+
+        .warning-item-card:hover {
+          border-color: rgba(212, 173, 106, 0.35);
+          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        .status-card-appealed {
+          border-color: rgba(56, 189, 248, 0.35);
+          background: linear-gradient(165deg, rgba(14, 25, 45, 0.95) 0%, rgba(10, 14, 25, 0.98) 100%);
+        }
+
+        .status-card-resolved {
+          border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .status-card-suspended {
+          border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Card Header */
+        .warning-card-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          padding-bottom: 16px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          flex-wrap: wrap;
+        }
+
+        .warning-user-cell {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+
+        .warning-avatar-wrap {
+          width: 46px;
+          height: 46px;
+          border-radius: 14px;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .warning-avatar-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .warning-avatar-fallback {
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .warning-user-name-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .warning-user-name {
+          font-size: 16px;
+          font-weight: 700;
+          color: #ffffff;
+          margin: 0;
+        }
+
+        .warning-violation-badge {
+          font-size: 10px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 2.5px 8px;
+          border-radius: 999px;
+          border: 1px solid transparent;
+        }
+
+        .violation-name {
+          background: rgba(168, 85, 247, 0.15);
+          border-color: rgba(168, 85, 247, 0.4);
+          color: #c084fc;
+        }
+
+        .violation-photo {
+          background: rgba(244, 63, 94, 0.15);
+          border-color: rgba(244, 63, 94, 0.4);
+          color: #fb7185;
+        }
+
+        .violation-policy {
+          background: rgba(245, 158, 11, 0.15);
+          border-color: rgba(245, 158, 11, 0.4);
+          color: #fbbf24;
+        }
+
+        .warning-user-meta-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          color: rgba(255, 255, 255, 0.5);
+          margin-top: 4px;
+          flex-wrap: wrap;
+        }
+
+        .warning-id-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 1px 6px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 6px;
+          cursor: pointer;
+          color: rgba(255, 255, 255, 0.7);
+          transition: all 0.2s ease;
+        }
+
+        .warning-id-pill:hover {
+          color: #D4AD6A;
+          background: rgba(212, 173, 106, 0.12);
+        }
+
+        /* Status Pill */
+        .warning-status-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          border-radius: 12px;
+          font-size: 11.5px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          border: 1px solid transparent;
+        }
+
+        .pill-active {
+          background: rgba(245, 158, 11, 0.15);
+          border-color: rgba(245, 158, 11, 0.4);
+          color: #fbbf24;
+        }
+
+        .pill-appealed {
+          background: rgba(56, 189, 248, 0.15);
+          border-color: rgba(56, 189, 248, 0.4);
+          color: #38bdf8;
+        }
+
+        .pill-resolved {
+          background: rgba(16, 185, 129, 0.15);
+          border-color: rgba(16, 185, 129, 0.4);
+          color: #34d399;
+        }
+
+        .pill-suspended {
+          background: rgba(239, 68, 68, 0.15);
+          border-color: rgba(239, 68, 68, 0.4);
+          color: #f87171;
+        }
+
+        /* Content Grid */
+        .warning-content-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+
+        @media (max-width: 800px) {
+          .warning-content-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .warning-col {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .warning-section-title {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: rgba(255, 255, 255, 0.5);
+        }
+
+        .warning-message-box {
+          padding: 12px 14px;
+          border-radius: 12px;
+          background: rgba(0, 0, 0, 0.35);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.88);
+          font-size: 12.5px;
+          line-height: 1.55;
+        }
+
+        .warning-resolution-box {
+          padding: 10px 12px;
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          font-size: 11.5px;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .warning-diff-box {
+          padding: 12px 14px;
+          border-radius: 12px;
+          background: rgba(0, 0, 0, 0.35);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          font-size: 12px;
+        }
+
+        .diff-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .diff-label {
+          color: rgba(255, 255, 255, 0.55);
+        }
+
+        .diff-val-old {
+          color: #fbbf24;
+          font-weight: 600;
+        }
+
+        .diff-val-new {
+          color: #ffffff;
+          font-weight: 600;
+        }
+
+        .diff-alert {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 10px;
+          border-radius: 8px;
+          font-size: 11.5px;
+          font-weight: 600;
+        }
+
+        .diff-alert-success {
+          background: rgba(16, 185, 129, 0.15);
+          border: 1px solid rgba(16, 185, 129, 0.35);
+          color: #34d399;
+        }
+
+        .diff-alert-pending {
+          background: rgba(245, 158, 11, 0.1);
+          border: 1px solid rgba(245, 158, 11, 0.25);
+          color: #fcd34d;
+        }
+
+        .text-muted-box {
+          color: rgba(255, 255, 255, 0.6);
+          line-height: 1.5;
+        }
+
+        /* Appeal Section */
+        .warning-appeal-section {
+          margin-top: 4px;
+          padding: 16px;
+          border-radius: 14px;
+          background: rgba(14, 25, 45, 0.6);
+          border: 1px solid rgba(56, 189, 248, 0.3);
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .appeal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .appeal-header-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: #38bdf8;
+        }
+
+        .appeal-timestamp {
+          font-size: 11px;
+          color: rgba(56, 189, 248, 0.6);
+        }
+
+        .appeal-text-quote {
+          margin: 0;
+          padding: 12px 14px;
+          border-radius: 10px;
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(56, 189, 248, 0.2);
+          color: #e0f2fe;
+          font-size: 12.5px;
+          line-height: 1.6;
+          white-space: pre-wrap;
+        }
+
+        .appeal-photos-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .appeal-photos-title {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: #38bdf8;
+        }
+
+        .appeal-thumbnails-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .appeal-thumb-card {
+          position: relative;
+          width: 76px;
+          height: 76px;
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid rgba(56, 189, 248, 0.4);
+          cursor: pointer;
+          transition: transform 0.2s ease;
+        }
+
+        .appeal-thumb-card:hover {
+          transform: scale(1.05);
+        }
+
+        .appeal-thumb-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .appeal-thumb-overlay {
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.45);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+          color: #ffffff;
+        }
+
+        .appeal-thumb-card:hover .appeal-thumb-overlay {
+          opacity: 1;
+        }
+
+        /* Footer & Actions */
+        .warning-card-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: 14px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .warning-issued-by {
+          font-size: 11.5px;
+          color: rgba(255, 255, 255, 0.45);
+        }
+
+        .warning-issued-by strong {
+          color: rgba(255, 255, 255, 0.8);
+        }
+
+        .warning-actions-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .btn-warn-inspect,
+        .btn-warn-dismiss,
+        .btn-warn-extend,
+        .btn-warn-suspend {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 14px;
+          border-radius: 10px;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          border: 1px solid transparent;
+        }
+
+        .btn-warn-inspect {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: rgba(255, 255, 255, 0.12);
+          color: rgba(255, 255, 255, 0.8);
+        }
+
+        .btn-warn-inspect:hover {
+          background: rgba(255, 255, 255, 0.12);
+          color: #ffffff;
+        }
+
+        .btn-warn-dismiss {
+          background: rgba(16, 185, 129, 0.15);
+          border-color: rgba(16, 185, 129, 0.4);
+          color: #34d399;
+        }
+
+        .btn-warn-dismiss:hover {
+          background: rgba(16, 185, 129, 0.25);
+        }
+
+        .btn-warn-extend {
+          background: rgba(245, 158, 11, 0.15);
+          border-color: rgba(245, 158, 11, 0.4);
+          color: #fbbf24;
+        }
+
+        .btn-warn-extend:hover {
+          background: rgba(245, 158, 11, 0.25);
+        }
+
+        .btn-warn-suspend {
+          background: rgba(239, 68, 68, 0.15);
+          border-color: rgba(239, 68, 68, 0.4);
+          color: #f87171;
+        }
+
+        .btn-warn-suspend:hover {
+          background: rgba(239, 68, 68, 0.25);
+        }
+
+        /* ── Lightbox Modal ── */
+        .admin-lightbox-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 100000;
+          background: rgba(0, 0, 0, 0.92);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          animation: adminFadeIn 0.2s ease-out;
+        }
+
+        .admin-lightbox-card {
+          position: relative;
+          max-width: 900px;
+          width: 100%;
+          max-height: 90vh;
+          background: #0f0a0d;
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          overflow: hidden;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .admin-lightbox-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 14px 20px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .admin-lightbox-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.85);
+        }
+
+        .admin-lightbox-close {
+          padding: 6px;
+          border-radius: 8px;
+          background: transparent;
+          border: none;
+          color: rgba(255, 255, 255, 0.6);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        }
+
+        .admin-lightbox-close:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+        }
+
+        .admin-lightbox-body {
+          padding: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: auto;
+          max-height: 80vh;
+        }
+
+        .admin-lightbox-img {
+          max-width: 100%;
+          max-height: 75vh;
+          object-fit: contain;
+          border-radius: 10px;
+        }
+
+        .icon-spin {
+          animation: adminIconSpin 1s linear infinite;
+        }
+
+        .icon-pulse {
+          animation: adminIconPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes adminIconSpin {
+          to { transform: rotate(360deg); }
+        }
+
+        @keyframes adminIconPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.92); }
+        }
+
+        @keyframes adminFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };

@@ -163,14 +163,22 @@ export const AppProvider = ({ children }) => {
         });
     }, []);
 
-    const showAlert = useCallback((opts) => {
+    const showAlert = useCallback((opts, maybeVariant) => {
         return new Promise((resolve) => {
-            const config = typeof opts === 'string' ? { message: opts } : opts;
+            let config = typeof opts === 'string' ? { message: opts } : (opts || {});
+            const variant = maybeVariant || config.variant || 'notice';
+            let defaultTitle = 'Notice';
+            if (variant === 'success') defaultTitle = 'Success';
+            else if (variant === 'error') defaultTitle = 'Action Failed';
+            else if (variant === 'warning') defaultTitle = 'Attention';
+            else if (variant === 'info') defaultTitle = 'Information';
+
             setDialogConfig({
-                title: config.title || 'Notice',
+                title: config.title || defaultTitle,
                 message: config.message || '',
                 okText: config.okText || 'OK',
                 cancelText: config.cancelText || 'Cancel',
+                variant: variant,
                 showCancel: config.showCancel === true,
                 onConfirm: () => {
                     setDialogConfig(null);
