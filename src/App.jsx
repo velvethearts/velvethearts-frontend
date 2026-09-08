@@ -90,7 +90,13 @@ function AppContent() {
   // Specific detail sub-page triggers
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [preselectedChatPartnerId, setPreselectedChatPartnerId] = useState(null);
-  const [activeChatPartnerId, setActiveChatPartnerId] = useState(null);
+  const [activeChatPartnerId, setActiveChatPartnerId] = useState(() => {
+    try {
+      return sessionStorage.getItem('vh-active-chat-id') || null;
+    } catch {
+      return null;
+    }
+  });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isViewingSavedProfiles, setIsViewingSavedProfiles] = useState(false);
 

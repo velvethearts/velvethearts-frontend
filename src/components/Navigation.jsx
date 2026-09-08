@@ -281,7 +281,9 @@ export const Navigation = ({ children, isChatViewActive, isInsideChat }) => {
           height: 100dvh;
           min-height: 100vh;
           min-height: 100dvh;
-          padding-bottom: var(--bottom-nav-height);
+          max-height: 100vh;
+          max-height: 100dvh;
+          padding-bottom: 0 !important;
           overflow: hidden;
         }
 
@@ -310,7 +312,8 @@ export const Navigation = ({ children, isChatViewActive, isInsideChat }) => {
 
           .main-content-layout.chat-inside-conversation,
           body.chat-active-conversation .main-content-layout.chat-active-layout,
-          .main-content-layout.chat-active-layout:has(.partner-selected) {
+          .main-content-layout.chat-active-layout:has(.partner-selected),
+          .main-content-layout.chat-active-layout {
             padding-bottom: 0 !important;
             height: 100vh !important;
             height: 100dvh !important;
@@ -419,8 +422,10 @@ export const Navigation = ({ children, isChatViewActive, isInsideChat }) => {
           }
 
           .main-content-layout.chat-active-layout {
-            padding-bottom: 0;
+            padding-bottom: 0 !important;
             height: 100vh;
+            height: 100dvh;
+            max-height: 100dvh;
             overflow: hidden;
           }
 

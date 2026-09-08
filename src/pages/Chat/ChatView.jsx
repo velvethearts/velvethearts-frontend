@@ -514,7 +514,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     return Boolean(onlineUserIds && (onlineUserIds.has(partner.userId) || onlineUserIds.has(partner.id)));
   };
   const [activeChatId, setActiveChatIdState] = useState(() => {
-    return preselectedConnectionId || null;
+    try {
+      return preselectedConnectionId || sessionStorage.getItem('vh-active-chat-id') || null;
+    } catch {
+      return preselectedConnectionId || null;
+    }
   });
 
   useEffect(() => {
@@ -846,12 +850,19 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
       const vv = window.visualViewport;
       if (!vv) return;
 
-      // When the mobile virtual keyboard opens, vv.height drops to the visible screen height
-      setViewportHeight(vv.height);
+      // Only apply explicit pixel height when virtual keyboard is genuinely open.
+      // On mobile screens, the virtual keyboard takes > 120px height.
+      // When the keyboard is closed, viewportHeight must be null so CSS dvh takes 100% full height without gaps.
+      const heightDifference = window.innerHeight - vv.height;
+      const isKeyboardOpen = heightDifference > 120;
 
-      // Keep messages view scrolled to the bottom so the user sees the conversation above the keyboard
-      if (activeChatId && messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      if (isKeyboardOpen) {
+        setViewportHeight(vv.height);
+        if (activeChatId && messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        setViewportHeight(null);
       }
     };
 
@@ -876,6 +887,12 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
         textInputRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
     }, 150);
+  };
+
+  const handleInputBlur = () => {
+    setTimeout(() => {
+      setViewportHeight(null);
+    }, 100);
   };
 
   // Voice note recording hooks
@@ -2479,6 +2496,7 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
                     value={messageText}
                     onChange={handleInputChange}
                     onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
                     className="chat-text-input font-body"
                   />
 
@@ -2773,13 +2791,16 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
 
       <style>{`
         .chat-page {
-          height: 100vh;
+          height: 100%;
           height: 100dvh;
           max-height: 100dvh;
           width: 100%;
           padding: 0;
+          margin: 0;
           background-color: var(--bg-page);
           overflow: hidden;
+          display: flex;
+          flex-direction: column;
         }
 
         .chat-layout {
@@ -3696,12 +3717,16 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
 
         /* Footer Input */
         .chat-input-footer {
-          padding: var(--space-4) var(--space-6);
+          padding: var(--space-3) var(--space-6);
+          padding-bottom: max(var(--space-3), env(safe-area-inset-bottom, 0px));
           background-color: var(--bg-surface);
           border-top: 1px solid var(--border-subtle);
           display: flex;
           gap: var(--space-3);
           align-items: center;
+          margin: 0;
+          width: 100%;
+          flex-shrink: 0;
         }
 
         .chat-text-input {
@@ -4504,6 +4529,11 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            margin: 0;
+            padding: 0;
+          }
+          .chat-partners-list {
+            padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + var(--space-4));
           }
           .chat-layout {
             height: 100%;
@@ -4537,13 +4567,12 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           .chat-input-footer {
             flex-shrink: 0;
             padding: var(--space-2) var(--space-3);
-            padding-bottom: max(var(--space-2), env(safe-area-inset-bottom));
+            padding-bottom: max(var(--space-2), env(safe-area-inset-bottom, 0px));
             gap: var(--space-2);
             background-color: var(--bg-surface);
             border-top: 1px solid var(--border-subtle);
-            position: sticky;
-            bottom: 0;
-            z-index: 20;
+            margin: 0;
+            width: 100%;
           }
           .chat-text-input {
             font-size: 15px;
