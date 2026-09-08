@@ -14,7 +14,7 @@ import { checkPhotoDuplicate, DUPLICATE_PHOTO_MESSAGE } from '../../utils/imageF
 import { StateSelectDropdown } from '../../components/UI/StateSelectDropdown';
 import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
 import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
-import { compareFaceBiometrics, analyzeLiveFaceStructure } from '../../utils/faceBiometrics';
+import { compareFaceBiometrics, analyzeLiveFaceStructure, detectFacePresenceInImage } from '../../utils/faceBiometrics';
 
 export const EditProfile = ({ onBack }) => {
   const { userProfile, setUserProfile, updateUserProfile, showAlert } = useApp();
@@ -337,6 +337,24 @@ export const EditProfile = ({ onBack }) => {
 
       if (index === 0) {
         checkAndNotifyPrimaryPhotoChange(finalUrl);
+      } else {
+        // If uploading into secondary slots (2 to 6), check if it contains an unmatching face
+        const primaryPhoto = localProfile.photos?.[0] || initialPrimaryPhotoRef.current;
+        if (primaryPhoto && finalUrl) {
+          detectFacePresenceInImage(finalUrl).then((faceCheck) => {
+            if (faceCheck?.hasFace) {
+              compareFaceBiometrics(finalUrl, primaryPhoto).then((comparison) => {
+                if (comparison?.isMismatch) {
+                  showAlert?.({
+                    title: 'Different Person Detected',
+                    message: `Photo #${index + 1} appears to show someone else or a group photo. To keep your profile verified and prevent moderation flags, please make sure your photos clearly show you.`,
+                    okText: 'Understood'
+                  });
+                }
+              }).catch(() => {});
+            }
+          }).catch(() => {});
+        }
       }
     } catch (err) {
       console.error('Photo upload failed:', err);
