@@ -7,14 +7,18 @@ import {
   Copy,
   Check,
   ShieldCheck,
-  Info
+  Info,
+  Images,
+  UserCheck,
+  Camera
 } from '@phosphor-icons/react';
-import { compareFaceBiometrics } from '../../utils/faceBiometrics';
+import { compareFaceBiometrics, analyzeSecondaryPhotos } from '../../utils/faceBiometrics';
 
 /**
- * Evaluates a verification request and produces an actionable decision with clear rationale.
+ * Evaluates a verification request and produces an actionable decision with clear rationale,
+ * factoring in both primary selfie matching and secondary photo (slots 2-6) biometric & lifestyle analysis.
  */
-export const getVerificationRecommendation = (request, asyncSimilarity = null) => {
+export const getVerificationRecommendation = (request, asyncSimilarity = null, secondaryAnalysis = null) => {
   const hasSelfie = Boolean(request?.selfieUrl && String(request.selfieUrl).trim());
   const refPhoto = request?.referenceUrl || request?.profilePhotos?.[0] || null;
   const hasReference = Boolean(refPhoto && typeof refPhoto === 'string' && refPhoto.trim());
@@ -127,7 +131,7 @@ export const getVerificationRecommendation = (request, asyncSimilarity = null) =
     };
   }
 
-  // 4. Client-side biometric comparison discrepancy if calculated
+  // 4. Client-side biometric comparison discrepancy on primary photo
   if (asyncSimilarity !== null) {
     if (asyncSimilarity.isMismatch) {
       return {
@@ -135,20 +139,47 @@ export const getVerificationRecommendation = (request, asyncSimilarity = null) =
         decisionLabel: 'SUGGESTION: REJECT',
         confidence: `${Math.round((1 - (asyncSimilarity.similarity || 0.5)) * 100)}% Discrepancy`,
         title: 'Biometric Mismatch Detected',
-        reason: asyncSimilarity.reason || 'Biometric analysis detected substantial morphological differences between the selfie and profile picture.',
+        reason: asyncSimilarity.reason || 'Biometric analysis detected substantial morphological differences between the selfie and primary profile picture.',
         suggestedNote: 'Rejected: Facial biometric landmarks do not match profile photo.',
         variant: 'reject',
       };
     }
   }
 
-  // 5. Normal healthy verification with live selfie and clear profile photo
+  // 5. Check secondary photos (slots 2-6)
+  if (secondaryAnalysis?.hasDifferentFace) {
+    const diffItems = (secondaryAnalysis.results || []).filter(r => r.category === 'different_face');
+    const diffSlots = diffItems.map(d => `#${d.slotNumber}`).join(', ');
+    return {
+      decision: 'REVIEW',
+      decisionLabel: 'SUGGESTION: REVIEW CAREFULLY',
+      confidence: 'Secondary Photo Discrepancy',
+      title: 'Different Person in Secondary Photos',
+      reason: `Selfie matches Photo #1, but Photo ${diffSlots} contains a distinct face that does not match the member. Please visually confirm if this is a group/friend photo or an unrelated person before approving.`,
+      suggestedNote: `Reviewed: Verified Photo #1 match. Inspected Photo ${diffSlots} manually.`,
+      variant: 'review',
+    };
+  }
+
+  // 6. Normal healthy verification with live selfie and clear profile photo
+  let secondarySummary = '';
+  if (secondaryAnalysis?.totalSecondary > 0) {
+    const parts = [];
+    if (secondaryAnalysis.matchingFaceCount > 0) {
+      parts.push(`${secondaryAnalysis.matchingFaceCount} face match`);
+    }
+    if (secondaryAnalysis.lifestyleCount > 0) {
+      parts.push(`${secondaryAnalysis.lifestyleCount} lifestyle/scenery`);
+    }
+    secondarySummary = parts.length > 0 ? ` Secondary photos (2–${secondaryAnalysis.totalSecondary + 1}): ${parts.join(', ')}.` : '';
+  }
+
   return {
     decision: 'APPROVE',
     decisionLabel: 'SUGGESTION: APPROVE',
     confidence: 'High Confidence Match',
     title: 'Authentic Match Detected',
-    reason: 'Live camera selfie matches the primary profile picture. Clean facial centering, natural lighting, and no biometric spoofing or obstruction detected. Safe to approve.',
+    reason: `Live camera selfie matches the primary profile picture. Clean facial centering, natural lighting, and no biometric spoofing detected.${secondarySummary} Safe to approve.`,
     suggestedNote: 'Approved: Verified live selfie matches profile photo.',
     variant: 'approve',
   };
@@ -156,11 +187,12 @@ export const getVerificationRecommendation = (request, asyncSimilarity = null) =
 
 export const AdminVerificationRecommendation = ({ request, onApplyReason }) => {
   const [asyncComparison, setAsyncComparison] = useState(null);
+  const [secondaryAnalysis, setSecondaryAnalysis] = useState(null);
   const [copiedNote, setCopiedNote] = useState(false);
 
   const refPhoto = request?.referenceUrl || request?.profilePhotos?.[0] || null;
 
-  // Optional background biometric comparison if both photos exist and no server auto-fail was logged
+  // 1. Primary photo biometric comparison
   useEffect(() => {
     let isMounted = true;
     if (request?.selfieUrl && refPhoto && !request?.autoFailReason) {
@@ -175,7 +207,24 @@ export const AdminVerificationRecommendation = ({ request, onApplyReason }) => {
     };
   }, [request?.selfieUrl, refPhoto, request?.autoFailReason]);
 
-  const rec = getVerificationRecommendation(request, asyncComparison);
+  // 2. Secondary photos (2 to 6) automated biometric & lifestyle classification
+  useEffect(() => {
+    let isMounted = true;
+    if (Array.isArray(request?.profilePhotos) && request.profilePhotos.length > 1) {
+      analyzeSecondaryPhotos(request.profilePhotos, refPhoto)
+        .then((analysis) => {
+          if (isMounted && analysis) setSecondaryAnalysis(analysis);
+        })
+        .catch(() => {});
+    } else {
+      setSecondaryAnalysis(null);
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [request?.profilePhotos, refPhoto]);
+
+  const rec = getVerificationRecommendation(request, asyncComparison, secondaryAnalysis);
 
   const handleApplyNote = () => {
     if (onApplyReason && rec.suggestedNote) {
@@ -235,6 +284,33 @@ export const AdminVerificationRecommendation = ({ request, onApplyReason }) => {
           <strong className="admin-rec-why-tag">Why:</strong>
           <span className="admin-rec-why-text">{rec.reason}</span>
         </div>
+
+        {/* Secondary Photos Breakdown Bar (slots 2-6) */}
+        {secondaryAnalysis && secondaryAnalysis.totalSecondary > 0 && (
+          <div className="admin-rec-secondary-row">
+            <span className="admin-rec-sec-title">
+              <Images size={14} weight="bold" />
+              <span>Photos 2–{secondaryAnalysis.totalSecondary + 1} AI Scan:</span>
+            </span>
+            <div className="admin-rec-chips-wrap">
+              {secondaryAnalysis.results.map((item) => {
+                let badgeClass = 'chip-info';
+                if (item.category === 'matching_face') badgeClass = 'chip-success';
+                if (item.category === 'different_face') badgeClass = 'chip-warning';
+
+                return (
+                  <span
+                    key={item.index}
+                    className={`admin-rec-chip ${badgeClass}`}
+                    title={item.reason}
+                  >
+                    <strong>Photo #{item.slotNumber}:</strong> {item.badge}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

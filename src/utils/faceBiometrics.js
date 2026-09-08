@@ -614,3 +614,179 @@ export const evaluateLiveAntiSpoofing = async (livenessSamples, capturedImageDat
 
   return { isValid: true };
 };
+
+/**
+ * Fast detection of human face presence in an arbitrary image (e.g. secondary photos).
+ * Distinguishes portraits from non-face lifestyle imagery (scenery, food, animals, objects).
+ */
+export const detectFacePresenceInImage = async (imageSource) => {
+  if (!imageSource) return { hasFace: false, category: 'empty' };
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      try {
+        const size = 100;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve({ hasFace: true, category: 'portrait' });
+
+        ctx.drawImage(img, 0, 0, size, size);
+        const data = ctx.getImageData(0, 0, size, size).data;
+
+        let facePixels = 0;
+        let total = 0;
+        let edgeSum = 0;
+
+        // Sample center quadrant where a face in portrait usually resides
+        for (let y = 18; y < 82; y += 2) {
+          for (let x = 18; x < 82; x += 2) {
+            const idx = (y * size + x) * 4;
+            const r = data[idx];
+            const g = data[idx + 1];
+            const b = data[idx + 2];
+            total++;
+            if (isSkinOrFacePixel(r, g, b)) facePixels++;
+            edgeSum += computeSobelEdgeMagnitude(data, size, size, x, y);
+          }
+        }
+
+        const faceRatio = facePixels / Math.max(1, total);
+        const avgEdge = edgeSum / Math.max(1, total);
+
+        // Portrait face: skin/face chrominance presence (> 5.5%) + edge definition
+        const hasFace = faceRatio >= 0.055 && avgEdge >= 1.6;
+        resolve({
+          hasFace,
+          faceRatio: Number(faceRatio.toFixed(3)),
+          avgEdge: Number(avgEdge.toFixed(2)),
+          category: hasFace ? 'portrait' : 'lifestyle'
+        });
+      } catch (e) {
+        resolve({ hasFace: true, category: 'portrait' });
+      }
+    };
+
+    img.onerror = () => resolve({ hasFace: false, category: 'error' });
+    img.src = typeof imageSource === 'string' ? imageSource : (imageSource.toDataURL ? imageSource.toDataURL() : '');
+  });
+};
+
+/**
+ * Analyzes secondary profile photos (slots 2 through 6) relative to the primary photo.
+ * Detects whether each secondary photo is a matching face, a lifestyle/non-face scene, or a different person.
+ */
+export const analyzeSecondaryPhotos = async (profilePhotos = [], primaryPhotoUrl = null) => {
+  if (!Array.isArray(profilePhotos) || profilePhotos.length <= 1) {
+    return {
+      totalSecondary: 0,
+      results: [],
+      lifestyleCount: 0,
+      matchingFaceCount: 0,
+      differentFaceCount: 0,
+      hasDifferentFace: false
+    };
+  }
+
+  const primaryRef = primaryPhotoUrl || profilePhotos[0];
+  const secondaryList = profilePhotos.slice(1);
+  const results = [];
+
+  for (let i = 0; i < secondaryList.length; i++) {
+    const photoUrl = secondaryList[i];
+    const slotNumber = i + 2; // Photo #2, Photo #3, etc.
+
+    if (!photoUrl || typeof photoUrl !== 'string') {
+      results.push({
+        index: i + 1,
+        slotNumber,
+        category: 'empty',
+        label: 'Empty Slot',
+        badge: 'EMPTY',
+        variant: 'neutral'
+      });
+      continue;
+    }
+
+    try {
+      // 1. Check if the image contains a human face
+      const facePresence = await detectFacePresenceInImage(photoUrl);
+
+      if (!facePresence.hasFace) {
+        results.push({
+          index: i + 1,
+          slotNumber,
+          category: 'lifestyle',
+          label: 'Lifestyle / Scenery / Non-Face Image',
+          badge: 'LIFESTYLE',
+          variant: 'info',
+          reason: `Photo #${slotNumber} is a lifestyle picture (scenery, hobby, pet, or object) without a prominent human face.`
+        });
+        continue;
+      }
+
+      // 2. If it has a face and we have a primary reference photo, check for biometric match vs mismatch
+      if (primaryRef) {
+        const comparison = await compareFaceBiometrics(photoUrl, primaryRef);
+        if (comparison.isMismatch) {
+          results.push({
+            index: i + 1,
+            slotNumber,
+            category: 'different_face',
+            label: 'Different Person / Group Flagged',
+            badge: 'DIFFERENT PERSON',
+            variant: 'warning',
+            reason: `Photo #${slotNumber} contains a face that does not biometrically match the primary profile photo. May be a friend, group photo, or third party.`
+          });
+        } else {
+          results.push({
+            index: i + 1,
+            slotNumber,
+            category: 'matching_face',
+            label: 'Face Match (Same Person)',
+            badge: 'FACE MATCH',
+            variant: 'success',
+            reason: `Photo #${slotNumber} biometrically matches Photo #1 with consistent facial landmarks.`
+          });
+        }
+      } else {
+        results.push({
+          index: i + 1,
+          slotNumber,
+          category: 'face_detected',
+          label: 'Face Portrait',
+          badge: 'FACE DETECTED',
+          variant: 'success',
+          reason: `Photo #${slotNumber} contains a clear human face.`
+        });
+      }
+    } catch (e) {
+      results.push({
+        index: i + 1,
+        slotNumber,
+        category: 'lifestyle',
+        label: 'Lifestyle Photo',
+        badge: 'LIFESTYLE',
+        variant: 'info',
+        reason: `Photo #${slotNumber} processed as lifestyle picture.`
+      });
+    }
+  }
+
+  const differentFaceCount = results.filter(r => r.category === 'different_face').length;
+  const lifestyleCount = results.filter(r => r.category === 'lifestyle').length;
+  const matchingFaceCount = results.filter(r => r.category === 'matching_face' || r.category === 'face_detected').length;
+
+  return {
+    totalSecondary: secondaryList.length,
+    results,
+    lifestyleCount,
+    matchingFaceCount,
+    differentFaceCount,
+    hasDifferentFace: differentFaceCount > 0
+  };
+};

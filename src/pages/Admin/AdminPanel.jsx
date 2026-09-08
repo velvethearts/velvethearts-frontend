@@ -2842,6 +2842,80 @@ const adminStyles = `
     word-break: break-word;
   }
 
+  .admin-rec-secondary-row {
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px dashed var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .admin-rec-sec-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .admin-rec-chips-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .admin-rec-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .admin-rec-chip.chip-info {
+    background: rgba(14, 165, 233, 0.12);
+    color: #0284c7;
+    border: 1px solid rgba(14, 165, 233, 0.3);
+  }
+
+  .admin-rec-chip.chip-success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .admin-rec-chip.chip-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+  }
+
+  [data-theme="dark"] .admin-rec-chip.chip-info {
+    background: rgba(14, 165, 233, 0.2);
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.35);
+  }
+
+  [data-theme="dark"] .admin-rec-chip.chip-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border-color: rgba(52, 211, 153, 0.35);
+  }
+
+  [data-theme="dark"] .admin-rec-chip.chip-warning {
+    background: rgba(245, 158, 11, 0.22);
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.45);
+  }
+
   [data-theme="dark"] .admin-rec-card.variant-approve {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, rgba(5, 150, 105, 0.06) 100%);
     border-color: rgba(52, 211, 153, 0.35);
