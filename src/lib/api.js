@@ -560,6 +560,10 @@ export const api = {
             return request(`/api/v1/admin/users${qs ? `?${qs}` : ''}`);
         },
 
+        getUserById(userId) {
+            return request(`/api/v1/admin/users/${userId}`);
+        },
+
         getLogs(page = 1, limit = 50) {
             return request(`/api/v1/admin/logs?page=${page}&limit=${limit}`);
         },

@@ -111,11 +111,52 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert: propSho
   const { showAlert: appShowAlert, showConfirm } = useApp();
   const showAlert = propShowAlert || appShowAlert;
   const [currentUser, setCurrentUser] = useState(user);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     setCurrentUser(user);
+
+    const loadCompleteProfile = async () => {
+      if (!user?.id) return;
+      // If we don't have full profile or want guaranteed fresh data
+      if (!user.profile || !user.createdAt || !user.email) {
+        setLoadingProfile(true);
+        try {
+          const res = await api.admin.getUserById(user.id);
+          const fullData = res?.user || res?.data || res;
+          if (isMounted && fullData && fullData.id) {
+            setCurrentUser(fullData);
+            onUserUpdated?.(fullData);
+          }
+        } catch (err) {
+          console.error('Failed to fetch full user via getUserById, attempting search fallback:', err);
+          try {
+            const searchRes = await api.admin.getUsers({ searchQuery: user.id });
+            const list = searchRes?.users || searchRes?.data?.users || [];
+            const matched = list.find(u => u.id === user.id);
+            if (isMounted && matched) {
+              setCurrentUser(matched);
+              onUserUpdated?.(matched);
+            }
+          } catch (searchErr) {
+            console.error('Fallback search failed:', searchErr);
+          }
+        } finally {
+          if (isMounted) {
+            setLoadingProfile(false);
+          }
+        }
+      }
+    };
+
+    loadCompleteProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const handleToggleVerif = async () => {
@@ -231,7 +272,8 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert: propSho
     }
   };
 
-  const resolvedProfile = currentUser.hasProfile ? {
+  const hasProfileData = Boolean(currentUser?.hasProfile || currentUser?.profile);
+  const resolvedProfile = hasProfileData ? {
     ...(currentUser.profile || {}),
     id: currentUser.profile?.id || currentUser.id,
     userId: currentUser.id,
@@ -405,7 +447,12 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert: propSho
       </div>
 
       {/* Main Content Area */}
-      {currentUser.hasProfile && resolvedProfile ? (
+      {loadingProfile ? (
+        <div className="admin-loading" style={{ minHeight: '360px' }}>
+          <ArrowsClockwise size={32} className="admin-spinner" />
+          <span>Loading member profile details…</span>
+        </div>
+      ) : hasProfileData && resolvedProfile ? (
         <div className="admin-profile-content-wrap">
           <ProfileDetail profile={resolvedProfile} onBack={onBack} />
         </div>
@@ -416,7 +463,7 @@ const AdminProfileInspector = ({ user, onBack, onUserUpdated, showAlert: propSho
             <div>
               <h3 className="admin-incomplete-name font-display">{currentUser.name || 'Anonymous Member'}</h3>
               <p className="admin-incomplete-meta font-ui">
-                Registered on {new Date(currentUser.createdAt).toLocaleString()}
+                Registered on {currentUser.createdAt && !isNaN(new Date(currentUser.createdAt).getTime()) ? new Date(currentUser.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently'}
               </p>
             </div>
           </div>

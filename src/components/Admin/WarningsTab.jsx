@@ -449,7 +449,15 @@ export const WarningsTab = ({ showAlert, onViewUser }) => {
                     {onViewUser && (
                       <button
                         type="button"
-                        onClick={() => onViewUser({ id: w.userId, name: w.userName })}
+                        onClick={() => onViewUser(w.user || {
+                          id: w.userId,
+                          name: w.userName,
+                          email: w.userEmail,
+                          phoneNumber: w.userPhone,
+                          status: w.userStatus,
+                          photos: w.currentPhotos,
+                          createdAt: w.createdAt,
+                        })}
                         className="btn-warn-inspect"
                       >
                         <Eye size={14} />
