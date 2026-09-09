@@ -12,6 +12,7 @@ import { StoryDeckSkeleton, GridCardSkeleton } from '../../components/UI/Skeleto
 import { calculateStateDistance, calculateGpsDistance } from '../../constants/indiaLocations';
 import { triggerHaptic } from '../../utils/haptics';
 import { PhotoVibeBanner } from '../../components/Discover/PhotoVibeBanner';
+import { api } from '../../lib/api';
 
 const BOOST_STORAGE_KEY = 'vh_profile_boost_state';
 const BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -199,39 +200,71 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       } catch (_) {}
     };
 
+    // Check localStorage immediately
     checkBoostTimer();
+
+    // Also sync real database status from backend on mount
+    api.getSpotlightBoostStatus().then((res) => {
+      const data = res?.data;
+      if (data && (data.isBoosting || data.isOnCooldown)) {
+        const syncedState = {
+          isBoosting: Boolean(data.isBoosting),
+          isOnCooldown: Boolean(data.isOnCooldown),
+          boostSecondsLeft: data.boostSecondsLeft || 0,
+          cooldownSecondsLeft: data.cooldownSecondsLeft || 0,
+          boostExpiresAt: data.boostExpiresAt,
+          cooldownExpiresAt: data.cooldownExpiresAt,
+        };
+        try {
+          localStorage.setItem(BOOST_STORAGE_KEY, JSON.stringify(syncedState));
+        } catch (_) {}
+        setBoostState(syncedState);
+      }
+    }).catch(() => {});
+
     const interval = setInterval(checkBoostTimer, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const handleActivateBoost = () => {
-    const now = Date.now();
-    const boostExpiresAt = now + BOOST_DURATION_MS;
-    const cooldownExpiresAt = now + BOOST_COOLDOWN_MS;
-    const newState = {
-      isBoosting: true,
-      isOnCooldown: false,
-      boostSecondsLeft: 30 * 60,
-      cooldownSecondsLeft: Math.floor(BOOST_COOLDOWN_MS / 1000),
-      boostExpiresAt,
-      cooldownExpiresAt,
-      expiredNotified: false,
-      cooldownNotified: false
-    };
-
+  const handleActivateBoost = async () => {
     try {
-      localStorage.setItem(BOOST_STORAGE_KEY, JSON.stringify(newState));
-    } catch (_) {}
+      const res = await api.activateSpotlightBoost();
+      const data = res?.data || {};
+      const now = Date.now();
+      const boostExpiresAt = data.boostExpiresAt || (now + BOOST_DURATION_MS);
+      const cooldownExpiresAt = data.cooldownExpiresAt || (now + BOOST_COOLDOWN_MS);
 
-    // Request browser notification permission if not yet requested
-    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-      Notification.requestPermission().catch(() => {});
+      const newState = {
+        isBoosting: true,
+        isOnCooldown: false,
+        boostSecondsLeft: data.boostSecondsLeft || 30 * 60,
+        cooldownSecondsLeft: data.cooldownSecondsLeft || Math.floor(BOOST_COOLDOWN_MS / 1000),
+        boostExpiresAt,
+        cooldownExpiresAt,
+        expiredNotified: false,
+        cooldownNotified: false
+      };
+
+      try {
+        localStorage.setItem(BOOST_STORAGE_KEY, JSON.stringify(newState));
+      } catch (_) {}
+
+      // Request browser notification permission if not yet requested
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
+
+      setBoostState(newState);
+      triggerHaptic?.('medium');
+      showAlert?.('⚡ Spotlight Boost Activated! Your profile is prioritized to 5x more members in your area for the next 30 minutes.', 'success');
+      setShowBoostModal(false);
+    } catch (err) {
+      if (err?.message && err.message.includes('COOLDOWN')) {
+        showAlert?.(err.message, 'warning');
+      } else {
+        showAlert?.(err?.message || 'Could not activate Spotlight Boost at this moment.', 'error');
+      }
     }
-
-    setBoostState(newState);
-    triggerHaptic?.('medium');
-    showAlert?.('⚡ Spotlight Boost Activated! Your profile is prioritized to 5x more members in your area for the next 30 minutes.', 'success');
-    setShowBoostModal(false);
   };
 
   const handleSearchChange = (e) => {

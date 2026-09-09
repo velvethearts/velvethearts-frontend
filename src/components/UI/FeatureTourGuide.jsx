@@ -33,7 +33,8 @@ export const FeatureTourGuide = () => {
     isFeatureTourActive,
     setIsFeatureTourActive,
     userProfile,
-    showCelebration
+    showCelebration,
+    showWelcomeRadar
   } = useApp();
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -551,7 +552,7 @@ export const FeatureTourGuide = () => {
     setActiveTab('discover');
   };
 
-  if (!isVisible || !isLoggedIn || !isOnboarded || showCelebration) {
+  if (!isVisible || !isLoggedIn || !isOnboarded || showCelebration || showWelcomeRadar) {
     return null;
   }
 
@@ -671,7 +672,7 @@ export const FeatureTourGuide = () => {
                 className="vh-tour-btn vh-tour-btn-next font-ui"
                 aria-label={isLastStep ? 'Complete tour and begin' : 'Next'}
               >
-                <span>{isLastStep ? 'Start Discovering' : isFirstStep ? 'Begin Tour' : 'Next'}</span>
+                <span>{isLastStep ? 'Discover' : isFirstStep ? 'Begin Tour' : 'Next'}</span>
                 {!isLastStep && <CaretRight size={16} weight="bold" />}
               </button>
             </div>
@@ -693,7 +694,7 @@ export const FeatureTourGuide = () => {
           border-radius: 16px;
           border: 2px solid #D4AD6A;
           background: transparent !important;
-          box-shadow: 0 0 0 9999px rgba(8, 6, 9, 0.65), 0 0 25px rgba(212, 173, 106, 0.75);
+          box-shadow: 0 0 0 9999px rgba(10, 8, 12, 0.42), 0 0 25px rgba(212, 173, 106, 0.75);
           pointer-events: none;
           z-index: 999998;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -703,18 +704,19 @@ export const FeatureTourGuide = () => {
         .vh-tour-full-dim {
           position: fixed;
           inset: 0;
-          background: rgba(8, 6, 9, 0.65);
+          background: rgba(10, 8, 12, 0.42);
+          backdrop-filter: blur(2px);
           pointer-events: none;
           z-index: 999998;
         }
 
         @keyframes spotlightHolePulse {
           0%, 100% {
-            box-shadow: 0 0 0 9999px rgba(8, 6, 9, 0.65), 0 0 15px rgba(212, 173, 106, 0.6);
+            box-shadow: 0 0 0 9999px rgba(10, 8, 12, 0.42), 0 0 15px rgba(212, 173, 106, 0.6);
             border-color: rgba(212, 173, 106, 0.85);
           }
           50% {
-            box-shadow: 0 0 0 9999px rgba(8, 6, 9, 0.65), 0 0 30px rgba(243, 198, 143, 0.95);
+            box-shadow: 0 0 0 9999px rgba(10, 8, 12, 0.42), 0 0 30px rgba(243, 198, 143, 0.95);
             border-color: #F3C68F;
           }
         }
@@ -726,13 +728,13 @@ export const FeatureTourGuide = () => {
         }
 
         .vh-tour-card {
-          background: rgba(24, 18, 22, 0.96);
+          background: rgba(28, 20, 25, 0.95);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border: 1.5px solid rgba(212, 173, 106, 0.4);
+          border: 1.5px solid rgba(212, 173, 106, 0.45);
           border-radius: 20px;
-          padding: 20px 20px 16px;
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(184, 67, 106, 0.35);
+          padding: 22px 22px 18px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(184, 67, 106, 0.25);
           display: flex;
           flex-direction: column;
           gap: 14px;

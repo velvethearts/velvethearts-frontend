@@ -19,6 +19,7 @@ import { triggerHaptic, playHapticSound } from '../../utils/haptics';
 import { PromptReactionModal } from './PromptReactionModal';
 import { ProtectedImage } from './ProtectedImage';
 import { VerifiedBadge } from './VerifiedBadge';
+import { api } from '../../lib/api';
 
 export const StoryDeck = ({
   profiles = [],
@@ -33,9 +34,25 @@ export const StoryDeck = ({
   onSaveProfile,
   onSelectProfile,
 }) => {
+  const { showAlert } = useApp() || {};
   const currentIndex = 0;
   const [swipeHistory, setSwipeHistory] = useState([]); // Undo stack
   const [photoIndices, setPhotoIndices] = useState({}); // photo index per profile id
+
+  // 5 Super-Hearts daily quota tracking
+  const [superQuota, setSuperQuota] = useState({ total: 5, used: 0, remaining: 5 });
+
+  useEffect(() => {
+    let isMounted = true;
+    api.getSuperSparksQuota()
+      .then((res) => {
+        if (isMounted && res?.data) {
+          setSuperQuota(res.data);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, [interestsSent.length]);
 
   const [showSwipeGuide, setShowSwipeGuide] = useState(true);
 
@@ -148,6 +165,19 @@ export const StoryDeck = ({
   const handleSwipe = (direction, reactionData = null) => {
     if (!activeProfile || swipeDirection) return;
 
+    if (direction === 'super') {
+      if (superQuota.remaining <= 0) {
+        triggerHaptic('medium');
+        showAlert?.("You have used all 5 of your daily Super-Hearts! They replenish 24 hours after each send.", 'info');
+        return;
+      }
+      setSuperQuota(prev => ({
+        ...prev,
+        used: prev.used + 1,
+        remaining: Math.max(0, prev.remaining - 1),
+      }));
+    }
+
     completeSwipeGuide();
 
     const currentSwipedProfile = activeProfile;
@@ -185,6 +215,14 @@ export const StoryDeck = ({
     setSwipeHistory(prev => prev.slice(0, prev.length - 1));
     triggerHaptic('light');
     playHapticSound('pop');
+
+    if (last.direction === 'super') {
+      setSuperQuota(prev => ({
+        ...prev,
+        used: Math.max(0, prev.used - 1),
+        remaining: Math.min(prev.total, prev.remaining + 1),
+      }));
+    }
 
     if (last.direction === 'right' || last.direction === 'super') {
       onUnsendInterest(last.profile.id, last.profile.name);
@@ -593,12 +631,22 @@ export const StoryDeck = ({
         {/* 3. Super Spark */}
         <button
           type="button"
-          onClick={() => handleSwipe('super')}
-          className="console-btn btn-super"
+          onClick={() => {
+            if (superQuota.remaining <= 0) {
+              triggerHaptic('medium');
+              showAlert?.("You have used all 5 of your daily Super-Hearts! They replenish 24 hours after each send.", 'info');
+              return;
+            }
+            handleSwipe('super');
+          }}
+          className={`console-btn btn-super ${superQuota.remaining <= 0 ? 'is-depleted' : ''}`}
           aria-label="Super Spark — stand out instantly"
-          title="Super Spark (Up Arrow)"
+          title={superQuota.remaining > 0 ? `Super Spark (Up Arrow) — ${superQuota.remaining} of ${superQuota.total} left today` : '5/5 Super-Hearts used today (replenishes in 24h)'}
         >
           <Star size={22} weight="fill" />
+          <span className={`super-sparks-badge font-ui ${superQuota.remaining <= 0 ? 'is-zero' : ''}`}>
+            {superQuota.remaining}
+          </span>
         </button>
 
         {/* 4. Spark / Like */}
@@ -1078,6 +1126,7 @@ export const StoryDeck = ({
 
         /* 3. Super Spark — Sky Blue (44px) */
         .btn-super {
+          position: relative;
           width: 44px;
           height: 44px;
           color: #38BDF8;
@@ -1085,6 +1134,37 @@ export const StoryDeck = ({
 
         .btn-super:hover {
           box-shadow: 0 4px 18px rgba(56, 189, 248, 0.45);
+        }
+
+        .btn-super.is-depleted {
+          opacity: 0.65;
+          filter: grayscale(0.4);
+        }
+
+        .super-sparks-badge {
+          position: absolute;
+          top: -4px;
+          right: -4px;
+          min-width: 17px;
+          height: 17px;
+          padding: 0 4px;
+          border-radius: 9px;
+          background: linear-gradient(135deg, #38BDF8, #0284C7);
+          color: #FFFFFF;
+          font-size: 10px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1.5px solid #080609;
+          box-shadow: 0 2px 6px rgba(56, 189, 248, 0.4);
+          line-height: 1;
+        }
+
+        .super-sparks-badge.is-zero {
+          background: #4B5563;
+          color: #D1D5DB;
+          box-shadow: none;
         }
 
         /* 4. Spark / Like — Emerald Green (58px) */

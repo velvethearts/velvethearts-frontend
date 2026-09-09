@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Sparkle, Gift, X } from "@phosphor-icons/react";
 
 /**
@@ -54,11 +54,11 @@ export const WelcomeRadarModal = ({
               <X size={18} weight="bold" />
             </button>
             <div className="wr-header">
-              <span className="wr-emoji-big">🎉</span>
+              <span className="wr-emoji-big">💖</span>
               <h2 className="wr-title font-display">Welcome, {firstName}!</h2>
               <p className="wr-subtitle font-ui">
-                <strong>{localCount}+ verified singles</strong>
-                {userCity ? ` in ${userCity}` : " near you"} are looking for {vibe1} too.
+                Connecting you with intentional matches
+                {userCity ? ` in ${userCity}` : " near you"} who share your vibe for {vibe1}.
               </p>
             </div>
             <div className="wr-gift-card">
@@ -75,8 +75,8 @@ export const WelcomeRadarModal = ({
             </div>
             <div className="wr-stat-row font-ui">
               <div className="wr-stat">
-                <span className="wr-stat-num">{localCount}+</span>
-                <span className="wr-stat-label">Local Singles</span>
+                <span className="wr-stat-num">100%</span>
+                <span className="wr-stat-label">Verified Rosette</span>
               </div>
               <div className="wr-stat-divider" />
               <div className="wr-stat">

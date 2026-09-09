@@ -646,18 +646,24 @@ const DashboardStatsTab = ({ onNavigateTab, onViewUser, showAlert }) => {
     fetchStats();
   }, [fetchStats]);
 
-  // Real-time socket listener: refresh metrics when verification requests are submitted
+  // Real-time socket listener: refresh metrics when verifications, onboarding, registrations, or deletions occur
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
 
-    const handleNewVerification = () => {
+    const handleRefresh = () => {
       fetchStats();
     };
 
-    socket.on('verification_request_submitted', handleNewVerification);
+    socket.on('verification_request_submitted', handleRefresh);
+    socket.on('profile_onboarding_completed', handleRefresh);
+    socket.on('user_registered', handleRefresh);
+    socket.on('user_account_deleted', handleRefresh);
     return () => {
-      socket.off('verification_request_submitted', handleNewVerification);
+      socket.off('verification_request_submitted', handleRefresh);
+      socket.off('profile_onboarding_completed', handleRefresh);
+      socket.off('user_registered', handleRefresh);
+      socket.off('user_account_deleted', handleRefresh);
     };
   }, [fetchStats]);
 
@@ -677,7 +683,7 @@ const DashboardStatsTab = ({ onNavigateTab, onViewUser, showAlert }) => {
   const statCards = [
     {
       id: 'total',
-      label: 'Total Registered',
+      label: 'Unique Registered',
       value: stats.stats?.totalCount || 0,
       color: '#60a5fa',
       accentBg: 'rgba(96, 165, 250, 0.12)',
@@ -692,6 +698,16 @@ const DashboardStatsTab = ({ onNavigateTab, onViewUser, showAlert }) => {
       accentBg: 'rgba(74, 222, 128, 0.12)',
       icon: CheckCircle,
       onClick: () => onNavigateTab('users'),
+    },
+    {
+      id: 'returning',
+      label: 'Returning Members',
+      value: stats.stats?.returningCount || 0,
+      color: '#eab308',
+      accentBg: 'rgba(234, 179, 8, 0.14)',
+      icon: ArrowCounterClockwise,
+      onClick: () => onNavigateTab('users'),
+      badge: (stats.stats?.returningCount || 0) > 0 ? 'Resurrected' : null,
     },
     {
       id: 'verifications',
@@ -888,9 +904,16 @@ const DashboardStatsTab = ({ onNavigateTab, onViewUser, showAlert }) => {
                         </span>
                       </td>
                       <td>
-                        <span className={`admin-status-pill status-${u.status?.toLowerCase()}`}>
-                          {u.status}
-                        </span>
+                        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <span className={`admin-status-pill status-${u.status?.toLowerCase()}`}>
+                            {u.status}
+                          </span>
+                          {u.isReturning && (
+                            <span className="admin-status-pill status-returning" title="Re-registered after deleting prior account">
+                              Returning
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="admin-table-date">
                         {new Date(u.createdAt).toLocaleDateString()}
@@ -1231,7 +1254,7 @@ const UsersDirectoryTab = ({ showAlert: propShowAlert, onViewUser }) => {
   const fetchDirStats = useCallback(async () => {
     try {
       const stats = await api.admin.getDashboardStats();
-      const st = stats?.data || stats;
+      const st = stats?.stats || stats?.data || stats;
       if (st) setDirStats(st);
     } catch (err) {
       console.error('Failed to fetch stats:', err);
@@ -1270,19 +1293,23 @@ const UsersDirectoryTab = ({ showAlert: propShowAlert, onViewUser }) => {
     fetchDirStats();
   }, [fetchUsers, fetchDirStats]);
 
-  // Real-time listener: refresh directory when any member completes onboarding
+  // Real-time listener: refresh directory when onboarding completes, user registers, or account deletes
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
 
-    const handleOnboardingCompleted = () => {
+    const handleRefresh = () => {
       fetchUsers();
       fetchDirStats();
     };
 
-    socket.on('profile_onboarding_completed', handleOnboardingCompleted);
+    socket.on('profile_onboarding_completed', handleRefresh);
+    socket.on('user_registered', handleRefresh);
+    socket.on('user_account_deleted', handleRefresh);
     return () => {
-      socket.off('profile_onboarding_completed', handleOnboardingCompleted);
+      socket.off('profile_onboarding_completed', handleRefresh);
+      socket.off('user_registered', handleRefresh);
+      socket.off('user_account_deleted', handleRefresh);
     };
   }, [fetchUsers, fetchDirStats]);
 
@@ -1587,6 +1614,11 @@ const UsersDirectoryTab = ({ showAlert: propShowAlert, onViewUser }) => {
                       <span className={`admin-status-pill status-${u.status?.toLowerCase()}`}>
                         {u.status}
                       </span>
+                      {u.isReturning && (
+                        <span className="admin-status-pill status-returning" title="Re-registered after deleting prior account">
+                          Returning Member
+                        </span>
+                      )}
                       {u.approvalStatus && (
                         <span className={`admin-approval-pill status-${u.approvalStatus?.toLowerCase()}`}>
                           {u.approvalStatus}
@@ -3687,6 +3719,18 @@ const adminStyles = `
     background: rgba(239, 68, 68, 0.12);
     color: #ef4444;
     border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .admin-status-pill.status-returning {
+    background: rgba(234, 179, 8, 0.14);
+    color: #ca8a04;
+    border: 1px solid rgba(234, 179, 8, 0.35);
+  }
+
+  [data-theme="dark"] .admin-status-pill.status-returning {
+    background: rgba(234, 179, 8, 0.2);
+    color: #facc15;
+    border-color: rgba(234, 179, 8, 0.45);
   }
 
   .admin-onboarding-pill {

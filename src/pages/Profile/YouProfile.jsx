@@ -186,18 +186,18 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
           </div>
         </div>
 
-        {/* Profile Strength Widget — gamified completion nudge */}
-        <ProfileStrengthWidget
-          photoCount={userPhotosList.length}
-          hasVoiceIntro={Boolean(userProfile?.voiceIntroUrl)}
-          hasStory={Boolean(userProfile?.story && userProfile.story.length >= 20)}
-          hasVerification={Boolean(userProfile?.verified)}
-          onAddPhoto={onEditProfile}
-          onAddVoice={onEditProfile}
-        />
-
         {/* Quick Actions Panel */}
         <div className="you-actions-panel font-ui">
+          {/* Profile Strength Widget — sits at top of the actions column */}
+          <ProfileStrengthWidget
+            photoCount={userPhotosList.length}
+            hasVoiceIntro={Boolean(userProfile?.voiceIntroUrl)}
+            hasStory={Boolean(userProfile?.story && userProfile.story.length >= 20)}
+            hasVerification={Boolean(userProfile?.verified)}
+            onAddPhoto={onEditProfile}
+            onAddVoice={onEditProfile}
+          />
+
           <Card hoverable onClick={onEditProfile} className="you-tile-card">
             <div className="you-tile-btn-body">
               <PencilSimple size={24} className="tile-icon font-accent" />

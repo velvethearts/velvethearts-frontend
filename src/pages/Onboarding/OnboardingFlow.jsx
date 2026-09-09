@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { Camera, Info, X, ShieldCheck } from '@phosphor-icons/react';
+import { Camera, Info, X, ShieldCheck, Sparkle } from '@phosphor-icons/react';
 import { Button } from '../../components/UI/Button';
 import { Input } from '../../components/UI/Input';
 import { Textarea } from '../../components/UI/Textarea';
@@ -680,10 +680,6 @@ export const OnboardingFlow = () => {
     const bioPlaceholderIdx = formData.name ? (formData.name.length % bioStarters.length) : 0;
     const dynamicBioPlaceholder = bioStarters[bioPlaceholderIdx];
 
-    // ── City match ticker copy ──
-    const cityMatchCount = formData.city ? (Math.floor(formData.city.length * 7.3 + 42) % 120 + 80) : 0;
-    const intentLabel = formData.relationshipIntent ? formData.relationshipIntent.replace(/^.*?\s/, '') : 'connection';
-
     // ── Photo slot guided labels ──
     const photoSlotMeta = [
         { icon: '👤', label: 'Your Smile', hint: 'A clear solo photo of your face — required for safety' },
@@ -800,13 +796,12 @@ export const OnboardingFlow = () => {
                                     onChange={(val) => handleChange('city', val)}
                                     error={validationErrors.city}
                                 />
-                                {/* City activity ticker — social proof */}
-                                {formData.city && cityMatchCount > 0 && (
+                                {/* City activity badge — Founding Member / Early Spotlight */}
+                                {formData.city && (
                                     <div className="city-match-ticker font-ui page-enter">
-                                        <span className="city-ticker-dot" />
+                                        <Sparkle size={14} weight="fill" style={{ color: 'var(--gold-500, #D4AD6A)', flexShrink: 0 }} />
                                         <span>
-                                            🔥 <strong>{cityMatchCount}+ singles</strong> seeking{' '}
-                                            {intentLabel} in <strong>{formData.city}</strong> are active today
+                                            Be among the <strong>founding members in {formData.city}</strong> — early profiles receive priority discovery
                                         </span>
                                     </div>
                                 )}

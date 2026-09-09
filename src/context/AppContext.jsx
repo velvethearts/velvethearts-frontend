@@ -1582,14 +1582,13 @@ export const AppProvider = ({ children }) => {
             } catch (_) {}
             setIsOnboarded(true);
             setActiveTab('discover');
-            setShowWelcomeRadar(true); // Trigger welcome radar modal
+            setShowWelcomeRadar(true); // Trigger welcome radar modal; tour will launch after radar is dismissed
             const uid = finalProfileData?.id || finalProfileData?.uid || auth.currentUser?.uid;
             if (uid) {
                 try {
                     localStorage.removeItem(`vh-tour-completed-${uid}`);
                 } catch (_) { }
             }
-            setIsFeatureTourActive(true);
             return;
         }
 
@@ -1611,16 +1610,15 @@ export const AppProvider = ({ children }) => {
             } catch (_) {}
             setIsOnboarded(true);
             setActiveTab('discover');
-            setShowWelcomeRadar(true); // Trigger welcome radar modal
+            setShowWelcomeRadar(true); // Trigger welcome radar modal; tour will launch after radar is dismissed
 
-            // Reset tour key and launch tour for newly completed onboarding
+            // Reset tour key so tour is ready to launch after welcome radar is dismissed
             const uid = saved?.id || saved?.uid || profileData?.id || profileData?.uid || auth.currentUser?.uid;
             if (uid) {
                 try {
                     localStorage.removeItem(`vh-tour-completed-${uid}`);
                 } catch (_) { }
             }
-            setIsFeatureTourActive(true);
 
             // After onboarding, if already approved, load social data
             if (approvalStatus === 'approved') {

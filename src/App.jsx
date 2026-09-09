@@ -78,7 +78,7 @@ class ErrorBoundary extends Component {
 }
 
 function AppContent() {
-  const { authLoading, isLoggedIn, isOnboarded, activeTab, setActiveTab, approvalStatus, userRole, deepLinkConversationId, setDeepLinkConversationId, showWelcomeRadar, setShowWelcomeRadar, userProfile } = useApp();
+  const { authLoading, isLoggedIn, isOnboarded, activeTab, setActiveTab, approvalStatus, userRole, deepLinkConversationId, setDeepLinkConversationId, showWelcomeRadar, setShowWelcomeRadar, userProfile, startFeatureTour } = useApp();
 
   const [authInitialMode, setAuthInitialMode] = useState('signup');
 
@@ -460,7 +460,10 @@ function AppContent() {
             userName={userProfile?.name || ''}
             userCity={userProfile?.city || ''}
             interests={userProfile?.interests || []}
-            onClose={() => setShowWelcomeRadar(false)}
+            onClose={() => {
+              setShowWelcomeRadar(false);
+              startFeatureTour();
+            }}
           />
         </Suspense>
       )}

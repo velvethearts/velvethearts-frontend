@@ -148,6 +148,16 @@ export const api = {
         });
     },
 
+    activateSpotlightBoost() {
+        return request('/api/v1/profile/boost', {
+            method: 'POST'
+        });
+    },
+
+    getSpotlightBoostStatus() {
+        return request('/api/v1/profile/boost-status');
+    },
+
     // ==========================================================
     // DISCOVER
     // ==========================================================
@@ -218,6 +228,10 @@ export const api = {
 
     getSentInvites() {
         return request('/api/v1/match/sent-invites');
+    },
+
+    getSuperSparksQuota() {
+        return request('/api/v1/match/super-sparks-quota');
     },
 
     // ==========================================================
