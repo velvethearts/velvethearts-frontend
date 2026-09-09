@@ -11,6 +11,7 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import { StoryDeckSkeleton, GridCardSkeleton } from '../../components/UI/Skeleton';
 import { calculateStateDistance, calculateGpsDistance } from '../../constants/indiaLocations';
 import { triggerHaptic } from '../../utils/haptics';
+import { PhotoVibeBanner } from '../../components/Discover/PhotoVibeBanner';
 
 const BOOST_STORAGE_KEY = 'vh_profile_boost_state';
 const BOOST_DURATION_MS = 30 * 60 * 1000; // 30 minutes
@@ -54,8 +55,10 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     showAlert,
     userLocation,
     requestUserLocation,
-    isLocationLoading
+    isLocationLoading,
+    setActiveTab,
   } = useApp();
+
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeQuickFilter, setActiveQuickFilter] = useState('All');
@@ -65,7 +68,11 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
   const [showBoostModal, setShowBoostModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [viewMode, setViewMode] = useState('deck'); // 'deck' | 'grid'
+  // Photo nudge banner — shown in grid view when user has < 3 photos, dismissed per-session
+  const userPhotoCount = userProfile?.photos?.length || userProfile?.photoUrls?.length || 1;
+  const [showPhotoBanner, setShowPhotoBanner] = useState(() => userPhotoCount < 3);
   const searchContainerRef = React.useRef(null);
+
 
   // Ask only once when user navigates to Near Me mode
   useEffect(() => {
@@ -672,28 +679,37 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
           />
         ) : (
           <div className="gallery-wall-grid">
-            {feedProfiles.map((profile) => (
-              <ProfileCard
-                key={profile.id}
-                profile={profile}
-                feedMode={feedMode}
-                isInterestSent={
-                  interestsSent.includes(profile.id) ||
-                  (profile.userId && interestsSent.includes(profile.userId)) ||
-                  Boolean(interestStatuses[profile.id]) ||
-                  (profile.userId && Boolean(interestStatuses[profile.userId]))
-                }
-                isSaved={savedProfiles.includes(profile.id)}
-                onSendInterest={sendInterest}
-                onUnsendInterest={unsendInterest}
-                onSave={(id) => toggleSaveProfile(id, profile)}
-                onBlock={blockUser}
-                onReport={(id) => {
-                  const reason = window.prompt(`Report ${profile.name} - Enter reason:`);
-                  if (reason) reportUser(id, 'Reported from Card', reason);
-                }}
-                onClick={() => onSelectProfile(profile)}
-              />
+            {feedProfiles.map((profile, cardIdx) => (
+              <React.Fragment key={profile.id}>
+                <ProfileCard
+                  profile={profile}
+                  feedMode={feedMode}
+                  isInterestSent={
+                    interestsSent.includes(profile.id) ||
+                    (profile.userId && interestsSent.includes(profile.userId)) ||
+                    Boolean(interestStatuses[profile.id]) ||
+                    (profile.userId && Boolean(interestStatuses[profile.userId]))
+                  }
+                  isSaved={savedProfiles.includes(profile.id)}
+                  onSendInterest={sendInterest}
+                  onUnsendInterest={unsendInterest}
+                  onSave={(id) => toggleSaveProfile(id, profile)}
+                  onBlock={blockUser}
+                  onReport={(id) => {
+                    const reason = window.prompt(`Report ${profile.name} - Enter reason:`);
+                    if (reason) reportUser(id, 'Reported from Card', reason);
+                  }}
+                  onClick={() => onSelectProfile(profile)}
+                />
+                {/* Photo nudge after the 5th card for users with < 3 photos */}
+                {cardIdx === 4 && showPhotoBanner && (
+                  <PhotoVibeBanner
+                    photoCount={(userProfile?.photos?.length || userProfile?.photoUrls?.length || 1)}
+                    onAddPhoto={() => setActiveTab('profile')}
+                    onDismiss={() => setShowPhotoBanner(false)}
+                  />
+                )}
+              </React.Fragment>
             ))}
           </div>
         )

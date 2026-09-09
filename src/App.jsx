@@ -31,6 +31,7 @@ const VerificationPromptModal = lazy(() => import('./components/Safety/Verificat
 const WarningAlertModal = lazy(() => import('./components/Safety/WarningAlertModal').then(m => ({ default: m.WarningAlertModal })));
 const AdminPanel = lazy(() => import('./pages/Admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
 const NotFoundPage = lazy(() => import('./pages/NotFound/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const WelcomeRadarModal = lazy(() => import('./components/Onboarding/WelcomeRadarModal').then(m => ({ default: m.WelcomeRadarModal })));
 
 const AuthLoadingScreen = () => {
   return (
@@ -77,7 +78,7 @@ class ErrorBoundary extends Component {
 }
 
 function AppContent() {
-  const { authLoading, isLoggedIn, isOnboarded, activeTab, setActiveTab, approvalStatus, userRole, deepLinkConversationId, setDeepLinkConversationId } = useApp();
+  const { authLoading, isLoggedIn, isOnboarded, activeTab, setActiveTab, approvalStatus, userRole, deepLinkConversationId, setDeepLinkConversationId, showWelcomeRadar, setShowWelcomeRadar, userProfile } = useApp();
 
   const [authInitialMode, setAuthInitialMode] = useState('signup');
 
@@ -452,6 +453,17 @@ function AppContent() {
       <FeatureTourGuide />
       <VerificationPromptModal />
       <WarningAlertModal />
+      {/* Welcome Radar — fires once after onboarding completes */}
+      {showWelcomeRadar && (
+        <Suspense fallback={null}>
+          <WelcomeRadarModal
+            userName={userProfile?.name || ''}
+            userCity={userProfile?.city || ''}
+            interests={userProfile?.interests || []}
+            onClose={() => setShowWelcomeRadar(false)}
+          />
+        </Suspense>
+      )}
     </Navigation>
   );
 }

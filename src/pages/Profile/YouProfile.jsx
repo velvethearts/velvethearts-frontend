@@ -7,6 +7,7 @@ import { ProtectedImage } from '../../components/UI/ProtectedImage';
 import { getProfilePhoto, extractPhotoUrls } from '../../utils/avatar';
 import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificationModal';
+import { ProfileStrengthWidget } from '../../components/Profile/ProfileStrengthWidget';
 
 export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile }) => {
   const { userProfile, setActiveTab, logout, showConfirm, savedProfileObjects = [] } = useApp();
@@ -184,6 +185,16 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
             </div>
           </div>
         </div>
+
+        {/* Profile Strength Widget — gamified completion nudge */}
+        <ProfileStrengthWidget
+          photoCount={userPhotosList.length}
+          hasVoiceIntro={Boolean(userProfile?.voiceIntroUrl)}
+          hasStory={Boolean(userProfile?.story && userProfile.story.length >= 20)}
+          hasVerification={Boolean(userProfile?.verified)}
+          onAddPhoto={onEditProfile}
+          onAddVoice={onEditProfile}
+        />
 
         {/* Quick Actions Panel */}
         <div className="you-actions-panel font-ui">

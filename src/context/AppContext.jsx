@@ -379,6 +379,7 @@ export const AppProvider = ({ children }) => {
 
     const [toastNotifications, setToastNotifications] = useState([]);
     const [isFeatureTourActive, setIsFeatureTourActive] = useState(false);
+    const [showWelcomeRadar, setShowWelcomeRadar] = useState(false);
 
     const startFeatureTour = useCallback(() => {
         setIsFeatureTourActive(true);
@@ -1581,6 +1582,7 @@ export const AppProvider = ({ children }) => {
             } catch (_) {}
             setIsOnboarded(true);
             setActiveTab('discover');
+            setShowWelcomeRadar(true); // Trigger welcome radar modal
             const uid = finalProfileData?.id || finalProfileData?.uid || auth.currentUser?.uid;
             if (uid) {
                 try {
@@ -1609,6 +1611,7 @@ export const AppProvider = ({ children }) => {
             } catch (_) {}
             setIsOnboarded(true);
             setActiveTab('discover');
+            setShowWelcomeRadar(true); // Trigger welcome radar modal
 
             // Reset tour key and launch tour for newly completed onboarding
             const uid = saved?.id || saved?.uid || profileData?.id || profileData?.uid || auth.currentUser?.uid;
@@ -2410,6 +2413,8 @@ export const AppProvider = ({ children }) => {
             isFeatureTourActive,
             setIsFeatureTourActive,
             startFeatureTour,
+            showWelcomeRadar,
+            setShowWelcomeRadar,
             filters,
             setFilters,
             theme,
