@@ -50,7 +50,7 @@ const FULL_SCREEN_STARS = [
 ];
 
 export const WelcomeSplashScreen = ({ onComplete }) => {
-  // Sequential Stages: 'welcome' -> 'rocket' -> 'clouds' -> 'reveal' -> 'exit'
+  // Strict Choreography: 'welcome' -> 'rocket' -> 'clouds' -> 'reveal' -> 'exit'
   const [stage, setStage] = useState('welcome');
   const [progress, setProgress] = useState(0);
   const isCompletedRef = useRef(false);
@@ -77,33 +77,33 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
   }, []);
 
   // Strict Sequential Progression:
-  // 1. Welcome Greeting (0s - 1.8s)
-  // 2. Rocket launches and COMPLETELY EXITS top of screen (1.8s - 3.4s)
-  // 3. Clouds billow in after rocket is gone (3.6s - 5.0s)
-  // 4. Brand Reveal pauses for user interaction (5.0s onwards)
+  // 1. Welcome Greeting (0s - 2.0s): Stars, Welcome text, idling rocket. NO CLOUDS IN DOM.
+  // 2. Rocket Blast Off (2.0s - 3.6s): Welcome text fades, rocket launches and exits off top. NO CLOUDS IN DOM.
+  // 3. Clouds Roll Down (3.8s - 5.2s): Clouds mount and roll down across screen.
+  // 4. Brand Reveal (5.2s onwards): Clean logo, title, and enter button.
   useEffect(() => {
-    // Rocket launches at 1.8s, exits screen by 3.4s
+    // Rocket blasts off at 2.0s
     const tLaunch = setTimeout(() => {
       setStage('rocket');
-    }, 1800);
+    }, 2000);
 
-    // Clouds start at 3.6s (rocket has completely left the screen)
+    // Clouds start at 3.8s AFTER rocket is completely gone past top
     const tClouds = setTimeout(() => {
       setStage('clouds');
-    }, 3600);
+    }, 3800);
 
-    // Brand Reveal displays at 5.0s once clouds are set
+    // Brand Reveal displays at 5.2s once clouds have fully rolled in
     const tReveal = setTimeout(() => {
       setStage('reveal');
-    }, 5000);
+    }, 5200);
 
-    // Inactivity safety fallback (30s)
+    // Inactivity safety fallback (35s)
     const tTimeout = setTimeout(() => {
       handleFinish();
-    }, 30000);
+    }, 35000);
 
-    // Progress bar up to reveal
-    const PROGRESS_DURATION = 5000;
+    // Progress bar runs smoothly up to reveal
+    const PROGRESS_DURATION = 5200;
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -204,196 +204,196 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
           STAGE 2: SMOOTH CUPID HEART-ROCKET ASCENT
           Launches swiftly and is COMPLETELY GONE before clouds appear
          ========================================================== */}
-      <div className="vws-rocket-stage" aria-hidden="true">
-        <div
-          className={`vws-rocket-assembly ${
-            stage === 'welcome' ? 'is-hovering' : 'is-ascending'
-          }`}
-        >
-          {/* Custom SVG Cupid Heart-Rocket */}
-          <svg
-            className="vws-rocket-svg"
-            viewBox="0 0 160 250"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+      {(stage === 'welcome' || stage === 'rocket') && (
+        <div className="vws-rocket-stage" aria-hidden="true">
+          <div
+            className={`vws-rocket-assembly ${
+              stage === 'welcome' ? 'is-hovering' : 'is-ascending'
+            }`}
           >
-            <defs>
-              {/* Metallic Rose-Gold Shading */}
-              <linearGradient id="rocketBodyGrad" x1="20" y1="20" x2="140" y2="190" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#FFFFFF" />
-                <stop offset="25%" stopColor="#FFF0F3" />
-                <stop offset="55%" stopColor="#F7CAD6" />
-                <stop offset="85%" stopColor="#E28EA6" />
-                <stop offset="100%" stopColor="#A83258" />
-              </linearGradient>
-
-              {/* Heart Wings Velvet Crimson */}
-              <linearGradient id="rocketWingGrad" x1="0" y1="120" x2="160" y2="200" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#E11D48" />
-                <stop offset="50%" stopColor="#BE123C" />
-                <stop offset="100%" stopColor="#670C23" />
-              </linearGradient>
-
-              {/* Champagne Gold Nose Cone */}
-              <linearGradient id="goldNoseGrad" x1="60" y1="5" x2="100" y2="65" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#FFFBEB" />
-                <stop offset="40%" stopColor="#FBBF24" />
-                <stop offset="100%" stopColor="#B45309" />
-              </linearGradient>
-
-              {/* Specular Highlight Streak */}
-              <linearGradient id="bodyHighlight" x1="50" y1="30" x2="70" y2="170" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.75" />
-                <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-              </linearGradient>
-
-              {/* Glowing Heart Core */}
-              <radialGradient id="heartPortholeGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#F43F5E" />
-                <stop offset="70%" stopColor="#BE123C" />
-                <stop offset="100%" stopColor="#4C0519" />
-              </radialGradient>
-            </defs>
-
-            {/* Left Heart-Shaped Aerofoil Wing */}
-            <path
-              d="M52 135 C32 135 12 158 15 186 C17 205 36 215 52 208 Z"
-              fill="url(#rocketWingGrad)"
-              stroke="rgba(255,255,255,0.4)"
-              strokeWidth="1.5"
-            />
-
-            {/* Right Heart-Shaped Aerofoil Wing */}
-            <path
-              d="M108 135 C128 135 148 158 145 186 C143 205 124 215 108 208 Z"
-              fill="url(#rocketWingGrad)"
-              stroke="rgba(255,255,255,0.4)"
-              strokeWidth="1.5"
-            />
-
-            {/* Main Rocket Fuselage */}
-            <path
-              d="M80 18 C96 50 106 100 106 170 C106 198 100 206 80 206 C60 206 54 198 54 170 C54 100 64 50 80 18 Z"
-              fill="url(#rocketBodyGrad)"
-              stroke="rgba(255,255,255,0.6)"
-              strokeWidth="2"
-            />
-
-            {/* Smooth Specular Glaze Reflection */}
-            <path
-              d="M74 35 C70 65 66 110 66 160 C66 180 67 195 70 198 C66 195 62 170 62 140 C62 90 68 50 74 35 Z"
-              fill="url(#bodyHighlight)"
-            />
-
-            {/* Gold Aerodynamic Nose Tip */}
-            <path
-              d="M80 16 C87 34 94 54 95 65 C85 68 75 68 65 65 C66 54 73 34 80 16 Z"
-              fill="url(#goldNoseGrad)"
-            />
-
-            {/* Center Porthole Window with Beating Heart */}
-            <circle cx="80" cy="118" r="21" fill="#1C0914" stroke="#FDE047" strokeWidth="2.5" />
-            <circle cx="80" cy="118" r="16" fill="url(#heartPortholeGlow)" />
-            <path
-              d="M80 128 C73 121 68 116 68 111 C68 107 71 104 75 104 C77.5 104 79.5 105.5 80 107 C80.5 105.5 82.5 104 85 104 C89 104 92 107 92 111 C92 116 87 121 80 128 Z"
-              fill="#FFFFFF"
-              opacity="0.95"
-            />
-
-            {/* Engine Exhaust Nozzles */}
-            <path d="M64 206 L96 206 L100 220 L60 220 Z" fill="#471426" stroke="#FBBF24" strokeWidth="1.5" />
-            <path d="M68 220 L92 220 L94 228 L66 228 Z" fill="#1C0914" />
-          </svg>
-
-          {/* Smooth Dual Flame Exhaust Plume */}
-          <div className="vws-plasma-thruster">
-            <div className="vws-flame-outer" />
-            <div className="vws-flame-inner" />
-            <div className="vws-flame-core" />
-          </div>
-
-          {/* Stardust exhaust spark particles */}
-          <div className="vws-spark-cascade">
-            <span className="vws-spark s-1" />
-            <span className="vws-spark s-2" />
-            <span className="vws-spark s-3" />
-            <span className="vws-spark s-4" />
-            <span className="vws-spark s-5" />
-            <span className="vws-spark s-6" />
-          </div>
-        </div>
-      </div>
-
-      {/* ==========================================================
-          STAGE 3: ORGANIC BILLOWING VOLUMETRIC CLOUD CURTAIN
-          Natural flowing curves — no disjointed circle shapes!
-         ========================================================== */}
-      <div className="vws-cloud-wipe-layer" aria-hidden="true">
-        <div
-          className={`vws-cloud-curtain-wrap ${
-            isLightStage ? 'is-sweeping-down' : ''
-          }`}
-        >
-          {/* Solid 100% viewport coverage body */}
-          <div className="vws-cloud-solid-body" />
-
-          {/* Continuous multi-layered organic wave lip */}
-          <div className="vws-cloud-wave-lip">
+            {/* Custom SVG Cupid Heart-Rocket */}
             <svg
-              className="vws-fluid-cloud-svg"
-              viewBox="0 0 1920 320"
-              preserveAspectRatio="none"
+              className="vws-rocket-svg"
+              viewBox="0 0 160 250"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
               <defs>
-                <linearGradient id="cloudDeepGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#FFF5F7" />
-                  <stop offset="50%" stopColor="#FEE4EC" />
-                  <stop offset="100%" stopColor="#FBCFE8" />
-                </linearGradient>
-
-                <linearGradient id="cloudMidGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
+                {/* Metallic Rose-Gold Shading */}
+                <linearGradient id="rocketBodyGrad" x1="20" y1="20" x2="140" y2="190" gradientUnits="userSpaceOnUse">
                   <stop offset="0%" stopColor="#FFFFFF" />
-                  <stop offset="60%" stopColor="#FFF2F6" />
-                  <stop offset="100%" stopColor="#FDD8E5" />
+                  <stop offset="25%" stopColor="#FFF0F3" />
+                  <stop offset="55%" stopColor="#F7CAD6" />
+                  <stop offset="85%" stopColor="#E28EA6" />
+                  <stop offset="100%" stopColor="#A83258" />
                 </linearGradient>
 
-                <linearGradient id="cloudFrontGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#FFFFFF" />
-                  <stop offset="70%" stopColor="#FFF5F8" />
-                  <stop offset="100%" stopColor="#FDE2EC" />
+                {/* Heart Wings Velvet Crimson */}
+                <linearGradient id="rocketWingGrad" x1="0" y1="120" x2="160" y2="200" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#E11D48" />
+                  <stop offset="50%" stopColor="#BE123C" />
+                  <stop offset="100%" stopColor="#670C23" />
                 </linearGradient>
 
-                <filter id="cloudSoftBloom" x="-10%" y="-10%" width="120%" height="150%">
-                  <feDropShadow dx="0" dy="16" stdDeviation="20" floodColor="#881337" floodOpacity="0.14" />
-                </filter>
+                {/* Champagne Gold Nose Cone */}
+                <linearGradient id="goldNoseGrad" x1="60" y1="5" x2="100" y2="65" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#FFFBEB" />
+                  <stop offset="40%" stopColor="#FBBF24" />
+                  <stop offset="100%" stopColor="#B45309" />
+                </linearGradient>
+
+                {/* Specular Highlight Streak */}
+                <linearGradient id="bodyHighlight" x1="50" y1="30" x2="70" y2="170" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.75" />
+                  <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+                </linearGradient>
+
+                {/* Glowing Heart Core */}
+                <radialGradient id="heartPortholeGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#F43F5E" />
+                  <stop offset="70%" stopColor="#BE123C" />
+                  <stop offset="100%" stopColor="#4C0519" />
+                </radialGradient>
               </defs>
 
-              {/* Layer 1: Background Velvet Blush Wave */}
+              {/* Left Heart-Shaped Aerofoil Wing */}
               <path
-                d="M 0,0 L 1920,0 L 1920,190 C 1800,250 1680,150 1520,210 C 1360,270 1240,170 1080,230 C 920,290 800,170 640,220 C 480,270 360,160 200,220 C 100,260 0,200 0,200 Z"
-                fill="url(#cloudDeepGrad)"
-                opacity="0.85"
+                d="M52 135 C32 135 12 158 15 186 C17 205 36 215 52 208 Z"
+                fill="url(#rocketWingGrad)"
+                stroke="rgba(255,255,255,0.4)"
+                strokeWidth="1.5"
               />
 
-              {/* Layer 2: Middle Soft Rose Wave */}
+              {/* Right Heart-Shaped Aerofoil Wing */}
               <path
-                d="M 0,0 L 1920,0 L 1920,150 C 1780,200 1660,120 1500,170 C 1340,220 1220,130 1060,180 C 900,230 780,130 620,175 C 460,220 340,120 180,170 C 90,200 0,155 0,155 Z"
-                fill="url(#cloudMidGrad)"
+                d="M108 135 C128 135 148 158 145 186 C143 205 124 215 108 208 Z"
+                fill="url(#rocketWingGrad)"
+                stroke="rgba(255,255,255,0.4)"
+                strokeWidth="1.5"
+              />
+
+              {/* Main Rocket Fuselage */}
+              <path
+                d="M80 18 C96 50 106 100 106 170 C106 198 100 206 80 206 C60 206 54 198 54 170 C54 100 64 50 80 18 Z"
+                fill="url(#rocketBodyGrad)"
+                stroke="rgba(255,255,255,0.6)"
+                strokeWidth="2"
+              />
+
+              {/* Smooth Specular Glaze Reflection */}
+              <path
+                d="M74 35 C70 65 66 110 66 160 C66 180 67 195 70 198 C66 195 62 170 62 140 C62 90 68 50 74 35 Z"
+                fill="url(#bodyHighlight)"
+              />
+
+              {/* Gold Aerodynamic Nose Tip */}
+              <path
+                d="M80 16 C87 34 94 54 95 65 C85 68 75 68 65 65 C66 54 73 34 80 16 Z"
+                fill="url(#goldNoseGrad)"
+              />
+
+              {/* Center Porthole Window with Beating Heart */}
+              <circle cx="80" cy="118" r="21" fill="#1C0914" stroke="#FDE047" strokeWidth="2.5" />
+              <circle cx="80" cy="118" r="16" fill="url(#heartPortholeGlow)" />
+              <path
+                d="M80 128 C73 121 68 116 68 111 C68 107 71 104 75 104 C77.5 104 79.5 105.5 80 107 C80.5 105.5 82.5 104 85 104 C89 104 92 107 92 111 C92 116 87 121 80 128 Z"
+                fill="#FFFFFF"
                 opacity="0.95"
               />
 
-              {/* Layer 3: Foreground Billowing Pure Cloud Wave */}
-              <path
-                d="M 0,0 L 1920,0 L 1920,110 C 1760,160 1640,85 1480,130 C 1320,175 1200,90 1040,135 C 880,180 760,95 600,135 C 440,175 320,90 160,130 C 80,155 0,115 0,115 Z"
-                fill="url(#cloudFrontGrad)"
-                filter="url(#cloudSoftBloom)"
-              />
+              {/* Engine Exhaust Nozzles */}
+              <path d="M64 206 L96 206 L100 220 L60 220 Z" fill="#471426" stroke="#FBBF24" strokeWidth="1.5" />
+              <path d="M68 220 L92 220 L94 228 L66 228 Z" fill="#1C0914" />
             </svg>
+
+            {/* Smooth Dual Flame Exhaust Plume */}
+            <div className="vws-plasma-thruster">
+              <div className="vws-flame-outer" />
+              <div className="vws-flame-inner" />
+              <div className="vws-flame-core" />
+            </div>
+
+            {/* Stardust exhaust spark particles */}
+            <div className="vws-spark-cascade">
+              <span className="vws-spark s-1" />
+              <span className="vws-spark s-2" />
+              <span className="vws-spark s-3" />
+              <span className="vws-spark s-4" />
+              <span className="vws-spark s-5" />
+              <span className="vws-spark s-6" />
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ==========================================================
+          STAGE 3: ORGANIC BILLOWING VOLUMETRIC CLOUD CURTAIN
+          CRITICAL: RENDERED ONLY AFTER ROCKET IS 100% OFF-SCREEN!
+         ========================================================== */}
+      {isLightStage && (
+        <div className="vws-cloud-wipe-layer" aria-hidden="true">
+          <div className="vws-cloud-curtain-wrap is-sweeping-down">
+            {/* Solid 100% viewport coverage body */}
+            <div className="vws-cloud-solid-body" />
+
+            {/* Continuous multi-layered organic wave lip */}
+            <div className="vws-cloud-wave-lip">
+              <svg
+                className="vws-fluid-cloud-svg"
+                viewBox="0 0 1920 320"
+                preserveAspectRatio="none"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <linearGradient id="cloudDeepGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#FFF5F7" />
+                    <stop offset="50%" stopColor="#FEE4EC" />
+                    <stop offset="100%" stopColor="#FBCFE8" />
+                  </linearGradient>
+
+                  <linearGradient id="cloudMidGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#FFFFFF" />
+                    <stop offset="60%" stopColor="#FFF2F6" />
+                    <stop offset="100%" stopColor="#FDD8E5" />
+                  </linearGradient>
+
+                  <linearGradient id="cloudFrontGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#FFFFFF" />
+                    <stop offset="70%" stopColor="#FFF5F8" />
+                    <stop offset="100%" stopColor="#FDE2EC" />
+                  </linearGradient>
+
+                  <filter id="cloudSoftBloom" x="-10%" y="-10%" width="120%" height="150%">
+                    <feDropShadow dx="0" dy="16" stdDeviation="20" floodColor="#881337" floodOpacity="0.14" />
+                  </filter>
+                </defs>
+
+                {/* Layer 1: Background Velvet Blush Wave */}
+                <path
+                  d="M 0,0 L 1920,0 L 1920,190 C 1800,250 1680,150 1520,210 C 1360,270 1240,170 1080,230 C 920,290 800,170 640,220 C 480,270 360,160 200,220 C 100,260 0,200 0,200 Z"
+                  fill="url(#cloudDeepGrad)"
+                  opacity="0.85"
+                />
+
+                {/* Layer 2: Middle Soft Rose Wave */}
+                <path
+                  d="M 0,0 L 1920,0 L 1920,150 C 1780,200 1660,120 1500,170 C 1340,220 1220,130 1060,180 C 900,230 780,130 620,175 C 460,220 340,120 180,170 C 90,200 0,155 0,155 Z"
+                  fill="url(#cloudMidGrad)"
+                  opacity="0.95"
+                />
+
+                {/* Layer 3: Foreground Billowing Pure Cloud Wave */}
+                <path
+                  d="M 0,0 L 1920,0 L 1920,110 C 1760,160 1640,85 1480,130 C 1320,175 1200,90 1040,135 C 880,180 760,95 600,135 C 440,175 320,90 160,130 C 80,155 0,115 0,115 Z"
+                  fill="url(#cloudFrontGrad)"
+                  filter="url(#cloudSoftBloom)"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ==========================================================
           STAGE 4: VELVET HEARTS BRAND REVEAL (Prestige Minimalist Design)
