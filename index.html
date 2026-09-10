@@ -41,10 +41,13 @@
     <!-- Image Preloading -->
     <link rel="preload" as="image" href="/velvet-heart-logo.png" type="image/png" fetchpriority="high" />
 
-    <!-- Google Fonts (Non-Render-Blocking Asynchronous Load with display=swap) -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=DM+Serif+Display:ital@0;1&family=Dancing+Script:wght@600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <!-- Critical Typography Fonts (High-Priority with display=swap for Instant FCP/LCP) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" />
+
+    <!-- Secondary Feature Fonts (Asynchronously Deferred for Our Diary & Letters) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=DM+Serif+Display:ital@0;1&family=Dancing+Script:wght@600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" media="print" onload="this.media='all'" />
     <noscript>
-      <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=DM+Serif+Display:ital@0;1&family=Dancing+Script:wght@600;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=DM+Serif+Display:ital@0;1&family=Dancing+Script:wght@600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
     </noscript>
 
     <!-- Velvet Hearts Favicon & Google Search Site Icon -->
@@ -289,7 +292,26 @@
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Instant Pre-paint Shell: Prevents blank flash and registers sub-second LCP before JS executes -->
+      <div id="vh-instant-shell" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#090408 0%,#160813 45%,#250c1c 100%);z-index:99999;color:#ffffff;font-family:'Playfair Display',Georgia,serif;text-align:center;padding:24px;">
+        <h1 style="font-size:clamp(44px,6.2vw,76px);font-weight:800;letter-spacing:4px;margin:0 0 16px;text-shadow:0 4px 30px rgba(225,29,72,0.65);">WELCOME</h1>
+        <p style="font-family:'Outfit',-apple-system,BlinkMacSystemFont,sans-serif;font-size:clamp(14px,1.3vw,18px);color:rgba(255,235,240,0.85);max-width:520px;margin:0;">Where intentional connections ignite into lifelong stories</p>
+      </div>
+    </div>
+    <script>
+      (function() {
+        try {
+          var seen = sessionStorage.getItem('vh-seen-welcome-splash');
+          var p = new URLSearchParams(window.location.search);
+          var isSplash = p.get('splash') === '1' || p.get('splash') === 'true';
+          if (seen === 'true' && !isSplash) {
+            var s = document.getElementById('vh-instant-shell');
+            if (s) s.style.display = 'none';
+          }
+        } catch (_) {}
+      })();
+    </script>
 
     <noscript>
       <!-- Grounding content for Search Crawlers, AI Bots, and non-JS clients -->

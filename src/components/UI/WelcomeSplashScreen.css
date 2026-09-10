@@ -201,7 +201,7 @@
   padding: 0 24px;
   z-index: 10;
   pointer-events: none;
-  animation: vws-welcome-fadein 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: vws-welcome-fadein 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: opacity, transform;
 }
 
@@ -211,8 +211,8 @@
 
 @keyframes vws-welcome-fadein {
   0% {
-    opacity: 0;
-    transform: translateY(25px) scale(0.96);
+    opacity: 0.85;
+    transform: translateY(14px) scale(0.98);
   }
   100% {
     opacity: 1;
