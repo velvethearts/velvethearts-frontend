@@ -410,6 +410,80 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           color: var(--gold-400, #d4ad6a);
         }
 
+        .legal-callout-emergency {
+          background: rgba(212, 38, 77, 0.12);
+          border: 1px solid rgba(226, 75, 116, 0.45);
+          border-left: 4px solid #e24b74;
+          border-radius: 0 12px 12px 0;
+          padding: 1.15rem 1.35rem;
+          margin: 1.5rem 0;
+          font-size: 0.88rem;
+          line-height: 1.65;
+          color: #ffe6ec;
+          box-shadow: 0 4px 16px rgba(184, 67, 106, 0.15);
+        }
+
+        .legal-callout-emergency strong {
+          color: #ff99b3;
+        }
+
+        .escalation-steps {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1rem;
+          margin-top: 1.25rem;
+        }
+
+        @media (min-width: 768px) {
+          .escalation-steps {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        .escalation-step {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(212, 173, 106, 0.2);
+          border-radius: 12px;
+          padding: 1rem 1.15rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.35rem;
+        }
+
+        .escalation-step-badge {
+          font-size: 0.72rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--gold-400, #d4ad6a);
+        }
+
+        .escalation-step-title {
+          font-size: 0.92rem;
+          font-weight: 600;
+          color: #ffffff;
+        }
+
+        .escalation-step-desc {
+          font-size: 0.82rem;
+          color: var(--text-secondary, #c7aeb7);
+          line-height: 1.45;
+          margin: 0;
+        }
+
+        .email-link {
+          color: var(--gold-400, #d4ad6a);
+          text-decoration: underline;
+          text-underline-offset: 3px;
+          font-weight: 600;
+          word-break: break-all;
+          transition: color 0.18s ease;
+        }
+
+        .email-link:hover {
+          color: #ffffff;
+        }
+
         /* Grievance Card */
         .grievance-card {
           background: linear-gradient(135deg, rgba(30, 22, 28, 0.8) 0%, rgba(18, 14, 17, 0.9) 100%);
@@ -474,18 +548,18 @@ const PrivacyPolicyContent = () => {
       <div className="legal-doc-hero">
         <div className="legal-tag-badge">
           <ShieldCheck size={14} weight="bold" />
-          <span>DPDPA 2023 &amp; IT Act 2000 Compliant</span>
+          <span>DPDPA 2023 &bull; IT Rules 2021 &bull; CERT-In Compliant</span>
         </div>
-        <h1 className="legal-doc-title font-display">Privacy Policy</h1>
+        <h1 className="legal-doc-title font-display">Privacy Policy &amp; Data Notice</h1>
         <div className="legal-doc-meta">
           <span className="legal-doc-meta-item">
-            <Clock size={14} /> Effective: September 10, 2026
+            <Clock size={14} /> Effective Date: September 11, 2026
           </span>
           <span className="legal-doc-meta-item">
             <MapPin size={14} /> Jurisdiction: Republic of India
           </span>
           <span className="legal-doc-meta-item">
-            <UserCheck size={14} /> Data Fiduciary: Velvet Hearts Dating Platforms
+            <UserCheck size={14} /> Data Fiduciary: Velvet Hearts Technologies India
           </span>
         </div>
       </div>
@@ -501,27 +575,42 @@ const PrivacyPolicyContent = () => {
             <Sparkle size={16} weight="fill" />
           </h4>
           <p>
-            Velvet Hearts takes transparency seriously. The application codebase, architecture, recommendation algorithms, and interface systems have been <strong>authored and synthesized utilizing Advanced Agentic Artificial Intelligence (Google DeepMind Antigravity AI Systems)</strong> under rigorous human engineering supervision and peer-review. AI models are applied strictly for vibe matchmaking, real-time photo aspect validation, and safety moderation, operating in complete compliance with the <strong>Digital Personal Data Protection Act, 2023</strong>.
+            Velvet Hearts operates with total technical transparency. The software application codebase, database architecture, communication schemas, and algorithmic matching mechanisms have been <strong>authored, generated, and synthesized utilizing Advanced Artificial Intelligence (Google DeepMind Antigravity AI Systems)</strong> under continuous human architectural supervision and validation. AI algorithms are deployed strictly for vibe affinity matching, biometric anti-spoofing verification, and safety moderation, operating in complete compliance with the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong>.
           </p>
         </div>
+      </div>
+
+      {/* Emergency Rule 3(2)(b) Takedown Notice */}
+      <div className="legal-callout-emergency">
+        <h4 style={{ margin: '0 0 0.5rem 0', color: '#ffffff', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <WarningCircle size={18} weight="fill" />
+          <span>Emergency 24-Hour Non-Consensual Sexual / Impersonation Material Removal</span>
+        </h4>
+        <p style={{ margin: 0 }}>
+          Under <strong>Rule 3(2)(b) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>, if you or someone you represent discovers any content on Velvet Hearts that depicts private areas, partial/full nudity, sexual conduct, or impersonation/deepfake imagery without consent, report it immediately to our Grievance Officer at{" "}
+          <a href="mailto:velvethearts.in@gmail.com?subject=[EMERGENCY%20RULE%203(2)(b)%20TAKEDOWN]" className="email-link">
+            velvethearts.in@gmail.com
+          </a>{" "}
+          with subject line <strong>&ldquo;[EMERGENCY RULE 3(2)(b) TAKEDOWN]&rdquo;</strong>. Velvet Hearts will take all reasonable and practicable measures to remove or disable access to such material <strong>within 24 hours of receiving the notice</strong>.
+        </p>
       </div>
 
       {/* 1. Introduction & Regulatory Framework */}
       <section className="legal-section-card">
         <h2 className="legal-section-title font-display">
           <FileText size={22} className="legal-section-icon" />
-          <span>1. Introduction &amp; Legal Framework</span>
+          <span>1. Regulatory Framework &amp; Data Notice</span>
         </h2>
         <p className="legal-p">
-          Velvet Hearts (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) operates an intentional relationship platform tailored for authentic connections in India. This Privacy Policy outlines how we collect, store, encrypt, process, and safeguard your personal data.
+          Velvet Hearts (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) operates an intentional relationship and discovery platform tailored for authentic connections across India. This Privacy Policy is published in strict compliance with Section 5 of the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act, 2023)</strong> and Rule 3(1) of the <strong>Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>.
         </p>
         <p className="legal-p">
-          This document is published in accordance with the provisions of:
+          Under Indian law:
         </p>
         <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li><strong>The Digital Personal Data Protection Act, 2023 (DPDP Act, 2023)</strong>, under which Velvet Hearts functions as a <em>Data Fiduciary</em> and you act as a <em>Data Principal</em>.</li>
-          <li><strong>The Information Technology Act, 2000</strong> and <strong>The Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>.</li>
-          <li><strong>Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011</strong>.</li>
+          <li><strong>Velvet Hearts Technologies</strong> serves as the <strong>Data Fiduciary</strong> determining the purpose and means of processing personal data.</li>
+          <li>You, as the registered member and citizen/resident of India, are the <strong>Data Principal</strong> entitled to constitutional and statutory privacy rights.</li>
+          <li>Our cloud infrastructure and transmission adhere to the <strong>Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011</strong> and <strong>CERT-In Cyber Security Directions 2022</strong>.</li>
         </ul>
       </section>
 
@@ -529,10 +618,10 @@ const PrivacyPolicyContent = () => {
       <section className="legal-section-card">
         <h2 className="legal-section-title font-display">
           <HardDrive size={22} className="legal-section-icon" />
-          <span>2. Data Stored &amp; Processing Activities</span>
+          <span>2. Exhaustive Disclosure of Data Stored &amp; Processed</span>
         </h2>
         <p className="legal-p">
-          In strict compliance with Section 5 and Section 6 of the DPDP Act 2023, we only collect data essential for providing genuine matching services and maintaining female-first and user physical safety. Below is the full inventory of data stored:
+          In strict compliance with Section 5(1) of the DPDP Act 2023, we provide Data Principals with an explicit, itemized inventory of all personal data collected and stored:
         </p>
 
         <div className="data-category-grid">
@@ -542,10 +631,10 @@ const PrivacyPolicyContent = () => {
               <span>Identity &amp; Authentication Data</span>
             </div>
             <ul>
-              <li><strong>Phone Number:</strong> Verified via Firebase SMS One-Time Password (OTP).</li>
-              <li><strong>Email Address:</strong> Optional social/OAuth profile contact.</li>
-              <li><strong>Name &amp; Age:</strong> Full display name and date of birth (enforces mandatory 18+ requirement).</li>
-              <li><strong>Gender &amp; Orientation:</strong> Declared gender and romantic orientation for discover filtering.</li>
+              <li><strong>Mobile Phone Number:</strong> Verified via cryptographically salted Firebase SMS One-Time Password (OTP).</li>
+              <li><strong>Unique Identifiers:</strong> Randomly generated alphanumeric Firebase User ID (UID).</li>
+              <li><strong>Legal Name &amp; Date of Birth:</strong> Enforces the mandatory 18+ age threshold under Section 9 of the DPDP Act 2023.</li>
+              <li><strong>Gender &amp; Romantic Preferences:</strong> Declared voluntarily to facilitate reciprocal discovery filters.</li>
             </ul>
           </div>
 
@@ -555,9 +644,9 @@ const PrivacyPolicyContent = () => {
               <span>Biometric &amp; Photo Authenticity</span>
             </div>
             <ul>
-              <li><strong>Profile Photos:</strong> Up to 6 curated lifestyle images (hosted on Cloudinary CDN).</li>
-              <li><strong>Verification Selfie:</strong> Real-time pose verification photo used solely to confirm authenticity and prevent catfishing.</li>
-              <li><strong>Face Geometry Vectors:</strong> Mathematical hash descriptors to match verification selfies against profile photos. Raw biometric templates are never sold or shared.</li>
+              <li><strong>Curated Profile Photos:</strong> Up to 6 lifestyle pictures stored on SOC2-certified Cloudinary CDN.</li>
+              <li><strong>Real-Time Verification Selfie:</strong> Live pose selfie captured solely to verify user authenticity and prevent catfishing.</li>
+              <li><strong>16-Zone Face Geometry Descriptors:</strong> Mathematical coordinate vectors used to compare the verification selfie against profile pictures. <em>Raw facial biometric templates are never sold, leased, or exported to external parties.</em></li>
             </ul>
           </div>
 
@@ -567,84 +656,123 @@ const PrivacyPolicyContent = () => {
               <span>Encrypted Communications</span>
             </div>
             <ul>
-              <li><strong>Direct Messages:</strong> Chat text stored with AES-256 encryption at rest.</li>
-              <li><strong>Voice Notes:</strong> Temporary audio voice recordings shared between mutual connections.</li>
-              <li><strong>Rewind Letters:</strong> Sealed digital letters with cryptographically scheduled delivery dates.</li>
-              <li><strong>Our Diary:</strong> Mutual scrapbook memories and photos between matched partners.</li>
+              <li><strong>Direct Messages:</strong> Private chat messages encrypted at rest using AES-256 standards.</li>
+              <li><strong>Voice Intros &amp; Audio Notes:</strong> 2-minute voice intros and audio recordings shared with mutual matches.</li>
+              <li><strong>Rewind Letters:</strong> Time-locked digital correspondence scheduled for future delivery between connections.</li>
+              <li><strong>Our Diary:</strong> Private scrapbook moments, photos, and milestones created mutually between matched couples.</li>
             </ul>
           </div>
 
           <div className="data-cat-item">
             <div className="data-cat-header">
               <LockKey size={18} />
-              <span>Technical &amp; Safety Records</span>
+              <span>Technical, Location &amp; Safety Logs</span>
             </div>
             <ul>
-              <li><strong>Device &amp; Session Identifiers:</strong> Anonymous browser fingerprint and device token for anti-account hijacking.</li>
-              <li><strong>City &amp; State:</strong> Regional location data for distance calculations; precise GPS is only collected upon explicit user consent.</li>
-              <li><strong>Safety &amp; Block Records:</strong> User block lists, report tickets, compliance warnings, and moderation audit trails.</li>
+              <li><strong>Device Telemetry:</strong> Device model, OS version, and browser fingerprint to detect unauthorized account takeovers.</li>
+              <li><strong>City, State &amp; Distance Radius:</strong> Approximate location for distance matching. Precise GPS is only retrieved upon explicit device permission.</li>
+              <li><strong>Safety Audit Logs:</strong> Timestamped block lists, report tickets, dispute notes, and suspension records for law enforcement compliance.</li>
             </ul>
           </div>
         </div>
 
         <div className="legal-callout-box">
-          <strong>Zero Sale of Data:</strong> Velvet Hearts does <strong>not sell, lease, or monetize</strong> your personal data or photos to third-party data brokers, ad networks, or external AI training aggregators.
+          <strong>Zero Monetization of Data:</strong> Velvet Hearts does <strong>not sell, rent, monetize, or trade</strong> your personal data, biometric vectors, photos, or private communications to data aggregators, advertising brokers, or external AI model training consortiums.
         </div>
       </section>
 
-      {/* 3. Consent & Purpose Limitation */}
+      {/* 3. Consent Architecture & Purpose Limitation */}
       <section className="legal-section-card">
         <h2 className="legal-section-title font-display">
           <CheckCircle size={22} className="legal-section-icon" />
-          <span>3. Lawful Consent Architecture</span>
+          <span>3. Lawful Consent Architecture (Section 6, DPDP Act 2023)</span>
         </h2>
         <p className="legal-p">
-          Processing of personal data is grounded in <strong>freely given, specific, informed, and unambiguous consent</strong> under Section 6 of the DPDP Act 2023. You have the right to withdraw consent at any time through your Profile &amp; Account Settings. Withdrawal of consent does not affect the legality of processing prior to such withdrawal.
+          All data processing is grounded in <strong>freely given, specific, informed, unconditional, and unambiguous consent</strong> with clear affirmative action. You retain the unconditional right to withdraw consent at any time through Account Settings or by contacting our Grievance Officer. Withdrawal of consent results in immediate cessation of processing and initiation of profile erasure, without impacting lawful processing carried out prior to withdrawal.
         </p>
       </section>
 
-      {/* 4. Data Principal Rights (Under DPDP Act 2023) */}
+      {/* 4. Statutory Rights of the Data Principal */}
       <section className="legal-section-card">
         <h2 className="legal-section-title font-display">
           <Scales size={22} className="legal-section-icon" />
-          <span>4. Your Rights as a Data Principal</span>
+          <span>4. Statutory Rights of Data Principals</span>
         </h2>
         <p className="legal-p">
-          As a registered citizen or resident of India, the DPDP Act 2023 guarantees you the following statutory rights:
+          Under Sections 11, 12, 13, and 14 of the DPDP Act 2023, you are endowed with enforceable statutory rights:
         </p>
         <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li><strong>Right to Access:</strong> You may request a complete summary of personal data held about you and any third-party sharing.</li>
-          <li><strong>Right to Correction &amp; Updation:</strong> You can edit and rectify inaccurate, incomplete, or out-of-date personal data directly in the app.</li>
-          <li><strong>Right to Erasure (&ldquo;Right to be Forgotten&rdquo;):</strong> When you delete your account via Settings, all profile data, photos, diary entries, and matching algorithms are permanently purged within 30 days.</li>
-          <li><strong>Right to Nominate:</strong> You have the right to designate an individual who may exercise your rights in the event of death or incapacity.</li>
-          <li><strong>Right of Grievance Redressal:</strong> A statutory mechanism to resolve privacy disputes promptly via our designated Grievance Officer.</li>
+          <li><strong>Right to Access Information (Section 11):</strong> Request a summary of personal data being processed, processing activities conducted, and third-party recipients.</li>
+          <li><strong>Right to Correction &amp; Updation (Section 12):</strong> Rectify misleading, inaccurate, or incomplete personal data via the in-app Edit Profile suite.</li>
+          <li><strong>Right to Erasure (Section 12):</strong> Request permanent deletion of your account and personal data (&ldquo;Right to be Forgotten&rdquo;) via Settings or email.</li>
+          <li><strong>Right of Grievance Redressal (Section 13):</strong> Access to rapid, time-bound statutory redressal through our designated Grievance Officer.</li>
+          <li><strong>Right to Nominate (Section 14):</strong> Designate a representative who may exercise your privacy rights in the event of death or physical/mental incapacity.</li>
         </ul>
       </section>
 
-      {/* 5. Age Restriction & Child Safety */}
+      {/* 5. Statutory 180-Day Data Retention */}
       <section className="legal-section-card">
         <h2 className="legal-section-title font-display">
-          <WarningCircle size={22} className="legal-section-icon" />
-          <span>5. Strict 18+ Age Requirement</span>
+          <Clock size={22} className="legal-section-icon" />
+          <span>5. Data Retention &amp; Mandatory 180-Day Regulatory Storage</span>
         </h2>
         <p className="legal-p">
-          In accordance with Section 9 of the DPDP Act 2023 (Processing of personal data of children), <strong>Velvet Hearts strictly prohibits individuals under 18 years of age</strong> from creating an account or using the platform. We do not knowingly track or process personal data belonging to minors. Any account found to belong to a minor is terminated immediately.
+          When you delete your account, your profile, photos, voice intros, and matching entries are immediately deactivated and hidden from all users.
+        </p>
+        <p className="legal-p">
+          However, in mandatory compliance with <strong>Rule 3(1)(h) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong> and the <strong>CERT-In Cyber Security Directions 2022 (under Section 70B of the IT Act, 2000)</strong>, Velvet Hearts preserves account registration details, authentication timestamps, and transaction logs in secure encrypted cold storage for a minimum statutory period of <strong>180 (one hundred eighty) days</strong> following account deletion, or longer where ordered by a competent court of law or lawful investigative agency. Following expiration of this statutory retention period, all remaining records are permanently expunged.
         </p>
       </section>
 
-      {/* 6. Statutory Grievance Officer */}
+      {/* 6. Cybersecurity, Breach Notification & CERT-In */}
+      <section className="legal-section-card">
+        <h2 className="legal-section-title font-display">
+          <LockKey size={22} className="legal-section-icon" />
+          <span>6. Cybersecurity Safeguards &amp; Breach Protocol</span>
+        </h2>
+        <p className="legal-p">
+          Velvet Hearts implements state-of-the-art security practices under Section 8(5) of the DPDP Act 2023 and the SPDI Rules 2011, including TLS 1.3 transit encryption, AES-256 storage encryption, rate-limiting, and SQL/NoSQL injection mitigations.
+        </p>
+        <p className="legal-p">
+          In the event of an identified personal data breach, Velvet Hearts will formally notify the <strong>Data Protection Board of India (DPBI)</strong> and each affected Data Principal without undue delay, in accordance with <strong>Section 8(6) of the DPDP Act 2023</strong>. Furthermore, relevant cybersecurity incidents will be reported to <strong>CERT-In</strong> within statutory timeframes (within 6 hours of discovery).
+        </p>
+      </section>
+
+      {/* 7. Cross-Border Data Processing */}
+      <section className="legal-section-card">
+        <h2 className="legal-section-title font-display">
+          <MapPin size={22} className="legal-section-icon" />
+          <span>7. Cross-Border Data Processing (Section 16, DPDP Act 2023)</span>
+        </h2>
+        <p className="legal-p">
+          Personal data may be hosted on secure cloud infrastructure provided by Google Firebase (Google Cloud Platform) and Cloudinary CDN. In compliance with <strong>Section 16 of the DPDP Act 2023</strong>, Velvet Hearts only transfers data to countries and territories that are not restricted by the Central Government of India, ensuring equivalent or superior security safeguards.
+        </p>
+      </section>
+
+      {/* 8. Child Safety & Absolute Minor Ban */}
+      <section className="legal-section-card">
+        <h2 className="legal-section-title font-display">
+          <WarningCircle size={22} className="legal-section-icon" />
+          <span>8. Child Protection &amp; Strict 18+ Prohibition (Section 9, DPDP Act)</span>
+        </h2>
+        <p className="legal-p">
+          Under Section 9 of the DPDP Act 2023, Velvet Hearts enforces a <strong>strict, absolute prohibition on users under 18 years of age</strong>. We do not knowingly track, process, or monitor children. Any account found to be operated by an individual under 18 will be permanently terminated with immediate effect and all associated records purged.
+        </p>
+      </section>
+
+      {/* 9. Statutory Grievance Redressal & Point of Contact */}
       <section className="legal-section-card">
         <h2 className="legal-section-title font-display">
           <EnvelopeSimple size={22} className="legal-section-icon" />
-          <span>6. Statutory Grievance Redressal Officer</span>
+          <span>9. Statutory Grievance Redressal Officer &amp; Escalation Mechanism</span>
         </h2>
         <p className="legal-p">
-          In accordance with Rule 3(2) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, and the DPDP Act 2023, the details of our designated Grievance Officer are as follows:
+          In compliance with Rule 3(2)(a) of the IT Rules 2021 and Section 13 of the DPDP Act 2023, Velvet Hearts has appointed a designated Grievance &amp; Data Protection Officer:
         </p>
 
         <div className="grievance-card">
           <h4 style={{ color: '#ffffff', margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
-            Grievance &amp; Data Protection Officer
+            Grievance Redressal &amp; Data Protection Officer
           </h4>
           <div className="grievance-row">
             <div className="grievance-detail">
@@ -652,17 +780,48 @@ const PrivacyPolicyContent = () => {
               <span className="grievance-val">Aditya Sharma (Head of Trust &amp; Safety)</span>
             </div>
             <div className="grievance-detail">
-              <span className="grievance-label">Official Email</span>
-              <span className="grievance-val">grievance-officer@velvethearts.in</span>
+              <span className="grievance-label">Official Grievance Email</span>
+              <span className="grievance-val">
+                <a href="mailto:velvethearts.in@gmail.com" className="email-link">
+                  velvethearts.in@gmail.com
+                </a>
+              </span>
             </div>
             <div className="grievance-detail">
-              <span className="grievance-label">Statutory Response Time</span>
-              <span className="grievance-val">Acknowledgment within 24h &bull; Redressal within 15 days</span>
+              <span className="grievance-label">Statutory Response SLA</span>
+              <span className="grievance-val">Acknowledged in 24h &bull; Resolved in 15 days (24h for Rule 3(2)(b))</span>
             </div>
             <div className="grievance-detail">
-              <span className="grievance-label">Physical Address</span>
+              <span className="grievance-label">Registered Office</span>
               <span className="grievance-val">Velvet Hearts Trust Office, Cyber City, Gurugram, Haryana 122002, India</span>
             </div>
+          </div>
+        </div>
+
+        <p className="legal-p" style={{ marginTop: '1.5rem' }}>
+          <strong>3-Tier Grievance Escalation Hierarchy:</strong>
+        </p>
+        <div className="escalation-steps">
+          <div className="escalation-step">
+            <span className="escalation-step-badge">Tier 1 &bull; Internal</span>
+            <span className="escalation-step-title">Grievance Officer</span>
+            <p className="escalation-step-desc">
+              Submit your complaint directly to <a href="mailto:velvethearts.in@gmail.com" className="email-link">velvethearts.in@gmail.com</a>. Acknowledgment guaranteed within 24 hours.
+            </p>
+          </div>
+          <div className="escalation-step">
+            <span className="escalation-step-badge">Tier 2 &bull; IT Rules 2021</span>
+            <span className="escalation-step-title">Grievance Appellate Committee (GAC)</span>
+            <p className="escalation-step-desc">
+              If dissatisfied with our resolution, appeal to the Central Government&rsquo;s GAC at <a href="https://gac.gov.in" target="_blank" rel="noopener noreferrer" className="email-link">https://gac.gov.in</a> within 30 days under Rule 3A.
+            </p>
+          </div>
+          <div className="escalation-step">
+            <span className="escalation-step-badge">Tier 3 &bull; DPDP Act 2023</span>
+            <span className="escalation-step-title">Data Protection Board of India</span>
+            <p className="escalation-step-desc">
+              Data Principals may lodge formal complaints alleging statutory privacy non-compliance directly with the <strong>Data Protection Board of India (DPBI)</strong>.
+            </p>
           </div>
         </div>
       </section>
@@ -680,18 +839,18 @@ const TermsOfServiceContent = () => {
       <div className="legal-doc-hero">
         <div className="legal-tag-badge">
           <Scales size={14} weight="bold" />
-          <span>IT Act 2000 &amp; Contract Act 1872 Compliant</span>
+          <span>IT Act 2000 &bull; IT Rules 2021 &bull; Contract Act 1872 Compliant</span>
         </div>
-        <h1 className="legal-doc-title font-display">Terms of Service</h1>
+        <h1 className="legal-doc-title font-display">Terms of Service &amp; User Agreement</h1>
         <div className="legal-doc-meta">
           <span className="legal-doc-meta-item">
-            <Clock size={14} /> Effective: September 10, 2026
+            <Clock size={14} /> Effective Date: September 11, 2026
           </span>
           <span className="legal-doc-meta-item">
             <MapPin size={14} /> Jurisdiction: Courts of New Delhi, India
           </span>
           <span className="legal-doc-meta-item">
-            <ShieldCheck size={14} /> Governed by Indian Law
+            <ShieldCheck size={14} /> Governed by the Laws of India
           </span>
         </div>
       </div>
@@ -703,26 +862,37 @@ const TermsOfServiceContent = () => {
         </div>
         <div className="ai-banner-content">
           <h4>
-            <span>AI-Driven Software Notice &amp; Platform Architecture</span>
+            <span>AI-Authored Software Architecture &amp; Algorithmic Heuristics Notice</span>
             <Sparkle size={16} weight="fill" />
           </h4>
           <p>
-            Users acknowledge that Velvet Hearts software, backend infrastructure, compatibility metrics, and user safety monitors are <strong>architected and written utilizing Advanced AI Systems (Google DeepMind Antigravity AI)</strong> under ongoing human oversight. While our autonomous systems strive for 99.9% uptime and zero-bias matching, you agree to engage with care, common sense, and personal discretion.
+            Users acknowledge that Velvet Hearts software, backend infrastructure, compatibility metrics, and user safety monitors are <strong>authored, generated, and synthesized utilizing Advanced Artificial Intelligence (Google DeepMind Antigravity AI Systems)</strong> under ongoing human oversight. Compatibility percentages are entertaining affinity suggestions and do not constitute character endorsements, background verifications, or relationship warranties. The service is provided strictly on an &ldquo;AS-IS&rdquo; and &ldquo;AS-AVAILABLE&rdquo; basis.
           </p>
         </div>
       </div>
 
-      {/* 1. Binding Agreement */}
+      {/* Emergency Rule 3(2)(b) Banner */}
+      <div className="legal-callout-emergency">
+        <h4 style={{ margin: '0 0 0.5rem 0', color: '#ffffff', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <WarningCircle size={18} weight="fill" />
+          <span>Rule 3(2)(b) Emergency Takedown Mechanism (24-Hour SLA)</span>
+        </h4>
+        <p style={{ margin: 0 }}>
+          If any user uploads non-consensual sexual material, nudity, intimate content, or impersonated/morphed media of you, email our Grievance Officer immediately at{" "}
+          <a href="mailto:velvethearts.in@gmail.com?subject=[EMERGENCY%20RULE%203(2)(b)%20TAKEDOWN]" className="email-link">
+            velvethearts.in@gmail.com
+          </a>. Velvet Hearts enforces a zero-tolerance policy and guarantees access removal <strong>within 24 hours of complaint receipt</strong>.
+        </p>
+      </div>
+
+      {/* 1. Acceptance of Terms */}
       <section className="legal-section-card">
         <h2 className="legal-section-title font-display">
           <FileText size={22} className="legal-section-icon" />
-          <span>1. Acceptance of Terms</span>
+          <span>1. Acceptance of Terms &amp; Binding Contract</span>
         </h2>
         <p className="legal-p">
-          By creating an account, browsing profiles, or accessing Velvet Hearts (&ldquo;App&rdquo; or &ldquo;Service&rdquo;), you enter into a legally binding contract under the <strong>Indian Contract Act, 1872</strong> with Velvet Hearts Dating Technologies India Private Limited.
-        </p>
-        <p className="legal-p">
-          If you do not agree to these Terms, you must immediately cease using the platform and delete your account.
+          By downloading, installing, registering, or accessing Velvet Hearts (&ldquo;App&rdquo; or &ldquo;Platform&rdquo;), you enter into a legally enforceable contract under the <strong>Indian Contract Act, 1872</strong> with Velvet Hearts Technologies. If you do not accept all terms of this User Agreement, you are not authorized to use the Service and must delete your account immediately.
         </p>
       </section>
 
@@ -730,84 +900,165 @@ const TermsOfServiceContent = () => {
       <section className="legal-section-card">
         <h2 className="legal-section-title font-display">
           <UserCheck size={22} className="legal-section-icon" />
-          <span>2. Eligibility Criteria</span>
+          <span>2. Eligibility &amp; Statutory Disqualifications</span>
         </h2>
         <p className="legal-p">
-          To register for or use Velvet Hearts, you represent and warrant that:
+          By creating an account, you solemnly represent, warrant, and covenant that:
         </p>
         <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li>You are at least <strong>18 (eighteen) years of age</strong> as of the date of registration.</li>
-          <li>You are legally competent to enter into a binding contract under Indian law.</li>
-          <li>You have never been convicted of an offence involving violence, harassment, sexual misconduct, or financial fraud under the <strong>Bharatiya Nyaya Sanhita, 2023 (BNS)</strong> or equivalent penal statutes.</li>
-          <li>You do not have more than one active account on Velvet Hearts.</li>
+          <li>You are at least <strong>18 (eighteen) years of age</strong> as of the registration date.</li>
+          <li>You have the legal capacity to enter into a valid contract under Indian law.</li>
+          <li>You have never been convicted of any sexual offense, violent crime, cyber harassment, or moral turpitude under the <strong>Bharatiya Nyaya Sanhita, 2023 (BNS)</strong>, <strong>Protection of Children from Sexual Offences (POCSO) Act, 2012</strong>, or equivalent criminal statutes.</li>
+          <li>You are not barred from using communications services under the laws of India.</li>
+          <li>You will maintain only one verified personal account on the Platform.</li>
         </ul>
       </section>
 
-      {/* 3. Prohibited Conduct (Rule 3(1)(b) IT Rules 2021) */}
+      {/* 3. Comprehensive Rule 3(1)(b) Prohibited Conduct */}
       <section className="legal-section-card">
         <h2 className="legal-section-title font-display">
           <WarningCircle size={22} className="legal-section-icon" />
-          <span>3. User Conduct &amp; Prohibited Activities</span>
+          <span>3. User Conduct &amp; Prohibited Content (Rule 3(1)(b) IT Rules 2021)</span>
         </h2>
         <p className="legal-p">
-          In compliance with Rule 3(1)(b) of the <strong>Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>, you agree not to host, display, upload, modify, publish, transmit, or share any information that:
+          In mandatory adherence to <strong>Rule 3(1)(b) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>, as amended, you covenant that you shall NOT host, display, upload, modify, publish, transmit, store, update, or share any information that:
         </p>
         <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li>Belongs to another person without authorization (impersonation, catfishing, fake credentials).</li>
-          <li>Is defamatory, obscene, pornographic, paedophilic, invasive of another&rsquo;s privacy, or bodily privacy (including non-consensual sexual images).</li>
-          <li>Harasses, intimidates, stalks, or causes harm to women, men, or LGBTQ+ individuals.</li>
-          <li>Promotes commercial solicitation, prostitution, human trafficking, escort services, or fraudulent financial requests.</li>
-          <li>Infringes any patent, trademark, copyright, or other proprietary rights.</li>
-          <li>Deceives or misleads the addressee about the origin of messages or contains software viruses or malicious code.</li>
-          <li>Threatens the unity, integrity, defence, security or sovereignty of India.</li>
+          <li>Belongs to another person and to which you do not have any right.</li>
+          <li>Is obscene, pornographic, paedophilic, invasive of another&rsquo;s bodily privacy, insulting or harassing on the basis of gender, racially or ethnically objectionable, or relating to or encouraging money laundering or gambling.</li>
+          <li>Is harmful to child or minor in any manner whatsoever.</li>
+          <li>Infringes any patent, trademark, copyright, or other proprietary rights of any third party.</li>
+          <li>Deceives or misleads the addressee about the origin of the message or knowingly transmits any information which is patently false or misleading in nature.</li>
+          <li>Impersonates another person (including creating fraudulent catfish profiles or sharing someone else&rsquo;s photos/identity).</li>
+          <li>Threatens the unity, integrity, defence, security, or sovereignty of India, friendly relations with foreign states, or public order, or causes incitement to the commission of any cognisable offence or prevents investigation of any offence.</li>
+          <li>Contains software virus or any other computer code, file, or program designed to interrupt, destroy, or limit the functionality of any computer resource.</li>
+          <li>Is in the nature of an online game that is not verified as a permissible online game, or involves real-money gambling.</li>
+          <li>Is patently false, untrue, or misleading in nature with intent to deceive or harass any person or entity.</li>
         </ul>
 
         <div className="legal-callout-box">
-          <strong>Zero Tolerance for Abuse:</strong> Violations of conduct result in immediate permanent account suspension, reporting to law enforcement authorities where applicable, and device-level blacklisting.
+          <strong>Zero Tolerance &amp; Law Enforcement Reporting:</strong> Any violation of Rule 3(1)(b) results in immediate, non-appealable account ban, device fingerprint blacklisting, and where deemed necessary, proactive transmission of records to law enforcement authorities.
         </div>
       </section>
 
-      {/* 4. Safety & Offline Encounters */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <ShieldCheck size={22} className="legal-section-icon" />
-          <span>4. Real-World Safety &amp; Disclaimers</span>
-        </h2>
-        <p className="legal-p">
-          While Velvet Hearts mandates selfie verification and biometric authenticity checks, <strong>we do not conduct criminal background checks</strong> on every user. You are solely responsible for your interactions with other members. Always follow our safety guidelines: meet in public spaces, notify a trusted friend, and never send money or financial credentials to anyone you meet online.
-        </p>
-      </section>
-
-      {/* 5. Intellectual Property & AI Generation */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <Cpu size={22} className="legal-section-icon" />
-          <span>5. Intellectual Property &amp; AI Authorship</span>
-        </h2>
-        <p className="legal-p">
-          All trademarks, logos, visual aesthetics, UI assets, and AI-synthesized software code comprising the Velvet Hearts platform are the proprietary intellectual property of Velvet Hearts. Users retain copyright in the photos and text they submit, but grant Velvet Hearts a non-exclusive, royalty-free license to host, display, and format content exclusively for operating the platform.
-        </p>
-      </section>
-
-      {/* 6. Intermediary Status & Safe Harbor */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <LockKey size={22} className="legal-section-icon" />
-          <span>6. Intermediary Status (Section 79, IT Act 2000)</span>
-        </h2>
-        <p className="legal-p">
-          Velvet Hearts operates as an <em>intermediary</em> under Section 2(1)(w) of the Information Technology Act, 2000. Under Section 79 of the IT Act, Velvet Hearts is not liable for third-party information, data, or communication links made available by users, provided due diligence obligations under the IT Rules 2021 are observed.
-        </p>
-      </section>
-
-      {/* 7. Dispute Resolution & Governing Jurisdiction */}
+      {/* 4. Criminal Liabilities & Penal Provisions */}
       <section className="legal-section-card">
         <h2 className="legal-section-title font-display">
           <Scales size={22} className="legal-section-icon" />
-          <span>7. Dispute Resolution &amp; Jurisdiction</span>
+          <span>4. Criminal Liabilities under Bharatiya Nyaya Sanhita &amp; IT Act</span>
         </h2>
         <p className="legal-p">
-          These Terms are governed by and construed in accordance with the substantive laws of the <strong>Republic of India</strong>. Any dispute, claim, or controversy arising out of or relating to these Terms shall be subject to the exclusive jurisdiction of the competent civil courts located in <strong>New Delhi, India</strong>.
+          Users are formally cautioned that engaging in harassment, non-consensual recordings, identity theft, or extortion on Velvet Hearts triggers severe criminal liabilities under Indian law:
+        </p>
+        <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
+          <li><strong>Section 66E, IT Act 2000:</strong> Capturing or transmitting images of private body areas without consent (imprisonment up to 3 years or fine up to ₹2,00,000).</li>
+          <li><strong>Section 67 &amp; 67A, IT Act 2000:</strong> Transmitting obscene or sexually explicit material in electronic form (rigorous imprisonment up to 5 years / 7 years).</li>
+          <li><strong>Section 67B, IT Act 2000:</strong> Depicting children in sexually explicit acts (rigorous imprisonment up to 7 years).</li>
+          <li><strong>Sections 75, 78 &amp; 79, Bharatiya Nyaya Sanhita 2023 (BNS):</strong> Sexual harassment, cyber stalking, and assault or criminal force to outrage the modesty of a woman.</li>
+          <li><strong>Sections 318 &amp; 319, BNS:</strong> Cheating by personation (catfishing and romance fraud).</li>
+          <li><strong>Section 308, BNS:</strong> Extortion, sextortion, and coercion.</li>
+        </ul>
+        <p className="legal-p">
+          Velvet Hearts cooperates fully with Cyber Crime Cells and Indian Law Enforcement Agencies (LEAs) under <strong>Section 94 of the Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS)</strong> / Section 91 CrPC upon receiving lawful notices.
+        </p>
+      </section>
+
+      {/* 5. Intermediary Status & Safe Harbor (Section 79) */}
+      <section className="legal-section-card">
+        <h2 className="legal-section-title font-display">
+          <LockKey size={22} className="legal-section-icon" />
+          <span>5. Intermediary Status &amp; Safe Harbor (Section 79, IT Act 2000)</span>
+        </h2>
+        <p className="legal-p">
+          Velvet Hearts qualifies as an <em>intermediary</em> under Section 2(1)(w) of the Information Technology Act, 2000. In accordance with Section 79 of the IT Act, Velvet Hearts provides a platform for user interactions and is not responsible or liable for user-generated content, chats, voice notes, or off-platform physical interactions, provided due diligence obligations under the IT Rules 2021 are maintained.
+        </p>
+      </section>
+
+      {/* 6. Offline Dating & Real-World Encounters */}
+      <section className="legal-section-card">
+        <h2 className="legal-section-title font-display">
+          <ShieldCheck size={22} className="legal-section-icon" />
+          <span>6. Offline Safety &amp; Assumption of Risk</span>
+        </h2>
+        <p className="legal-p">
+          Velvet Hearts does <strong>not conduct criminal background checks</strong> on its members. You agree that you are solely and exclusively responsible for your interactions with other users. You acknowledge the inherent risks in online dating and agree to exercise personal caution: always meet in public locations, inform trusted friends or family, and never transfer money, UPI payments, cryptocurrency, or banking OTPs to anyone met on the Platform.
+        </p>
+      </section>
+
+      {/* 7. Limitation of Liability & Disclaimers */}
+      <section className="legal-section-card">
+        <h2 className="legal-section-title font-display">
+          <WarningCircle size={22} className="legal-section-icon" />
+          <span>7. Comprehensive Limitation of Liability &amp; Disclaimers</span>
+        </h2>
+        <p className="legal-p">
+          TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE INDIAN LAW, VELVET HEARTS, ITS CREATORS, DEVELOPERS, DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, ARISING OUT OF:
+        </p>
+        <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
+          <li>YOUR ACCESS TO, USE OF, OR INABILITY TO ACCESS THE SERVICE;</li>
+          <li>THE CONDUCT OR CONTENT OF ANY USER OR THIRD PARTY ON THE SERVICE;</li>
+          <li>UNAUTHORIZED ACCESS, USE, OR ALTERATION OF YOUR CONTENT OR DATA;</li>
+          <li>OFFLINE IN-PERSON DATING ENCOUNTERS, PHYSICAL DISPUTES, OR FINANCIAL TRANSACTIONS BETWEEN USERS.</li>
+        </ul>
+      </section>
+
+      {/* 8. Intellectual Property & AI Codebase License */}
+      <section className="legal-section-card">
+        <h2 className="legal-section-title font-display">
+          <Cpu size={22} className="legal-section-icon" />
+          <span>8. Intellectual Property &amp; User Content License</span>
+        </h2>
+        <p className="legal-p">
+          All proprietary trademarks, logos, visual designs, and AI-synthesized software code comprising Velvet Hearts remain the exclusive property of Velvet Hearts Technologies. You retain copyright in the photos and prompts you submit; however, by uploading content, you grant Velvet Hearts a non-exclusive, royalty-free, worldwide license to host, display, and format your content solely for operating the platform.
+        </p>
+      </section>
+
+      {/* 9. Grievance Redressal & Point of Contact */}
+      <section className="legal-section-card">
+        <h2 className="legal-section-title font-display">
+          <EnvelopeSimple size={22} className="legal-section-icon" />
+          <span>9. Grievance Redressal &amp; Point of Contact</span>
+        </h2>
+        <p className="legal-p">
+          For any legal inquiries, rule violations, or technical grievances, contact our Grievance Officer:
+        </p>
+        <div className="grievance-card">
+          <h4 style={{ color: '#ffffff', margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
+            Statutory Grievance Officer
+          </h4>
+          <div className="grievance-row">
+            <div className="grievance-detail">
+              <span className="grievance-label">Designated Officer</span>
+              <span className="grievance-val">Aditya Sharma (Head of Trust &amp; Safety)</span>
+            </div>
+            <div className="grievance-detail">
+              <span className="grievance-label">Official Contact Email</span>
+              <span className="grievance-val">
+                <a href="mailto:velvethearts.in@gmail.com" className="email-link">
+                  velvethearts.in@gmail.com
+                </a>
+              </span>
+            </div>
+            <div className="grievance-detail">
+              <span className="grievance-label">Statutory Redressal SLA</span>
+              <span className="grievance-val">24h Acknowledgment &bull; 15 Days Resolution (24h for Rule 3(2)(b))</span>
+            </div>
+            <div className="grievance-detail">
+              <span className="grievance-label">Registered Address</span>
+              <span className="grievance-val">Velvet Hearts Trust Office, Cyber City, Gurugram, Haryana 122002, India</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 10. Governing Law & Dispute Resolution */}
+      <section className="legal-section-card">
+        <h2 className="legal-section-title font-display">
+          <Scales size={22} className="legal-section-icon" />
+          <span>10. Governing Law &amp; Exclusive Jurisdiction</span>
+        </h2>
+        <p className="legal-p">
+          These Terms and any dispute or claim arising out of or in connection with them shall be governed by and construed in accordance with the substantive laws of the <strong>Republic of India</strong>, without regard to conflict of law principles. Any dispute, litigation, or legal proceeding arising out of these Terms shall be subject to the <strong>exclusive jurisdiction of the competent civil courts located in New Delhi, India</strong>.
         </p>
       </section>
     </div>
