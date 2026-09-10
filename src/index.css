@@ -194,6 +194,46 @@
 }
 
 /* ============================================================
+   LIGHT MODE EXPLICIT
+   ============================================================ */
+[data-theme="light"] {
+  --bg-page: var(--charcoal-50);
+  --bg-surface: #FFFFFF;
+  --bg-surface-warm: var(--cream-100);
+  --bg-surface-raised: #FFFFFF;
+  --bg-surface-overlay: rgba(26, 21, 23, 0.6);
+  --bg-accent: var(--burgundy-500);
+  --bg-accent-hover: var(--burgundy-400);
+  --bg-accent-subtle: var(--burgundy-50);
+  --bg-muted: var(--charcoal-200);
+  --bg-input: var(--cream-100);
+
+  --text-primary: var(--charcoal-950);
+  --text-secondary: var(--charcoal-700);
+  --text-tertiary: var(--charcoal-600);
+  --text-muted: var(--charcoal-500);
+  --text-on-accent: #FFFFFF;
+  --text-accent: var(--burgundy-500);
+  --text-link: var(--burgundy-600);
+
+  --border-default: var(--charcoal-300);
+  --border-subtle: var(--charcoal-200);
+  --border-focus: var(--burgundy-500);
+  --border-error: var(--error);
+
+  --success-light: #E8F5EC;
+  --warning-light: #FDF6E8;
+  --error-light: #FCEAEA;
+  --info-light: #E8F0F8;
+
+  --shadow-sm: 0 1px 3px rgba(58, 14, 26, 0.06);
+  --shadow-md: 0 4px 12px rgba(58, 14, 26, 0.08);
+  --shadow-lg: 0 8px 24px rgba(58, 14, 26, 0.10);
+  --shadow-xl: 0 16px 48px rgba(58, 14, 26, 0.12);
+  --shadow-glow: 0 0 24px rgba(184, 67, 106, 0.15);
+}
+
+/* ============================================================
    RESET & BASE
    ============================================================ */
 *,

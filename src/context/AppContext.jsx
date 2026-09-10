@@ -1008,6 +1008,9 @@ export const AppProvider = ({ children }) => {
 
         const applyTheme = (currentTheme) => {
             root.setAttribute('data-theme', currentTheme);
+            if (document.body) {
+                document.body.setAttribute('data-theme', currentTheme);
+            }
             setResolvedTheme(currentTheme);
         };
 

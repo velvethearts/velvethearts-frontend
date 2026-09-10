@@ -21,6 +21,7 @@ import {
   HardDrive
 } from '@phosphor-icons/react';
 import logo from '../../assets/velvet-heart-logo.png';
+import { ThemeToggle } from '../../components/UI/ThemeToggle';
 
 export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
   const [activeTab, setActiveTab] = useState(initialTab); // 'privacy' | 'terms'
@@ -36,19 +37,18 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
   }, [activeTab]);
 
   return (
-    <div className="legal-page-container font-ui page-enter">
-      {/* Top Banner Navigation */}
+    <div className="legal-page-container font-ui">
+      {/* Top Sticky Header */}
       <header className="legal-header">
         <div className="legal-header-inner">
           <div className="legal-header-brand">
             {onBack && (
               <button
-                type="button"
                 onClick={onBack}
                 className="legal-back-btn"
-                aria-label="Go back"
+                aria-label="Back to settings"
               >
-                <ArrowLeft size={18} weight="bold" />
+                <ArrowLeft size={16} />
                 <span>Back</span>
               </button>
             )}
@@ -59,28 +59,31 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
             </div>
           </div>
 
-          {/* Tab Switcher */}
-          <div className="legal-tab-switcher" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'privacy'}
-              className={`legal-tab-btn ${activeTab === 'privacy' ? 'active' : ''}`}
-              onClick={() => setActiveTab('privacy')}
-            >
-              <ShieldCheck size={18} weight={activeTab === 'privacy' ? 'fill' : 'regular'} />
-              <span>Privacy Policy</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'terms'}
-              className={`legal-tab-btn ${activeTab === 'terms' ? 'active' : ''}`}
-              onClick={() => setActiveTab('terms')}
-            >
-              <Scales size={18} weight={activeTab === 'terms' ? 'fill' : 'regular'} />
-              <span>Terms of Service</span>
-            </button>
+          {/* Controls: Tab Switcher & Theme Toggle */}
+          <div className="legal-header-controls">
+            <div className="legal-tab-switcher" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'privacy'}
+                className={`legal-tab-btn ${activeTab === 'privacy' ? 'active' : ''}`}
+                onClick={() => setActiveTab('privacy')}
+              >
+                <ShieldCheck size={18} weight={activeTab === 'privacy' ? 'fill' : 'regular'} />
+                <span>Privacy Policy</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'terms'}
+                className={`legal-tab-btn ${activeTab === 'terms' ? 'active' : ''}`}
+                onClick={() => setActiveTab('terms')}
+              >
+                <Scales size={18} weight={activeTab === 'terms' ? 'fill' : 'regular'} />
+                <span>Terms of Service</span>
+              </button>
+            </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -183,6 +186,13 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           color: #a89098;
           letter-spacing: 0.04em;
           text-transform: uppercase;
+        }
+
+        .legal-header-controls {
+          display: flex;
+          align-items: center;
+          gap: 0.85rem;
+          flex-wrap: wrap;
         }
 
         /* Solid Matte Tab Switcher */
@@ -544,6 +554,208 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           margin: 0 auto;
           line-height: 1.55;
         }
+
+        /* ============================================================
+           LIGHT MODE ADAPTATION FOR LEGAL PAGE
+           ============================================================ */
+        [data-theme="light"] .legal-page-container {
+          background-color: #FAF7F9;
+          color: #2C2426;
+        }
+
+        [data-theme="light"] .legal-header {
+          background-color: #FFFFFF;
+          border-bottom: 1px solid #EAD8E0;
+          box-shadow: 0 2px 14px rgba(90, 20, 45, 0.06);
+        }
+
+        [data-theme="light"] .legal-back-btn {
+          background-color: #F8EDF1;
+          border-color: #E2CCD6;
+          color: #7A2842;
+        }
+
+        [data-theme="light"] .legal-back-btn:hover {
+          background-color: #B8436A;
+          color: #FFFFFF;
+          border-color: #7A2842;
+        }
+
+        [data-theme="light"] .legal-brand-title {
+          color: #9B3456;
+        }
+
+        [data-theme="light"] .legal-brand-sub {
+          color: #7A6E70;
+        }
+
+        [data-theme="light"] .legal-tab-switcher {
+          background-color: #F3E6EC;
+          border-color: #E2CCD6;
+          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="light"] .legal-tab-btn {
+          color: #6A555D;
+        }
+
+        [data-theme="light"] .legal-tab-btn.active {
+          background: linear-gradient(135deg, #B8436A 0%, #7A2842 100%);
+          color: #FFFFFF;
+        }
+
+        [data-theme="light"] .legal-doc-hero {
+          border-bottom-color: #EAD8E0;
+        }
+
+        [data-theme="light"] .legal-tag-badge {
+          background-color: #FFF8FA;
+          border-color: #C4964A;
+          color: #A07228;
+        }
+
+        [data-theme="light"] .legal-doc-title {
+          color: #1A1517;
+        }
+
+        [data-theme="light"] .legal-doc-meta {
+          color: #7A6E70;
+        }
+
+        [data-theme="light"] .ai-disclosure-banner {
+          background-color: #FFFDF9;
+          border-color: #C4964A;
+          box-shadow: 0 4px 18px rgba(90, 20, 45, 0.05);
+        }
+
+        [data-theme="light"] .ai-icon-wrap {
+          background-color: #FAEEE0;
+          border-color: rgba(196, 150, 74, 0.4);
+          color: #B88232;
+        }
+
+        [data-theme="light"] .ai-banner-content h4 {
+          color: #9E742E;
+        }
+
+        [data-theme="light"] .ai-banner-content p {
+          color: #3D3335;
+        }
+
+        [data-theme="light"] .legal-section-card {
+          background-color: #FFFFFF;
+          border-color: #EFE4EA;
+          box-shadow: 0 4px 18px rgba(90, 20, 45, 0.04);
+        }
+
+        [data-theme="light"] .legal-section-card:hover {
+          border-color: rgba(184, 67, 106, 0.35);
+        }
+
+        [data-theme="light"] .legal-section-title {
+          color: #2A0812;
+          border-bottom-color: #F3E8EE;
+        }
+
+        [data-theme="light"] .legal-section-icon {
+          color: #B8436A;
+        }
+
+        [data-theme="light"] .legal-p {
+          color: #4A3C42;
+        }
+
+        [data-theme="light"] .data-cat-item {
+          background-color: #FAF7F9;
+          border-color: #ECDCE4;
+        }
+
+        [data-theme="light"] .data-cat-header {
+          color: #9E742E;
+        }
+
+        [data-theme="light"] .data-cat-item ul {
+          color: #5A4E50;
+        }
+
+        [data-theme="light"] .legal-callout-box {
+          background-color: #FFF9F2;
+          border-left-color: #C4964A;
+          color: #3D3335;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
+
+        [data-theme="light"] .legal-callout-box strong {
+          color: #9E742E;
+        }
+
+        [data-theme="light"] .legal-callout-emergency {
+          background-color: #FFF2F5;
+          border-color: #E87A9A;
+          border-left-color: #D03B64;
+          color: #4A1424;
+          box-shadow: 0 4px 18px rgba(184, 67, 106, 0.08);
+        }
+
+        [data-theme="light"] .legal-callout-emergency h4 {
+          color: #7A1D36 !important;
+        }
+
+        [data-theme="light"] .legal-callout-emergency strong {
+          color: #A31E44;
+        }
+
+        [data-theme="light"] .escalation-step {
+          background-color: #FAF7F9;
+          border-color: #ECDCE4;
+        }
+
+        [data-theme="light"] .escalation-step-badge {
+          color: #9E742E;
+        }
+
+        [data-theme="light"] .escalation-step-title {
+          color: #2A0812;
+        }
+
+        [data-theme="light"] .escalation-step-desc {
+          color: #5A4E50;
+        }
+
+        [data-theme="light"] .email-link {
+          color: #B8436A;
+        }
+
+        [data-theme="light"] .email-link:hover {
+          color: #7A2842;
+        }
+
+        [data-theme="light"] .grievance-card {
+          background-color: #FFFFFF;
+          border-color: rgba(196, 150, 74, 0.45);
+          box-shadow: 0 4px 18px rgba(90, 20, 45, 0.05);
+        }
+
+        [data-theme="light"] .grievance-card h4 {
+          color: #2A0812 !important;
+        }
+
+        [data-theme="light"] .grievance-label {
+          color: #8A737B;
+        }
+
+        [data-theme="light"] .grievance-val {
+          color: #2C2426;
+        }
+
+        [data-theme="light"] .legal-footer {
+          border-top-color: #EAD8E0;
+          background-color: #F7EFF2;
+        }
+
+        [data-theme="light"] .legal-footer-note {
+          color: #7A6E70;
+        }
       `}</style>
     </div>
   );
@@ -599,7 +811,12 @@ const PrivacyPolicyContent = () => {
         </h4>
         <p style={{ margin: 0 }}>
           Under <strong>Rule 3(2)(b) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>, if you or someone you represent discovers any content on Velvet Hearts that depicts private areas, partial/full nudity, sexual conduct, or impersonation/deepfake imagery without consent, report it immediately to our Grievance Officer at{" "}
-          <a href="mailto:velvethearts.in@gmail.com?subject=[EMERGENCY%20RULE%203(2)(b)%20TAKEDOWN]" className="email-link">
+          <a
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=%5BEMERGENCY%20RULE%203(2)(b)%20TAKEDOWN%5D"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="email-link"
+          >
             velvethearts.in@gmail.com
           </a>{" "}
           with subject line <strong>&ldquo;[EMERGENCY RULE 3(2)(b) TAKEDOWN]&rdquo;</strong>. Velvet Hearts will take all reasonable and practicable measures to remove or disable access to such material <strong>within 24 hours of receiving the notice</strong>.
@@ -793,7 +1010,12 @@ const PrivacyPolicyContent = () => {
             <div className="grievance-detail">
               <span className="grievance-label">Official Grievance Email</span>
               <span className="grievance-val">
-                <a href="mailto:velvethearts.in@gmail.com" className="email-link">
+                <a
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="email-link"
+                >
                   velvethearts.in@gmail.com
                 </a>
               </span>
@@ -801,10 +1023,6 @@ const PrivacyPolicyContent = () => {
             <div className="grievance-detail">
               <span className="grievance-label">Statutory Response SLA</span>
               <span className="grievance-val">Acknowledged in 24h &bull; Resolved in 15 days (24h for Rule 3(2)(b))</span>
-            </div>
-            <div className="grievance-detail">
-              <span className="grievance-label">Communication Channel</span>
-              <span className="grievance-val">Electronic Grievance Redressal Desk, Velvet Hearts, India</span>
             </div>
           </div>
         </div>
@@ -817,7 +1035,16 @@ const PrivacyPolicyContent = () => {
             <span className="escalation-step-badge">Tier 1 &bull; Internal</span>
             <span className="escalation-step-title">Grievance Officer</span>
             <p className="escalation-step-desc">
-              Submit your complaint directly to <a href="mailto:velvethearts.in@gmail.com" className="email-link">velvethearts.in@gmail.com</a>. Acknowledgment guaranteed within 24 hours.
+              Submit your complaint directly to{" "}
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="email-link"
+              >
+                velvethearts.in@gmail.com
+              </a>
+              . Acknowledgment guaranteed within 24 hours.
             </p>
           </div>
           <div className="escalation-step">
@@ -890,9 +1117,15 @@ const TermsOfServiceContent = () => {
         </h4>
         <p style={{ margin: 0 }}>
           If any user uploads non-consensual sexual material, nudity, intimate content, or impersonated/morphed media of you, email our Grievance Officer immediately at{" "}
-          <a href="mailto:velvethearts.in@gmail.com?subject=[EMERGENCY%20RULE%203(2)(b)%20TAKEDOWN]" className="email-link">
+          <a
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=%5BEMERGENCY%20RULE%203(2)(b)%20TAKEDOWN%5D"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="email-link"
+          >
             velvethearts.in@gmail.com
-          </a>. Velvet Hearts enforces a zero-tolerance policy and guarantees access removal <strong>within 24 hours of complaint receipt</strong>.
+          </a>
+          . Velvet Hearts enforces a zero-tolerance policy and guarantees access removal <strong>within 24 hours of complaint receipt</strong>.
         </p>
       </div>
 
@@ -1045,7 +1278,12 @@ const TermsOfServiceContent = () => {
             <div className="grievance-detail">
               <span className="grievance-label">Official Contact Email</span>
               <span className="grievance-val">
-                <a href="mailto:velvethearts.in@gmail.com" className="email-link">
+                <a
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="email-link"
+                >
                   velvethearts.in@gmail.com
                 </a>
               </span>
@@ -1053,10 +1291,6 @@ const TermsOfServiceContent = () => {
             <div className="grievance-detail">
               <span className="grievance-label">Statutory Redressal SLA</span>
               <span className="grievance-val">24h Acknowledgment &bull; 15 Days Resolution (24h for Rule 3(2)(b))</span>
-            </div>
-            <div className="grievance-detail">
-              <span className="grievance-label">Communication Channel</span>
-              <span className="grievance-val">Electronic Grievance Redressal Desk, Velvet Hearts, India</span>
             </div>
           </div>
         </div>
