@@ -22,8 +22,12 @@
   will-change: opacity, transform;
 }
 
-.vws-fullscreen-root.is-light-mode {
+.vws-fullscreen-root.is-light-canvas {
   background: linear-gradient(180deg, #FFFFFF 0%, #FFF5F7 60%, #FDEBF0 100%);
+}
+
+.vws-fullscreen-root.is-dark-canvas {
+  background: linear-gradient(180deg, #0c050b 0%, #150613 60%, #1f081c 100%);
 }
 
 .vws-fullscreen-root.is-exiting {
@@ -158,12 +162,19 @@
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* In Light Stage (Clouds & Brand): Solid dark velvet with radiant gold border */
-.vws-skip-pill.is-light-mode {
+/* Skip button light & dark pill styling */
+.vws-skip-pill.is-light-pill {
   background: #1c0617;
   color: #ffffff;
   border: 1.5px solid #d97706;
   box-shadow: 0 8px 24px rgba(28, 6, 23, 0.35), 0 0 0 1px rgba(217, 119, 6, 0.3);
+}
+
+.vws-skip-pill.is-dark-pill {
+  background: rgba(28, 9, 24, 0.9);
+  color: #ffffff;
+  border: 1.5px solid #fbbf24;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6), 0 0 16px rgba(251, 191, 36, 0.3);
 }
 
 .vws-skip-pill:hover {
@@ -463,6 +474,10 @@
   background: linear-gradient(180deg, #FFFFFF 0%, #FFF5F7 60%, #FDEBF0 100%);
 }
 
+.vws-fullscreen-root.is-dark-canvas .vws-cloud-solid-body {
+  background: linear-gradient(180deg, #0c050b 0%, #150613 60%, #1f081c 100%);
+}
+
 .vws-cloud-wave-lip {
   position: absolute;
   top: 99.2%;
@@ -622,17 +637,51 @@
     inset 0 1px 2px rgba(255, 255, 255, 0.6);
 }
 
-.vws-enter-button:active {
-  transform: translateY(0);
+/* Theme-specific Brand Card Typography & Elements */
+.vws-fullscreen-root.is-light-canvas .vws-brand-title {
+  color: #1c0515;
 }
 
-.vws-continue-hint {
-  margin-top: 18px;
-  font-size: 13px;
+.vws-fullscreen-root.is-light-canvas .vws-brand-tagline {
+  color: #881337;
+}
+
+.vws-fullscreen-root.is-light-canvas .vws-prestige-tag {
+  color: #b45309;
+}
+
+.vws-fullscreen-root.is-light-canvas .vws-continue-hint {
   color: rgba(136, 19, 55, 0.7);
-  letter-spacing: 0.4px;
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 500;
+}
+
+.vws-fullscreen-root.is-dark-canvas .vws-brand-title {
+  color: #ffffff;
+  text-shadow: 0 4px 24px rgba(225, 29, 72, 0.5);
+}
+
+.vws-fullscreen-root.is-dark-canvas .vws-brand-tagline {
+  color: #fda4af;
+}
+
+.vws-fullscreen-root.is-dark-canvas .vws-prestige-tag {
+  color: #fbbf24;
+}
+
+.vws-fullscreen-root.is-dark-canvas .vws-continue-hint {
+  color: rgba(253, 164, 175, 0.75);
+}
+
+.vws-fullscreen-root.is-dark-canvas .vws-enter-button {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+  border-color: #fbbf24;
+  box-shadow: 
+    0 12px 32px -4px rgba(225, 29, 72, 0.55),
+    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.vws-fullscreen-root.is-dark-canvas .vws-gold-filigree-ring {
+  border-color: rgba(251, 191, 36, 0.55);
+  box-shadow: 0 0 28px rgba(251, 191, 36, 0.35);
 }
 
 /* ==========================================================

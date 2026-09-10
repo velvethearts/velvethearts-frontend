@@ -55,6 +55,42 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
   const isCompletedRef = useRef(false);
 
+  // System & App Theme Detection for the cloud/reveal stage
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      if (typeof window === 'undefined') return false;
+      const attr = document.documentElement.getAttribute('data-theme');
+      if (attr === 'dark') return true;
+      if (attr === 'light') return false;
+      return Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleThemeChange = () => {
+        const attr = document.documentElement.getAttribute('data-theme');
+        if (attr === 'dark') {
+          setIsDarkMode(true);
+        } else if (attr === 'light') {
+          setIsDarkMode(false);
+        } else {
+          setIsDarkMode(mq.matches);
+        }
+      };
+      mq.addEventListener('change', handleThemeChange);
+      const observer = new MutationObserver(handleThemeChange);
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+      return () => {
+        mq.removeEventListener('change', handleThemeChange);
+        observer.disconnect();
+      };
+    } catch (_) {}
+  }, []);
+
   const handleFinish = () => {
     if (isCompletedRef.current) return;
     isCompletedRef.current = true;
@@ -80,7 +116,7 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
   // 1. Welcome Greeting (0s - 1.8s): Stars, Welcome text, idling rocket. NO CLOUDS IN DOM.
   // 2. Rocket Blast Off (1.8s - 3.1s): Rocket accelerates and exits top of screen.
   // 3. Clouds Roll Down (3.1s - 4.3s): Clouds roll down smoothly immediately as rocket exits (no dead gap!).
-  // 4. Brand Reveal (4.3s onwards): Clean logo, title, and enter button.
+  // 4. Brand Reveal (4.3s onwards): Clean logo, title, and enter button. Adapts to dark/light theme.
   useEffect(() => {
     // Rocket blasts off at 1.8s
     const tLaunch = setTimeout(() => {
@@ -121,12 +157,12 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
     };
   }, []);
 
-  const isLightStage = stage === 'clouds' || stage === 'reveal' || stage === 'exit';
+  const isCloudRevealStage = stage === 'clouds' || stage === 'reveal' || stage === 'exit';
 
   return (
     <div
       className={`vws-fullscreen-root ${stage === 'exit' ? 'is-exiting' : ''} ${
-        isLightStage ? 'is-light-mode' : ''
+        isCloudRevealStage ? (isDarkMode ? 'is-dark-canvas' : 'is-light-canvas') : ''
       }`}
       role="dialog"
       aria-label="Welcome to Velvet Hearts"
@@ -171,7 +207,9 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
 
         <button
           type="button"
-          className={`vws-skip-pill ${isLightStage ? 'is-light-mode' : ''}`}
+          className={`vws-skip-pill ${
+            isCloudRevealStage ? (isDarkMode ? 'is-dark-pill' : 'is-light-pill') : ''
+          }`}
           onClick={(e) => {
             e.stopPropagation();
             handleFinish();
@@ -325,8 +363,9 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
       {/* ==========================================================
           STAGE 3: ORGANIC BILLOWING VOLUMETRIC CLOUD CURTAIN
           CRITICAL: RENDERED ONLY AFTER ROCKET IS 100% OFF-SCREEN!
+          Adapts palette dynamically to system/app theme (Dark or Light)
          ========================================================== */}
-      {isLightStage && (
+      {isCloudRevealStage && (
         <div className="vws-cloud-wipe-layer" aria-hidden="true">
           <div className="vws-cloud-curtain-wrap is-sweeping-down">
             {/* Solid 100% viewport coverage body */}
@@ -342,44 +381,51 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <defs>
+                  {/* Theme-Adaptive Cloud Wave Gradients */}
                   <linearGradient id="cloudDeepGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#FFF5F7" />
-                    <stop offset="50%" stopColor="#FEE4EC" />
-                    <stop offset="100%" stopColor="#FBCFE8" />
+                    <stop offset="0%" stopColor={isDarkMode ? '#0c050b' : '#FFF5F7'} />
+                    <stop offset="50%" stopColor={isDarkMode ? '#170614' : '#FEE4EC'} />
+                    <stop offset="100%" stopColor={isDarkMode ? '#250820' : '#FBCFE8'} />
                   </linearGradient>
 
                   <linearGradient id="cloudMidGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#FFFFFF" />
-                    <stop offset="60%" stopColor="#FFF2F6" />
-                    <stop offset="100%" stopColor="#FDD8E5" />
+                    <stop offset="0%" stopColor={isDarkMode ? '#130510' : '#FFFFFF'} />
+                    <stop offset="60%" stopColor={isDarkMode ? '#22081c' : '#FFF2F6'} />
+                    <stop offset="100%" stopColor={isDarkMode ? '#340b2a' : '#FDD8E5'} />
                   </linearGradient>
 
                   <linearGradient id="cloudFrontGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#FFFFFF" />
-                    <stop offset="70%" stopColor="#FFF5F8" />
-                    <stop offset="100%" stopColor="#FDE2EC" />
+                    <stop offset="0%" stopColor={isDarkMode ? '#1a0717' : '#FFFFFF'} />
+                    <stop offset="70%" stopColor={isDarkMode ? '#2e0a25' : '#FFF5F8'} />
+                    <stop offset="100%" stopColor={isDarkMode ? '#440f37' : '#FDE2EC'} />
                   </linearGradient>
 
                   <filter id="cloudSoftBloom" x="-10%" y="-10%" width="120%" height="150%">
-                    <feDropShadow dx="0" dy="16" stdDeviation="20" floodColor="#881337" floodOpacity="0.14" />
+                    <feDropShadow
+                      dx="0"
+                      dy="16"
+                      stdDeviation="20"
+                      floodColor={isDarkMode ? '#f43f5e' : '#881337'}
+                      floodOpacity={isDarkMode ? 0.25 : 0.14}
+                    />
                   </filter>
                 </defs>
 
-                {/* Layer 1: Background Velvet Blush Wave */}
+                {/* Layer 1: Background Velvet Blush/Night Wave */}
                 <path
                   d="M 0,0 L 1920,0 L 1920,190 C 1800,250 1680,150 1520,210 C 1360,270 1240,170 1080,230 C 920,290 800,170 640,220 C 480,270 360,160 200,220 C 100,260 0,200 0,200 Z"
                   fill="url(#cloudDeepGrad)"
                   opacity="0.85"
                 />
 
-                {/* Layer 2: Middle Soft Rose Wave */}
+                {/* Layer 2: Middle Soft Wave */}
                 <path
                   d="M 0,0 L 1920,0 L 1920,150 C 1780,200 1660,120 1500,170 C 1340,220 1220,130 1060,180 C 900,230 780,130 620,175 C 460,220 340,120 180,170 C 90,200 0,155 0,155 Z"
                   fill="url(#cloudMidGrad)"
                   opacity="0.95"
                 />
 
-                {/* Layer 3: Foreground Billowing Pure Cloud Wave */}
+                {/* Layer 3: Foreground Billowing Wave */}
                 <path
                   d="M 0,0 L 1920,0 L 1920,110 C 1760,160 1640,85 1480,130 C 1320,175 1200,90 1040,135 C 880,180 760,95 600,135 C 440,175 320,90 160,130 C 80,155 0,115 0,115 Z"
                   fill="url(#cloudFrontGrad)"
@@ -393,6 +439,7 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
 
       {/* ==========================================================
           STAGE 4: VELVET HEARTS BRAND REVEAL (Prestige Minimalist Design)
+          Adapts typography and buttons to Dark Mode or Light Mode
          ========================================================== */}
       <div className={`vws-brand-stage ${stage === 'reveal' || stage === 'exit' ? 'is-visible' : ''}`}>
         <div className="vws-brand-card">
