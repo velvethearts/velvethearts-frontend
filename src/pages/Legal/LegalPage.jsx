@@ -106,20 +106,20 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
       <style>{`
         .legal-page-container {
           min-height: 100vh;
-          background-color: var(--bg-page, #120e11);
-          color: var(--text-primary, #f5edf0);
+          background-color: #0b080a;
+          color: #f7eff3;
           display: flex;
           flex-direction: column;
         }
 
+        /* Solid Luxury Header (No Glassmorphism) */
         .legal-header {
           position: sticky;
           top: 0;
           z-index: 40;
-          background: rgba(18, 14, 17, 0.92);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-bottom: 1px solid var(--border-subtle, rgba(184, 67, 106, 0.2));
+          background-color: #120b10;
+          border-bottom: 1px solid rgba(212, 173, 106, 0.22);
+          box-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
         }
 
         .legal-header-inner {
@@ -145,9 +145,9 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           gap: 0.4rem;
           padding: 0.45rem 0.85rem;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          color: var(--text-secondary, #d4adb7);
+          background-color: #1a1016;
+          border: 1px solid rgba(212, 173, 106, 0.25);
+          color: #d4adb7;
           font-size: 0.82rem;
           font-weight: 600;
           cursor: pointer;
@@ -155,9 +155,9 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         }
 
         .legal-back-btn:hover {
-          background: rgba(184, 67, 106, 0.18);
+          background-color: #8e2b4f;
           color: #ffffff;
-          border-color: rgba(184, 67, 106, 0.4);
+          border-color: #d4ad6a;
         }
 
         .legal-logo {
@@ -174,44 +174,46 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         .legal-brand-title {
           font-size: 1.15rem;
           font-weight: 700;
-          color: var(--gold-400, #d4ad6a);
+          color: #d4ad6a;
           line-height: 1.2;
         }
 
         .legal-brand-sub {
           font-size: 0.72rem;
-          color: var(--text-muted, #9e858d);
+          color: #a89098;
           letter-spacing: 0.04em;
           text-transform: uppercase;
         }
 
+        /* Solid Matte Tab Switcher */
         .legal-tab-switcher {
           display: flex;
-          background: rgba(0, 0, 0, 0.35);
-          padding: 0.25rem;
+          background-color: #160e14;
+          padding: 0.3rem;
           border-radius: 999px;
-          border: 1px solid rgba(184, 67, 106, 0.2);
+          border: 1px solid rgba(212, 173, 106, 0.25);
+          box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .legal-tab-btn {
           display: inline-flex;
           align-items: center;
           gap: 0.45rem;
-          padding: 0.5rem 1.1rem;
+          padding: 0.5rem 1.15rem;
           border-radius: 999px;
           font-size: 0.84rem;
           font-weight: 600;
           border: none;
           background: transparent;
-          color: var(--text-secondary, #c7aeb7);
+          color: #c7aeb7;
           cursor: pointer;
-          transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+          transition: all 0.2s ease;
         }
 
         .legal-tab-btn.active {
-          background: linear-gradient(135deg, #b8436a 0%, #8e2b4f 100%);
+          background: linear-gradient(135deg, #b8436a 0%, #7c2242 100%);
           color: #ffffff;
-          box-shadow: 0 2px 10px rgba(184, 67, 106, 0.35);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
 
         .legal-main {
@@ -226,22 +228,22 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           text-align: center;
           margin-bottom: 2.75rem;
           padding-bottom: 2rem;
-          border-bottom: 1px solid rgba(184, 67, 106, 0.18);
+          border-bottom: 1px solid rgba(212, 173, 106, 0.2);
         }
 
         .legal-tag-badge {
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
-          padding: 0.35rem 0.85rem;
+          padding: 0.4rem 0.95rem;
           border-radius: 999px;
           font-size: 0.75rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          background: rgba(212, 173, 106, 0.12);
-          border: 1px solid rgba(212, 173, 106, 0.3);
-          color: var(--gold-400, #d4ad6a);
+          background-color: #1b1218;
+          border: 1px solid #d4ad6a;
+          color: #d4ad6a;
           margin-bottom: 1rem;
         }
 
@@ -255,7 +257,7 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
 
         .legal-doc-meta {
           font-size: 0.85rem;
-          color: var(--text-muted, #a88d96);
+          color: #b39aa3;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -269,81 +271,85 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           gap: 0.35rem;
         }
 
-        /* AI Disclosure Banner */
+        /* Solid AI Disclosure Card (No Transparency) */
         .ai-disclosure-banner {
-          background: linear-gradient(135deg, rgba(82, 33, 56, 0.45) 0%, rgba(20, 16, 22, 0.7) 100%);
-          border: 1px solid rgba(212, 173, 106, 0.35);
+          background-color: #190f15;
+          border: 1.5px solid #d4ad6a;
           border-radius: 16px;
-          padding: 1.35rem 1.5rem;
+          padding: 1.5rem;
           margin-bottom: 2.5rem;
           display: flex;
           align-items: flex-start;
-          gap: 1rem;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+          gap: 1.15rem;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
         }
 
         .ai-icon-wrap {
           flex-shrink: 0;
-          width: 44px;
-          height: 44px;
+          width: 46px;
+          height: 46px;
           border-radius: 12px;
-          background: rgba(212, 173, 106, 0.15);
-          border: 1px solid rgba(212, 173, 106, 0.4);
-          color: var(--gold-400, #d4ad6a);
+          background-color: #271420;
+          border: 1px solid rgba(212, 173, 106, 0.45);
+          color: #d4ad6a;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
         .ai-banner-content h4 {
-          font-size: 1rem;
+          font-size: 1.02rem;
           font-weight: 700;
-          color: var(--gold-400, #d4ad6a);
-          margin-bottom: 0.35rem;
+          color: #d4ad6a;
+          margin-bottom: 0.4rem;
           display: flex;
           align-items: center;
           gap: 0.45rem;
         }
 
         .ai-banner-content p {
-          font-size: 0.88rem;
-          line-height: 1.55;
-          color: var(--text-secondary, #d9c5cc);
+          font-size: 0.9rem;
+          line-height: 1.6;
+          color: #e6d3db;
           margin: 0;
         }
 
-        /* Section Cards */
+        /* Solid Matte Section Cards */
         .legal-section-card {
-          background: rgba(25, 20, 24, 0.6);
-          border: 1px solid rgba(184, 67, 106, 0.16);
+          background-color: #140d12;
+          border: 1px solid #2d1824;
           border-radius: 16px;
           padding: 1.85rem;
           margin-bottom: 1.75rem;
-          transition: border-color 0.2s ease;
+          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+          transition: border-color 0.2s ease, transform 0.2s ease;
         }
 
         .legal-section-card:hover {
-          border-color: rgba(184, 67, 106, 0.3);
+          border-color: rgba(212, 173, 106, 0.35);
+          transform: translateY(-1px);
         }
 
         .legal-section-title {
           font-size: 1.3rem;
           font-weight: 700;
           color: #ffffff;
-          margin-bottom: 1rem;
+          margin-bottom: 1.1rem;
           display: flex;
           align-items: center;
           gap: 0.65rem;
+          border-bottom: 1px solid #22121c;
+          padding-bottom: 0.75rem;
         }
 
         .legal-section-icon {
-          color: var(--burgundy-400, #e0608b);
+          color: #e0608b;
         }
 
         .legal-p {
           font-size: 0.92rem;
-          line-height: 1.68;
-          color: var(--text-secondary, #d9c5cc);
+          line-height: 1.7;
+          color: #d9c5cc;
           margin-bottom: 1rem;
         }
 
@@ -351,7 +357,7 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           margin-bottom: 0;
         }
 
-        /* Data Storage Grid */
+        /* Solid Data Category Tiles */
         .data-category-grid {
           display: grid;
           grid-template-columns: 1fr;
@@ -366,10 +372,11 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         }
 
         .data-cat-item {
-          background: rgba(14, 11, 13, 0.6);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background-color: #0e080b;
+          border: 1px solid #26141f;
           border-radius: 12px;
-          padding: 1rem 1.15rem;
+          padding: 1.15rem;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
         }
 
         .data-cat-header {
@@ -377,56 +384,59 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           align-items: center;
           gap: 0.5rem;
           font-weight: 700;
-          font-size: 0.9rem;
-          color: var(--gold-400, #d4ad6a);
-          margin-bottom: 0.45rem;
+          font-size: 0.92rem;
+          color: #d4ad6a;
+          margin-bottom: 0.55rem;
         }
 
         .data-cat-item ul {
           margin: 0;
           padding-left: 1.2rem;
-          font-size: 0.84rem;
-          line-height: 1.55;
-          color: var(--text-secondary, #c7aeb7);
+          font-size: 0.85rem;
+          line-height: 1.6;
+          color: #cbb2bc;
         }
 
         .data-cat-item li {
-          margin-bottom: 0.25rem;
+          margin-bottom: 0.35rem;
         }
 
-        /* Highlight Boxes */
+        /* Solid Callouts */
         .legal-callout-box {
-          background: rgba(212, 173, 106, 0.08);
-          border-left: 3px solid var(--gold-400, #d4ad6a);
+          background-color: #170e14;
+          border-left: 4px solid #d4ad6a;
           border-radius: 0 10px 10px 0;
-          padding: 1rem 1.25rem;
-          margin: 1.25rem 0;
-          font-size: 0.88rem;
-          line-height: 1.6;
+          padding: 1.15rem 1.35rem;
+          margin: 1.35rem 0;
+          font-size: 0.9rem;
+          line-height: 1.65;
           color: #fce8ee;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
         }
 
         .legal-callout-box strong {
-          color: var(--gold-400, #d4ad6a);
+          color: #d4ad6a;
         }
 
+        /* Solid Emergency Redressal Banner */
         .legal-callout-emergency {
-          background: rgba(212, 38, 77, 0.12);
-          border: 1px solid rgba(226, 75, 116, 0.45);
-          border-left: 4px solid #e24b74;
-          border-radius: 0 12px 12px 0;
-          padding: 1.15rem 1.35rem;
-          margin: 1.5rem 0;
-          font-size: 0.88rem;
-          line-height: 1.65;
+          background-color: #1e0910;
+          border: 1.5px solid #d9385d;
+          border-left: 5px solid #e24b74;
+          border-radius: 12px;
+          padding: 1.25rem 1.45rem;
+          margin: 1.75rem 0;
+          font-size: 0.9rem;
+          line-height: 1.7;
           color: #ffe6ec;
-          box-shadow: 0 4px 16px rgba(184, 67, 106, 0.15);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         }
 
         .legal-callout-emergency strong {
           color: #ff99b3;
         }
 
+        /* Solid Escalation Steps */
         .escalation-steps {
           display: grid;
           grid-template-columns: 1fr;
@@ -441,13 +451,13 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         }
 
         .escalation-step {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(212, 173, 106, 0.2);
+          background-color: #0e080b;
+          border: 1px solid #281521;
           border-radius: 12px;
-          padding: 1rem 1.15rem;
+          padding: 1.15rem;
           display: flex;
           flex-direction: column;
-          gap: 0.35rem;
+          gap: 0.4rem;
         }
 
         .escalation-step-badge {
@@ -455,24 +465,24 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          color: var(--gold-400, #d4ad6a);
+          color: #d4ad6a;
         }
 
         .escalation-step-title {
-          font-size: 0.92rem;
+          font-size: 0.94rem;
           font-weight: 600;
           color: #ffffff;
         }
 
         .escalation-step-desc {
-          font-size: 0.82rem;
-          color: var(--text-secondary, #c7aeb7);
-          line-height: 1.45;
+          font-size: 0.83rem;
+          color: #c7aeb7;
+          line-height: 1.5;
           margin: 0;
         }
 
         .email-link {
-          color: var(--gold-400, #d4ad6a);
+          color: #d4ad6a;
           text-decoration: underline;
           text-underline-offset: 3px;
           font-weight: 600;
@@ -484,34 +494,35 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           color: #ffffff;
         }
 
-        /* Grievance Card */
+        /* Solid Grievance Card */
         .grievance-card {
-          background: linear-gradient(135deg, rgba(30, 22, 28, 0.8) 0%, rgba(18, 14, 17, 0.9) 100%);
-          border: 1px solid rgba(212, 173, 106, 0.3);
+          background-color: #100a0e;
+          border: 1.5px solid rgba(212, 173, 106, 0.35);
           border-radius: 14px;
-          padding: 1.5rem;
+          padding: 1.6rem;
           margin-top: 1.25rem;
+          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
         }
 
         .grievance-row {
           display: flex;
           flex-wrap: wrap;
           gap: 1.5rem;
-          margin-top: 0.85rem;
+          margin-top: 1rem;
         }
 
         .grievance-detail {
           display: flex;
           flex-direction: column;
-          font-size: 0.86rem;
+          font-size: 0.88rem;
         }
 
         .grievance-label {
-          color: var(--text-muted, #9e858d);
+          color: #9e858d;
           font-size: 0.75rem;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          margin-bottom: 0.2rem;
+          margin-bottom: 0.25rem;
         }
 
         .grievance-val {
@@ -520,18 +531,18 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         }
 
         .legal-footer {
-          border-top: 1px solid var(--border-subtle, rgba(184, 67, 106, 0.2));
-          padding: 2rem 1.25rem;
+          border-top: 1px solid rgba(212, 173, 106, 0.2);
+          padding: 2.25rem 1.25rem;
           text-align: center;
-          background: rgba(14, 11, 13, 0.8);
+          background-color: #0c0709;
         }
 
         .legal-footer-note {
-          font-size: 0.8rem;
-          color: var(--text-muted, #8f7780);
-          max-width: 600px;
+          font-size: 0.82rem;
+          color: #8f7780;
+          max-width: 620px;
           margin: 0 auto;
-          line-height: 1.5;
+          line-height: 1.55;
         }
       `}</style>
     </div>
