@@ -7,7 +7,7 @@ import { api } from '../../lib/api';
 import logo from "../../assets/velvet-heart-logo.png";
 
 
-export const AuthFlow = ({ onBack }) => {
+export const AuthFlow = ({ onBack, onNavigate }) => {
   const { login, loginWithGoogle } = useApp?.() || {};
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -118,15 +118,21 @@ export const AuthFlow = ({ onBack }) => {
         <div className="auth-legal font-ui">
           By continuing, you agree to our{" "}
           <a
-            href="#terms"
-            onClick={(e) => e.preventDefault()}
+            href="/terms"
+            onClick={(e) => {
+              e.preventDefault();
+              if (onNavigate) onNavigate('terms');
+            }}
           >
             Terms of Service
           </a>{" "}
           and{" "}
           <a
-            href="#privacy"
-            onClick={(e) => e.preventDefault()}
+            href="/privacy"
+            onClick={(e) => {
+              e.preventDefault();
+              if (onNavigate) onNavigate('privacy');
+            }}
           >
             Privacy Policy
           </a>.

@@ -34,6 +34,7 @@ const WarningAlertModal = lazy(() => import('./components/Safety/WarningAlertMod
 const AdminPanel = lazy(() => import('./pages/Admin/AdminPanel').then(m => ({ default: m.AdminPanel })));
 const NotFoundPage = lazy(() => import('./pages/NotFound/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const WelcomeRadarModal = lazy(() => import('./components/Onboarding/WelcomeRadarModal').then(m => ({ default: m.WelcomeRadarModal })));
+const LegalPage = lazy(() => import('./pages/Legal/LegalPage').then(m => ({ default: m.LegalPage })));
 
 const AuthLoadingScreen = () => {
   return (
@@ -172,7 +173,7 @@ function AppContent() {
 
   // Handle URL pathname and query parameter deep linking (e.g. /discover, /?tab=chat, or unknown 404 routes)
   React.useEffect(() => {
-    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety', 'admin'];
+    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety', 'admin', 'privacy', 'terms'];
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
 
@@ -232,6 +233,70 @@ function AppContent() {
       return;
     }
 
+    const TAB_META = {
+      discover: {
+        title: 'Discover Profiles',
+        description: 'Browse verified profiles, 2-minute voice intros, and real-time vibe matches across India on Velvet Hearts.',
+        path: '/discover',
+      },
+      matches: {
+        title: 'Your Matches & Connections',
+        description: 'View your mutual sparks, conversations, and interactive couple diaries on Velvet Hearts.',
+        path: '/matches',
+      },
+      chat: {
+        title: 'Direct Messages',
+        description: 'Chat privately and securely with your intentional matches on Velvet Hearts.',
+        path: '/chat',
+      },
+      notifications: {
+        title: 'Notifications & Activity',
+        description: 'Stay updated on new sparks, profile views, and message requests on Velvet Hearts.',
+        path: '/notifications',
+      },
+      profile: {
+        title: 'Your Profile',
+        description: 'Manage your verified photos, voice intro, prompts, and relationship preferences on Velvet Hearts.',
+        path: '/profile',
+      },
+      settings: {
+        title: 'Settings & Privacy',
+        description: 'Configure your privacy preferences, account safety, and notification controls on Velvet Hearts.',
+        path: '/settings',
+      },
+      safety: {
+        title: 'Safety Center & Guidelines',
+        description: 'Biometric face verification guidelines, emergency contacts, and anti-catfish safety resources on Velvet Hearts.',
+        path: '/safety',
+      },
+      admin: {
+        title: 'Admin Moderation Console',
+        description: 'Platform verification moderation, user reports, and administrative management on Velvet Hearts.',
+        path: '/admin',
+      },
+      privacy: {
+        title: 'Privacy Policy — Data Protection & Indian DPDP Act 2023',
+        description: 'Learn how Velvet Hearts protects your personal data under the Indian Digital Personal Data Protection Act, 2023 (DPDPA). Full transparency on stored data, AI codebase synthesis, and biometric verification.',
+        path: '/privacy',
+      },
+      terms: {
+        title: 'Terms of Service — Indian IT Act 2000 & Community Guidelines',
+        description: 'Review Velvet Hearts Terms of Service, User Agreement, and Intermediary Guidelines compliant with the Indian Information Technology Act, 2000 and IT Rules 2021.',
+        path: '/terms',
+      },
+    };
+
+    if (activeTab === 'privacy' || activeTab === 'terms') {
+      const currentMeta = TAB_META[activeTab];
+      updateMetadata({
+        title: currentMeta.title,
+        description: currentMeta.description,
+        robots: 'index, follow',
+        canonicalPath: currentMeta.path,
+      });
+      return;
+    }
+
     if (!isLoggedIn) {
       updateMetadata({
         title: 'Official Website — Intentional Dating & Verified Profiles',
@@ -247,49 +312,6 @@ function AppContent() {
         canonicalPath: '/onboarding',
       });
     } else {
-      const TAB_META = {
-        discover: {
-          title: 'Discover Profiles',
-          description: 'Browse verified profiles, 2-minute voice intros, and real-time vibe matches across India on Velvet Hearts.',
-          path: '/discover',
-        },
-        matches: {
-          title: 'Your Matches & Connections',
-          description: 'View your mutual sparks, conversations, and interactive couple diaries on Velvet Hearts.',
-          path: '/matches',
-        },
-        chat: {
-          title: 'Direct Messages',
-          description: 'Chat privately and securely with your intentional matches on Velvet Hearts.',
-          path: '/chat',
-        },
-        notifications: {
-          title: 'Notifications & Activity',
-          description: 'Stay updated on new sparks, profile views, and message requests on Velvet Hearts.',
-          path: '/notifications',
-        },
-        profile: {
-          title: 'Your Profile',
-          description: 'Manage your verified photos, voice intro, prompts, and relationship preferences on Velvet Hearts.',
-          path: '/profile',
-        },
-        settings: {
-          title: 'Settings & Privacy',
-          description: 'Configure your privacy preferences, account safety, and notification controls on Velvet Hearts.',
-          path: '/settings',
-        },
-        safety: {
-          title: 'Safety Center & Guidelines',
-          description: 'Biometric face verification guidelines, emergency contacts, and anti-catfish safety resources on Velvet Hearts.',
-          path: '/safety',
-        },
-        admin: {
-          title: 'Admin Moderation Console',
-          description: 'Platform verification moderation, user reports, and administrative management on Velvet Hearts.',
-          path: '/admin',
-        },
-      };
-
       const currentMeta = TAB_META[activeTab] || TAB_META.discover;
       updateMetadata({
         title: currentMeta.title,
@@ -382,6 +404,18 @@ function AppContent() {
         }
         return <AdminPanel onSelectProfile={setSelectedProfile} />;
 
+      case 'privacy':
+      case 'terms':
+        return (
+          <LegalPage
+            initialTab={activeTab}
+            onBack={() => {
+              setActiveTab('settings');
+              try { window.history.pushState({}, '', '/settings'); } catch (_) {}
+            }}
+          />
+        );
+
       case '404':
         return (
           <NotFoundPage
@@ -439,12 +473,34 @@ function AppContent() {
       );
     }
 
-    // 2. Logged Out State: Landing or Auth Screen
+    // 2. Logged Out State: Legal Pages, Auth Screen, or Landing Page
     if (!isLoggedIn) {
+      if (activeTab === 'privacy' || activeTab === 'terms') {
+        return (
+          <Suspense fallback={<AuthLoadingScreen />}>
+            <LegalPage
+              initialTab={activeTab}
+              onBack={() => {
+                setActiveTab('discover');
+                try { window.history.pushState({}, '', '/'); } catch (_) {}
+              }}
+            />
+          </Suspense>
+        );
+      }
+
       if (showAuth) {
         return (
           <Suspense fallback={<AuthLoadingScreen />}>
-            <AuthFlow onBack={() => setShowAuth(false)} initialMode={authInitialMode} />
+            <AuthFlow
+              onBack={() => setShowAuth(false)}
+              initialMode={authInitialMode}
+              onNavigate={(tab) => {
+                setShowAuth(false);
+                setActiveTab(tab);
+                try { window.history.pushState({}, '', `/${tab}`); } catch (_) {}
+              }}
+            />
           </Suspense>
         );
       }
@@ -458,6 +514,10 @@ function AppContent() {
             onSignIn={() => {
               setAuthInitialMode('login');
               setShowAuth(true);
+            }}
+            onNavigate={(tab) => {
+              setActiveTab(tab);
+              try { window.history.pushState({}, '', `/${tab}`); } catch (_) {}
             }}
           />
           {!showWelcomeSplash && <CookieConsentBanner />}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle, Compass, EnvelopeSimple, ShieldCheck } from '@phosphor-icons/react';
+import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle, Compass, EnvelopeSimple, ShieldCheck, Scales, FileText } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
@@ -387,6 +387,40 @@ export const SettingsPage = () => {
                 onClick={(e) => { e.stopPropagation(); triggerCookieBanner(); }}
               >
                 Manage
+              </Button>
+            </div>
+
+            {/* Privacy Policy */}
+            <div className="option-item" style={{ cursor: 'pointer' }} onClick={() => setActiveTab('privacy')}>
+              <div className="option-text">
+                <span className="option-label">Privacy Policy (DPDP Act 2023)</span>
+                <span className="option-desc font-body">
+                  Data storage transparency, AI code disclosure, biometric safeguards, and Indian grievance redressal.
+                </span>
+              </div>
+              <Button 
+                variant="secondary"
+                className="font-ui"
+                onClick={(e) => { e.stopPropagation(); setActiveTab('privacy'); }}
+              >
+                View
+              </Button>
+            </div>
+
+            {/* Terms of Service */}
+            <div className="option-item" style={{ cursor: 'pointer' }} onClick={() => setActiveTab('terms')}>
+              <div className="option-text">
+                <span className="option-label">Terms of Service &amp; Community Rules</span>
+                <span className="option-desc font-body">
+                  User agreement, Rule 3(1)(b) prohibitions, and Section 79 intermediary safe harbor.
+                </span>
+              </div>
+              <Button 
+                variant="secondary"
+                className="font-ui"
+                onClick={(e) => { e.stopPropagation(); setActiveTab('terms'); }}
+              >
+                View
               </Button>
             </div>
           </div>
