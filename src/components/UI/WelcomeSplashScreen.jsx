@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkle, ArrowRight } from '@phosphor-icons/react';
+import { ArrowRight } from '@phosphor-icons/react';
 import velvetHeartLogo from '../../assets/velvet-heart-logo.png';
 import { triggerHaptic } from '../../utils/haptics';
 import './WelcomeSplashScreen.css';
@@ -78,35 +78,33 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
 
   // Smooth cinematic progression across stages
   useEffect(() => {
-    // Total duration: 8.4 seconds (gives the user ample time to enjoy the animation)
-    const TOTAL_DURATION = 8400;
-
     // Stage 1: 'welcome' (0s - 2.2s) - starry arrival, typography, floating idle rocket
     // Stage 2: 'rocket' (2.2s - 4.6s) - smooth ignition and majestic upward launch
     const tLaunch = setTimeout(() => {
       setStage('rocket');
     }, 2200);
 
-    // Stage 3: 'clouds' (4.6s - 6.0s) - rich fluid volumetric cloud wipe rolls down
+    // Stage 3: 'clouds' (4.6s - 6.2s) - seamless fluid volumetric cloud wipe rolls down
     const tClouds = setTimeout(() => {
       setStage('clouds');
     }, 4600);
 
-    // Stage 4: 'reveal' (6.0s - 8.4s) - Velvet Hearts emblem reveal and brand tagline
+    // Stage 4: 'reveal' (6.2s onwards) - Velvet Hearts brand reveal
+    // The screen stays here for the user to click "Enter Experience", with a generous 25s timeout
     const tReveal = setTimeout(() => {
       setStage('reveal');
-    }, 6000);
+    }, 6200);
 
-    // Stage 5: 'exit' (8.4s) - auto transition to landing page
-    const tExit = setTimeout(() => {
+    const tTimeout = setTimeout(() => {
       handleFinish();
-    }, TOTAL_DURATION);
+    }, 25000);
 
-    // Smooth progress bar update
+    // Progress bar runs smoothly up to the reveal stage
+    const PROGRESS_DURATION = 6200;
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const pct = Math.min(100, Math.round((elapsed / TOTAL_DURATION) * 100));
+      const pct = Math.min(100, Math.round((elapsed / PROGRESS_DURATION) * 100));
       setProgress(pct);
       if (pct >= 100) clearInterval(interval);
     }, 40);
@@ -115,14 +113,18 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
       clearTimeout(tLaunch);
       clearTimeout(tClouds);
       clearTimeout(tReveal);
-      clearTimeout(tExit);
+      clearTimeout(tTimeout);
       clearInterval(interval);
     };
   }, []);
 
+  const isLightStage = stage === 'clouds' || stage === 'reveal' || stage === 'exit';
+
   return (
     <div
-      className={`vws-fullscreen-root ${stage === 'exit' ? 'is-exiting' : ''}`}
+      className={`vws-fullscreen-root ${stage === 'exit' ? 'is-exiting' : ''} ${
+        isLightStage ? 'is-light-mode' : ''
+      }`}
       role="dialog"
       aria-label="Welcome to Velvet Hearts"
       onClick={() => {
@@ -157,16 +159,16 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
         <div className="vws-dust" style={{ left: '85%', '--drift-time': '10s', '--drift-x': '-20px' }} />
       </div>
 
-      {/* Top Header Controls: Brand badge & accessible Skip button */}
+      {/* Top Header Navigation: Brand Indicator & High-Contrast Skip Button */}
       <header className="vws-top-nav">
-        <div className="vws-brand-indicator">
+        <div className={`vws-brand-indicator ${isLightStage ? 'is-light-mode' : ''}`}>
           <img src={velvetHeartLogo} alt="" className="vws-mini-logo" />
           <span>VELVET HEARTS</span>
         </div>
 
         <button
           type="button"
-          className="vws-skip-pill"
+          className={`vws-skip-pill ${isLightStage ? 'is-light-mode' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
             handleFinish();
@@ -179,13 +181,12 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
       </header>
 
       {/* ==========================================================
-          STAGE 1: WELCOME SCREEN (Cosmic typography)
+          STAGE 1: WELCOME SCREEN (Cosmic typography, no emojis)
          ========================================================== */}
       <div className={`vws-welcome-stage ${stage !== 'welcome' ? 'is-fading-out' : ''}`}>
         <div className="vws-welcome-content">
-          <div className="vws-accent-badge">
-            <Sparkle size={13} weight="fill" />
-            <span>Intentional Dating</span>
+          <div className="vws-prestige-badge font-ui">
+            <span>INTENTIONAL DATING PLATFORM</span>
           </div>
 
           <h1 className="vws-hero-title font-display">WELCOME</h1>
@@ -320,98 +321,103 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
       </div>
 
       {/* ==========================================================
-          STAGE 3: FULL-WIDTH VOLUMETRIC CLOUD CURTAIN WIPE
+          STAGE 3: 100% GAPLESS VOLUMETRIC CLOUD CURTAIN WIPE
+          Sweeps from top: -100% to top: 0% with solid fill above
          ========================================================== */}
       <div className="vws-cloud-wipe-layer" aria-hidden="true">
         <div
           className={`vws-cloud-curtain-wrap ${
-            stage === 'clouds' || stage === 'reveal' || stage === 'exit' ? 'is-sweeping-down' : ''
+            isLightStage ? 'is-sweeping-down' : ''
           }`}
         >
-          <svg
-            className="vws-fluid-cloud-svg"
-            viewBox="0 0 1920 1080"
-            preserveAspectRatio="none"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <defs>
-              {/* Back Layer Soft Velvet Blush */}
-              <linearGradient id="cloudBackGrad" x1="960" y1="0" x2="960" y2="1080" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#FCE7EE" />
-                <stop offset="60%" stopColor="#F8CFDA" />
-                <stop offset="100%" stopColor="#EEAABF" />
-              </linearGradient>
+          {/* Solid 100% viewport coverage block */}
+          <div className="vws-cloud-solid-body" />
 
-              {/* Front Layer Pure Cream Cloud Volume */}
-              <linearGradient id="cloudFrontGrad" x1="960" y1="0" x2="960" y2="1080" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#FFFFFF" />
-                <stop offset="50%" stopColor="#FFF5F7" />
-                <stop offset="85%" stopColor="#FDECF1" />
-                <stop offset="100%" stopColor="#F9D7E2" />
-              </linearGradient>
+          {/* Scalloped organic cloud wave on the leading bottom edge */}
+          <div className="vws-cloud-wave-lip">
+            <svg
+              className="vws-fluid-cloud-svg"
+              viewBox="0 0 1920 280"
+              preserveAspectRatio="none"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="waveLipGrad" x1="960" y1="0" x2="960" y2="280" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#FFF5F7" />
+                  <stop offset="60%" stopColor="#FEE4EC" />
+                  <stop offset="100%" stopColor="#FBCFE8" />
+                </linearGradient>
 
-              <filter id="cloudSoftShadow" x="-10%" y="-10%" width="120%" height="130%">
-                <feDropShadow dx="0" dy="18" stdDeviation="24" floodColor="#9F1239" floodOpacity="0.18" />
-              </filter>
-            </defs>
+                <linearGradient id="waveFrontLip" x1="960" y1="0" x2="960" y2="280" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="70%" stopColor="#FFF5F8" />
+                  <stop offset="100%" stopColor="#FDE2EC" />
+                </linearGradient>
 
-            {/* Background Blush Cloud Undulation */}
-            <path
-              d="
-                M 0 0
-                L 1920 0
-                L 1920 860
-                C 1760 840, 1640 890, 1480 850
-                C 1320 810, 1200 870, 1040 840
-                C 880 810, 760 880, 600 840
-                C 440 800, 320 870, 160 830
-                C 80 810, 0 850, 0 850
-                Z
-              "
-              fill="url(#cloudBackGrad)"
-              opacity="0.85"
-            />
+                <filter id="cloudLipShadow" x="-10%" y="-10%" width="120%" height="140%">
+                  <feDropShadow dx="0" dy="16" stdDeviation="20" floodColor="#881337" floodOpacity="0.16" />
+                </filter>
+              </defs>
 
-            {/* Foreground Multi-Scalloped Volumetric Cream Cloud Curtain */}
-            <path
-              d="
-                M 0 0
-                L 1920 0
-                L 1920 780
-                C 1820 770, 1750 720, 1660 720
-                C 1560 720, 1480 770, 1380 770
-                C 1280 770, 1200 710, 1100 710
-                C 1000 710, 920 760, 820 760
-                C 720 760, 640 705, 540 705
-                C 440 705, 360 760, 260 760
-                C 160 760, 100 715, 0 715
-                Z
-              "
-              fill="url(#cloudFrontGrad)"
-              filter="url(#cloudSoftShadow)"
-            />
+              {/* Background undulating wave */}
+              <path
+                d="
+                  M 0 0
+                  L 1920 0
+                  L 1920 180
+                  C 1760 160, 1640 220, 1480 180
+                  C 1320 140, 1200 210, 1040 175
+                  C 880 140, 760 215, 600 175
+                  C 440 135, 320 210, 160 170
+                  C 80 150, 0 185, 0 185
+                  Z
+                "
+                fill="url(#waveLipGrad)"
+                opacity="0.9"
+              />
 
-            {/* Organic 3D Cloud Bubbles along the leading wavefront */}
-            <circle cx="160" cy="740" r="110" fill="url(#cloudFrontGrad)" />
-            <circle cx="420" cy="730" r="125" fill="url(#cloudFrontGrad)" />
-            <circle cx="700" cy="750" r="130" fill="url(#cloudFrontGrad)" />
-            <circle cx="980" cy="725" r="140" fill="url(#cloudFrontGrad)" />
-            <circle cx="1260" cy="745" r="135" fill="url(#cloudFrontGrad)" />
-            <circle cx="1540" cy="735" r="120" fill="url(#cloudFrontGrad)" />
-            <circle cx="1800" cy="750" r="115" fill="url(#cloudFrontGrad)" />
-          </svg>
+              {/* Foreground Puffy Scalloped Bubbles */}
+              <path
+                d="
+                  M 0 0
+                  L 1920 0
+                  L 1920 140
+                  C 1820 130, 1750 85, 1660 85
+                  C 1560 85, 1480 130, 1380 130
+                  C 1280 130, 1200 80, 1100 80
+                  C 1000 80, 920 125, 820 125
+                  C 720 125, 640 75, 540 75
+                  C 440 75, 360 125, 260 125
+                  C 160 125, 100 85, 0 85
+                  Z
+                "
+                fill="url(#waveFrontLip)"
+                filter="url(#cloudLipShadow)"
+              />
+
+              {/* Leading cloud bubbles */}
+              <circle cx="160" cy="115" r="90" fill="url(#waveFrontLip)" />
+              <circle cx="420" cy="105" r="105" fill="url(#waveFrontLip)" />
+              <circle cx="700" cy="118" r="100" fill="url(#waveFrontLip)" />
+              <circle cx="980" cy="98" r="115" fill="url(#waveFrontLip)" />
+              <circle cx="1260" cy="112" r="108" fill="url(#waveFrontLip)" />
+              <circle cx="1540" cy="108" r="95" fill="url(#waveFrontLip)" />
+              <circle cx="1800" cy="118" r="95" fill="url(#waveFrontLip)" />
+            </svg>
+          </div>
         </div>
       </div>
 
       {/* ==========================================================
-          STAGE 4: VELVET HEARTS BRAND REVEAL
+          STAGE 4: VELVET HEARTS BRAND REVEAL (Prestige Minimalist Design)
          ========================================================== */}
       <div className={`vws-brand-stage ${stage === 'reveal' || stage === 'exit' ? 'is-visible' : ''}`}>
         <div className="vws-brand-card">
-          <div className="vws-emblem-wrapper">
-            <div className="vws-halo-pulse" />
-            <div className="vws-halo-pulse-outer" />
+          {/* Concentric Gold Medallion Halo */}
+          <div className="vws-emblem-medallion">
+            <div className="vws-gold-filigree-ring" />
+            <div className="vws-gold-filigree-ring-outer" />
             <img
               src={velvetHeartLogo}
               alt="Velvet Hearts Logo"
@@ -419,9 +425,13 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
             />
           </div>
 
-          <h2 className="vws-brand-title font-display">Velvet Hearts</h2>
-          <p className="vws-brand-tagline font-ui">Where Intentional Connections Ignite</p>
+          <div className="vws-prestige-tag font-ui">OFFICIAL PLATFORM</div>
 
+          {/* Clean, Modern, Highly Readable Typography */}
+          <h2 className="vws-brand-title">Velvet Hearts</h2>
+          <p className="vws-brand-tagline">Where Intentional Connections Ignite</p>
+
+          {/* Tactile Enamel Pill Button */}
           <button
             type="button"
             className="vws-enter-button font-ui"
@@ -429,18 +439,19 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
               e.stopPropagation();
               handleFinish();
             }}
+            aria-label="Enter Velvet Hearts Experience"
           >
             <span>Enter Experience</span>
-            <ArrowRight size={16} weight="bold" />
+            <ArrowRight size={17} weight="bold" />
           </button>
 
           <div className="vws-continue-hint font-ui">
-            Tap anywhere to continue →
+            Tap anywhere to continue
           </div>
         </div>
       </div>
 
-      {/* Ambient bottom timeline indicator */}
+      {/* Bottom Timeline Bar */}
       <div className="vws-footer-bar">
         <div className="vws-progress-track">
           <div className="vws-progress-fill" style={{ width: `${progress}%` }} />
