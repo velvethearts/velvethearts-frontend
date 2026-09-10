@@ -452,6 +452,7 @@ function AppContent() {
             setShowAuth(true);
           }}
         />
+        {!showWelcomeSplash && <CookieConsentBanner />}
       </>
     );
   }
@@ -506,7 +507,6 @@ function App() {
         <AppContent />
         <Celebration />
         <ToastContainer />
-        <CookieConsentBanner />
         <Analytics />
         <SpeedInsights />
       </AppProvider>
