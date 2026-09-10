@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight } from '@phosphor-icons/react';
 import velvetHeartLogo from '../../assets/velvet-heart-logo.png';
 import { triggerHaptic } from '../../utils/haptics';
 import './WelcomeSplashScreen.css';
@@ -458,21 +457,7 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
 
           {/* Clean, Modern, Highly Readable Typography */}
           <h2 className="vws-brand-title">Velvet Hearts</h2>
-          <p className="vws-brand-tagline">Where Intentional Connections Ignite</p>
-
-          {/* Tactile Enamel Pill Button */}
-          <button
-            type="button"
-            className="vws-enter-button font-ui"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleFinish();
-            }}
-            aria-label="Enter Velvet Hearts Experience"
-          >
-            <span>Enter Experience</span>
-            <ArrowRight size={17} weight="bold" />
-          </button>
+          <p className="vws-brand-tagline">Where sweet moments turn into forever</p>
 
           <div className="vws-continue-hint font-ui">
             Tap anywhere to continue
