@@ -602,7 +602,7 @@ const PrivacyPolicyContent = () => {
           <span>1. Regulatory Framework &amp; Data Notice</span>
         </h2>
         <p className="legal-p">
-          Velvet Hearts (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) operates an intentional relationship and discovery platform tailored for authentic connections across India. This Privacy Policy is published in strict compliance with Section 5 of the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act, 2023)</strong> and Rule 3(1) of the <strong>Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>.
+          Velvet Hearts (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) operates an intentional relationship and discovery platform tailored for authentic connections across India. This Privacy Policy outlines how we collect, store, process, and safeguard your personal data.
         </p>
         <p className="legal-p">
           Under Indian law:
@@ -631,7 +631,7 @@ const PrivacyPolicyContent = () => {
               <span>Identity &amp; Authentication Data</span>
             </div>
             <ul>
-              <li><strong>Mobile Phone Number:</strong> Verified via cryptographically salted Firebase SMS One-Time Password (OTP).</li>
+              <li><strong>Account Credentials &amp; Email:</strong> Authentication conducted via Google Sign-In or verified account credentials with Firebase Auth. <em>(Note: Velvet Hearts does NOT ask for, require, or store your mobile phone number).</em></li>
               <li><strong>Unique Identifiers:</strong> Randomly generated alphanumeric Firebase User ID (UID).</li>
               <li><strong>Legal Name &amp; Date of Birth:</strong> Enforces the mandatory 18+ age threshold under Section 9 of the DPDP Act 2023.</li>
               <li><strong>Gender &amp; Romantic Preferences:</strong> Declared voluntarily to facilitate reciprocal discovery filters.</li>
@@ -653,10 +653,10 @@ const PrivacyPolicyContent = () => {
           <div className="data-cat-item">
             <div className="data-cat-header">
               <ChatCircleText size={18} />
-              <span>Encrypted Communications</span>
+              <span>In-App Messages &amp; Communications</span>
             </div>
             <ul>
-              <li><strong>Direct Messages:</strong> Private chat messages encrypted at rest using AES-256 standards.</li>
+              <li><strong>Direct Messages:</strong> Text chats exchanged between mutually matched users. <em>(Notice: Messages are transmitted over secure HTTPS/TLS network connections, but are NOT end-to-end encrypted or encrypted at rest on the database).</em></li>
               <li><strong>Voice Intros &amp; Audio Notes:</strong> 2-minute voice intros and audio recordings shared with mutual matches.</li>
               <li><strong>Rewind Letters:</strong> Time-locked digital correspondence scheduled for future delivery between connections.</li>
               <li><strong>Our Diary:</strong> Private scrapbook moments, photos, and milestones created mutually between matched couples.</li>
@@ -731,7 +731,7 @@ const PrivacyPolicyContent = () => {
           <span>6. Cybersecurity Safeguards &amp; Breach Protocol</span>
         </h2>
         <p className="legal-p">
-          Velvet Hearts implements state-of-the-art security practices under Section 8(5) of the DPDP Act 2023 and the SPDI Rules 2011, including TLS 1.3 transit encryption, AES-256 storage encryption, rate-limiting, and SQL/NoSQL injection mitigations.
+          Velvet Hearts implements industry-standard security practices under Section 8(5) of the DPDP Act 2023 and the SPDI Rules 2011, including TLS 1.3 network transit encryption, strict database access controls, API rate-limiting, and injection mitigations. As disclosed in Section 2, in-app direct messages and voice notes are stored on access-controlled cloud database servers and are not end-to-end encrypted.
         </p>
         <p className="legal-p">
           In the event of an identified personal data breach, Velvet Hearts will formally notify the <strong>Data Protection Board of India (DPBI)</strong> and each affected Data Principal without undue delay, in accordance with <strong>Section 8(6) of the DPDP Act 2023</strong>. Furthermore, relevant cybersecurity incidents will be reported to <strong>CERT-In</strong> within statutory timeframes (within 6 hours of discovery).
