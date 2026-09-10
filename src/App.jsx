@@ -392,6 +392,9 @@ function AppContent() {
 
   // 0. Loading — session restoration in progress
   if (authLoading) {
+    if (showWelcomeSplash) {
+      return <WelcomeSplashScreen onComplete={handleCompleteWelcomeSplash} />;
+    }
     return <AuthLoadingScreen />;
   }
 
