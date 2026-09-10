@@ -121,11 +121,12 @@
   font-weight: 700;
   letter-spacing: 2px;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  transition: color 0.4s ease;
+  transition: opacity 0.4s ease;
 }
 
-.vws-brand-indicator.is-light-mode {
-  color: #1c0515;
+.vws-brand-indicator.is-fading-out {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .vws-mini-logo {
@@ -312,27 +313,24 @@
 
 /* Smooth, majestic physics ascent */
 .vws-rocket-assembly.is-ascending {
-  animation: vws-smooth-launch 2.5s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  animation: vws-smooth-launch 1.6s cubic-bezier(0.4, 0.0, 0.15, 1) forwards;
 }
 
 @keyframes vws-smooth-launch {
   0% {
     transform: translateX(-50%) translateY(0px) scale(1);
   }
-  12% {
-    transform: translateX(-50%) translateY(12px) scale(0.98);
+  15% {
+    transform: translateX(-50%) translateY(10px) scale(0.98);
   }
-  30% {
-    transform: translateX(-50%) translateY(-80px) scale(1.02);
+  35% {
+    transform: translateX(-50%) translateY(-140px) scale(1.03);
   }
-  55% {
-    transform: translateX(-50%) translateY(-350px) scale(1.05);
-  }
-  80% {
-    transform: translateX(-50%) translateY(-850px) scale(1.12);
+  65% {
+    transform: translateX(-50%) translateY(-750px) scale(1.1);
   }
   100% {
-    transform: translateX(-50%) translateY(-1500px) scale(1.2);
+    transform: translateX(-50%) translateY(-2200px) scale(1.25);
   }
 }
 
@@ -447,7 +445,7 @@
 }
 
 .vws-cloud-curtain-wrap.is-sweeping-down {
-  animation: vws-cloud-curtain-roll 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: vws-cloud-curtain-roll 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 @keyframes vws-cloud-curtain-roll {
@@ -467,10 +465,10 @@
 
 .vws-cloud-wave-lip {
   position: absolute;
-  top: 99.5%;
+  top: 99.2%;
   left: 0;
   width: 100%;
-  height: 280px;
+  height: 320px;
 }
 
 .vws-fluid-cloud-svg {

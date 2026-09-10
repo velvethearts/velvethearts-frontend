@@ -50,7 +50,7 @@ const FULL_SCREEN_STARS = [
 ];
 
 export const WelcomeSplashScreen = ({ onComplete }) => {
-  // Stages: 'welcome' | 'rocket' | 'clouds' | 'reveal' | 'exit'
+  // Sequential Stages: 'welcome' -> 'rocket' -> 'clouds' -> 'reveal' -> 'exit'
   const [stage, setStage] = useState('welcome');
   const [progress, setProgress] = useState(0);
   const isCompletedRef = useRef(false);
@@ -76,31 +76,34 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Smooth cinematic progression across stages
+  // Strict Sequential Progression:
+  // 1. Welcome Greeting (0s - 1.8s)
+  // 2. Rocket launches and COMPLETELY EXITS top of screen (1.8s - 3.4s)
+  // 3. Clouds billow in after rocket is gone (3.6s - 5.0s)
+  // 4. Brand Reveal pauses for user interaction (5.0s onwards)
   useEffect(() => {
-    // Stage 1: 'welcome' (0s - 2.2s) - starry arrival, typography, floating idle rocket
-    // Stage 2: 'rocket' (2.2s - 4.6s) - smooth ignition and majestic upward launch
+    // Rocket launches at 1.8s, exits screen by 3.4s
     const tLaunch = setTimeout(() => {
       setStage('rocket');
-    }, 2200);
+    }, 1800);
 
-    // Stage 3: 'clouds' (4.6s - 6.2s) - seamless fluid volumetric cloud wipe rolls down
+    // Clouds start at 3.6s (rocket has completely left the screen)
     const tClouds = setTimeout(() => {
       setStage('clouds');
-    }, 4600);
+    }, 3600);
 
-    // Stage 4: 'reveal' (6.2s onwards) - Velvet Hearts brand reveal
-    // The screen stays here for the user to click "Enter Experience", with a generous 25s timeout
+    // Brand Reveal displays at 5.0s once clouds are set
     const tReveal = setTimeout(() => {
       setStage('reveal');
-    }, 6200);
+    }, 5000);
 
+    // Inactivity safety fallback (30s)
     const tTimeout = setTimeout(() => {
       handleFinish();
-    }, 25000);
+    }, 30000);
 
-    // Progress bar runs smoothly up to the reveal stage
-    const PROGRESS_DURATION = 6200;
+    // Progress bar up to reveal
+    const PROGRESS_DURATION = 5000;
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -159,9 +162,9 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
         <div className="vws-dust" style={{ left: '85%', '--drift-time': '10s', '--drift-x': '-20px' }} />
       </div>
 
-      {/* Top Header Navigation: Brand Indicator & High-Contrast Skip Button */}
+      {/* Top Header Navigation: Skip Button */}
       <header className="vws-top-nav">
-        <div className={`vws-brand-indicator ${isLightStage ? 'is-light-mode' : ''}`}>
+        <div className={`vws-brand-indicator ${stage !== 'welcome' ? 'is-fading-out' : ''}`}>
           <img src={velvetHeartLogo} alt="" className="vws-mini-logo" />
           <span>VELVET HEARTS</span>
         </div>
@@ -199,6 +202,7 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
 
       {/* ==========================================================
           STAGE 2: SMOOTH CUPID HEART-ROCKET ASCENT
+          Launches swiftly and is COMPLETELY GONE before clouds appear
          ========================================================== */}
       <div className="vws-rocket-stage" aria-hidden="true">
         <div
@@ -321,8 +325,8 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
       </div>
 
       {/* ==========================================================
-          STAGE 3: 100% GAPLESS VOLUMETRIC CLOUD CURTAIN WIPE
-          Sweeps from top: -100% to top: 0% with solid fill above
+          STAGE 3: ORGANIC BILLOWING VOLUMETRIC CLOUD CURTAIN
+          Natural flowing curves — no disjointed circle shapes!
          ========================================================== */}
       <div className="vws-cloud-wipe-layer" aria-hidden="true">
         <div
@@ -330,80 +334,62 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
             isLightStage ? 'is-sweeping-down' : ''
           }`}
         >
-          {/* Solid 100% viewport coverage block */}
+          {/* Solid 100% viewport coverage body */}
           <div className="vws-cloud-solid-body" />
 
-          {/* Scalloped organic cloud wave on the leading bottom edge */}
+          {/* Continuous multi-layered organic wave lip */}
           <div className="vws-cloud-wave-lip">
             <svg
               className="vws-fluid-cloud-svg"
-              viewBox="0 0 1920 280"
+              viewBox="0 0 1920 320"
               preserveAspectRatio="none"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
               <defs>
-                <linearGradient id="waveLipGrad" x1="960" y1="0" x2="960" y2="280" gradientUnits="userSpaceOnUse">
+                <linearGradient id="cloudDeepGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
                   <stop offset="0%" stopColor="#FFF5F7" />
-                  <stop offset="60%" stopColor="#FEE4EC" />
+                  <stop offset="50%" stopColor="#FEE4EC" />
                   <stop offset="100%" stopColor="#FBCFE8" />
                 </linearGradient>
 
-                <linearGradient id="waveFrontLip" x1="960" y1="0" x2="960" y2="280" gradientUnits="userSpaceOnUse">
+                <linearGradient id="cloudMidGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="60%" stopColor="#FFF2F6" />
+                  <stop offset="100%" stopColor="#FDD8E5" />
+                </linearGradient>
+
+                <linearGradient id="cloudFrontGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
                   <stop offset="0%" stopColor="#FFFFFF" />
                   <stop offset="70%" stopColor="#FFF5F8" />
                   <stop offset="100%" stopColor="#FDE2EC" />
                 </linearGradient>
 
-                <filter id="cloudLipShadow" x="-10%" y="-10%" width="120%" height="140%">
-                  <feDropShadow dx="0" dy="16" stdDeviation="20" floodColor="#881337" floodOpacity="0.16" />
+                <filter id="cloudSoftBloom" x="-10%" y="-10%" width="120%" height="150%">
+                  <feDropShadow dx="0" dy="16" stdDeviation="20" floodColor="#881337" floodOpacity="0.14" />
                 </filter>
               </defs>
 
-              {/* Background undulating wave */}
+              {/* Layer 1: Background Velvet Blush Wave */}
               <path
-                d="
-                  M 0 0
-                  L 1920 0
-                  L 1920 180
-                  C 1760 160, 1640 220, 1480 180
-                  C 1320 140, 1200 210, 1040 175
-                  C 880 140, 760 215, 600 175
-                  C 440 135, 320 210, 160 170
-                  C 80 150, 0 185, 0 185
-                  Z
-                "
-                fill="url(#waveLipGrad)"
-                opacity="0.9"
+                d="M 0,0 L 1920,0 L 1920,190 C 1800,250 1680,150 1520,210 C 1360,270 1240,170 1080,230 C 920,290 800,170 640,220 C 480,270 360,160 200,220 C 100,260 0,200 0,200 Z"
+                fill="url(#cloudDeepGrad)"
+                opacity="0.85"
               />
 
-              {/* Foreground Puffy Scalloped Bubbles */}
+              {/* Layer 2: Middle Soft Rose Wave */}
               <path
-                d="
-                  M 0 0
-                  L 1920 0
-                  L 1920 140
-                  C 1820 130, 1750 85, 1660 85
-                  C 1560 85, 1480 130, 1380 130
-                  C 1280 130, 1200 80, 1100 80
-                  C 1000 80, 920 125, 820 125
-                  C 720 125, 640 75, 540 75
-                  C 440 75, 360 125, 260 125
-                  C 160 125, 100 85, 0 85
-                  Z
-                "
-                fill="url(#waveFrontLip)"
-                filter="url(#cloudLipShadow)"
+                d="M 0,0 L 1920,0 L 1920,150 C 1780,200 1660,120 1500,170 C 1340,220 1220,130 1060,180 C 900,230 780,130 620,175 C 460,220 340,120 180,170 C 90,200 0,155 0,155 Z"
+                fill="url(#cloudMidGrad)"
+                opacity="0.95"
               />
 
-              {/* Leading cloud bubbles */}
-              <circle cx="160" cy="115" r="90" fill="url(#waveFrontLip)" />
-              <circle cx="420" cy="105" r="105" fill="url(#waveFrontLip)" />
-              <circle cx="700" cy="118" r="100" fill="url(#waveFrontLip)" />
-              <circle cx="980" cy="98" r="115" fill="url(#waveFrontLip)" />
-              <circle cx="1260" cy="112" r="108" fill="url(#waveFrontLip)" />
-              <circle cx="1540" cy="108" r="95" fill="url(#waveFrontLip)" />
-              <circle cx="1800" cy="118" r="95" fill="url(#waveFrontLip)" />
+              {/* Layer 3: Foreground Billowing Pure Cloud Wave */}
+              <path
+                d="M 0,0 L 1920,0 L 1920,110 C 1760,160 1640,85 1480,130 C 1320,175 1200,90 1040,135 C 880,180 760,95 600,135 C 440,175 320,90 160,130 C 80,155 0,115 0,115 Z"
+                fill="url(#cloudFrontGrad)"
+                filter="url(#cloudSoftBloom)"
+              />
             </svg>
           </div>
         </div>
