@@ -8,6 +8,7 @@ import velvetHeartLogo from './assets/velvet-heart-logo.png';
 
 import { LoadingScreen } from './components/UI/LoadingScreen';
 import { LandingPage } from './pages/Landing/LandingPage';
+import { WelcomeSplashScreen } from './components/UI/WelcomeSplashScreen';
 import { ToastContainer } from './components/UI/ToastContainer';
 import { CookieConsentBanner } from './components/UI/CookieConsentBanner';
 import { initGA } from './lib/analytics';
@@ -87,6 +88,24 @@ function AppContent() {
   const [showAuth, setShowAuth] = useState(false);
   const [isNotFound, setIsNotFound] = useState(false);
   const [notFoundPath, setNotFoundPath] = useState('');
+
+  // Welcome Splash Screen (inspired by Wegho Bodymovin/Lottie animation)
+  const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('splash') === '1' || params.get('splash') === 'true') return true;
+      return !sessionStorage.getItem('vh-seen-welcome-splash');
+    } catch {
+      return true;
+    }
+  });
+
+  const handleCompleteWelcomeSplash = () => {
+    try {
+      sessionStorage.setItem('vh-seen-welcome-splash', 'true');
+    } catch (_) {}
+    setShowWelcomeSplash(false);
+  };
 
   // Specific detail sub-page triggers
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -419,16 +438,21 @@ function AppContent() {
       );
     }
     return (
-      <LandingPage
-        onGetStarted={() => {
-          setAuthInitialMode('signup');
-          setShowAuth(true);
-        }}
-        onSignIn={() => {
-          setAuthInitialMode('login');
-          setShowAuth(true);
-        }}
-      />
+      <>
+        {showWelcomeSplash && (
+          <WelcomeSplashScreen onComplete={handleCompleteWelcomeSplash} />
+        )}
+        <LandingPage
+          onGetStarted={() => {
+            setAuthInitialMode('signup');
+            setShowAuth(true);
+          }}
+          onSignIn={() => {
+            setAuthInitialMode('login');
+            setShowAuth(true);
+          }}
+        />
+      </>
     );
   }
 
