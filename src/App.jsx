@@ -9,6 +9,7 @@ import velvetHeartLogo from './assets/velvet-heart-logo.png';
 import { LoadingScreen } from './components/UI/LoadingScreen';
 import { LandingPage } from './pages/Landing/LandingPage';
 import { WelcomeSplashScreen } from './components/UI/WelcomeSplashScreen';
+import { evaluateSplashEligibility, markSplashSeen } from './utils/welcomeSplashPolicy';
 import { ToastContainer } from './components/UI/ToastContainer';
 import { CookieConsentBanner } from './components/UI/CookieConsentBanner';
 import { initGA } from './lib/analytics';
@@ -89,21 +90,13 @@ function AppContent() {
   const [isNotFound, setIsNotFound] = useState(false);
   const [notFoundPath, setNotFoundPath] = useState('');
 
-  // Welcome Splash Screen (inspired by Wegho Bodymovin/Lottie animation)
+  // Welcome Splash Screen (governed by comprehensive edge-case policy)
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('splash') === '1' || params.get('splash') === 'true') return true;
-      return !sessionStorage.getItem('vh-seen-welcome-splash');
-    } catch {
-      return true;
-    }
+    return evaluateSplashEligibility().shouldPlay;
   });
 
   const handleCompleteWelcomeSplash = () => {
-    try {
-      sessionStorage.setItem('vh-seen-welcome-splash', 'true');
-    } catch (_) {}
+    markSplashSeen();
     setShowWelcomeSplash(false);
   };
 
@@ -464,6 +457,9 @@ function AppContent() {
   if (!isOnboarded) {
     return (
       <Suspense fallback={<AuthLoadingScreen />}>
+        {showWelcomeSplash && (
+          <WelcomeSplashScreen onComplete={handleCompleteWelcomeSplash} />
+        )}
         <OnboardingFlow />
       </Suspense>
     );
@@ -471,10 +467,14 @@ function AppContent() {
 
   // 3. Authenticated and Onboarded: Layout wrapping Main Navigation
   return (
-    <Navigation
-      isChatViewActive={activeTab === 'chat' && !selectedProfile}
-      isInsideChat={activeTab === 'chat' && Boolean(activeChatPartnerId || preselectedChatPartnerId) && !selectedProfile}
-    >
+    <>
+      {showWelcomeSplash && (
+        <WelcomeSplashScreen onComplete={handleCompleteWelcomeSplash} />
+      )}
+      <Navigation
+        isChatViewActive={activeTab === 'chat' && !selectedProfile}
+        isInsideChat={activeTab === 'chat' && Boolean(activeChatPartnerId || preselectedChatPartnerId) && !selectedProfile}
+      >
       <Suspense fallback={<AuthLoadingScreen />}>
         {renderActivePage()}
       </Suspense>
@@ -496,6 +496,7 @@ function AppContent() {
         </Suspense>
       )}
     </Navigation>
+    </>
   );
 }
 

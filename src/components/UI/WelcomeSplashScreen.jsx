@@ -101,29 +101,32 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
     }, 600);
   };
 
-  // Keyboard shortcut: Esc or Enter to skip instantly
+  // Seamless, tight timing & Edge-case Handling
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' || e.key === 'Enter') {
-        handleFinish();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+    // Edge case 1: User prefers reduced motion
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Seamless, tight timing:
-  // 1. Welcome Greeting (0s - 1.8s): Stars, Welcome text, idling rocket. NO CLOUDS IN DOM.
-  // 2. Rocket Blast Off (1.8s - 3.1s): Rocket accelerates and exits top of screen.
-  // 3. Clouds Roll Down (3.1s - 4.3s): Clouds roll down smoothly immediately as rocket exits (no dead gap!).
-  // 4. Brand Reveal (4.3s onwards): Clean logo, title, and enter button. Adapts to dark/light theme.
-  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isForced = params.get('splash') === '1' || params.get('splash') === 'true';
+
+    // If reduced motion is preferred and not explicitly forced, fast-forward directly to reveal
+    if (prefersReducedMotion && !isForced) {
+      setStage('reveal');
+      setProgress(100);
+      return;
+    }
+
+    const startTime = Date.now();
+
     // Rocket blasts off at 1.8s
     const tLaunch = setTimeout(() => {
       setStage('rocket');
     }, 1800);
 
-    // Clouds roll down immediately as rocket clears the top of the screen at 3.1s
+    // Clouds roll down immediately as rocket clears top of screen at 3.1s
     const tClouds = setTimeout(() => {
       setStage('clouds');
     }, 3100);
@@ -140,7 +143,6 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
 
     // Progress bar runs up to reveal
     const PROGRESS_DURATION = 4300;
-    const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const pct = Math.min(100, Math.round((elapsed / PROGRESS_DURATION) * 100));
@@ -148,14 +150,47 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
       if (pct >= 100) clearInterval(interval);
     }, 40);
 
+    // Edge case 2: Background tab synchronization
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= 4300) {
+          setStage('reveal');
+          setProgress(100);
+        } else if (elapsed >= 3100) {
+          setStage('clouds');
+        } else if (elapsed >= 1800) {
+          setStage('rocket');
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       clearTimeout(tLaunch);
       clearTimeout(tClouds);
       clearTimeout(tReveal);
       clearTimeout(tTimeout);
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  // Edge case 3: Global Keyboard accessibility (Escape to skip, Enter/Space to continue)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleFinish();
+      } else if ((e.key === 'Enter' || e.key === ' ') && stage === 'reveal') {
+        e.preventDefault();
+        handleFinish();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [stage]);
 
   const isCloudRevealStage = stage === 'clouds' || stage === 'reveal' || stage === 'exit';
 
