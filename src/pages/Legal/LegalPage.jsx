@@ -559,7 +559,7 @@ const PrivacyPolicyContent = () => {
             <MapPin size={14} /> Jurisdiction: Republic of India
           </span>
           <span className="legal-doc-meta-item">
-            <UserCheck size={14} /> Data Fiduciary: Velvet Hearts Technologies India
+            <UserCheck size={14} /> Data Fiduciary: Velvet Hearts (Founder: Indrani Roy)
           </span>
         </div>
       </div>
@@ -602,13 +602,13 @@ const PrivacyPolicyContent = () => {
           <span>1. Regulatory Framework &amp; Data Notice</span>
         </h2>
         <p className="legal-p">
-          Velvet Hearts (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) operates an intentional relationship and discovery platform tailored for authentic connections across India. This Privacy Policy outlines how we collect, store, process, and safeguard your personal data.
+          Velvet Hearts (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) operates an intentional relationship and discovery platform tailored for authentic connections across India. This Privacy Policy is published in strict compliance with Section 5 of the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act, 2023)</strong> and Rule 3(1) of the <strong>Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>.
         </p>
         <p className="legal-p">
           Under Indian law:
         </p>
         <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li><strong>Velvet Hearts Technologies</strong> serves as the <strong>Data Fiduciary</strong> determining the purpose and means of processing personal data.</li>
+          <li><strong>Velvet Hearts (founded by Indrani Roy)</strong> serves as the <strong>Data Fiduciary</strong> determining the purpose and means of processing personal data.</li>
           <li>You, as the registered member and citizen/resident of India, are the <strong>Data Principal</strong> entitled to constitutional and statutory privacy rights.</li>
           <li>Our cloud infrastructure and transmission adhere to the <strong>Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011</strong> and <strong>CERT-In Cyber Security Directions 2022</strong>.</li>
         </ul>
@@ -777,7 +777,7 @@ const PrivacyPolicyContent = () => {
           <div className="grievance-row">
             <div className="grievance-detail">
               <span className="grievance-label">Designated Officer</span>
-              <span className="grievance-val">Aditya Sharma (Head of Trust &amp; Safety)</span>
+              <span className="grievance-val">Indrani Roy (Founder &amp; Designated Grievance Officer)</span>
             </div>
             <div className="grievance-detail">
               <span className="grievance-label">Official Grievance Email</span>
@@ -792,8 +792,8 @@ const PrivacyPolicyContent = () => {
               <span className="grievance-val">Acknowledged in 24h &bull; Resolved in 15 days (24h for Rule 3(2)(b))</span>
             </div>
             <div className="grievance-detail">
-              <span className="grievance-label">Registered Office</span>
-              <span className="grievance-val">Velvet Hearts Trust Office, Cyber City, Gurugram, Haryana 122002, India</span>
+              <span className="grievance-label">Communication Channel</span>
+              <span className="grievance-val">Electronic Grievance Redressal Desk, Velvet Hearts, India</span>
             </div>
           </div>
         </div>
@@ -892,7 +892,7 @@ const TermsOfServiceContent = () => {
           <span>1. Acceptance of Terms &amp; Binding Contract</span>
         </h2>
         <p className="legal-p">
-          By downloading, installing, registering, or accessing Velvet Hearts (&ldquo;App&rdquo; or &ldquo;Platform&rdquo;), you enter into a legally enforceable contract under the <strong>Indian Contract Act, 1872</strong> with Velvet Hearts Technologies. If you do not accept all terms of this User Agreement, you are not authorized to use the Service and must delete your account immediately.
+          By downloading, installing, registering, or accessing Velvet Hearts (&ldquo;App&rdquo; or &ldquo;Platform&rdquo;), you enter into a legally enforceable contract under the <strong>Indian Contract Act, 1872</strong> with Velvet Hearts (founded by Indrani Roy). If you do not accept all terms of this User Agreement, you are not authorized to use the Service and must delete your account immediately.
         </p>
       </section>
 
@@ -1029,7 +1029,7 @@ const TermsOfServiceContent = () => {
           <div className="grievance-row">
             <div className="grievance-detail">
               <span className="grievance-label">Designated Officer</span>
-              <span className="grievance-val">Aditya Sharma (Head of Trust &amp; Safety)</span>
+              <span className="grievance-val">Indrani Roy (Founder &amp; Designated Grievance Officer)</span>
             </div>
             <div className="grievance-detail">
               <span className="grievance-label">Official Contact Email</span>
@@ -1044,8 +1044,8 @@ const TermsOfServiceContent = () => {
               <span className="grievance-val">24h Acknowledgment &bull; 15 Days Resolution (24h for Rule 3(2)(b))</span>
             </div>
             <div className="grievance-detail">
-              <span className="grievance-label">Registered Address</span>
-              <span className="grievance-val">Velvet Hearts Trust Office, Cyber City, Gurugram, Haryana 122002, India</span>
+              <span className="grievance-label">Communication Channel</span>
+              <span className="grievance-val">Electronic Grievance Redressal Desk, Velvet Hearts, India</span>
             </div>
           </div>
         </div>
