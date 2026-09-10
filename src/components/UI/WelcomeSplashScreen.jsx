@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ArrowRight } from '@phosphor-icons/react';
 import velvetHeartLogo from '../../assets/velvet-heart-logo.png';
 import { triggerHaptic } from '../../utils/haptics';
 import './WelcomeSplashScreen.css';
