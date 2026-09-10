@@ -383,119 +383,118 @@ function AppContent() {
     }
   };
 
-  // 0. Loading — session restoration in progress
-  if (authLoading) {
-    if (showWelcomeSplash) {
-      return <WelcomeSplashScreen onComplete={handleCompleteWelcomeSplash} />;
+  const renderContent = () => {
+    // 0. Loading — session restoration in progress
+    if (authLoading) {
+      return <AuthLoadingScreen />;
     }
-    return <AuthLoadingScreen />;
-  }
 
-  // 1. Dedicated 404 Route (renders for any invalid route, logged in or logged out)
-  if (isNotFound) {
-    return (
-      <Suspense fallback={<AuthLoadingScreen />}>
-        <NotFoundPage
-          path={notFoundPath}
-          isLoggedIn={isLoggedIn}
-          onNavigate={(target) => {
-            setIsNotFound(false);
-            if (target === 'home') {
-              try { window.history.pushState({}, '', '/'); } catch (_) {}
-            } else {
-              setActiveTab(target);
-              try { window.history.pushState({}, '', `/${target}`); } catch (_) {}
-            }
-          }}
-          onSignIn={() => {
-            setIsNotFound(false);
-            setAuthInitialMode('login');
-            setShowAuth(true);
-            try { window.history.pushState({}, '', '/'); } catch (_) {}
-          }}
-          onGetStarted={() => {
-            setIsNotFound(false);
-            setAuthInitialMode('signup');
-            setShowAuth(true);
-            try { window.history.pushState({}, '', '/'); } catch (_) {}
-          }}
-        />
-      </Suspense>
-    );
-  }
-
-  // 2. Logged Out State: Landing or Auth Screen
-  if (!isLoggedIn) {
-    if (showAuth) {
+    // 1. Dedicated 404 Route (renders for any invalid route, logged in or logged out)
+    if (isNotFound) {
       return (
         <Suspense fallback={<AuthLoadingScreen />}>
-          <AuthFlow onBack={() => setShowAuth(false)} initialMode={authInitialMode} />
+          <NotFoundPage
+            path={notFoundPath}
+            isLoggedIn={isLoggedIn}
+            onNavigate={(target) => {
+              setIsNotFound(false);
+              if (target === 'home') {
+                try { window.history.pushState({}, '', '/'); } catch (_) {}
+              } else {
+                setActiveTab(target);
+                try { window.history.pushState({}, '', `/${target}`); } catch (_) {}
+              }
+            }}
+            onSignIn={() => {
+              setIsNotFound(false);
+              setAuthInitialMode('login');
+              setShowAuth(true);
+              try { window.history.pushState({}, '', '/'); } catch (_) {}
+            }}
+            onGetStarted={() => {
+              setIsNotFound(false);
+              setAuthInitialMode('signup');
+              setShowAuth(true);
+              try { window.history.pushState({}, '', '/'); } catch (_) {}
+            }}
+          />
         </Suspense>
       );
     }
-    return (
-      <>
-        {showWelcomeSplash && (
-          <WelcomeSplashScreen onComplete={handleCompleteWelcomeSplash} />
-        )}
-        <LandingPage
-          onGetStarted={() => {
-            setAuthInitialMode('signup');
-            setShowAuth(true);
-          }}
-          onSignIn={() => {
-            setAuthInitialMode('login');
-            setShowAuth(true);
-          }}
-        />
-        {!showWelcomeSplash && <CookieConsentBanner />}
-      </>
-    );
-  }
 
-  // 2. Authenticated but Onboarding Incomplete
-  if (!isOnboarded) {
-    return (
-      <Suspense fallback={<AuthLoadingScreen />}>
-        {showWelcomeSplash && (
-          <WelcomeSplashScreen onComplete={handleCompleteWelcomeSplash} />
-        )}
-        <OnboardingFlow />
-      </Suspense>
-    );
-  }
+    // 2. Logged Out State: Landing or Auth Screen
+    if (!isLoggedIn) {
+      if (showAuth) {
+        return (
+          <Suspense fallback={<AuthLoadingScreen />}>
+            <AuthFlow onBack={() => setShowAuth(false)} initialMode={authInitialMode} />
+          </Suspense>
+        );
+      }
+      return (
+        <>
+          <LandingPage
+            onGetStarted={() => {
+              setAuthInitialMode('signup');
+              setShowAuth(true);
+            }}
+            onSignIn={() => {
+              setAuthInitialMode('login');
+              setShowAuth(true);
+            }}
+          />
+          {!showWelcomeSplash && <CookieConsentBanner />}
+        </>
+      );
+    }
 
-  // 3. Authenticated and Onboarded: Layout wrapping Main Navigation
+    // 3. Authenticated but Onboarding Incomplete
+    if (!isOnboarded) {
+      return (
+        <Suspense fallback={<AuthLoadingScreen />}>
+          <OnboardingFlow />
+        </Suspense>
+      );
+    }
+
+    // 4. Authenticated and Onboarded: Layout wrapping Main Navigation
+    return (
+      <Navigation
+        isChatViewActive={activeTab === 'chat' && !selectedProfile}
+        isInsideChat={activeTab === 'chat' && Boolean(activeChatPartnerId || preselectedChatPartnerId) && !selectedProfile}
+      >
+        <Suspense fallback={<AuthLoadingScreen />}>
+          {renderActivePage()}
+        </Suspense>
+        <FeatureTourGuide />
+        <VerificationPromptModal />
+        <WarningAlertModal />
+        {/* Welcome Radar — fires once after onboarding completes */}
+        {showWelcomeRadar && (
+          <Suspense fallback={null}>
+            <WelcomeRadarModal
+              userName={userProfile?.name || ''}
+              userCity={userProfile?.city || ''}
+              interests={userProfile?.interests || []}
+              onClose={() => {
+                setShowWelcomeRadar(false);
+                startFeatureTour();
+              }}
+            />
+          </Suspense>
+        )}
+      </Navigation>
+    );
+  };
+
+  // WelcomeSplashScreen sits persistently at the root fragment level so that
+  // authLoading transitions underneath NEVER cause it to unmount or restart!
   return (
     <>
       {showWelcomeSplash && (
         <WelcomeSplashScreen onComplete={handleCompleteWelcomeSplash} />
       )}
-      <Navigation
-        isChatViewActive={activeTab === 'chat' && !selectedProfile}
-        isInsideChat={activeTab === 'chat' && Boolean(activeChatPartnerId || preselectedChatPartnerId) && !selectedProfile}
-      >
-      <Suspense fallback={<AuthLoadingScreen />}>
-        {renderActivePage()}
-      </Suspense>
-      <FeatureTourGuide />
-      <VerificationPromptModal />
-      <WarningAlertModal />
-      {/* Welcome Radar — fires once after onboarding completes */}
-      {showWelcomeRadar && (
-        <Suspense fallback={null}>
-          <WelcomeRadarModal
-            userName={userProfile?.name || ''}
-            userCity={userProfile?.city || ''}
-            interests={userProfile?.interests || []}
-            onClose={() => {
-              setShowWelcomeRadar(false);
-              startFeatureTour();
-            }}
-          />
-        </Suspense>
-      )}
-    </Navigation>
+      {renderContent()}
     </>
   );
 }
