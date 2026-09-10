@@ -795,7 +795,6 @@ const PrivacyPolicyContent = () => {
         <div className="ai-banner-content">
           <h4>
             <span>AI-Authored Platform &amp; Algorithmic Transparency Disclosure</span>
-            <Sparkle size={16} weight="fill" />
           </h4>
           <p>
             Velvet Hearts operates with total technical transparency. The software application codebase, database architecture, communication schemas, and algorithmic matching mechanisms have been <strong>authored, generated, and synthesized utilizing Advanced Artificial Intelligence (Google DeepMind Antigravity AI Systems)</strong> under continuous human architectural supervision and validation. AI algorithms are deployed strictly for vibe affinity matching, biometric anti-spoofing verification, and safety moderation, operating in complete compliance with the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong>.
@@ -1101,7 +1100,6 @@ const TermsOfServiceContent = () => {
         <div className="ai-banner-content">
           <h4>
             <span>AI-Authored Software Architecture &amp; Algorithmic Heuristics Notice</span>
-            <Sparkle size={16} weight="fill" />
           </h4>
           <p>
             Users acknowledge that Velvet Hearts software, backend infrastructure, compatibility metrics, and user safety monitors are <strong>authored, generated, and synthesized utilizing Advanced Artificial Intelligence (Google DeepMind Antigravity AI Systems)</strong> under ongoing human oversight. Compatibility percentages are entertaining affinity suggestions and do not constitute character endorsements, background verifications, or relationship warranties. The service is provided strictly on an &ldquo;AS-IS&rdquo; and &ldquo;AS-AVAILABLE&rdquo; basis.

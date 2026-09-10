@@ -39,12 +39,18 @@ export function CookieConsentBanner() {
     setConsent(true);
     setCurrentChoice(ConsentStatus.ACCEPTED);
     setVisible(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('vh-cookie-consent-changed', { detail: 'accepted' }));
+    }
   };
 
   const handleReject = () => {
     setConsent(false);
     setCurrentChoice(ConsentStatus.REJECTED);
     setVisible(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('vh-cookie-consent-changed', { detail: 'rejected' }));
+    }
   };
 
   if (!visible) {

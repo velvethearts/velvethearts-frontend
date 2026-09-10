@@ -413,7 +413,7 @@ export const StoryDeck = ({
       >
         {/* Dynamic Drag Stamp Overlays */}
         <div className="card-stamp stamp-spark font-display" style={{ opacity: stampSparkOpacity }}>
-          SPARK ✨
+          SPARK
         </div>
         <div className="card-stamp stamp-pass font-display" style={{ opacity: stampPassOpacity }}>
           PASS
@@ -596,7 +596,7 @@ export const StoryDeck = ({
             )}
             {activeProfile.relationshipIntent && (
               <span className="meta-item intent-item">
-                ✨ {activeProfile.relationshipIntent}
+                {activeProfile.relationshipIntent}
               </span>
             )}
           </div>

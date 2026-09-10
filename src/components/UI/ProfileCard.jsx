@@ -193,7 +193,7 @@ export const ProfileCard = ({
         ) : feedMode === 'new_faces' ? (
           <div className="profile-badge-row font-ui">
             <span className="badge-new-face font-ui">
-              ✨ New Face
+              New Face
             </span>
           </div>
         ) : profile.isPremium ? (
@@ -330,7 +330,7 @@ export const ProfileCard = ({
           )}
           {profile.relationshipIntent && (
             <span className="meta-item intent-item">
-              ✨ {profile.relationshipIntent}
+              {profile.relationshipIntent}
             </span>
           )}
         </div>

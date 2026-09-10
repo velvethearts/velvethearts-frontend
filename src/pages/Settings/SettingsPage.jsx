@@ -33,6 +33,19 @@ export const SettingsPage = () => {
   const [localNotifs, setLocalNotifs] = useState({ ...notifications });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [cookieConsent, setCookieConsent] = useState(() => getStoredConsent());
+
+  useEffect(() => {
+    const handleConsentUpdate = () => {
+      setCookieConsent(getStoredConsent());
+    };
+    window.addEventListener('vh-cookie-consent-changed', handleConsentUpdate);
+    window.addEventListener('storage', handleConsentUpdate);
+    return () => {
+      window.removeEventListener('vh-cookie-consent-changed', handleConsentUpdate);
+      window.removeEventListener('storage', handleConsentUpdate);
+    };
+  }, []);
 
   const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
@@ -378,7 +391,7 @@ export const SettingsPage = () => {
               <div className="option-text">
                 <span className="option-label">Cookie &amp; Tracking Preferences</span>
                 <span className="option-desc font-body">
-                  Status: {getStoredConsent() === 'accepted' ? 'Analytics Accepted 🟢' : getStoredConsent() === 'rejected' ? 'Strictly Necessary Only (Analytics Blocked) 🛡️' : 'Not Configured (Strict Mode) 🛡️'}. Tap to modify consent.
+                  Status: {cookieConsent === 'accepted' ? 'Analytics Accepted 🟢' : cookieConsent === 'rejected' ? 'Strictly Necessary Only (Analytics Blocked) 🛡️' : 'Not Configured (Strict Mode) 🛡️'}. Tap to modify consent.
                 </span>
               </div>
               <Button 

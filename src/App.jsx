@@ -520,7 +520,6 @@ function AppContent() {
               try { window.history.pushState({}, '', `/${tab}`); } catch (_) {}
             }}
           />
-          {!showWelcomeSplash && <CookieConsentBanner />}
         </>
       );
     }
@@ -572,6 +571,7 @@ function AppContent() {
         <WelcomeSplashScreen onComplete={handleCompleteWelcomeSplash} />
       )}
       {renderContent()}
+      {!showWelcomeSplash && <CookieConsentBanner />}
     </>
   );
 }

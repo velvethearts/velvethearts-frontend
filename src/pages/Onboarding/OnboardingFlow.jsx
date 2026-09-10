@@ -686,7 +686,7 @@ export const OnboardingFlow = () => {
         { icon: '🎸', label: 'In Your Element', hint: 'Show your hobby, sport, or creative passion' },
         { icon: '🌍', label: 'An Adventure', hint: 'A travel, nature, or road trip moment' },
         { icon: '😄', label: 'Candid Moment', hint: 'Laughing, coffee run, or a casual snap' },
-        { icon: '✨', label: 'Dressed Up', hint: 'A celebration, night out, or event' },
+        { icon: '🥂', label: 'Dressed Up', hint: 'A celebration, night out, or event' },
         { icon: '🃏', label: 'Wild Card', hint: 'Anything that shows more of your personality' },
     ];
 

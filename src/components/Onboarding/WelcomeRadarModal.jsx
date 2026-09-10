@@ -36,7 +36,7 @@ export const WelcomeRadarModal = ({
               <div className="wr-ring wr-ring-3" />
               <div className="wr-radar-pulse" />
               <div className="wr-dot wr-dot-1">💜</div>
-              <div className="wr-dot wr-dot-2">✨</div>
+              <div className="wr-dot wr-dot-2">🤍</div>
               <div className="wr-dot wr-dot-3">❤️</div>
               <div className="wr-dot wr-dot-4">🌟</div>
             </div>

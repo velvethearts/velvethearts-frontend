@@ -73,7 +73,7 @@ export const PromptReactionModal = ({
             <p className="context-quote-text font-body italic">&ldquo;{targetContent}&rdquo;</p>
           )}
           {targetType === 'interest' && (
-            <span className="context-interest-pill font-ui">✨ {targetContent}</span>
+            <span className="context-interest-pill font-ui">{targetContent}</span>
           )}
           {targetType === 'letter' && (
             <p className="context-quote-text font-body" style={{ color: 'var(--gold-400)', margin: 0 }}>
