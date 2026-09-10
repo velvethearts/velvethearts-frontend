@@ -76,34 +76,34 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Strict Sequential Progression:
-  // 1. Welcome Greeting (0s - 2.0s): Stars, Welcome text, idling rocket. NO CLOUDS IN DOM.
-  // 2. Rocket Blast Off (2.0s - 3.6s): Welcome text fades, rocket launches and exits off top. NO CLOUDS IN DOM.
-  // 3. Clouds Roll Down (3.8s - 5.2s): Clouds mount and roll down across screen.
-  // 4. Brand Reveal (5.2s onwards): Clean logo, title, and enter button.
+  // Seamless, tight timing:
+  // 1. Welcome Greeting (0s - 1.8s): Stars, Welcome text, idling rocket. NO CLOUDS IN DOM.
+  // 2. Rocket Blast Off (1.8s - 3.1s): Rocket accelerates and exits top of screen.
+  // 3. Clouds Roll Down (3.1s - 4.3s): Clouds roll down smoothly immediately as rocket exits (no dead gap!).
+  // 4. Brand Reveal (4.3s onwards): Clean logo, title, and enter button.
   useEffect(() => {
-    // Rocket blasts off at 2.0s
+    // Rocket blasts off at 1.8s
     const tLaunch = setTimeout(() => {
       setStage('rocket');
-    }, 2000);
+    }, 1800);
 
-    // Clouds start at 3.8s AFTER rocket is completely gone past top
+    // Clouds roll down immediately as rocket clears the top of the screen at 3.1s
     const tClouds = setTimeout(() => {
       setStage('clouds');
-    }, 3800);
+    }, 3100);
 
-    // Brand Reveal displays at 5.2s once clouds have fully rolled in
+    // Brand Reveal displays at 4.3s once clouds have rolled in
     const tReveal = setTimeout(() => {
       setStage('reveal');
-    }, 5200);
+    }, 4300);
 
     // Inactivity safety fallback (35s)
     const tTimeout = setTimeout(() => {
       handleFinish();
     }, 35000);
 
-    // Progress bar runs smoothly up to reveal
-    const PROGRESS_DURATION = 5200;
+    // Progress bar runs up to reveal
+    const PROGRESS_DURATION = 4300;
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -184,18 +184,14 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
       </header>
 
       {/* ==========================================================
-          STAGE 1: WELCOME SCREEN (Cosmic typography, no emojis)
+          STAGE 1: WELCOME SCREEN (Cosmic typography, clean & romantic)
          ========================================================== */}
       <div className={`vws-welcome-stage ${stage !== 'welcome' ? 'is-fading-out' : ''}`}>
         <div className="vws-welcome-content">
-          <div className="vws-prestige-badge font-ui">
-            <span>INTENTIONAL DATING PLATFORM</span>
-          </div>
-
           <h1 className="vws-hero-title font-display">WELCOME</h1>
 
           <p className="vws-hero-sub font-ui">
-            Where vulnerability is cherished, verified profiles connect, and intentional relationships begin.
+            Where authentic hearts meet, verified stories connect, and true romance begins.
           </p>
         </div>
       </div>
