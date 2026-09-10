@@ -353,6 +353,34 @@ export const AppProvider = ({ children }) => {
     const [blockedUsers, setBlockedUsers] = useState([]);
     const [reportedUsers, setReportedUsers] = useState([]);
 
+    const isUserBlockedOrSuspended = useCallback((targetId, targetObj = null) => {
+        if (!targetId && !targetObj) return false;
+
+        // Check status flags on object
+        if (targetObj) {
+            const status = (targetObj.status || '').toUpperCase();
+            if (status === 'SUSPENDED' || status === 'BLOCKED' || status === 'DELETED') return true;
+            if (targetObj.isSuspended || targetObj.isBlocked) return true;
+            if (targetObj.approvalStatus && targetObj.approvalStatus.toUpperCase() === 'REJECTED') return true;
+            if (targetObj.partner) {
+                const pStatus = (targetObj.partner.status || '').toUpperCase();
+                if (pStatus === 'SUSPENDED' || pStatus === 'BLOCKED' || pStatus === 'DELETED') return true;
+            }
+        }
+
+        // Check against personal blocked list
+        const idToCheck = targetId || targetObj?.id || targetObj?.userId || targetObj?.partnerId;
+        const secondaryId = targetObj?.userId || targetObj?.partnerId || targetObj?.partner?.id || targetObj?.partner?.userId;
+
+        const isBlocked = (blockedUsers || []).some(item => {
+            const bId = typeof item === 'string' ? item : (item.blockedUserId || item.blockedId || item.id || item.blocked?.id || item.user?.id);
+            if (!bId) return false;
+            return bId === idToCheck || (secondaryId && bId === secondaryId);
+        });
+
+        return isBlocked;
+    }, [blockedUsers]);
+
     const [supportTickets, setSupportTickets] = useState(() => {
         try {
             const saved = localStorage.getItem('vh-support-tickets');
@@ -717,9 +745,10 @@ export const AppProvider = ({ children }) => {
         try {
             const data = await api.getDiscover(filters);
             const list = Array.isArray(data) ? data : (Array.isArray(data?.profiles) ? data.profiles : []);
-            setProfiles(list);
+            const visibleList = list.filter(p => !isUserBlockedOrSuspended(p.id, p));
+            setProfiles(visibleList);
             try {
-                localStorage.setItem('vh-discover-profiles', JSON.stringify(list));
+                localStorage.setItem('vh-discover-profiles', JSON.stringify(visibleList));
             } catch (_) { }
         } catch (err) {
             setErrorProfiles(err.message || 'Failed to load profiles');
@@ -727,7 +756,7 @@ export const AppProvider = ({ children }) => {
         } finally {
             setLoadingProfiles(false);
         }
-    }, [filters, profiles.length]);
+    }, [filters, profiles.length, isUserBlockedOrSuspended]);
 
     useEffect(() => {
         if (api.isConfigured && api.tokenStore.getToken()) {
@@ -742,7 +771,8 @@ export const AppProvider = ({ children }) => {
         if (!api.isConfigured) return;
         try {
             const data = await api.getConnections();
-            const newConns = Array.isArray(data) ? data : [];
+            const rawConns = Array.isArray(data) ? data : [];
+            const newConns = rawConns.filter(c => !isUserBlockedOrSuspended(c.id, c));
 
             setConnections(prev => {
                 const oldIds = prev.map(c => c.id);
@@ -763,23 +793,25 @@ export const AppProvider = ({ children }) => {
         } catch (err) {
             console.error('Failed to fetch connections:', err);
         }
-    }, [interestsSent, interestStatuses]);
+    }, [interestsSent, interestStatuses, isUserBlockedOrSuspended]);
 
     const fetchReceivedInvites = useCallback(async () => {
         if (!api.isConfigured) return;
         try {
             const data = await api.getReceivedInvites();
-            setReceivedInvites(Array.isArray(data) ? data : []);
+            const rawInvites = Array.isArray(data) ? data : [];
+            setReceivedInvites(rawInvites.filter(inv => !isUserBlockedOrSuspended(inv.id, inv)));
         } catch (err) {
             console.error('Failed to fetch received invites:', err);
         }
-    }, []);
+    }, [isUserBlockedOrSuspended]);
 
     const fetchSentInvites = useCallback(async () => {
         if (!api.isConfigured) return;
         try {
             const data = await api.getSentInvites();
-            const list = Array.isArray(data) ? data : [];
+            const rawList = Array.isArray(data) ? data : [];
+            const list = rawList.filter(item => !isUserBlockedOrSuspended(item.id, item));
             setSentInvitesList(list);
 
             const sentIds = list.map(item => item.id);
@@ -795,7 +827,7 @@ export const AppProvider = ({ children }) => {
         } catch (err) {
             console.error('Failed to fetch sent invites:', err);
         }
-    }, []);
+    }, [isUserBlockedOrSuspended]);
 
 
     // ─── Conversations (API-driven) ────────────────────────────────────
@@ -807,6 +839,7 @@ export const AppProvider = ({ children }) => {
             const conversationsList = Array.isArray(data) ? data : [];
             const chatClears = getStoredChatClears();
             const visibleConversations = conversationsList.filter(conv => {
+                if (isUserBlockedOrSuspended(conv.partnerId, conv)) return false;
                 const clearedAt = chatClears[conv.partnerId];
                 if (!clearedAt) return true;
 
@@ -962,7 +995,7 @@ export const AppProvider = ({ children }) => {
 
     const savedProfileObjects = savedProfiles.map(id => {
         return savedProfileDetails[id] || profiles.find(p => p.id === id) || connections.find(c => c.id === id || c.userId === id) || null;
-    }).filter(Boolean);
+    }).filter(p => Boolean(p) && !isUserBlockedOrSuspended(p.id, p));
 
     useEffect(() => {
         localStorage.setItem('vh-support-tickets', JSON.stringify(supportTickets));
@@ -1889,17 +1922,35 @@ export const AppProvider = ({ children }) => {
     };
 
     const blockUser = async (profileId) => {
-        // Optimistic local cleanup
+        if (!profileId) return;
+
+        // Find existing profile information before removing, so it can display properly under the blocker's dashboard
+        const existingInfo = profiles.find(p => p.id === profileId || p.userId === profileId) ||
+                             connections.find(c => c.id === profileId || c.userId === profileId || c.partnerId === profileId) ||
+                             savedProfileDetails[profileId];
+
+        const blockedEntry = {
+            id: profileId,
+            blockedUserId: profileId,
+            name: existingInfo?.name || 'Blocked User',
+            avatar: existingInfo?.photos?.[0] || existingInfo?.photo || null,
+            city: existingInfo?.city || null,
+            createdAt: new Date().toISOString()
+        };
+
+        // Optimistic local cleanup across ALL surfaces: Discover, Grid, Connections, Chat, Saved, Invites
+        setProfiles(prev => prev.filter(p => p.id !== profileId && p.userId !== profileId));
         setSavedProfiles(prev => prev.filter(id => id !== profileId));
         setSavedProfileDetails(prev => {
             const next = { ...prev };
             delete next[profileId];
             return next;
         });
-        setConnections(prev => prev.filter(c => (c.id || c) !== profileId));
-        setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId));
+        setConnections(prev => prev.filter(c => c.id !== profileId && c.userId !== profileId && c.partnerId !== profileId));
+        setConversations(prev => prev.filter(c => c.partnerId !== profileId && c.id !== profileId));
+        setReceivedInvites(prev => prev.filter(invite => invite.id !== profileId && invite.userId !== profileId));
         setInterestsSent(prev => prev.filter(id => id !== profileId));
-        setSentInvitesList(prev => prev.filter(item => item.id !== profileId));
+        setSentInvitesList(prev => prev.filter(item => item.id !== profileId && item.userId !== profileId));
         setInterestStatuses(prev => {
             const next = { ...prev };
             delete next[profileId];
@@ -1911,8 +1962,12 @@ export const AppProvider = ({ children }) => {
             return next;
         });
         setBlockedUsers(prev => {
-            if (!prev.includes(profileId)) {
-                return [...prev, profileId];
+            const exists = prev.some(item => {
+                const id = typeof item === 'string' ? item : (item.blockedUserId || item.id);
+                return id === profileId;
+            });
+            if (!exists) {
+                return [blockedEntry, ...prev];
             }
             return prev;
         });
@@ -2400,6 +2455,7 @@ export const AppProvider = ({ children }) => {
             addToast,
             removeToast,
             blockedUsers,
+            isUserBlockedOrSuspended,
             reportedUsers,
             supportTickets,
             showCelebration,

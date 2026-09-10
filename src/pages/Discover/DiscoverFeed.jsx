@@ -58,6 +58,8 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
     requestUserLocation,
     isLocationLoading,
     setActiveTab,
+    blockedUsers = [],
+    isUserBlockedOrSuspended,
   } = useApp();
 
 
@@ -273,6 +275,21 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
 
   // Perform search and filter locally
   const filteredProfiles = profiles.filter(profile => {
+    if (!profile) return false;
+
+    // Strict privacy & safety check: Exclude any suspended or blocked account
+    if (isUserBlockedOrSuspended && isUserBlockedOrSuspended(profile.id, profile)) return false;
+
+    const st = (profile.status || '').toUpperCase();
+    if (st === 'SUSPENDED' || st === 'BLOCKED' || st === 'DELETED' || profile.isSuspended || profile.isBlocked) return false;
+
+    if (Array.isArray(blockedUsers) && blockedUsers.some(b => {
+      const bId = typeof b === 'string' ? b : (b.blockedUserId || b.blockedId || b.id || b.blocked?.id);
+      return bId === profile.id || (profile.userId && bId === profile.userId);
+    })) {
+      return false;
+    }
+
     // 0. Exclude own profile
     if (userProfile && (profile.id === userProfile.id || profile.userId === userProfile.userId || profile.id === userProfile.userId || profile.userId === userProfile.id)) return false;
 

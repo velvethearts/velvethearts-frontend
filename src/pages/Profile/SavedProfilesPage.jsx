@@ -14,8 +14,24 @@ export const SavedProfilesPage = ({ onBack, onSelectProfile }) => {
     sendInterest,
     unsendInterest,
     blockUser, 
-    reportUser 
+    reportUser,
+    isUserBlockedOrSuspended,
+    blockedUsers = []
   } = useApp();
+
+  const visibleSavedProfiles = savedProfileObjects.filter(p => {
+    if (!p) return false;
+    if (isUserBlockedOrSuspended && isUserBlockedOrSuspended(p.id, p)) return false;
+    const st = (p.status || '').toUpperCase();
+    if (st === 'SUSPENDED' || st === 'BLOCKED' || st === 'DELETED' || p.isSuspended || p.isBlocked) return false;
+    if (Array.isArray(blockedUsers) && blockedUsers.some(b => {
+      const bId = typeof b === 'string' ? b : (b.blockedUserId || b.blockedId || b.id || b.blocked?.id);
+      return bId === p.id || (p.userId && bId === p.userId);
+    })) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="saved-profiles-page page-enter">
@@ -25,9 +41,9 @@ export const SavedProfilesPage = ({ onBack, onSelectProfile }) => {
         onBack={onBack}
       />
 
-      {savedProfileObjects.length > 0 ? (
+      {visibleSavedProfiles.length > 0 ? (
         <div className="saved-profiles-grid">
-          {savedProfileObjects.map((profile) => (
+          {visibleSavedProfiles.map((profile) => (
             <ProfileCard
               key={profile.id}
               profile={profile}

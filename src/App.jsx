@@ -80,7 +80,7 @@ class ErrorBoundary extends Component {
 }
 
 function AppContent() {
-  const { authLoading, isLoggedIn, isOnboarded, activeTab, setActiveTab, approvalStatus, userRole, deepLinkConversationId, setDeepLinkConversationId, showWelcomeRadar, setShowWelcomeRadar, userProfile, startFeatureTour } = useApp();
+  const { authLoading, isLoggedIn, isOnboarded, activeTab, setActiveTab, approvalStatus, userRole, deepLinkConversationId, setDeepLinkConversationId, showWelcomeRadar, setShowWelcomeRadar, userProfile, startFeatureTour, blockedUsers = [], isUserBlockedOrSuspended } = useApp();
 
   const [authInitialMode, setAuthInitialMode] = useState('signup');
 
@@ -112,6 +112,23 @@ function AppContent() {
   });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isViewingSavedProfiles, setIsViewingSavedProfiles] = useState(false);
+
+  // Safety guard: If selectedProfile becomes blocked or suspended, immediately close it
+  React.useEffect(() => {
+    if (!selectedProfile) return;
+    const isBlockedOrSuspended =
+      (isUserBlockedOrSuspended && isUserBlockedOrSuspended(selectedProfile.id, selectedProfile)) ||
+      ['SUSPENDED', 'BLOCKED', 'DELETED'].includes((selectedProfile.status || '').toUpperCase()) ||
+      selectedProfile.isSuspended || selectedProfile.isBlocked ||
+      (Array.isArray(blockedUsers) && blockedUsers.some(b => {
+        const bId = typeof b === 'string' ? b : (b.blockedUserId || b.blockedId || b.id || b.blocked?.id);
+        return bId === selectedProfile.id || (selectedProfile.userId && bId === selectedProfile.userId);
+      }));
+
+    if (isBlockedOrSuspended) {
+      setSelectedProfile(null);
+    }
+  }, [selectedProfile, blockedUsers, isUserBlockedOrSuspended]);
 
   // Helper to clear profile details and return to discover feed
   const handleBackToDiscover = () => {

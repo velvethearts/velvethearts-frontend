@@ -237,10 +237,14 @@ export const SafetyCenter = () => {
             {blockedUsers && blockedUsers.length > 0 ? (
               <div className="blocked-items-list">
                 {blockedUsers.map(item => {
-                  const blockedId = typeof item === 'string' ? item : (item.blockedUserId || item.id);
-                  const blockedProfile = profiles.find(p => p.id === blockedId);
-                  const name = typeof item === 'object' && item.name ? item.name : (blockedProfile ? blockedProfile.name : 'Blocked User');
-                  const avatar = typeof item === 'object' && item.avatar ? item.avatar : (blockedProfile?.photos?.[0] || null);
+                  const blockedId = typeof item === 'string' ? item : (item.blockedUserId || item.id || item.blockedId);
+                  const blockedProfile = profiles.find(p => p.id === blockedId || p.userId === blockedId);
+                  const name = typeof item === 'object' && item.name
+                    ? item.name
+                    : (item.blocked?.profile?.name || (blockedProfile ? blockedProfile.name : 'Blocked User'));
+                  const avatar = typeof item === 'object' && item.avatar
+                    ? item.avatar
+                    : (item.blocked?.profile?.photos?.[0]?.secureUrl || blockedProfile?.photos?.[0] || null);
 
                   return (
                     <div key={blockedId} className="blocked-item-row">

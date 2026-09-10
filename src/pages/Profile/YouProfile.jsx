@@ -10,7 +10,7 @@ import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificatio
 import { ProfileStrengthWidget } from '../../components/Profile/ProfileStrengthWidget';
 
 export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile }) => {
-  const { userProfile, setActiveTab, logout, showConfirm, savedProfileObjects = [] } = useApp();
+  const { userProfile, setActiveTab, logout, showConfirm, savedProfileObjects = [], blockedUsers = [] } = useApp();
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
@@ -272,8 +272,19 @@ export const YouProfile = ({ onEditProfile, onOpenSavedProfiles, onSelectProfile
             <div className="you-tile-btn-body">
               <ShieldCheck size={24} className="tile-icon font-success" />
               <div className="tile-text">
-                <span className="tile-title">Safety Center</span>
-                <span className="tile-desc">Read guidelines or manage blocked profiles</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="tile-title">Safety Center</span>
+                  {blockedUsers && blockedUsers.length > 0 && (
+                    <span className="blocked-count-badge font-ui" style={{ fontSize: '11px', background: 'rgba(212, 173, 106, 0.15)', color: '#D4AD6A', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                      {blockedUsers.length} Blocked
+                    </span>
+                  )}
+                </div>
+                <span className="tile-desc">
+                  {blockedUsers && blockedUsers.length > 0
+                    ? `Review and manage ${blockedUsers.length} blocked ${blockedUsers.length === 1 ? 'profile' : 'profiles'}`
+                    : 'Read guidelines or manage blocked profiles'}
+                </span>
               </div>
             </div>
           </Card>

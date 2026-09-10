@@ -507,7 +507,7 @@ const SwipeableMessageRow = ({ children, onReply, disabled, isUser, id, classNam
 };
 
 export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelectProfile, onActiveChatChange }) => {
-  const { userProfile, connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages, notifications, isFeatureTourActive } = useApp();
+  const { userProfile, connections, conversations, chats, sendMessage, editMessage, deleteMessage, deleteConversationMessages, markConversationSeen, unmatchConnection, blockUser, reportUser, showConfirm, showAlert, onlineUserIds, fetchConversationMessages, notifications, isFeatureTourActive, blockedUsers = [], isUserBlockedOrSuspended } = useApp();
 
   const isUserOnline = (partner) => {
     if (!partner) return false;
@@ -647,6 +647,24 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
   );
   const conversationId = conversation?.id;
   const activeMatchId = activePartner?.matchId || conversation?.matchId || (connections.find(c => c.id === activeChatId || c.userId === activeChatId)?.matchId) || activePartner?.id || conversationId || activeChatId;
+
+  // Safety guard: Immediately exit active chat if partner gets blocked or suspended
+  useEffect(() => {
+    if (!activeChatId) return;
+    const isBlockedOrSuspended =
+      (isUserBlockedOrSuspended && isUserBlockedOrSuspended(activeChatId, activePartner)) ||
+      (activePartner && (activePartner.status === 'SUSPENDED' || activePartner.status === 'BLOCKED' || activePartner.status === 'DELETED' || activePartner.isSuspended || activePartner.isBlocked)) ||
+      (Array.isArray(blockedUsers) && blockedUsers.some(b => {
+        const bId = typeof b === 'string' ? b : (b.blockedUserId || b.blockedId || b.id || b.blocked?.id);
+        return bId === activeChatId || (activePartner && (bId === activePartner.id || bId === activePartner.userId));
+      }));
+
+    if (isBlockedOrSuspended) {
+      setActiveChatId(null);
+      if (onClearPreselected) onClearPreselected();
+      showAlert?.('This conversation is no longer available.', 'info');
+    }
+  }, [activeChatId, activePartner, blockedUsers, isUserBlockedOrSuspended, onClearPreselected, showAlert]);
 
   const [messageText, setMessageText] = useState('');
   const [editingMessageId, setEditingMessageId] = useState(null);
@@ -1237,10 +1255,26 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
     matchedAt: new Date().toISOString()
   };
 
-  // All connections are valid chat partners
-  const chatPartners = isFeatureTourActive && (!connections || connections.length === 0)
-    ? [DEMO_TOUR_PARTNER]
-    : connections;
+  // All connections are valid chat partners, strictly filtering out suspended or blocked accounts
+  const chatPartners = useMemo(() => {
+    const source = isFeatureTourActive && (!connections || connections.length === 0)
+      ? [DEMO_TOUR_PARTNER]
+      : (connections || []);
+
+    return source.filter(partner => {
+      if (!partner) return false;
+      if (isUserBlockedOrSuspended && isUserBlockedOrSuspended(partner.id, partner)) return false;
+      const st = (partner.status || '').toUpperCase();
+      if (st === 'SUSPENDED' || st === 'BLOCKED' || st === 'DELETED' || partner.isSuspended || partner.isBlocked) return false;
+      if (Array.isArray(blockedUsers) && blockedUsers.some(b => {
+        const bId = typeof b === 'string' ? b : (b.blockedUserId || b.blockedId || b.id || b.blocked?.id);
+        return bId === partner.id || (partner.userId && bId === partner.userId) || (partner.partnerId && bId === partner.partnerId);
+      })) {
+        return false;
+      }
+      return true;
+    });
+  }, [connections, isFeatureTourActive, blockedUsers, isUserBlockedOrSuspended]);
 
   // Helper to determine recency timestamp for dynamic sorting
   const getPartnerActivityTime = useCallback((partner) => {

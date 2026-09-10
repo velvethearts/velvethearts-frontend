@@ -59,20 +59,58 @@ const DEMO_SENT_INTEREST = {
 };
 
 export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
-  const { connections, interestsSent, interestStatuses, profiles, receivedInvites, sentInvitesList, setActiveTab, sendInterest, unsendInterest, onlineUserIds, sendMessage, userProfile, updateUserProfile, conversations = [], chats = {}, addToast, isFeatureTourActive } = useApp();
+  const { connections, interestsSent, interestStatuses, profiles, receivedInvites, sentInvitesList, setActiveTab, sendInterest, unsendInterest, onlineUserIds, sendMessage, userProfile, updateUserProfile, conversations = [], chats = {}, addToast, isFeatureTourActive, blockedUsers = [], isUserBlockedOrSuspended } = useApp();
 
-  const activeConnections = isFeatureTourActive && (!connections || connections.length === 0)
-    ? [DEMO_ACTIVE_CONNECTION]
-    : (connections || []);
+  const sanitizedConnections = (connections || []).filter(c => {
+    if (!c) return false;
+    if (isUserBlockedOrSuspended && isUserBlockedOrSuspended(c.id, c)) return false;
+    const st = (c.status || '').toUpperCase();
+    if (st === 'SUSPENDED' || st === 'BLOCKED' || st === 'DELETED' || c.isSuspended || c.isBlocked) return false;
+    if (Array.isArray(blockedUsers) && blockedUsers.some(b => {
+      const bId = typeof b === 'string' ? b : (b.blockedUserId || b.blockedId || b.id || b.blocked?.id);
+      return bId === c.id || (c.userId && bId === c.userId) || (c.partnerId && bId === c.partnerId);
+    })) {
+      return false;
+    }
+    return true;
+  });
 
-  const displayReceivedInvites = isFeatureTourActive && (!receivedInvites || receivedInvites.length === 0)
-    ? [DEMO_RECEIVED_SUPER_SPARK]
-    : (receivedInvites || []);
+  const sanitizedReceivedInvites = (receivedInvites || []).filter(inv => {
+    if (!inv) return false;
+    if (isUserBlockedOrSuspended && isUserBlockedOrSuspended(inv.id, inv)) return false;
+    const st = (inv.status || '').toUpperCase();
+    if (st === 'SUSPENDED' || st === 'BLOCKED' || st === 'DELETED' || inv.isSuspended || inv.isBlocked) return false;
+    if (Array.isArray(blockedUsers) && blockedUsers.some(b => {
+      const bId = typeof b === 'string' ? b : (b.blockedUserId || b.blockedId || b.id || b.blocked?.id);
+      return bId === inv.id || (inv.userId && bId === inv.userId);
+    })) {
+      return false;
+    }
+    return true;
+  });
 
   const rawPendingInterests = (sentInvitesList || []).filter(p => {
+    if (!p) return false;
+    if (isUserBlockedOrSuspended && isUserBlockedOrSuspended(p.id, p)) return false;
+    const st = (p.status || '').toUpperCase();
+    if (st === 'SUSPENDED' || st === 'BLOCKED' || st === 'DELETED' || p.isSuspended || p.isBlocked) return false;
+    if (Array.isArray(blockedUsers) && blockedUsers.some(b => {
+      const bId = typeof b === 'string' ? b : (b.blockedUserId || b.blockedId || b.id || b.blocked?.id);
+      return bId === p.id || (p.userId && bId === p.userId);
+    })) {
+      return false;
+    }
     const status = interestStatuses[p.id];
     return status !== 'mutual';
   });
+
+  const activeConnections = isFeatureTourActive && sanitizedConnections.length === 0
+    ? [DEMO_ACTIVE_CONNECTION]
+    : sanitizedConnections;
+
+  const displayReceivedInvites = isFeatureTourActive && sanitizedReceivedInvites.length === 0
+    ? [DEMO_RECEIVED_SUPER_SPARK]
+    : sanitizedReceivedInvites;
 
   const pendingInterests = isFeatureTourActive && rawPendingInterests.length === 0
     ? [DEMO_SENT_INTEREST]

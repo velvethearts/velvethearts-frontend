@@ -10,18 +10,27 @@ import { getProfilePhoto, getDefaultAvatar, extractPhotoUrls } from '../../utils
 import { computeVibeMatch } from '../../utils/vibe';
 
 export const ProfileDetail = ({ profile, onBack }) => {
-  const { connections, interestsSent, sendInterest, unsendInterest, reportUser, blockUser, showConfirm, unmatchConnection, showAlert, userProfile } = useApp();
+  const { connections, interestsSent, sendInterest, unsendInterest, reportUser, blockUser, showConfirm, unmatchConnection, showAlert, userProfile, blockedUsers = [], isUserBlockedOrSuspended } = useApp();
   const [showReportSheet, setShowReportSheet] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportComment, setReportComment] = useState('');
   const [reportSubmitted, setReportSubmitted] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-  if (!profile || !profile.id) {
+  const isSuspendedOrBlocked = !profile || !profile.id ||
+    (isUserBlockedOrSuspended && isUserBlockedOrSuspended(profile.id, profile)) ||
+    ['SUSPENDED', 'BLOCKED', 'DELETED'].includes((profile.status || '').toUpperCase()) ||
+    profile.isSuspended || profile.isBlocked ||
+    (Array.isArray(blockedUsers) && blockedUsers.some(b => {
+      const bId = typeof b === 'string' ? b : (b.blockedUserId || b.blockedId || b.id || b.blocked?.id);
+      return bId === profile.id || (profile.userId && bId === profile.userId);
+    }));
+
+  if (isSuspendedOrBlocked) {
     if (showAlert && onBack) {
       showAlert({
         title: 'Account Unavailable',
-        message: 'This user no longer exists or has deleted their account.'
+        message: 'This profile is no longer active or is unavailable.'
       });
       onBack();
     }
