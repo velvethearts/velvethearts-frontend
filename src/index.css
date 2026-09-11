@@ -11074,3 +11074,16 @@ html {
   color: var(--text-muted);
   font-size: 0.85rem;
 }
+
+/* ==========================================================================
+   SHADCN / TAILWIND COMPATIBILITY UTILITIES
+   ========================================================================== */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.h-full { height: 100%; }
+.w-full { width: 100%; }
+.h-screen { height: 100vh; }
+.select-none { user-select: none; -webkit-user-select: none; }
+.cursor-pointer { cursor: pointer; }

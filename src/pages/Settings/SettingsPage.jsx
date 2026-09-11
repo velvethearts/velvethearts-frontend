@@ -6,6 +6,7 @@ import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
 import { ThemeToggle } from '../../components/UI/ThemeToggle';
+import BlindPullToggle from '@/components/ui/blind-pull-toggle';
 import { DeleteAccountModal } from '../../components/UI/DeleteAccountModal';
 import { triggerCookieBanner, getStoredConsent } from '../../lib/analytics';
 
@@ -157,6 +158,39 @@ export const SettingsPage = () => {
                 <span style={{ textTransform: 'capitalize' }}>{t}</span>
               </button>
             ))}
+          </div>
+
+          {/* Interactive Blind Pull Animation Showcase */}
+          <div className="blind-pull-showcase-box" style={{
+            marginTop: '18px',
+            padding: '20px 16px',
+            borderRadius: '16px',
+            background: 'var(--card-bg, rgba(255,255,255,0.03))',
+            border: '1px solid var(--border-color, rgba(255,255,255,0.08))',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: '10px'
+          }}>
+            <div style={{ maxWidth: '420px' }}>
+              <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '4px' }}>
+                Interactive Blind Pull Slat Toggle 🪟
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
+                Pull the cord or click the window to experience the spring-loaded blind slat animation for theme toggling.
+              </p>
+            </div>
+            <div style={{ height: '140px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <BlindPullToggle
+                isDark={theme === 'dark' || (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark')}
+                onToggle={(nextDark) => {
+                  handleThemeChange(nextDark ? 'dark' : 'light');
+                }}
+                size={64}
+                showPreviewBg={false}
+              />
+            </div>
           </div>
         </section>
 
