@@ -155,7 +155,7 @@ export const SettingsPage = () => {
           </div>
 
           {/* Toggle Control Style Selector */}
-          <div style={{ marginTop: '20px' }}>
+          <div style={{ marginTop: '12px' }}>
             <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '8px' }}>
               Theme Switch Control Style
             </div>
@@ -177,7 +177,7 @@ export const SettingsPage = () => {
                 style={{ padding: '14px', borderRadius: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
                 aria-label="Use blind pull slat animation"
               >
-                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Blind Pull Slat 🪟</div>
+                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Blind Pull Slat </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Spring cord animation</div>
               </button>
             </div>
@@ -576,7 +576,7 @@ export const SettingsPage = () => {
           background-color: var(--bg-surface);
           border: 1.5px solid var(--border-default);
           border-radius: var(--radius-lg);
-          padding: var(--space-4) var(--space-5);
+          padding: var(--space-3) var(--space-4);
           margin-bottom: var(--space-2);
         }
 

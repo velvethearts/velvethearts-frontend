@@ -41,7 +41,7 @@ export const ThemeToggle = ({ className = '', variant = 'auto' }) => {
               try { localStorage.setItem('vh-theme', nextTheme); } catch (_) { }
             }
           }}
-          size={52}
+          size={36}
           showPreviewBg={false}
         />
       </div>

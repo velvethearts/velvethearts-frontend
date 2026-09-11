@@ -19,7 +19,7 @@ const useIsomorphicLayoutEffect =
 
 const SLATS = 6;
 const MAX_SIZE = 80; // tune: raise to increase the maximum control size
-const MIN_SIZE = 48; // tune: raise to increase the minimum control size
+const MIN_SIZE = 28; // tune: raise to increase the minimum control size
 
 export interface BlindPullToggleProps {
   isDark?: boolean;
@@ -116,7 +116,7 @@ export default function BlindPullToggle({
   const iconSize = Math.round(size * 0.45); // tune: raise the multiplier to enlarge the icon
   const radius = Math.round(size * 0.275); // tune: raise the multiplier to round the corners further
   const cordRestH = Math.round(size * 0.3); // tune: raise the multiplier to lengthen the resting cord
-  const dotSize = Math.max(8, Math.round(size * 0.138)); // tune: raise the multiplier to enlarge the pull dot
+  const dotSize = Math.max(5, Math.round(size * 0.14)); // tune: raise the multiplier to enlarge the pull dot
 
   const previewBg = pageIsDark ? "#110F0C" : "#EDEAE5";
   const buttonBg = pageIsDark
@@ -185,7 +185,7 @@ export default function BlindPullToggle({
   return (
     <div
       ref={scope}
-      className={`flex h-full w-full items-center justify-center ${className}`}
+      className={`${showPreviewBg ? "flex h-full w-full" : "inline-flex"} items-center justify-center ${className}`}
       style={{ background: showPreviewBg ? previewBg : "transparent", transition: "background 0.3s ease" }}
     >
       <motion.div
