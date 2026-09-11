@@ -33,6 +33,7 @@ export const SettingsPage = () => {
   const [showNotifModal, setShowNotifModal] = useState(false);
   const [localNotifs, setLocalNotifs] = useState({ ...notifications });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [cookieConsent, setCookieConsent] = useState(() => getStoredConsent());
   const [toggleStyle, setToggleStyle] = useState(() => {
     try {
