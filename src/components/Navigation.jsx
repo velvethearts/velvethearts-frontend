@@ -249,8 +249,8 @@ export const Navigation = ({ children, isChatViewActive, isInsideChat }) => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: var(--space-2) var(--space-4);
-          margin-top: var(--space-2);
+          padding: 4px var(--space-4);
+          margin-top: 0;
           color: var(--text-tertiary);
           font-size: var(--text-body-sm);
         }

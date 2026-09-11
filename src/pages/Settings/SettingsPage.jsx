@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle, Compass, EnvelopeSimple, ShieldCheck, Scales, FileText } from '@phosphor-icons/react';
+import { Sun, Eye, TextT, Warning, Bell, PauseCircle, Compass, EnvelopeSimple, ShieldCheck, Scales, FileText } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
@@ -10,13 +10,13 @@ import { DeleteAccountModal } from '../../components/UI/DeleteAccountModal';
 import { triggerCookieBanner, getStoredConsent } from '../../lib/analytics';
 
 export const SettingsPage = () => {
-  const { 
-    theme, 
-    setTheme, 
-    accessibility, 
+  const {
+    theme,
+    setTheme,
+    accessibility,
     setAccessibility,
     updateAccessibilitySettings,
-    notifications, 
+    notifications,
     setNotifications,
     updateNotificationSettings,
     setActiveTab,
@@ -34,6 +34,21 @@ export const SettingsPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [cookieConsent, setCookieConsent] = useState(() => getStoredConsent());
+  const [toggleStyle, setToggleStyle] = useState(() => {
+    try {
+      return localStorage.getItem('vh-theme-toggle-style') || 'pill';
+    } catch {
+      return 'pill';
+    }
+  });
+
+  const handleToggleStyleChange = (style) => {
+    setToggleStyle(style);
+    try {
+      localStorage.setItem('vh-theme-toggle-style', style);
+    } catch (_) { }
+    window.dispatchEvent(new CustomEvent('vh-theme-toggle-style-changed', { detail: style }));
+  };
 
   useEffect(() => {
     const handleConsentUpdate = () => {
@@ -46,10 +61,6 @@ export const SettingsPage = () => {
       window.removeEventListener('storage', handleConsentUpdate);
     };
   }, []);
-
-  const handleThemeChange = (newTheme) => {
-    setTheme(newTheme);
-  };
 
   const handleAccessibilityChange = (key, value) => {
     const updated = { ...accessibility, [key]: value };
@@ -108,7 +119,7 @@ export const SettingsPage = () => {
       if (uid) {
         try {
           localStorage.removeItem(`vh-tour-completed-${uid}`);
-        } catch (_) {}
+        } catch (_) { }
       }
       setShowDeleteModal(false);
       await logout();
@@ -143,21 +154,35 @@ export const SettingsPage = () => {
             <ThemeToggle />
           </div>
 
-          <div className="theme-toggle-row">
-            {['light', 'dark', 'system'].map(t => (
+          {/* Toggle Control Style Selector */}
+          <div style={{ marginTop: '12px' }}>
+            <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '8px' }}>
+              Theme Switch Control Style
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <button
-                key={t}
-                onClick={() => handleThemeChange(t)}
-                className={`theme-card ${theme === t ? 'active' : ''}`}
-                aria-label={`Select ${t} theme`}
+                type="button"
+                onClick={() => handleToggleStyleChange('pill')}
+                className={`theme-card ${toggleStyle === 'pill' ? 'active' : ''}`}
+                style={{ padding: '14px', borderRadius: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                aria-label="Use classic pill switch"
               >
-                {t === 'light' && <Sun size={24} />}
-                {t === 'dark' && <Moon size={24} />}
-                {t === 'system' && <Eye size={24} />}
-                <span style={{ textTransform: 'capitalize' }}>{t}</span>
+                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Classic Switch</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Compact sliding pill</div>
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => handleToggleStyleChange('blind-pull')}
+                className={`theme-card ${toggleStyle === 'blind-pull' ? 'active' : ''}`}
+                style={{ padding: '14px', borderRadius: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                aria-label="Use blind pull slat animation"
+              >
+                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Blind Pull Slat </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Spring cord animation</div>
+              </button>
+            </div>
           </div>
+
         </section>
 
         {/* Accessibility Panel */}
@@ -167,7 +192,7 @@ export const SettingsPage = () => {
             <span>Accessibility Settings</span>
           </h2>
           <div className="settings-options-list">
-            
+
             {/* Reduce Motion */}
             <div className="option-item">
               <div className="option-text">
@@ -232,7 +257,7 @@ export const SettingsPage = () => {
             <span>Notification Preferences</span>
           </h2>
           <div className="settings-options-list">
-            
+
             {/* New Connections */}
             <div className="option-item">
               <div className="option-text">
@@ -307,7 +332,7 @@ export const SettingsPage = () => {
             <span>Feature Preferences</span>
           </h2>
           <div className="settings-options-list">
-            
+
             {/* Rewind Letters */}
             <div className="option-item">
               <div className="option-text">
@@ -339,7 +364,7 @@ export const SettingsPage = () => {
                 <span className="option-label">Replay App Walkthrough</span>
                 <span className="option-desc font-body">Take the interactive multi-page tour explaining how Velvet Hearts works.</span>
               </div>
-              <Button 
+              <Button
                 variant="secondary"
                 className="btn-tour-start font-ui"
                 onClick={(e) => { e.stopPropagation(); startFeatureTour(); }}
@@ -394,7 +419,7 @@ export const SettingsPage = () => {
                   Status: {cookieConsent === 'accepted' ? 'Analytics Accepted 🟢' : cookieConsent === 'rejected' ? 'Strictly Necessary Only (Analytics Blocked) 🛡️' : 'Not Configured (Strict Mode) 🛡️'}. Tap to modify consent.
                 </span>
               </div>
-              <Button 
+              <Button
                 variant="secondary"
                 className="font-ui"
                 onClick={(e) => { e.stopPropagation(); triggerCookieBanner(); }}
@@ -411,7 +436,7 @@ export const SettingsPage = () => {
                   Data storage transparency, AI code disclosure, biometric safeguards, and Indian grievance redressal.
                 </span>
               </div>
-              <Button 
+              <Button
                 variant="secondary"
                 className="font-ui"
                 onClick={(e) => { e.stopPropagation(); setActiveTab('privacy'); }}
@@ -428,7 +453,7 @@ export const SettingsPage = () => {
                   User agreement, Rule 3(1)(b) prohibitions, and Section 79 intermediary safe harbor.
                 </span>
               </div>
-              <Button 
+              <Button
                 variant="secondary"
                 className="font-ui"
                 onClick={(e) => { e.stopPropagation(); setActiveTab('terms'); }}
@@ -446,7 +471,7 @@ export const SettingsPage = () => {
             <span>Danger Zone</span>
           </h2>
           <div className="danger-actions-list">
-            <button 
+            <button
               onClick={handleDeleteAccount}
               disabled={deletingAccount}
               className="option-action-row danger"
@@ -466,7 +491,7 @@ export const SettingsPage = () => {
       >
         <div className="notif-pref-body font-ui">
           <p className="notif-pref-desc font-body">Select when you want to receive alerts from Velvet Hearts.</p>
-          
+
           <div className="notif-options-list">
             <label className="notif-option-item">
               <input
@@ -551,7 +576,7 @@ export const SettingsPage = () => {
           background-color: var(--bg-surface);
           border: 1.5px solid var(--border-default);
           border-radius: var(--radius-lg);
-          padding: var(--space-4) var(--space-5);
+          padding: var(--space-3) var(--space-4);
           margin-bottom: var(--space-2);
         }
 

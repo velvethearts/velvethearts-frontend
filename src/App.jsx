@@ -35,6 +35,7 @@ const AdminPanel = lazy(() => import('./pages/Admin/AdminPanel').then(m => ({ de
 const NotFoundPage = lazy(() => import('./pages/NotFound/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const WelcomeRadarModal = lazy(() => import('./components/Onboarding/WelcomeRadarModal').then(m => ({ default: m.WelcomeRadarModal })));
 const LegalPage = lazy(() => import('./pages/Legal/LegalPage').then(m => ({ default: m.LegalPage })));
+const BlindPullToggleDemo = lazy(() => import('./components/ui/demo').then(m => ({ default: m.default })));
 
 const AuthLoadingScreen = () => {
   return (
@@ -173,7 +174,7 @@ function AppContent() {
 
   // Handle URL pathname and query parameter deep linking (e.g. /discover, /?tab=chat, or unknown 404 routes)
   React.useEffect(() => {
-    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety', 'admin', 'privacy', 'terms'];
+    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety', 'admin', 'privacy', 'terms', 'pull-toggle'];
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
 
@@ -429,6 +430,9 @@ function AppContent() {
           />
         );
 
+      case 'pull-toggle':
+        return <BlindPullToggleDemo />;
+
       default:
         return <DiscoverFeed onSelectProfile={setSelectedProfile} />;
     }
@@ -476,6 +480,14 @@ function AppContent() {
 
     // 2. Logged Out State: Legal Pages, Auth Screen, or Landing Page
     if (!isLoggedIn) {
+      if (activeTab === 'pull-toggle') {
+        return (
+          <Suspense fallback={<AuthLoadingScreen />}>
+            <BlindPullToggleDemo />
+          </Suspense>
+        );
+      }
+
       if (activeTab === 'privacy' || activeTab === 'terms') {
         return (
           <Suspense fallback={<AuthLoadingScreen />}>
