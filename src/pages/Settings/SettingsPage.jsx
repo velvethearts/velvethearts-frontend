@@ -33,8 +33,22 @@ export const SettingsPage = () => {
   const [showNotifModal, setShowNotifModal] = useState(false);
   const [localNotifs, setLocalNotifs] = useState({ ...notifications });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletingAccount, setDeletingAccount] = useState(false);
   const [cookieConsent, setCookieConsent] = useState(() => getStoredConsent());
+  const [toggleStyle, setToggleStyle] = useState(() => {
+    try {
+      return localStorage.getItem('vh-theme-toggle-style') || 'pill';
+    } catch {
+      return 'pill';
+    }
+  });
+
+  const handleToggleStyleChange = (style) => {
+    setToggleStyle(style);
+    try {
+      localStorage.setItem('vh-theme-toggle-style', style);
+    } catch (_) {}
+    window.dispatchEvent(new CustomEvent('vh-theme-toggle-style-changed', { detail: style }));
+  };
 
   useEffect(() => {
     const handleConsentUpdate = () => {
@@ -160,6 +174,35 @@ export const SettingsPage = () => {
             ))}
           </div>
 
+          {/* Toggle Control Style Selector */}
+          <div style={{ marginTop: '20px' }}>
+            <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '8px' }}>
+              Theme Switch Control Style
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => handleToggleStyleChange('pill')}
+                className={`theme-card ${toggleStyle === 'pill' ? 'active' : ''}`}
+                style={{ padding: '14px', borderRadius: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                aria-label="Use classic pill switch"
+              >
+                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Classic Switch</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Compact sliding pill</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleStyleChange('blind-pull')}
+                className={`theme-card ${toggleStyle === 'blind-pull' ? 'active' : ''}`}
+                style={{ padding: '14px', borderRadius: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer' }}
+                aria-label="Use blind pull slat animation"
+              >
+                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>Blind Pull Slat 🪟</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Spring cord animation</div>
+              </button>
+            </div>
+          </div>
+
           {/* Interactive Blind Pull Animation Showcase */}
           <div className="blind-pull-showcase-box" style={{
             marginTop: '18px',
@@ -175,10 +218,10 @@ export const SettingsPage = () => {
           }}>
             <div style={{ maxWidth: '420px' }}>
               <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '4px' }}>
-                Interactive Blind Pull Slat Toggle 🪟
+                Interactive Slat Pull Animation Preview
               </div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>
-                Pull the cord or click the window to experience the spring-loaded blind slat animation for theme toggling.
+                Pull the hanging cord or tap the slat window to test the physics-based spring animation and toggle theme.
               </p>
             </div>
             <div style={{ height: '140px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
