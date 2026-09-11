@@ -135,7 +135,7 @@ export const EditProfile = ({ onBack }) => {
   const getProfileValidationErrors = useCallback((p) => {
     const errors = {};
     if (!p.name || !p.name.trim()) errors.name = 'Name is required.';
-    if (!p.city || !p.city.trim()) errors.city = 'Please select your State / Union Territory.';
+    if (!p.city || !p.city.trim()) errors.city = 'Please select your Country or State / Region.';
     if (!p.story || !p.story.trim()) {
       errors.story = 'Story is required.';
     } else if (p.story.trim().length < 20) {
@@ -582,11 +582,11 @@ export const EditProfile = ({ onBack }) => {
 
           <div className="form-group">
             <label className="input-label font-ui" htmlFor="edit-state">
-              State / Location in India <span className="required-star">*</span>
+              Country or State / Location <span className="required-star">*</span>
             </label>
             <StateSelectDropdown
               id="edit-state"
-              placeholder="Select your State / Union Territory"
+              placeholder="Select your Country or State / Region"
               value={localProfile.city}
               onChange={(val) => handleFieldChange('city', val)}
               error={validationErrors.city}

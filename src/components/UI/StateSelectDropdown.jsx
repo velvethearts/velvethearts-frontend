@@ -1,16 +1,24 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { MapPin, MagnifyingGlass, CaretDown, Check, X } from '@phosphor-icons/react';
-import { INDIAN_STATES, normalizeStateName } from '../../constants/indiaLocations';
+import {
+  ALL_LOCATIONS,
+  WORLD_COUNTRIES,
+  INDIAN_STATES,
+  POPULAR_LOCATIONS,
+  normalizeLocationName,
+  getLocationInfo
+} from '../../constants/indiaLocations';
 
 export const StateSelectDropdown = ({
   value = '',
   onChange,
   error = null,
   id = 'state-select',
-  placeholder = 'Select your State / Union Territory'
+  placeholder = 'Select your Country or State / Region'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'countries' | 'india' | 'popular'
   const containerRef = useRef(null);
   const searchInputRef = useRef(null);
 
@@ -34,21 +42,42 @@ export const StateSelectDropdown = ({
     }
   }, [isOpen]);
 
-  const normalizedCurrent = useMemo(() => normalizeStateName(value), [value]);
+  const normalizedCurrent = useMemo(() => normalizeLocationName(value), [value]);
+  const currentInfo = useMemo(() => getLocationInfo(value), [value]);
 
-  const filteredStates = useMemo(() => {
-    if (!searchQuery.trim()) return INDIAN_STATES;
+  const filteredLocations = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    return INDIAN_STATES.filter(
-      (s) =>
-        s.name.toLowerCase().includes(q) ||
-        s.region.toLowerCase().includes(q) ||
-        s.code.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
 
-  const handleSelect = (stateName) => {
-    onChange(stateName);
+    let baseList = ALL_LOCATIONS;
+    if (!q) {
+      if (activeTab === 'popular') {
+        const popSet = new Set(POPULAR_LOCATIONS.map(p => p.toLowerCase()));
+        baseList = ALL_LOCATIONS.filter(l => popSet.has(l.name.toLowerCase()));
+      } else if (activeTab === 'countries') {
+        baseList = WORLD_COUNTRIES;
+      } else if (activeTab === 'india') {
+        baseList = INDIAN_STATES;
+      }
+    }
+
+    if (!q) return baseList;
+
+    return ALL_LOCATIONS.filter((s) => {
+      const name = s.name.toLowerCase();
+      const region = (s.region || '').toLowerCase();
+      const code = (s.code || '').toLowerCase();
+      const country = (s.country || '').toLowerCase();
+      return (
+        name.includes(q) ||
+        region.includes(q) ||
+        code.includes(q) ||
+        country.includes(q)
+      );
+    });
+  }, [searchQuery, activeTab]);
+
+  const handleSelect = (locationName) => {
+    onChange(locationName);
     setIsOpen(false);
   };
 
@@ -64,7 +93,11 @@ export const StateSelectDropdown = ({
         aria-expanded={isOpen}
       >
         <div className="state-select-trigger-left">
-          <MapPin size={18} className="state-pin-icon" weight={value ? 'fill' : 'regular'} />
+          {currentInfo?.flag ? (
+            <span className="state-option-flag" role="img" aria-hidden="true">{currentInfo.flag}</span>
+          ) : (
+            <MapPin size={18} className="state-pin-icon" weight={value ? 'fill' : 'regular'} />
+          )}
           <span className={`state-select-value ${!normalizedCurrent ? 'is-placeholder' : ''}`}>
             {normalizedCurrent || placeholder}
           </span>
@@ -84,7 +117,7 @@ export const StateSelectDropdown = ({
               ref={searchInputRef}
               type="text"
               className="state-search-input font-ui"
-              placeholder="Search state, region (e.g. Maharashtra, South)..."
+              placeholder="Search country, state, region (e.g. United States, Germany, Maharashtra)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -101,16 +134,50 @@ export const StateSelectDropdown = ({
             )}
           </div>
 
+          {/* Quick Filter Tabs (when not actively searching) */}
+          {!searchQuery.trim() && (
+            <div className="state-filter-tabs">
+              <button
+                type="button"
+                className={`state-filter-tab ${activeTab === 'all' ? 'is-active' : ''}`}
+                onClick={() => setActiveTab('all')}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                className={`state-filter-tab ${activeTab === 'popular' ? 'is-active' : ''}`}
+                onClick={() => setActiveTab('popular')}
+              >
+                ✨ Popular
+              </button>
+              <button
+                type="button"
+                className={`state-filter-tab ${activeTab === 'countries' ? 'is-active' : ''}`}
+                onClick={() => setActiveTab('countries')}
+              >
+                🌍 Countries
+              </button>
+              <button
+                type="button"
+                className={`state-filter-tab ${activeTab === 'india' ? 'is-active' : ''}`}
+                onClick={() => setActiveTab('india')}
+              >
+                🇮🇳 India States
+              </button>
+            </div>
+          )}
+
           {/* Options List */}
           <div className="state-options-list">
-            {filteredStates.length === 0 ? (
-              <div className="state-no-results font-ui">No state found matching &ldquo;{searchQuery}&rdquo;</div>
+            {filteredLocations.length === 0 ? (
+              <div className="state-no-results font-ui">No location found matching &ldquo;{searchQuery}&rdquo;</div>
             ) : (
-              filteredStates.map((s) => {
+              filteredLocations.map((s) => {
                 const isSelected = normalizedCurrent.toLowerCase() === s.name.toLowerCase();
                 return (
                   <button
-                    key={s.code}
+                    key={`${s.code}-${s.name}`}
                     type="button"
                     role="option"
                     aria-selected={isSelected}
@@ -118,6 +185,7 @@ export const StateSelectDropdown = ({
                     onClick={() => handleSelect(s.name)}
                   >
                     <div className="state-option-info">
+                      {s.flag && <span className="state-option-flag" role="img" aria-hidden="true">{s.flag}</span>}
                       <span className="state-option-name">{s.name}</span>
                       <span className="state-option-region-chip">{s.region}</span>
                       {s.isUT && <span className="state-option-ut-badge">UT</span>}
@@ -133,3 +201,6 @@ export const StateSelectDropdown = ({
     </div>
   );
 };
+
+// Aliased export for semantic clarity
+export const LocationSelectDropdown = StateSelectDropdown;

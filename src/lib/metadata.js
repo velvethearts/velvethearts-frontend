@@ -6,7 +6,7 @@
 
 const BASE_TITLE = 'Velvet Hearts';
 const DEFAULT_DESC =
-  'Velvet Hearts is the official intentional dating platform featuring 16-zone biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching across India.';
+  'Velvet Hearts is the official intentional dating platform featuring 16-zone biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching across India and worldwide.';
 const DEFAULT_IMAGE = 'https://www.velvethearts.in/velvet-heart-logo.png';
 const CANONICAL_BASE = 'https://www.velvethearts.in';
 

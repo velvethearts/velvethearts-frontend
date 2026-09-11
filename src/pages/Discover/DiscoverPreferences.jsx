@@ -158,17 +158,17 @@ export const DiscoverPreferences = ({ onClose }) => {
           )}
         </div>
 
-        {/* 2. State / Region in India */}
+        {/* 2. Country or State / Location */}
         <div className="pref-item-section border-top">
           <div className="pref-title-with-icon" style={{ marginBottom: '6px' }}>
             <MapPin size={18} weight="bold" color="var(--burgundy-500, #B8436A)" />
             <label htmlFor="pref-state-select" className="pref-item-label">
-              State / Location in India
+              Country or State / Location
             </label>
           </div>
           <StateSelectDropdown
             id="pref-state-select"
-            placeholder="All States & Union Territories (India)"
+            placeholder="All Countries & Regions"
             value={localFilters.city}
             onChange={(val) => setLocalFilters(prev => ({ ...prev, city: val }))}
           />
@@ -183,9 +183,9 @@ export const DiscoverPreferences = ({ onClose }) => {
             </div>
             <span className="slider-value-display">
               {localFilters.distanceMax >= 2500
-                ? 'All India'
+                ? 'Worldwide (Any Distance)'
                 : localFilters.distanceMax <= 50
-                ? 'Within Same State (< 50 km)'
+                ? 'Nearby (< 50 km)'
                 : `${localFilters.distanceMax} km`}
             </span>
           </div>
@@ -201,8 +201,8 @@ export const DiscoverPreferences = ({ onClose }) => {
             aria-label="Maximum distance filter slider"
           />
           <div className="slider-subtext-row">
-            <span>Nearby / Same State</span>
-            <span>All India</span>
+            <span>Nearby</span>
+            <span>Worldwide</span>
           </div>
         </div>
 

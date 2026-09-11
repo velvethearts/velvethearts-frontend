@@ -516,9 +516,9 @@ export const OnboardingFlow = () => {
 
             if (force || formData.city) {
                 if (!formData.city || !formData.city.trim()) {
-                    errors.city = 'Please select your State / Union Territory.';
+                    errors.city = 'Please select your Country or State / Region.';
                 } else if (formData.city.trim().length < 2) {
-                    errors.city = 'Please select a valid State / Union Territory.';
+                    errors.city = 'Please select a valid Country or State / Region.';
                 }
             }
         }
@@ -787,11 +787,11 @@ export const OnboardingFlow = () => {
 
                             <div className="form-group">
                                 <label className="input-label font-ui" htmlFor="state">
-                                    Where are you based in India? <span className="required-star">*</span>
+                                    Where are you based? <span className="required-star">*</span>
                                 </label>
                                 <StateSelectDropdown
                                     id="state"
-                                    placeholder="Select your State / Union Territory"
+                                    placeholder="Select your Country or State / Region"
                                     value={formData.city}
                                     onChange={(val) => handleChange('city', val)}
                                     error={validationErrors.city}

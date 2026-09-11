@@ -11078,6 +11078,69 @@ html {
   font-size: 0.85rem;
 }
 
+.state-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--border-subtle, #E8E3E4);
+  background: var(--bg-surface, #FFFFFF);
+  overflow-x: auto;
+}
+
+[data-theme="dark"] .state-filter-tabs {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.state-filter-tab {
+  padding: 4px 10px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid var(--border-subtle, #E8E3E4);
+  background: transparent;
+  color: var(--text-secondary, #5A4E50);
+  font-size: 0.76rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--duration-fast);
+}
+
+.state-filter-tab:hover {
+  border-color: var(--burgundy-400, #D15B80);
+  color: var(--burgundy-700, #7A2842);
+}
+
+.state-filter-tab.is-active {
+  background: var(--burgundy-500, #B8436A);
+  border-color: var(--burgundy-500, #B8436A);
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .state-filter-tab {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text-muted, #998D8F);
+}
+
+[data-theme="dark"] .state-filter-tab:hover {
+  border-color: var(--burgundy-400, #D15B80);
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .state-filter-tab.is-active {
+  background: var(--burgundy-500, #B8436A);
+  border-color: var(--burgundy-500, #B8436A);
+  color: #FFFFFF;
+}
+
+.state-option-flag {
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 /* ==========================================================================
    SHADCN / TAILWIND COMPATIBILITY UTILITIES
    ========================================================================== */

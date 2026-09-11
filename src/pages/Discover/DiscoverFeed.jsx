@@ -452,7 +452,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         distText = calc.formatted;
       } else {
         distKm = isExactCity ? 0 : 50;
-        distText = isExactCity ? 'Same City' : 'Nearby';
+        distText = isExactCity ? 'Same Location' : 'Nearby';
       }
     }
 
@@ -460,7 +460,7 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
       ...p,
       _isExactCity: isExactCity,
       _computedDistanceKm: distKm,
-      _computedDistanceText: distText || (isExactCity ? `Same City • ${p.city}` : `${distKm} km away`)
+      _computedDistanceText: distText || (isExactCity ? `Same Location • ${p.city}` : `${distKm} km away`)
     };
   });
 
