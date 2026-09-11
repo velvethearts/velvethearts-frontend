@@ -435,8 +435,9 @@ function AppContent() {
   };
 
   const renderContent = () => {
-    // 0. Loading — session restoration in progress
+    // 0. Loading — session restoration in progress (suppressed if welcome splash is actively presenting)
     if (authLoading) {
+      if (showWelcomeSplash) return null;
       return <AuthLoadingScreen />;
     }
 

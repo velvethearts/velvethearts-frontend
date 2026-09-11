@@ -145,7 +145,7 @@ export const LoadingScreenDemo: React.FC = () => {
             cursor: 'pointer'
           }}
         >
-          ✨ Custom Messages
+          Custom Messages
         </button>
 
         {activePreset !== 'none' && (

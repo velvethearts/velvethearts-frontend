@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
 import { Sun, Moon, Eye, TextT, Warning, Bell, PauseCircle, Compass, EnvelopeSimple, ShieldCheck, Scales, FileText } from '@phosphor-icons/react';
