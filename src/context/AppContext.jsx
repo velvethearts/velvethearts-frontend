@@ -216,7 +216,17 @@ export const AppProvider = ({ children }) => {
     const [phone, setPhone] = useState('');
     const [approvalStatus, setApprovalStatus] = useState('pending');
     const [userRole, setUserRole] = useState('USER');
-    const [isOnboarded, setIsOnboarded] = useState(false);
+    const [isOnboarded, setIsOnboarded] = useState(() => {
+        try {
+            if (localStorage.getItem('vh-onboarded') === 'true') return true;
+            const saved = localStorage.getItem('vh-user-profile');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return Boolean(parsed?.name || parsed?.profile?.name);
+            }
+        } catch (_) {}
+        return false;
+    });
     const [onboardingStep, setOnboardingStep] = useState(1);
     const [userProfile, setUserProfile] = useState(() => {
         try {
@@ -665,6 +675,7 @@ export const AppProvider = ({ children }) => {
         if (!data) {
             // No profile yet = needs onboarding
             setIsOnboarded(false);
+            try { localStorage.removeItem('vh-onboarded'); } catch (_) {}
             return;
         }
 
@@ -678,6 +689,7 @@ export const AppProvider = ({ children }) => {
 
         if (profile.name) {
             setIsOnboarded(true);
+            try { localStorage.setItem('vh-onboarded', 'true'); } catch (_) {}
             setUserProfile(prev => {
                 const next = {
                     ...prev,
@@ -719,6 +731,7 @@ export const AppProvider = ({ children }) => {
             });
         } else {
             setIsOnboarded(false);
+            try { localStorage.removeItem('vh-onboarded'); } catch (_) {}
         }
     };
 
@@ -1417,12 +1430,16 @@ export const AppProvider = ({ children }) => {
             }
 
             try {
+                setAuthLoading(true);
                 const firebaseIdToken = await firebaseUser.getIdToken();
 
                 api.tokenStore.setToken(firebaseIdToken);
 
                 try {
-                    await api.login(firebaseIdToken);
+                    const loginRes = await api.login(firebaseIdToken);
+                    if (loginRes?.user?.profile?.name) {
+                        hydrateFromProfile(loginRes.user.profile);
+                    }
                 } catch (loginErr) {
                     console.warn('api.login during onAuthStateChanged failed:', loginErr);
                 }
@@ -1559,7 +1576,6 @@ export const AppProvider = ({ children }) => {
 
         // Set auth state
         setPhone(data.user.phoneNumber || phoneNumber || '');
-        setIsLoggedIn(true);
         const status = normalizeApprovalStatus(data.user.approvalStatus);
         setApprovalStatus(status);
         setUserRole(data.user.role || 'USER');
@@ -1569,14 +1585,19 @@ export const AppProvider = ({ children }) => {
             setUserProfile(prev => ({ ...prev, userId: data.user.id }));
         }
 
+        // Fast hydration: if login response already includes a completed profile, hydrate immediately
+        if (data.user?.profile?.name) {
+            hydrateFromProfile(data.user.profile);
+        }
+
         // Fetch full profile to accurately check onboarding status and hydrate state
-        let hasProfile = false;
+        let hasProfile = Boolean(data.user?.profile?.name);
         try {
             const profileData = await api.getMe();
             if (profileData && (profileData.name || profileData.profile?.name)) {
                 hydrateFromProfile(profileData);
                 hasProfile = true;
-            } else {
+            } else if (!data.user?.profile?.name) {
                 setIsOnboarded(false);
             }
         } catch (profileErr) {
@@ -1588,6 +1609,11 @@ export const AppProvider = ({ children }) => {
                 setIsOnboarded(false);
             }
         }
+
+        // CRITICAL FIX: Only mark logged in AFTER onboarding/profile state is fully determined!
+        // Prematurely calling setIsLoggedIn(true) before profile hydration caused App.jsx
+        // to temporarily evaluate !isOnboarded as true, flashing the Onboarding flow for several seconds.
+        setIsLoggedIn(true);
 
         if (hasProfile && status === 'approved') {
             loadSocialData();
@@ -1635,6 +1661,7 @@ export const AppProvider = ({ children }) => {
             setUserProfile(merged);
             try {
                 localStorage.setItem('vh-user-profile', JSON.stringify(merged));
+                localStorage.setItem('vh-onboarded', 'true');
                 if (merged.verified) {
                     localStorage.setItem('vh-user-verified', 'true');
                     localStorage.setItem('vh-verification-completed', 'true');
@@ -2092,6 +2119,8 @@ export const AppProvider = ({ children }) => {
             // Clear persisted UI data
             localStorage.removeItem('vh-saved-profiles');
             localStorage.removeItem('vh-support-tickets');
+            localStorage.removeItem('vh-user-profile');
+            localStorage.removeItem('vh-onboarded');
         }
     };
 
