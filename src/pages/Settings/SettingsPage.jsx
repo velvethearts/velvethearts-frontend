@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../lib/api';
-import { Sun, Eye, TextT, Warning, Bell, PauseCircle, Compass, EnvelopeSimple, ShieldCheck, Scales, FileText } from '@phosphor-icons/react';
+import { Sun, Eye, TextT, Warning, Bell, PauseCircle, Compass, EnvelopeSimple, ShieldCheck } from '@phosphor-icons/react';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { Button } from '../../components/UI/Button';
 import { Modal } from '../../components/UI/Modal';
@@ -11,8 +11,6 @@ import { triggerCookieBanner, getStoredConsent } from '../../lib/analytics';
 
 export const SettingsPage = () => {
   const {
-    theme,
-    setTheme,
     accessibility,
     setAccessibility,
     updateAccessibilitySettings,
@@ -21,7 +19,6 @@ export const SettingsPage = () => {
     updateNotificationSettings,
     setActiveTab,
     logout,
-    showConfirm,
     showAlert,
     isPaused,
     pauseProfile,
@@ -46,7 +43,9 @@ export const SettingsPage = () => {
     setToggleStyle(style);
     try {
       localStorage.setItem('vh-theme-toggle-style', style);
-    } catch (_) { }
+    } catch {
+      // Storage unavailable
+    }
     window.dispatchEvent(new CustomEvent('vh-theme-toggle-style-changed', { detail: style }));
   };
 
@@ -119,7 +118,9 @@ export const SettingsPage = () => {
       if (uid) {
         try {
           localStorage.removeItem(`vh-tour-completed-${uid}`);
-        } catch (_) { }
+        } catch {
+          // Storage unavailable
+        }
       }
       setShowDeleteModal(false);
       await logout();
