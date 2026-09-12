@@ -236,7 +236,7 @@ function AppContent() {
     const TAB_META = {
       discover: {
         title: 'Discover Profiles',
-        description: 'Browse verified profiles, 2-minute voice intros, and real-time vibe matches across India on Velvet Hearts.',
+        description: 'Browse verified profiles, 2-minute voice intros, and real-time vibe matches across India and worldwide on Velvet Hearts.',
         path: '/discover',
       },
       matches: {
@@ -275,18 +275,18 @@ function AppContent() {
         path: '/admin',
       },
       privacy: {
-        title: 'Privacy Policy — Data Protection & Indian DPDP Act 2023',
-        description: 'Learn how Velvet Hearts protects your personal data under the Indian Digital Personal Data Protection Act, 2023 (DPDPA). Full transparency on stored data, AI codebase synthesis, and biometric verification.',
+        title: 'Privacy Policy — Data Protection & Privacy Rights',
+        description: 'Learn how Velvet Hearts protects your personal data under the Digital Personal Data Protection Act (DPDPA) and global privacy standards. Full transparency on stored data, AI code disclosure, and biometric verification.',
         path: '/privacy',
       },
       terms: {
-        title: 'Terms of Service — Indian IT Act 2000 & Community Guidelines',
-        description: 'Review Velvet Hearts Terms of Service, User Agreement, and Intermediary Guidelines compliant with the Indian Information Technology Act, 2000 and IT Rules 2021.',
+        title: 'Terms of Service — Community & Safety Guidelines',
+        description: 'Review Velvet Hearts Terms of Service, User Agreement, and Community Guidelines compliant with applicable intermediary rules and safety standards.',
         path: '/terms',
       },
     };
 
-    if (activeTab === 'privacy' || activeTab === 'terms') {
+    if (activeTab === 'privacy' || activeTab === 'terms' || activeTab === 'safety') {
       const currentMeta = TAB_META[activeTab];
       updateMetadata({
         title: currentMeta.title,
@@ -300,7 +300,7 @@ function AppContent() {
     if (!isLoggedIn) {
       updateMetadata({
         title: 'Official Website — Intentional Dating & Verified Profiles',
-        description: 'Velvet Hearts is the official intentional dating platform featuring 16-zone biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching across India.',
+        description: 'Velvet Hearts is the official intentional dating platform featuring 16-zone biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching across India and worldwide.',
         robots: 'index, follow, max-image-preview:large',
         canonicalPath: '/',
       });

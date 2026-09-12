@@ -4,38 +4,65 @@
 
 User-agent: *
 Allow: /
+Allow: /safety
+Allow: /privacy
+Allow: /terms
+Allow: /discover
 Allow: /llms.txt
 Allow: /llms-full.txt
 Allow: /sitemap.xml
 Disallow: /api/
 Disallow: /chat
 Disallow: /matches
-Disallow: /discover
 Disallow: /diary
 Disallow: /notifications
 Disallow: /profile
 Disallow: /settings
+Disallow: /admin
 
 # Major Search Engine Crawlers
 User-agent: Googlebot
 Allow: /
+Allow: /safety
+Allow: /privacy
+Allow: /terms
+Allow: /discover
 Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /sitemap.xml
 Disallow: /api/
 Disallow: /chat
 Disallow: /matches
-Disallow: /discover
 Disallow: /diary
 Disallow: /notifications
 Disallow: /profile
 Disallow: /settings
+Disallow: /admin
 
 User-agent: Bingbot
 Allow: /
+Allow: /safety
+Allow: /privacy
+Allow: /terms
+Allow: /discover
 Allow: /llms.txt
+Allow: /sitemap.xml
+Disallow: /api/
+Disallow: /chat
+Disallow: /matches
+Disallow: /diary
+Disallow: /notifications
+Disallow: /profile
+Disallow: /settings
+Disallow: /admin
 
 User-agent: Applebot
 Allow: /
+Allow: /safety
+Allow: /privacy
+Allow: /terms
 Allow: /llms.txt
+Allow: /sitemap.xml
 
 User-agent: Twitterbot
 Allow: /

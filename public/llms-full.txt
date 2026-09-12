@@ -17,7 +17,7 @@ Velvet Hearts (https://www.velvethearts.in/) is an official, verified intentiona
 - **Voice Introductions**: 2-minute high-quality voice clips allowing singles to convey their personality.
 - **Our Diary**: Interactive dual-entry flipbook memory book for couples after matching.
 - **Rewind Letters**: Wax-sealed digital time capsules and letters that unlock on mutual milestones.
-- **Pan-India Coverage**: Seamless matching across all 28 states and 8 union territories in India.
+- **Worldwide & Regional Coverage**: Seamless location discovery across all countries worldwide, as well as all 28 states and 8 union territories in India.
 - **Inclusive Accessibility**: Designed from the ground up with WCAG 2.1 AAA accessibility, high contrast, text scaling, and screen-reader support.
 
 ## 3. Metadata
@@ -25,3 +25,7 @@ Velvet Hearts (https://www.velvethearts.in/) is an official, verified intentiona
 - Target Audience: Singles looking for intentional, long-term romantic relationships.
 - Official Founder & Engineering: Velvet Hearts Technology Team.
 - Launch Year: 2025-2026.
+- Sitemap: https://www.velvethearts.in/sitemap.xml
+- Privacy Policy: https://www.velvethearts.in/privacy
+- Terms of Service: https://www.velvethearts.in/terms
+- Safety Center: https://www.velvethearts.in/safety
