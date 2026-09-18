@@ -4,6 +4,7 @@ import { ArrowLeft, ShieldCheck, GoogleLogo } from '@phosphor-icons/react';
 import { Button } from '../../components/UI/Button';
 import { signInWithGoogle } from '../../lib/firebase';
 import { api } from '../../lib/api';
+import { sanitizeUserErrorMessage } from '../../utils/errorSanitizer';
 import logo from "../../assets/velvet-heart-logo.png";
 
 
@@ -37,8 +38,10 @@ export const AuthFlow = ({ onBack, onNavigate }) => {
     } catch (err) {
       console.error("Google Auth error:", err);
       setError(
-        err?.message ||
-        "Google Authentication failed. Please try again."
+        sanitizeUserErrorMessage(
+          err,
+          "Unable to sign in right now. Please try again after a while."
+        )
       );
     } finally {
       setLoading(false);

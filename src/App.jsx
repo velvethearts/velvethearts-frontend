@@ -14,6 +14,7 @@ import { ToastContainer } from './components/UI/ToastContainer';
 import { CookieConsentBanner } from './components/UI/CookieConsentBanner';
 import { initGA } from './lib/analytics';
 import { updateMetadata } from './lib/metadata';
+import { sanitizeUserErrorMessage } from './utils/errorSanitizer';
 
 // Route-based Code Splitting: Lazy-load authenticated & secondary sub-pages
 const AuthFlow = lazy(() => import('./pages/Auth/AuthFlow').then(m => ({ default: m.AuthFlow })));
@@ -61,11 +62,15 @@ class ErrorBoundary extends Component {
   }
   render() {
     if (this.state.hasError) {
+      const friendlyMessage = sanitizeUserErrorMessage(
+        this.state.error,
+        'Something went wrong on our end. Please try again in a few moments.'
+      );
       return (
         <div style={{ padding: 40, color: '#fce7f3', background: '#1a1517', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: '2.5rem', marginBottom: 16, color: '#ffffff' }}>Something went wrong</h1>
           <p style={{ color: '#e2b3b8', maxWidth: 480, marginBottom: 24, fontSize: '1rem', lineHeight: 1.5 }}>
-            {this.state.error?.message || 'An unexpected render error occurred.'}
+            {friendlyMessage}
           </p>
           <button
             onClick={() => window.location.reload()}

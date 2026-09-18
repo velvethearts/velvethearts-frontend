@@ -21,6 +21,7 @@ const tokenStore = {
 };
 
 import { auth } from './firebase';
+import { sanitizeUserErrorMessage } from '../utils/errorSanitizer';
 
 const getDeviceId = () => {
     try {
@@ -79,8 +80,11 @@ const request = async (path, options = {}, isRetry = false) => {
     const payload = await response.json().catch(() => null);
 
     if (!response.ok || payload?.success === false) {
-        const err = new Error(payload?.message || 'API request failed');
+        const rawMsg = payload?.message || 'API request failed';
+        console.error(`[API Error] ${options.method || 'GET'} ${path} (${response.status}):`, rawMsg);
+        const err = new Error(sanitizeUserErrorMessage(rawMsg, 'Unable to process your request. Please try again after a while.'));
         err.status = response.status;
+        err.rawMessage = rawMsg;
         throw err;
     }
 
