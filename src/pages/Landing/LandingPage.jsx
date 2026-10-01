@@ -600,7 +600,7 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
           <span>Velvet Hearts</span>
         </div>
         <nav className="fey-footer-links" aria-label="Footer navigation">
-          <a href="#guidelines" onClick={(e) => { e.preventDefault(); showAlert({ title: 'Community Guidelines', message: 'Be respectful, genuine, and kind.' }); }}>Community Guidelines</a>
+          <a href="/guidelines" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('guidelines'); else showAlert({ title: 'Community Guidelines', message: 'Be respectful, genuine, and kind.' }); }}>Community Guidelines</a>
           <a href="/safety" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('safety'); else showAlert({ title: 'Safety Center', message: 'Report tools are available directly inside chat and profiles.' }); }}>Safety Center</a>
           <a href="/privacy" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('privacy'); else showAlert({ title: 'Privacy Policy', message: 'Your data is secure and never sold.' }); }}>Privacy Policy</a>
           <a href="#cookies" onClick={(e) => { e.preventDefault(); triggerCookieBanner(); }}>Cookie Preferences</a>

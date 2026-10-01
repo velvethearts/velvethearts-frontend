@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   ShieldCheck,
   FileText,
@@ -7,7 +7,6 @@ import {
   Scales,
   UserCheck,
   Eye,
-  Trash,
   CheckCircle,
   WarningCircle,
   ArrowLeft,
@@ -17,349 +16,1047 @@ import {
   Sparkle,
   Fingerprint,
   ChatCircleText,
-  Microphone,
-  HardDrive
+  HardDrive,
+  MagnifyingGlass,
+  ArrowUpRight,
+  HandHeart,
+  Prohibit,
+  Warning,
+  Article,
+  ShareNetwork,
+  Printer,
+  X,
+  CaretRight,
+  Info
 } from '@phosphor-icons/react';
 import logo from '../../assets/velvet-heart-logo.png';
 import { ThemeToggle } from '../../components/UI/ThemeToggle';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
-  const [activeTab, setActiveTab] = useState(initialTab); // 'privacy' | 'terms'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'privacy' | 'terms' | 'guidelines'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSection, setActiveSection] = useState('');
+  const [copiedId, setCopiedId] = useState(null);
+  const [expandedDetails, setExpandedDetails] = useState({});
 
+  const containerRef = useRef(null);
+  const heroRef = useRef(null);
+  const bentoRef = useRef(null);
+  const contentRef = useRef(null);
+
+  // Sync prop changes
   useEffect(() => {
-    if (initialTab) {
+    if (initialTab && ['privacy', 'terms', 'guidelines'].includes(initialTab)) {
       setActiveTab(initialTab);
     }
   }, [initialTab]);
 
-  useEffect(() => {
+  // Push URL state when tab changes
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    setSearchQuery('');
+    try {
+      window.history.pushState({}, '', `/${newTab}`);
+    } catch (_) {}
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Toggle detail card explanation
+  const toggleDetail = (key) => {
+    setExpandedDetails((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // Copy clause permalink to clipboard
+  const copyClauseLink = (id) => {
+    const url = `${window.location.origin}/${activeTab}#${id}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+      });
+    }
+  };
+
+  // GSAP Entrance & Scroll Animations
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Hero entrance
+      gsap.fromTo(
+        '.legal-hero-elem',
+        { y: 30, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.12,
+          ease: 'power3.out',
+        }
+      );
+
+      // Bento cards reveal
+      gsap.fromTo(
+        '.legal-bento-card',
+        { y: 35, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          stagger: 0.08,
+          ease: 'power2.out',
+          delay: 0.3,
+        }
+      );
+
+      // ScrollTrigger for sections
+      const sections = document.querySelectorAll('.legal-doc-section');
+      sections.forEach((sec) => {
+        ScrollTrigger.create({
+          trigger: sec,
+          start: 'top 35%',
+          end: 'bottom 35%',
+          onEnter: () => setActiveSection(sec.id),
+          onEnterBack: () => setActiveSection(sec.id),
+        });
+      });
+    }, containerRef);
+
+    return () => ctx.revert();
   }, [activeTab]);
 
+  // Current tab metadata
+  const tabDetails = {
+    privacy: {
+      badge: 'DPDPA 2023 • IT Rules 2021 • CERT-In Compliant',
+      title: 'Privacy & Data Governance Architecture',
+      subtitle: 'Complete transparency on stored biometric vectors, zero data monetization, and algorithmic privacy under the Digital Personal Data Protection Act, 2023.',
+      date: 'September 11, 2026',
+      jurisdiction: 'Republic of India',
+      fiduciary: 'Velvet Hearts (Founder: Indrani Roy)',
+    },
+    terms: {
+      badge: 'IT Act 2000 • IT Rules 2021 • Contract Act 1872 Compliant',
+      title: 'User Agreement & Intermediary Terms of Service',
+      subtitle: 'Legally enforceable covenant governing platform access, prohibited conduct under Rule 3(1)(b), criminal liabilities under BNS 2023, and intermediary safe harbor.',
+      date: 'September 11, 2026',
+      jurisdiction: 'Courts of New Delhi, India',
+      fiduciary: 'Velvet Hearts Technologies',
+    },
+    guidelines: {
+      badge: 'Honor & Safety Code • Zero Tolerance Anti-Harassment',
+      title: 'Community Integrity Code & Conduct Standards',
+      subtitle: 'Our shared commitment to authentic human connection, mutual consent, verified identity, zero catfishing, and transparent accountability.',
+      date: 'September 11, 2026',
+      jurisdiction: 'Worldwide Community Standards',
+      fiduciary: 'Velvet Hearts Safety Board',
+    },
+  }[activeTab];
+
   return (
-    <div className="legal-page-container font-ui">
-      {/* Top Sticky Header */}
-      <header className="legal-header">
-        <div className="legal-header-inner">
-          <div className="legal-header-brand">
+    <div ref={containerRef} className="legal-universe font-ui overflow-x-hidden min-h-screen">
+      {/* Dynamic Ambient Background Glows */}
+      <div className="legal-ambient-glow legal-ambient-primary" aria-hidden="true" />
+      <div className="legal-ambient-glow legal-ambient-secondary" aria-hidden="true" />
+      <div className="legal-grid-mesh" aria-hidden="true" />
+
+      {/* Top Floating Glass Navigation Header */}
+      <header className="legal-nav-bar">
+        <div className="legal-nav-inner">
+          <div className="legal-nav-left">
             {onBack && (
               <button
                 onClick={onBack}
-                className="legal-back-btn"
-                aria-label="Back to settings"
+                className="legal-action-btn back-btn"
+                aria-label="Navigate back"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={16} weight="bold" />
                 <span>Back</span>
               </button>
             )}
-            <img src={logo} alt="Velvet Hearts" className="legal-logo" />
-            <div className="legal-header-titles">
-              <span className="legal-brand-title font-display">Velvet Hearts</span>
-              <span className="legal-brand-sub">Legal &amp; Trust Compliance Center</span>
+            <div className="legal-brand-pill">
+              <img src={logo} alt="Velvet Hearts" className="legal-nav-logo" />
+              <div className="legal-brand-text">
+                <span className="legal-nav-brand font-display">Velvet Hearts</span>
+                <span className="legal-nav-status">Legal &amp; Trust Node</span>
+              </div>
             </div>
           </div>
 
-          {/* Controls: Tab Switcher & Theme Toggle */}
-          <div className="legal-header-controls">
-            <div className="legal-tab-switcher" role="tablist">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === 'privacy'}
-                className={`legal-tab-btn ${activeTab === 'privacy' ? 'active' : ''}`}
-                onClick={() => setActiveTab('privacy')}
-              >
-                <ShieldCheck size={18} weight={activeTab === 'privacy' ? 'fill' : 'regular'} />
-                <span>Privacy Policy</span>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === 'terms'}
-                className={`legal-tab-btn ${activeTab === 'terms' ? 'active' : ''}`}
-                onClick={() => setActiveTab('terms')}
-              >
-                <Scales size={18} weight={activeTab === 'terms' ? 'fill' : 'regular'} />
-                <span>Terms of Service</span>
-              </button>
+          {/* Tab Switcher Pills */}
+          <nav className="legal-tab-track" role="tablist" aria-label="Legal document selection">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'privacy'}
+              className={`legal-tab-item ${activeTab === 'privacy' ? 'active' : ''}`}
+              onClick={() => handleTabChange('privacy')}
+            >
+              <ShieldCheck size={16} weight={activeTab === 'privacy' ? 'fill' : 'regular'} />
+              <span>Privacy Policy</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'terms'}
+              className={`legal-tab-item ${activeTab === 'terms' ? 'active' : ''}`}
+              onClick={() => handleTabChange('terms')}
+            >
+              <Scales size={16} weight={activeTab === 'terms' ? 'fill' : 'regular'} />
+              <span>Terms of Service</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'guidelines'}
+              className={`legal-tab-item ${activeTab === 'guidelines' ? 'active' : ''}`}
+              onClick={() => handleTabChange('guidelines')}
+            >
+              <HandHeart size={16} weight={activeTab === 'guidelines' ? 'fill' : 'regular'} />
+              <span>Community Guidelines</span>
+            </button>
+          </nav>
+
+          {/* Right Controls: Search, Print, Theme */}
+          <div className="legal-nav-right">
+            <div className="legal-search-wrap">
+              <MagnifyingGlass size={15} className="legal-search-icon" />
+              <input
+                type="text"
+                placeholder="Search provisions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="legal-search-input"
+                aria-label="Search legal provisions"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="legal-search-clear"
+                  aria-label="Clear search"
+                >
+                  <X size={13} />
+                </button>
+              )}
             </div>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="legal-action-btn icon-only"
+              title="Print or Export PDF"
+              aria-label="Print legal document"
+            >
+              <Printer size={16} />
+            </button>
             <ThemeToggle />
           </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="legal-main">
-        {activeTab === 'privacy' ? (
-          <PrivacyPolicyContent />
-        ) : (
-          <TermsOfServiceContent />
-        )}
+      {/* Main Content Container */}
+      <main className="legal-main-wrap max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-32">
+        {/* ATTENTION: Ultra-Wide Cinematic Hero Section */}
+        <section ref={heroRef} className="legal-hero py-12 md:py-16 text-center">
+          <div className="legal-hero-elem inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase border legal-badge-pill mb-6">
+            <Sparkle size={14} weight="fill" className="text-amber-400" />
+            <span>{tabDetails.badge}</span>
+          </div>
+
+          <h1 className="legal-hero-elem font-display text-4xl sm:text-5xl md:text-6xl text-white tracking-tight leading-[1.1] max-w-5xl mx-auto mb-6">
+            {tabDetails.title}
+          </h1>
+
+          <p className="legal-hero-elem font-ui text-base sm:text-lg text-[#d3bcc7] max-w-3xl mx-auto leading-relaxed mb-8">
+            {tabDetails.subtitle}
+          </p>
+
+          <div className="legal-hero-elem flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-[#a8909b]">
+            <span className="flex items-center gap-1.5">
+              <Clock size={15} className="text-[#d4ad6a]" /> Effective: {tabDetails.date}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <MapPin size={15} className="text-[#d4ad6a]" /> Jurisdiction: {tabDetails.jurisdiction}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <UserCheck size={15} className="text-[#d4ad6a]" /> Fiduciary: {tabDetails.fiduciary}
+            </span>
+          </div>
+        </section>
+
+        {/* AI Systems & Algorithmic Transparency Beacon Card */}
+        <div className="legal-ai-beacon-card mb-10 p-6 rounded-2xl relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="legal-ai-beacon-icon flex-shrink-0">
+                <Cpu size={28} weight="duotone" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-base font-bold text-white tracking-wide">
+                    Autonomous Codebase &amp; Algorithmic Safety Notice
+                  </h2>
+                  <span className="legal-live-indicator" title="Continuously Audited">
+                    <span className="legal-live-dot" />
+                    <span>Audited</span>
+                  </span>
+                </div>
+                <p className="text-sm text-[#cebac4] leading-relaxed">
+                  The Velvet Hearts software systems, communication protocols, database schemas, and discovery affinity matching heuristics are <strong>authored, generated, and synthesized utilizing Advanced Artificial Intelligence (Google DeepMind Antigravity AI Systems)</strong> under human supervisory stewardship. All data processing operates strictly in compliance with Indian IT Rules and the Digital Personal Data Protection Act, 2023.
+                </p>
+              </div>
+            </div>
+            <div className="flex-shrink-0 self-end sm:self-center">
+              <a
+                href="#takedown-notice"
+                className="legal-takedown-quick-link inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold"
+              >
+                <span>Emergency 24h Takedown</span>
+                <ArrowUpRight size={14} weight="bold" />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* INTEREST: Gapless Bento Grid of Foundational Pillars */}
+        <section ref={bentoRef} className="legal-bento-section mb-16">
+          <div className="legal-bento-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 grid-flow-dense gap-4">
+            {/* Card 1: Biometric Vector Isolation (Span 2 cols) */}
+            <div className="legal-bento-card col-span-1 md:col-span-2 p-6 rounded-2xl flex flex-col justify-between">
+              <div>
+                <div className="bento-badge-tag mb-3">
+                  <Fingerprint size={16} className="text-[#e27396]" />
+                  <span>Biometric Protection</span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2 font-display">
+                  16-Zone Facial Coordinate Descriptors
+                </h3>
+                <p className="text-sm text-[#cbb2bd] leading-relaxed">
+                  Real-time selfie verification extracts temporary geometric spatial coordinates to mathematically verify profile authenticity against catfishing. Raw facial biometrics are strictly isolated and <strong>never exported, sold, or trained into third-party commercial AI models</strong>.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-[#311b27] flex items-center justify-between text-xs text-[#a9909c]">
+                <span>DPDPA Section 8(5) Compliant</span>
+                <span className="text-[#d4ad6a] font-medium">Encrypted Cold Isolation</span>
+              </div>
+            </div>
+
+            {/* Card 2: Emergency Rule 3(2)(b) SLA (Span 2 cols on desktop) */}
+            <div id="takedown-notice" className="legal-bento-card emergency-card col-span-1 md:col-span-2 p-6 rounded-2xl flex flex-col justify-between">
+              <div>
+                <div className="bento-badge-tag emergency mb-3">
+                  <WarningCircle size={16} weight="fill" className="text-[#ff6b8b]" />
+                  <span>Statutory Emergency Takedown</span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2 font-display">
+                  Rule 3(2)(b) 24-Hour Removal Protocol
+                </h3>
+                <p className="text-sm text-[#ffd6e0] leading-relaxed">
+                  If non-consensual intimate imagery, nudity, deepfakes, or impersonation content appears, report directly to our Grievance Officer. Velvet Hearts guarantees access deactivation <strong>within 24 hours of notice receipt</strong>.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-[#541c2c] flex items-center justify-between">
+                <a
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=%5BEMERGENCY%20RULE%203(2)(b)%20TAKEDOWN%5D"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="emergency-action-btn inline-flex items-center gap-2 text-xs font-bold text-white"
+                >
+                  <EnvelopeSimple size={15} weight="bold" />
+                  <span>velvethearts.in@gmail.com</span>
+                </a>
+                <span className="text-xs text-[#ff99b3] font-mono">SLA: &lt; 24h</span>
+              </div>
+            </div>
+
+            {/* Card 3: Zero Data Commercialization */}
+            <div className="legal-bento-card col-span-1 p-6 rounded-2xl flex flex-col justify-between">
+              <div>
+                <div className="bento-badge-tag mb-3">
+                  <LockKey size={16} className="text-[#d4ad6a]" />
+                  <span>Privacy Pledge</span>
+                </div>
+                <h3 className="text-base font-bold text-white mb-2 font-display">
+                  Zero Data Monetization
+                </h3>
+                <p className="text-xs text-[#cbb2bd] leading-relaxed">
+                  We never sell, rent, or trade your personal conversations, phone numbers, or match history to ad brokers, data aggregators, or credit bureaus.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-[#311b27] text-xs text-[#d4ad6a] font-medium">
+                No Ad Trackers
+              </div>
+            </div>
+
+            {/* Card 4: Statutory 180-Day Regulatory Retention */}
+            <div className="legal-bento-card col-span-1 p-6 rounded-2xl flex flex-col justify-between">
+              <div>
+                <div className="bento-badge-tag mb-3">
+                  <HardDrive size={16} className="text-[#a78bfa]" />
+                  <span>Statutory Retention</span>
+                </div>
+                <h3 className="text-base font-bold text-white mb-2 font-display">
+                  180-Day CERT-In Retention
+                </h3>
+                <p className="text-xs text-[#cbb2bd] leading-relaxed">
+                  Per Rule 3(1)(h) IT Rules 2021, deleted account metadata is preserved in cold encrypted isolation for 180 days for statutory investigative agencies before permanent deletion.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-[#311b27] text-xs text-[#a78bfa] font-medium">
+                Cryptographic Purge
+              </div>
+            </div>
+
+            {/* Card 5: Criminal Penalties under BNS 2023 (Span 2 cols) */}
+            <div className="legal-bento-card col-span-1 md:col-span-2 p-6 rounded-2xl flex flex-col justify-between">
+              <div>
+                <div className="bento-badge-tag mb-3">
+                  <Scales size={16} className="text-[#e27396]" />
+                  <span>Criminal Liabilities</span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2 font-display">
+                  Bharatiya Nyaya Sanhita (BNS) Enforcement
+                </h3>
+                <p className="text-sm text-[#cbb2bd] leading-relaxed">
+                  Cyberstalking, romance scamming, sextortion, and non-consensual recordings attract severe criminal punishment under Sections 75, 78, 308, 318 of BNS 2023 and Section 66E of the IT Act. Full investigative cooperation is rendered to law enforcement.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-[#311b27] flex items-center justify-between text-xs text-[#a9909c]">
+                <span>Sec 94 BNSS Legal Cooperation</span>
+                <span className="text-[#e27396] font-medium">Zero Tolerance</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* DESIRE: Interactive Reading Architecture with Pinned TOC */}
+        <div ref={contentRef} className="legal-doc-layout grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Pinned Table of Contents */}
+          <aside className="lg:col-span-4 sticky top-28 hidden lg:block">
+            <div className="legal-toc-card p-5 rounded-2xl">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#2d1824]">
+                <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <Article size={16} className="text-[#d4ad6a]" />
+                  <span>Table of Contents</span>
+                </span>
+                <span className="text-[11px] text-[#9e8590] font-mono">
+                  {activeTab.toUpperCase()}
+                </span>
+              </div>
+
+              <nav className="legal-toc-list space-y-1">
+                {activeTab === 'privacy' && (
+                  <>
+                    <TocLink id="priv-sec-1" title="1. Regulatory Notice & Data Fiduciary" active={activeSection === 'priv-sec-1'} />
+                    <TocLink id="priv-sec-2" title="2. Personal Data Stored & Processed" active={activeSection === 'priv-sec-2'} />
+                    <TocLink id="priv-sec-3" title="3. Lawful Consent Architecture" active={activeSection === 'priv-sec-3'} />
+                    <TocLink id="priv-sec-4" title="4. Statutory Rights of Data Principal" active={activeSection === 'priv-sec-4'} />
+                    <TocLink id="priv-sec-5" title="5. 180-Day Regulatory Retention" active={activeSection === 'priv-sec-5'} />
+                    <TocLink id="priv-sec-6" title="6. Cybersecurity & CERT-In Incident SLA" active={activeSection === 'priv-sec-6'} />
+                    <TocLink id="priv-sec-7" title="7. Cross-Border Cloud Safeguards" active={activeSection === 'priv-sec-7'} />
+                    <TocLink id="priv-sec-8" title="8. Absolute Minor Prohibition (18+)" active={activeSection === 'priv-sec-8'} />
+                    <TocLink id="priv-sec-9" title="9. Grievance Officer & Escalation" active={activeSection === 'priv-sec-9'} />
+                  </>
+                )}
+
+                {activeTab === 'terms' && (
+                  <>
+                    <TocLink id="terms-sec-1" title="1. Acceptance & Binding Contract" active={activeSection === 'terms-sec-1'} />
+                    <TocLink id="terms-sec-2" title="2. Eligibility & Disqualifications" active={activeSection === 'terms-sec-2'} />
+                    <TocLink id="terms-sec-3" title="3. Prohibited Conduct (Rule 3(1)(b))" active={activeSection === 'terms-sec-3'} />
+                    <TocLink id="terms-sec-4" title="4. Criminal Penalties (BNS & IT Act)" active={activeSection === 'terms-sec-4'} />
+                    <TocLink id="terms-sec-5" title="5. Intermediary Safe Harbor (Sec 79)" active={activeSection === 'terms-sec-5'} />
+                    <TocLink id="terms-sec-6" title="6. Offline Dating & Risk Assumption" active={activeSection === 'terms-sec-6'} />
+                    <TocLink id="terms-sec-7" title="7. Disclaimers & Liability Caps" active={activeSection === 'terms-sec-7'} />
+                    <TocLink id="terms-sec-8" title="8. Intellectual Property & AI Codebase" active={activeSection === 'terms-sec-8'} />
+                    <TocLink id="terms-sec-9" title="9. Grievance Redressal SLA" active={activeSection === 'terms-sec-9'} />
+                    <TocLink id="terms-sec-10" title="10. Governing Law & Jurisdiction" active={activeSection === 'terms-sec-10'} />
+                  </>
+                )}
+
+                {activeTab === 'guidelines' && (
+                  <>
+                    <TocLink id="guide-sec-1" title="1. Core Philosophy of Intentional Discovery" active={activeSection === 'guide-sec-1'} />
+                    <TocLink id="guide-sec-2" title="2. Identity Authenticity & Photo Standards" active={activeSection === 'guide-sec-2'} />
+                    <TocLink id="guide-sec-3" title="3. Respectful Communication & Audio Notes" active={activeSection === 'guide-sec-3'} />
+                    <TocLink id="guide-sec-4" title="4. Zero Tolerance for Harassment & Abuse" active={activeSection === 'guide-sec-4'} />
+                    <TocLink id="guide-sec-5" title="5. Financial Safety & Anti-Scam Rules" active={activeSection === 'guide-sec-5'} />
+                    <TocLink id="guide-sec-6" title="6. Real-World Date Protocol" active={activeSection === 'guide-sec-6'} />
+                    <TocLink id="guide-sec-7" title="7. Reporting, Triaging & Dispute Channels" active={activeSection === 'guide-sec-7'} />
+                    <TocLink id="guide-sec-8" title="8. Three-Strike Account Sanctions" active={activeSection === 'guide-sec-8'} />
+                  </>
+                )}
+              </nav>
+
+              <div className="mt-6 pt-4 border-t border-[#2d1824] flex items-center justify-between text-xs text-[#a8909b]">
+                <span>Need immediate help?</span>
+                <a
+                  href="mailto:velvethearts.in@gmail.com"
+                  className="text-[#d4ad6a] hover:underline font-semibold"
+                >
+                  Contact Trust Desk
+                </a>
+              </div>
+            </div>
+          </aside>
+
+          {/* Right Column: Exhaustive Legal Clauses */}
+          <div className="lg:col-span-8 space-y-8">
+            {activeTab === 'privacy' && (
+              <PrivacyClauses
+                searchQuery={searchQuery}
+                onCopy={copyClauseLink}
+                copiedId={copiedId}
+                expandedDetails={expandedDetails}
+                toggleDetail={toggleDetail}
+              />
+            )}
+            {activeTab === 'terms' && (
+              <TermsClauses
+                searchQuery={searchQuery}
+                onCopy={copyClauseLink}
+                copiedId={copiedId}
+                expandedDetails={expandedDetails}
+                toggleDetail={toggleDetail}
+              />
+            )}
+            {activeTab === 'guidelines' && (
+              <GuidelinesClauses
+                searchQuery={searchQuery}
+                onCopy={copyClauseLink}
+                copiedId={copiedId}
+                expandedDetails={expandedDetails}
+                toggleDetail={toggleDetail}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* ACTION: Statutory Grievance Redressal & Escalation Terminal */}
+        <section className="legal-grievance-terminal mt-20 p-8 rounded-3xl relative overflow-hidden">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-8">
+            <div className="max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-[#2a1320] border border-[#d4ad6a] text-[#d4ad6a] mb-4">
+                <Scales size={14} weight="bold" />
+                <span>Statutory Dispute Escalation Node</span>
+              </div>
+              <h2 className="text-2xl font-bold text-white font-display mb-3">
+                Three-Tier Redressal Hierarchy (IT Rules 2021 &amp; DPDPA 2023)
+              </h2>
+              <p className="text-sm text-[#cebac4] leading-relaxed mb-6">
+                Under Rule 3(2)(a) of the Information Technology Rules 2021 and Section 13 of the Digital Personal Data Protection Act 2023, Data Principals possess an enforceable right to rapid grievance resolution.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-4 rounded-xl bg-[#140b11] border border-[#2b1623]">
+                  <span className="text-[11px] font-bold text-[#d4ad6a] uppercase tracking-wider block mb-1">
+                    Tier 1 • Internal
+                  </span>
+                  <p className="text-xs font-semibold text-white mb-1">Grievance Officer</p>
+                  <p className="text-[11px] text-[#a9909b]">
+                    Acknowledged within 24 hours. Resolved within 15 days.
+                  </p>
+                </div>
+                <div className="p-4 rounded-xl bg-[#140b11] border border-[#2b1623]">
+                  <span className="text-[11px] font-bold text-[#d4ad6a] uppercase tracking-wider block mb-1">
+                    Tier 2 • Ministry
+                  </span>
+                  <p className="text-xs font-semibold text-white mb-1">Grievance Appellate</p>
+                  <p className="text-[11px] text-[#a9909b]">
+                    Appeal to GAC via <a href="https://gac.gov.in" target="_blank" rel="noopener noreferrer" className="text-[#d4ad6a] underline">gac.gov.in</a> within 30 days.
+                  </p>
+                </div>
+                <div className="p-4 rounded-xl bg-[#140b11] border border-[#2b1623]">
+                  <span className="text-[11px] font-bold text-[#d4ad6a] uppercase tracking-wider block mb-1">
+                    Tier 3 • Statutory
+                  </span>
+                  <p className="text-xs font-semibold text-white mb-1">Data Protection Board</p>
+                  <p className="text-[11px] text-[#a9909b]">
+                    Formal complaints directly to the Data Protection Board of India.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Officer Details Card */}
+            <div className="w-full md:w-80 p-6 rounded-2xl bg-[#160c13] border border-[#d4ad6a]/30 flex flex-col justify-between">
+              <div>
+                <span className="text-[11px] text-[#a9909b] uppercase tracking-wider font-semibold block mb-1">
+                  Designated Grievance Officer
+                </span>
+                <h4 className="text-base font-bold text-white mb-4">
+                  Indrani Roy
+                  <span className="text-xs font-normal text-[#d4ad6a] block">Founder &amp; Legal Compliance Head</span>
+                </h4>
+
+                <div className="space-y-2.5 text-xs text-[#cebac4]">
+                  <div>
+                    <span className="text-[11px] text-[#8e7681] block">Direct Redressal Email</span>
+                    <a
+                      href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-[#d4ad6a] hover:underline font-semibold"
+                    >
+                      velvethearts.in@gmail.com
+                    </a>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-[#8e7681] block">Emergency Takedown SLA</span>
+                    <span className="text-white font-medium">Within 24 Hours (Rule 3(2)(b))</span>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-[#8e7681] block">Corporate Jurisdiction</span>
+                    <span className="text-white font-medium">New Delhi &bull; Republic of India</span>
+                  </div>
+                </div>
+              </div>
+
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=Legal%20Grievance%20Notice"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#b8436a] to-[#7c2242] text-white font-semibold text-xs text-center hover:opacity-95 transition-opacity"
+              >
+                File Formal Grievance
+              </a>
+            </div>
+          </div>
+        </section>
       </main>
 
-      {/* Footer Disclaimer */}
-      <footer className="legal-footer">
-        <div className="legal-footer-inner">
-          <p className="legal-footer-note">
-            &copy; {new Date().getFullYear()} Velvet Hearts India. Compliant with the Digital Personal Data Protection Act, 2023 (DPDPA) and the Information Technology Act, 2000. All rights reserved.
+      {/* Footer Disclaimer & Legal Attributes */}
+      <footer className="legal-doc-footer py-10 border-t border-[#2a1320] text-center">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex flex-wrap items-center justify-center gap-6 mb-4 text-xs text-[#a9909b]">
+            <button onClick={() => handleTabChange('privacy')} className="hover:text-white transition-colors">Privacy Policy</button>
+            <span>&bull;</span>
+            <button onClick={() => handleTabChange('terms')} className="hover:text-white transition-colors">Terms of Service</button>
+            <span>&bull;</span>
+            <button onClick={() => handleTabChange('guidelines')} className="hover:text-white transition-colors">Community Guidelines</button>
+            <span>&bull;</span>
+            <a href="mailto:velvethearts.in@gmail.com" className="hover:text-white transition-colors">Contact Legal Desk</a>
+          </div>
+          <p className="text-xs text-[#7e6772] max-w-2xl mx-auto leading-relaxed">
+            &copy; {new Date().getFullYear()} Velvet Hearts India. Fully compliant with the Digital Personal Data Protection Act, 2023 (DPDPA), the Information Technology Act, 2000, and the Information Technology Rules, 2021. All rights reserved.
           </p>
         </div>
       </footer>
 
+      {/* Styled Component CSS */}
       <style>{`
-        .legal-page-container {
-          min-height: 100vh;
-          background-color: #0b080a;
+        .legal-universe {
+          background-color: #0b070a;
           color: #f7eff3;
-          display: flex;
-          flex-direction: column;
+          position: relative;
         }
 
-        /* Solid Luxury Header (No Glassmorphism) */
-        .legal-header {
+        .legal-ambient-glow {
+          position: fixed;
+          width: 600px;
+          height: 600px;
+          border-radius: 50%;
+          filter: blur(140px);
+          pointer-events: none;
+          z-index: 0;
+          opacity: 0.15;
+        }
+
+        .legal-ambient-primary {
+          top: -150px;
+          left: -100px;
+          background: radial-gradient(circle, #b8436a 0%, transparent 70%);
+        }
+
+        .legal-ambient-secondary {
+          top: 30%;
+          right: -150px;
+          background: radial-gradient(circle, #d4ad6a 0%, transparent 70%);
+          opacity: 0.08;
+        }
+
+        .legal-grid-mesh {
+          position: fixed;
+          inset: 0;
+          background-image: linear-gradient(rgba(212, 173, 106, 0.03) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(212, 173, 106, 0.03) 1px, transparent 1px);
+          background-size: 64px 64px;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .legal-nav-bar {
           position: sticky;
           top: 0;
-          z-index: 40;
-          background-color: #120b10;
-          border-bottom: 1px solid rgba(212, 173, 106, 0.22);
-          box-shadow: 0 2px 14px rgba(0, 0, 0, 0.6);
+          z-index: 50;
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          background: rgba(15, 9, 13, 0.88);
+          border-bottom: 1px solid rgba(212, 173, 106, 0.18);
         }
 
-        .legal-header-inner {
-          max-width: 1080px;
+        .legal-nav-inner {
+          max-width: 1200px;
           margin: 0 auto;
-          padding: 1rem 1.25rem;
+          padding: 0.75rem 1.25rem;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          flex-wrap: wrap;
           gap: 1rem;
+          flex-wrap: wrap;
         }
 
-        .legal-header-brand {
+        .legal-nav-left {
           display: flex;
           align-items: center;
           gap: 0.75rem;
         }
 
-        .legal-back-btn {
+        .legal-action-btn {
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
           padding: 0.45rem 0.85rem;
           border-radius: 999px;
-          background-color: #1a1016;
+          background: #190f15;
           border: 1px solid rgba(212, 173, 106, 0.25);
           color: #d4adb7;
-          font-size: 0.82rem;
+          font-size: 0.8rem;
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
-        .legal-back-btn:hover {
-          background-color: #8e2b4f;
+        .legal-action-btn:hover {
+          background: #8e2b4f;
           color: #ffffff;
           border-color: #d4ad6a;
         }
 
-        .legal-logo {
-          width: 34px;
-          height: 34px;
+        .legal-action-btn.icon-only {
+          padding: 0.5rem;
+        }
+
+        .legal-brand-pill {
+          display: flex;
+          align-items: center;
+          gap: 0.6rem;
+        }
+
+        .legal-nav-logo {
+          width: 32px;
+          height: 32px;
           object-fit: contain;
         }
 
-        .legal-header-titles {
+        .legal-brand-text {
           display: flex;
           flex-direction: column;
         }
 
-        .legal-brand-title {
-          font-size: 1.15rem;
+        .legal-nav-brand {
+          font-size: 1.1rem;
           font-weight: 700;
           color: #d4ad6a;
-          line-height: 1.2;
+          line-height: 1.1;
         }
 
-        .legal-brand-sub {
-          font-size: 0.72rem;
-          color: #a89098;
-          letter-spacing: 0.04em;
+        .legal-nav-status {
+          font-size: 0.68rem;
+          color: #9e858f;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .legal-tab-track {
+          display: flex;
+          align-items: center;
+          background: #140b10;
+          border: 1px solid rgba(212, 173, 106, 0.22);
+          border-radius: 999px;
+          padding: 0.25rem;
+          gap: 0.2rem;
+        }
+
+        .legal-tab-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          padding: 0.45rem 0.95rem;
+          border-radius: 999px;
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: #cbb2bc;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .legal-tab-item:hover {
+          color: #ffffff;
+        }
+
+        .legal-tab-item.active {
+          background: linear-gradient(135deg, #b8436a 0%, #7c2242 100%);
+          color: #ffffff;
+          box-shadow: 0 2px 10px rgba(184, 67, 106, 0.35);
+        }
+
+        .legal-nav-right {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .legal-search-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .legal-search-icon {
+          position: absolute;
+          left: 0.75rem;
+          color: #9e858f;
+          pointer-events: none;
+        }
+
+        .legal-search-input {
+          background: #160e13;
+          border: 1px solid rgba(212, 173, 106, 0.2);
+          border-radius: 999px;
+          padding: 0.45rem 1.8rem 0.45rem 2.2rem;
+          font-size: 0.8rem;
+          color: #ffffff;
+          width: 170px;
+          transition: all 0.25s ease;
+        }
+
+        .legal-search-input:focus {
+          outline: none;
+          width: 220px;
+          border-color: #d4ad6a;
+          background: #1e111a;
+          box-shadow: 0 0 0 3px rgba(212, 173, 106, 0.15);
+        }
+
+        .legal-search-clear {
+          position: absolute;
+          right: 0.6rem;
+          background: transparent;
+          border: none;
+          color: #9e858f;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .legal-badge-pill {
+          background: rgba(212, 173, 106, 0.08);
+          border-color: rgba(212, 173, 106, 0.4);
+          color: #d4ad6a;
+        }
+
+        .legal-ai-beacon-card {
+          background: linear-gradient(145deg, #180d15 0%, #11080e 100%);
+          border: 1.5px solid rgba(212, 173, 106, 0.4);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .legal-ai-beacon-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
+          background: #25121e;
+          border: 1px solid rgba(212, 173, 106, 0.4);
+          color: #d4ad6a;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .legal-live-indicator {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.2rem 0.5rem;
+          border-radius: 999px;
+          background: rgba(34, 197, 94, 0.12);
+          border: 1px solid rgba(34, 197, 94, 0.3);
+          font-size: 0.68rem;
+          font-weight: 700;
+          color: #4ade80;
           text-transform: uppercase;
         }
 
-        .legal-header-controls {
-          display: flex;
-          align-items: center;
-          gap: 0.85rem;
-          flex-wrap: wrap;
+        .legal-live-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #22c55e;
+          animation: pulseDot 2s infinite ease-in-out;
         }
 
-        /* Solid Matte Tab Switcher */
-        .legal-tab-switcher {
-          display: flex;
-          background-color: #160e14;
-          padding: 0.3rem;
-          border-radius: 999px;
-          border: 1px solid rgba(212, 173, 106, 0.25);
-          box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        @keyframes pulseDot {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.4); opacity: 0.5; }
         }
 
-        .legal-tab-btn {
+        .legal-takedown-quick-link {
+          background: #25121b;
+          border: 1px solid #d9385d;
+          color: #ff99b3;
+          transition: all 0.2s ease;
+        }
+
+        .legal-takedown-quick-link:hover {
+          background: #d9385d;
+          color: #ffffff;
+        }
+
+        /* Bento Grid */
+        .legal-bento-card {
+          background: #140b11;
+          border: 1px solid #2b1723;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+          transition: transform 0.4s ease, border-color 0.3s ease;
+        }
+
+        .legal-bento-card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(212, 173, 106, 0.35);
+        }
+
+        .legal-bento-card.emergency-card {
+          background: linear-gradient(145deg, #200912 0%, #15060b 100%);
+          border-color: #d9385d;
+        }
+
+        .bento-badge-tag {
           display: inline-flex;
           align-items: center;
-          gap: 0.45rem;
-          padding: 0.5rem 1.15rem;
+          gap: 0.35rem;
+          padding: 0.25rem 0.65rem;
           border-radius: 999px;
-          font-size: 0.84rem;
-          font-weight: 600;
-          border: none;
-          background: transparent;
-          color: #c7aeb7;
+          background: #1f111a;
+          border: 1px solid rgba(212, 173, 106, 0.2);
+          font-size: 0.72rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: #d4adb7;
+        }
+
+        .bento-badge-tag.emergency {
+          background: #310c17;
+          border-color: #e24b74;
+          color: #ff99b3;
+        }
+
+        .emergency-action-btn {
+          padding: 0.4rem 0.85rem;
+          border-radius: 999px;
+          background: #d9385d;
+          transition: background 0.2s ease;
+        }
+
+        .emergency-action-btn:hover {
+          background: #f44336;
+        }
+
+        /* Table of Contents */
+        .legal-toc-card {
+          background: #130a10;
+          border: 1px solid #281420;
+          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+        }
+
+        .toc-link-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.45rem 0.65rem;
+          border-radius: 8px;
+          font-size: 0.78rem;
+          color: #bfa8b3;
+          text-decoration: none;
+          transition: all 0.2s ease;
+        }
+
+        .toc-link-item:hover {
+          color: #ffffff;
+          background: #1e111a;
+        }
+
+        .toc-link-item.active {
+          color: #d4ad6a;
+          font-weight: 700;
+          background: rgba(212, 173, 106, 0.08);
+          border-left: 2px solid #d4ad6a;
+        }
+
+        /* Document Section Cards */
+        .legal-doc-section {
+          background: #140c11;
+          border: 1px solid #2a1522;
+          border-radius: 20px;
+          padding: 2rem;
+          box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+          transition: border-color 0.3s ease;
+        }
+
+        .legal-doc-section:hover {
+          border-color: rgba(212, 173, 106, 0.3);
+        }
+
+        .legal-section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 1.25rem;
+          padding-bottom: 0.85rem;
+          border-bottom: 1px solid #23111c;
+        }
+
+        .legal-section-heading {
+          font-size: 1.28rem;
+          font-weight: 700;
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          gap: 0.65rem;
+        }
+
+        .clause-copy-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3rem;
+          padding: 0.3rem 0.6rem;
+          border-radius: 6px;
+          background: #1d1018;
+          border: 1px solid rgba(212, 173, 106, 0.2);
+          color: #bfa8b3;
+          font-size: 0.72rem;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
-        .legal-tab-btn.active {
-          background: linear-gradient(135deg, #b8436a 0%, #7c2242 100%);
+        .clause-copy-btn:hover {
           color: #ffffff;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-        }
-
-        .legal-main {
-          flex: 1;
-          max-width: 960px;
-          margin: 0 auto;
-          width: 100%;
-          padding: 2.5rem 1.25rem 4rem;
-        }
-
-        .legal-doc-hero {
-          text-align: center;
-          margin-bottom: 2.75rem;
-          padding-bottom: 2rem;
-          border-bottom: 1px solid rgba(212, 173, 106, 0.2);
-        }
-
-        .legal-tag-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.4rem;
-          padding: 0.4rem 0.95rem;
-          border-radius: 999px;
-          font-size: 0.75rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          background-color: #1b1218;
-          border: 1px solid #d4ad6a;
-          color: #d4ad6a;
-          margin-bottom: 1rem;
-        }
-
-        .legal-doc-title {
-          font-size: 2.35rem;
-          font-weight: 800;
-          color: #ffffff;
-          margin-bottom: 0.75rem;
-          letter-spacing: -0.02em;
-        }
-
-        .legal-doc-meta {
-          font-size: 0.85rem;
-          color: #b39aa3;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 1.25rem;
-          flex-wrap: wrap;
-        }
-
-        .legal-doc-meta-item {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.35rem;
-        }
-
-        /* Solid AI Disclosure Card (No Transparency) */
-        .ai-disclosure-banner {
-          background-color: #190f15;
-          border: 1.5px solid #d4ad6a;
-          border-radius: 16px;
-          padding: 1.5rem;
-          margin-bottom: 2.5rem;
-          display: flex;
-          align-items: flex-start;
-          gap: 1.15rem;
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
-        }
-
-        .ai-icon-wrap {
-          flex-shrink: 0;
-          width: 46px;
-          height: 46px;
-          border-radius: 12px;
-          background-color: #271420;
-          border: 1px solid rgba(212, 173, 106, 0.45);
-          color: #d4ad6a;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .ai-banner-content h4 {
-          font-size: 1.02rem;
-          font-weight: 700;
-          color: #d4ad6a;
-          margin-bottom: 0.4rem;
-          display: flex;
-          align-items: center;
-          gap: 0.45rem;
-        }
-
-        .ai-banner-content p {
-          font-size: 0.9rem;
-          line-height: 1.6;
-          color: #e6d3db;
-          margin: 0;
-        }
-
-        /* Solid Matte Section Cards */
-        .legal-section-card {
-          background-color: #140d12;
-          border: 1px solid #2d1824;
-          border-radius: 16px;
-          padding: 1.85rem;
-          margin-bottom: 1.75rem;
-          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
-          transition: border-color 0.2s ease, transform 0.2s ease;
-        }
-
-        .legal-section-card:hover {
-          border-color: rgba(212, 173, 106, 0.35);
-          transform: translateY(-1px);
-        }
-
-        .legal-section-title {
-          font-size: 1.3rem;
-          font-weight: 700;
-          color: #ffffff;
-          margin-bottom: 1.1rem;
-          display: flex;
-          align-items: center;
-          gap: 0.65rem;
-          border-bottom: 1px solid #22121c;
-          padding-bottom: 0.75rem;
-        }
-
-        .legal-section-icon {
-          color: #e0608b;
+          border-color: #d4ad6a;
         }
 
         .legal-p {
           font-size: 0.92rem;
-          line-height: 1.7;
-          color: #d9c5cc;
+          line-height: 1.72;
+          color: #d6c1ca;
           margin-bottom: 1rem;
         }
 
@@ -367,394 +1064,182 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           margin-bottom: 0;
         }
 
-        /* Solid Data Category Tiles */
-        .data-category-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1rem;
-          margin: 1.25rem 0;
-        }
-
-        @media (min-width: 640px) {
-          .data-category-grid {
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-
-        .data-cat-item {
-          background-color: #0e080b;
-          border: 1px solid #26141f;
-          border-radius: 12px;
-          padding: 1.15rem;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        }
-
-        .data-cat-header {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-weight: 700;
-          font-size: 0.92rem;
-          color: #d4ad6a;
-          margin-bottom: 0.55rem;
-        }
-
-        .data-cat-item ul {
-          margin: 0;
-          padding-left: 1.2rem;
-          font-size: 0.85rem;
-          line-height: 1.6;
-          color: #cbb2bc;
-        }
-
-        .data-cat-item li {
-          margin-bottom: 0.35rem;
-        }
-
-        /* Solid Callouts */
-        .legal-callout-box {
-          background-color: #170e14;
+        .legal-highlight-box {
+          background: #190f16;
           border-left: 4px solid #d4ad6a;
-          border-radius: 0 10px 10px 0;
-          padding: 1.15rem 1.35rem;
-          margin: 1.35rem 0;
-          font-size: 0.9rem;
-          line-height: 1.65;
-          color: #fce8ee;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-        }
-
-        .legal-callout-box strong {
-          color: #d4ad6a;
-        }
-
-        /* Solid Emergency Redressal Banner */
-        .legal-callout-emergency {
-          background-color: #1e0910;
-          border: 1.5px solid #d9385d;
-          border-left: 5px solid #e24b74;
-          border-radius: 12px;
-          padding: 1.25rem 1.45rem;
-          margin: 1.75rem 0;
-          font-size: 0.9rem;
-          line-height: 1.7;
-          color: #ffe6ec;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        .legal-callout-emergency strong {
-          color: #ff99b3;
-        }
-
-        /* Solid Escalation Steps */
-        .escalation-steps {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1rem;
-          margin-top: 1.25rem;
-        }
-
-        @media (min-width: 768px) {
-          .escalation-steps {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-
-        .escalation-step {
-          background-color: #0e080b;
-          border: 1px solid #281521;
-          border-radius: 12px;
-          padding: 1.15rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.4rem;
-        }
-
-        .escalation-step-badge {
-          font-size: 0.72rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: #d4ad6a;
-        }
-
-        .escalation-step-title {
-          font-size: 0.94rem;
-          font-weight: 600;
-          color: #ffffff;
-        }
-
-        .escalation-step-desc {
-          font-size: 0.83rem;
-          color: #c7aeb7;
-          line-height: 1.5;
-          margin: 0;
-        }
-
-        .email-link {
-          color: #d4ad6a;
-          text-decoration: underline;
-          text-underline-offset: 3px;
-          font-weight: 600;
-          word-break: break-all;
-          transition: color 0.18s ease;
-        }
-
-        .email-link:hover {
-          color: #ffffff;
-        }
-
-        /* Solid Grievance Card */
-        .grievance-card {
-          background-color: #100a0e;
-          border: 1.5px solid rgba(212, 173, 106, 0.35);
-          border-radius: 14px;
-          padding: 1.6rem;
-          margin-top: 1.25rem;
-          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
-        }
-
-        .grievance-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1.5rem;
-          margin-top: 1rem;
-        }
-
-        .grievance-detail {
-          display: flex;
-          flex-direction: column;
+          border-radius: 0 12px 12px 0;
+          padding: 1rem 1.25rem;
+          margin: 1.25rem 0;
           font-size: 0.88rem;
+          line-height: 1.65;
+          color: #f7e6ec;
         }
 
-        .grievance-label {
-          color: #9e858d;
-          font-size: 0.75rem;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 0.25rem;
-        }
-
-        .grievance-val {
-          color: #ffffff;
+        .legal-plain-english-toggle {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          margin-top: 1rem;
+          padding: 0.4rem 0.85rem;
+          border-radius: 8px;
+          background: #1b1017;
+          border: 1px solid rgba(212, 173, 106, 0.25);
+          color: #d4ad6a;
+          font-size: 0.78rem;
           font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
         }
 
-        .legal-footer {
-          border-top: 1px solid rgba(212, 173, 106, 0.2);
-          padding: 2.25rem 1.25rem;
-          text-align: center;
-          background-color: #0c0709;
+        .legal-plain-english-toggle:hover {
+          background: #251320;
         }
 
-        .legal-footer-note {
-          font-size: 0.82rem;
-          color: #8f7780;
-          max-width: 620px;
-          margin: 0 auto;
-          line-height: 1.55;
+        .legal-plain-english-content {
+          margin-top: 0.75rem;
+          padding: 1rem;
+          border-radius: 12px;
+          background: #12090f;
+          border: 1px dashed rgba(212, 173, 106, 0.35);
+          font-size: 0.85rem;
+          color: #f3dfa2;
+          line-height: 1.6;
         }
 
-        /* ============================================================
-           LIGHT MODE ADAPTATION FOR LEGAL PAGE
-           ============================================================ */
-        [data-theme="light"] .legal-page-container {
-          background-color: #FAF7F9;
-          color: #2C2426;
+        .legal-grievance-terminal {
+          background: linear-gradient(135deg, #190c14 0%, #0e070c 100%);
+          border: 1.5px solid rgba(212, 173, 106, 0.35);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
         }
 
-        [data-theme="light"] .legal-header {
-          background-color: #FFFFFF;
-          border-bottom: 1px solid #EAD8E0;
-          box-shadow: 0 2px 14px rgba(90, 20, 45, 0.06);
+        /* Light Mode Override */
+        [data-theme="light"] .legal-universe {
+          background-color: #faf6f8;
+          color: #271f22;
         }
 
-        [data-theme="light"] .legal-back-btn {
-          background-color: #F8EDF1;
-          border-color: #E2CCD6;
-          color: #7A2842;
+        [data-theme="light"] .legal-nav-bar {
+          background: rgba(255, 255, 255, 0.9);
+          border-bottom-color: #ead8e0;
         }
 
-        [data-theme="light"] .legal-back-btn:hover {
-          background-color: #B8436A;
-          color: #FFFFFF;
-          border-color: #7A2842;
+        [data-theme="light"] .legal-action-btn {
+          background: #f7ebf0;
+          border-color: #e2ccd6;
+          color: #7a2842;
         }
 
-        [data-theme="light"] .legal-brand-title {
-          color: #9B3456;
+        [data-theme="light"] .legal-nav-brand {
+          color: #8b2545;
         }
 
-        [data-theme="light"] .legal-brand-sub {
-          color: #7A6E70;
+        [data-theme="light"] .legal-tab-track {
+          background: #f2e4ea;
+          border-color: #e2ccd6;
         }
 
-        [data-theme="light"] .legal-tab-switcher {
-          background-color: #F3E6EC;
-          border-color: #E2CCD6;
-          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+        [data-theme="light"] .legal-tab-item {
+          color: #6a555d;
         }
 
-        [data-theme="light"] .legal-tab-btn {
-          color: #6A555D;
+        [data-theme="light"] .legal-tab-item.active {
+          background: linear-gradient(135deg, #b8436a 0%, #7a2842 100%);
+          color: #ffffff;
         }
 
-        [data-theme="light"] .legal-tab-btn.active {
-          background: linear-gradient(135deg, #B8436A 0%, #7A2842 100%);
-          color: #FFFFFF;
+        [data-theme="light"] .legal-search-input {
+          background: #ffffff;
+          border-color: #e2ccd6;
+          color: #271f22;
         }
 
-        [data-theme="light"] .legal-doc-hero {
-          border-bottom-color: #EAD8E0;
+        [data-theme="light"] .legal-ai-beacon-card {
+          background: #ffffff;
+          border-color: #c4964a;
+          box-shadow: 0 4px 20px rgba(90, 20, 45, 0.06);
         }
 
-        [data-theme="light"] .legal-tag-badge {
-          background-color: #FFF8FA;
-          border-color: #C4964A;
-          color: #A07228;
+        [data-theme="light"] .legal-hero-elem.font-display {
+          color: #1a1215;
         }
 
-        [data-theme="light"] .legal-doc-title {
-          color: #1A1517;
-        }
-
-        [data-theme="light"] .legal-doc-meta {
-          color: #7A6E70;
-        }
-
-        [data-theme="light"] .ai-disclosure-banner {
-          background-color: #FFFDF9;
-          border-color: #C4964A;
+        [data-theme="light"] .legal-bento-card {
+          background: #ffffff;
+          border-color: #ede0e6;
           box-shadow: 0 4px 18px rgba(90, 20, 45, 0.05);
         }
 
-        [data-theme="light"] .ai-icon-wrap {
-          background-color: #FAEEE0;
-          border-color: rgba(196, 150, 74, 0.4);
-          color: #B88232;
+        [data-theme="light"] .legal-bento-card h3 {
+          color: #1c0e15 !important;
         }
 
-        [data-theme="light"] .ai-banner-content h4 {
-          color: #9E742E;
+        [data-theme="light"] .legal-bento-card.emergency-card {
+          background: #fff5f7;
+          border-color: #e87a9a;
         }
 
-        [data-theme="light"] .ai-banner-content p {
-          color: #3D3335;
+        [data-theme="light"] .legal-bento-card.emergency-card h3 {
+          color: #7a1d36 !important;
         }
 
-        [data-theme="light"] .legal-section-card {
-          background-color: #FFFFFF;
-          border-color: #EFE4EA;
+        [data-theme="light"] .legal-bento-card.emergency-card p {
+          color: #5a1426 !important;
+        }
+
+        [data-theme="light"] .legal-doc-section {
+          background: #ffffff;
+          border-color: #ece0e6;
           box-shadow: 0 4px 18px rgba(90, 20, 45, 0.04);
         }
 
-        [data-theme="light"] .legal-section-card:hover {
-          border-color: rgba(184, 67, 106, 0.35);
-        }
-
-        [data-theme="light"] .legal-section-title {
-          color: #2A0812;
-          border-bottom-color: #F3E8EE;
-        }
-
-        [data-theme="light"] .legal-section-icon {
-          color: #B8436A;
+        [data-theme="light"] .legal-section-heading {
+          color: #1c0e15;
+          border-bottom-color: #f5edf1;
         }
 
         [data-theme="light"] .legal-p {
-          color: #4A3C42;
+          color: #4a3a41;
         }
 
-        [data-theme="light"] .data-cat-item {
-          background-color: #FAF7F9;
-          border-color: #ECDCE4;
+        [data-theme="light"] .legal-highlight-box {
+          background: #fff9f0;
+          border-left-color: #c4964a;
+          color: #3d3135;
         }
 
-        [data-theme="light"] .data-cat-header {
-          color: #9E742E;
+        [data-theme="light"] .legal-toc-card {
+          background: #ffffff;
+          border-color: #ece0e6;
         }
 
-        [data-theme="light"] .data-cat-item ul {
-          color: #5A4E50;
+        [data-theme="light"] .toc-link-item {
+          color: #6a555d;
         }
 
-        [data-theme="light"] .legal-callout-box {
-          background-color: #FFF9F2;
-          border-left-color: #C4964A;
-          color: #3D3335;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        [data-theme="light"] .toc-link-item:hover {
+          background: #f7ebf0;
+          color: #1a1215;
         }
 
-        [data-theme="light"] .legal-callout-box strong {
-          color: #9E742E;
+        [data-theme="light"] .toc-link-item.active {
+          color: #8b2545;
+          background: #fbedf2;
+          border-left-color: #8b2545;
         }
 
-        [data-theme="light"] .legal-callout-emergency {
-          background-color: #FFF2F5;
-          border-color: #E87A9A;
-          border-left-color: #D03B64;
-          color: #4A1424;
-          box-shadow: 0 4px 18px rgba(184, 67, 106, 0.08);
+        [data-theme="light"] .legal-grievance-terminal {
+          background: #ffffff;
+          border-color: #c4964a;
+          box-shadow: 0 6px 24px rgba(90, 20, 45, 0.06);
         }
 
-        [data-theme="light"] .legal-callout-emergency h4 {
-          color: #7A1D36 !important;
+        [data-theme="light"] .legal-grievance-terminal h2 {
+          color: #1a1215 !important;
         }
 
-        [data-theme="light"] .legal-callout-emergency strong {
-          color: #A31E44;
-        }
-
-        [data-theme="light"] .escalation-step {
-          background-color: #FAF7F9;
-          border-color: #ECDCE4;
-        }
-
-        [data-theme="light"] .escalation-step-badge {
-          color: #9E742E;
-        }
-
-        [data-theme="light"] .escalation-step-title {
-          color: #2A0812;
-        }
-
-        [data-theme="light"] .escalation-step-desc {
-          color: #5A4E50;
-        }
-
-        [data-theme="light"] .email-link {
-          color: #B8436A;
-        }
-
-        [data-theme="light"] .email-link:hover {
-          color: #7A2842;
-        }
-
-        [data-theme="light"] .grievance-card {
-          background-color: #FFFFFF;
-          border-color: rgba(196, 150, 74, 0.45);
-          box-shadow: 0 4px 18px rgba(90, 20, 45, 0.05);
-        }
-
-        [data-theme="light"] .grievance-card h4 {
-          color: #2A0812 !important;
-        }
-
-        [data-theme="light"] .grievance-label {
-          color: #8A737B;
-        }
-
-        [data-theme="light"] .grievance-val {
-          color: #2C2426;
-        }
-
-        [data-theme="light"] .legal-footer {
-          border-top-color: #EAD8E0;
-          background-color: #F7EFF2;
-        }
-
-        [data-theme="light"] .legal-footer-note {
-          color: #7A6E70;
+        [data-theme="light"] .legal-doc-footer {
+          border-top-color: #ead8e0;
+          background: #f6eef2;
         }
       `}</style>
     </div>
@@ -762,548 +1247,751 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
 };
 
 /* -------------------------------------------------------------------------- */
-/* PRIVACY POLICY CONTENT (INDIAN DPDP ACT 2023 & IT ACT 2000 COMPLIANT)     */
+/* TOC Link Helper Component                                                   */
 /* -------------------------------------------------------------------------- */
-const PrivacyPolicyContent = () => {
+const TocLink = ({ id, title, active }) => (
+  <a
+    href={`#${id}`}
+    className={`toc-link-item ${active ? 'active' : ''}`}
+  >
+    <span className="truncate">{title}</span>
+    <CaretRight size={12} className={active ? 'opacity-100' : 'opacity-40'} />
+  </a>
+);
+
+/* -------------------------------------------------------------------------- */
+/* PRIVACY POLICY CLAUSES COMPONENT                                           */
+/* -------------------------------------------------------------------------- */
+const PrivacyClauses = ({ searchQuery, onCopy, copiedId, expandedDetails, toggleDetail }) => {
   return (
-    <div className="legal-content-doc">
-      {/* Hero Header */}
-      <div className="legal-doc-hero">
-        <div className="legal-tag-badge">
-          <ShieldCheck size={14} weight="bold" />
-          <span>DPDPA 2023 &bull; IT Rules 2021 &bull; CERT-In Compliant</span>
-        </div>
-        <h1 className="legal-doc-title font-display">Privacy Policy &amp; Data Notice</h1>
-        <div className="legal-doc-meta">
-          <span className="legal-doc-meta-item">
-            <Clock size={14} /> Effective Date: September 11, 2026
-          </span>
-          <span className="legal-doc-meta-item">
-            <MapPin size={14} /> Jurisdiction: Republic of India
-          </span>
-          <span className="legal-doc-meta-item">
-            <UserCheck size={14} /> Data Fiduciary: Velvet Hearts (Founder: Indrani Roy)
-          </span>
-        </div>
-      </div>
-
-      {/* AI Codebase & Systems Disclosure */}
-      <div className="ai-disclosure-banner">
-        <div className="ai-icon-wrap">
-          <Cpu size={26} weight="duotone" />
-        </div>
-        <div className="ai-banner-content">
-          <h4>
-            <span>AI-Authored Platform &amp; Algorithmic Transparency Disclosure</span>
-          </h4>
-          <p>
-            Velvet Hearts operates with total technical transparency. The software application codebase, database architecture, communication schemas, and algorithmic matching mechanisms have been <strong>authored, generated, and synthesized utilizing Advanced Artificial Intelligence (Google DeepMind Antigravity AI Systems)</strong> under continuous human architectural supervision and validation. AI algorithms are deployed strictly for vibe affinity matching, biometric anti-spoofing verification, and safety moderation, operating in complete compliance with the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong>.
-          </p>
-        </div>
-      </div>
-
-      {/* Emergency Rule 3(2)(b) Takedown Notice */}
-      <div className="legal-callout-emergency">
-        <h4 style={{ margin: '0 0 0.5rem 0', color: '#ffffff', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <WarningCircle size={18} weight="fill" />
-          <span>Emergency 24-Hour Non-Consensual Sexual / Impersonation Material Removal</span>
-        </h4>
-        <p style={{ margin: 0 }}>
-          Under <strong>Rule 3(2)(b) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>, if you or someone you represent discovers any content on Velvet Hearts that depicts private areas, partial/full nudity, sexual conduct, or impersonation/deepfake imagery without consent, report it immediately to our Grievance Officer at{" "}
-          <a
-            href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=%5BEMERGENCY%20RULE%203(2)(b)%20TAKEDOWN%5D"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="email-link"
+    <>
+      {/* Chapter 1 */}
+      <section id="priv-sec-1" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <FileText size={22} className="text-[#e27396]" />
+            <span>1. Regulatory Notice &amp; Data Fiduciary</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('priv-sec-1')}
+            className="clause-copy-btn"
+            title="Copy clause link"
           >
-            velvethearts.in@gmail.com
-          </a>{" "}
-          with subject line <strong>&ldquo;[EMERGENCY RULE 3(2)(b) TAKEDOWN]&rdquo;</strong>. Velvet Hearts will take all reasonable and practicable measures to remove or disable access to such material <strong>within 24 hours of receiving the notice</strong>.
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'priv-sec-1' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Velvet Hearts operates an intentional discovery platform designed for verified romantic relationships across India. This Privacy Policy is published in strict conformity with <strong>Section 5 of the Digital Personal Data Protection Act, 2023 (DPDP Act)</strong> and Rule 3(1) of the <strong>Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>.
         </p>
-      </div>
+        <div className="legal-highlight-box">
+          <strong>Designated Data Fiduciary:</strong> Velvet Hearts (founded by Indrani Roy) acts as the Data Fiduciary, determining the purpose and means of data processing. You are the statutory <strong>Data Principal</strong> holding constitutionally guaranteed privacy rights under Indian law.
+        </div>
+        <button
+          type="button"
+          onClick={() => toggleDetail('priv1')}
+          className="legal-plain-english-toggle"
+        >
+          <Info size={14} />
+          <span>{expandedDetails['priv1'] ? 'Hide Plain Summary' : 'View Plain English Summary'}</span>
+        </button>
+        {expandedDetails['priv1'] && (
+          <div className="legal-plain-english-content">
+            We operate fully under Indian privacy law (DPDPA 2023). You control your personal data at all times, and we clearly explain every single reason we ever process information about you.
+          </div>
+        )}
+      </section>
 
-      {/* 1. Introduction & Regulatory Framework */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <FileText size={22} className="legal-section-icon" />
-          <span>1. Regulatory Framework &amp; Data Notice</span>
-        </h2>
+      {/* Chapter 2 */}
+      <section id="priv-sec-2" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <HardDrive size={22} className="text-[#e27396]" />
+            <span>2. Itemized Inventory of Stored Data</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('priv-sec-2')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'priv-sec-2' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
         <p className="legal-p">
-          Velvet Hearts (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;) operates an intentional relationship and discovery platform tailored for authentic connections across India. This Privacy Policy is published in strict compliance with Section 5 of the <strong>Digital Personal Data Protection Act, 2023 (DPDP Act, 2023)</strong> and Rule 3(1) of the <strong>Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>.
+          Pursuant to Section 5(1) of the DPDP Act 2023, Data Principals are hereby provided with an exhaustive list of all categories of personal data collected, stored, and processed:
         </p>
-        <p className="legal-p">
-          Under Indian law:
-        </p>
-        <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li><strong>Velvet Hearts (founded by Indrani Roy)</strong> serves as the <strong>Data Fiduciary</strong> determining the purpose and means of processing personal data.</li>
-          <li>You, as the registered member and citizen/resident of India, are the <strong>Data Principal</strong> entitled to constitutional and statutory privacy rights.</li>
-          <li>Our cloud infrastructure and transmission adhere to the <strong>Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011</strong> and <strong>CERT-In Cyber Security Directions 2022</strong>.</li>
+        <ul className="legal-p list-disc pl-5 space-y-2">
+          <li><strong>Identity &amp; Authentication:</strong> Verified Google Account or email credentials managed securely via Firebase Auth. <em>Notice: Velvet Hearts does NOT ask for, require, or store your mobile phone number.</em></li>
+          <li><strong>Mandatory 18+ Age &amp; Gender:</strong> Enforces minor exclusion under Section 9 of the DPDP Act 2023 and facilitates mutual matchmaking filters.</li>
+          <li><strong>Biometric Anti-Spoofing Vectors:</strong> Live verification selfie pose vectors. Raw facial images are never distributed to external AI databases.</li>
+          <li><strong>Audio Intros &amp; Private Scrapbooks:</strong> 2-minute voice intros, mutual Rewind Letters, and Our Diary scrapbook milestones between matched couples.</li>
+          <li><strong>Communications:</strong> Direct text messages exchanged between mutual matches transmitted over TLS 1.3 encryption. (Notice: Messages are access-controlled on cloud databases and are not end-to-end encrypted).</li>
         </ul>
       </section>
 
-      {/* 2. Exhaustive Data Storage Disclosure */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <HardDrive size={22} className="legal-section-icon" />
-          <span>2. Exhaustive Disclosure of Data Stored &amp; Processed</span>
-        </h2>
-        <p className="legal-p">
-          In strict compliance with Section 5(1) of the DPDP Act 2023, we provide Data Principals with an explicit, itemized inventory of all personal data collected and stored:
-        </p>
-
-        <div className="data-category-grid">
-          <div className="data-cat-item">
-            <div className="data-cat-header">
-              <UserCheck size={18} />
-              <span>Identity &amp; Authentication Data</span>
-            </div>
-            <ul>
-              <li><strong>Account Credentials &amp; Email:</strong> Authentication conducted via Google Sign-In or verified account credentials with Firebase Auth. <em>(Note: Velvet Hearts does NOT ask for, require, or store your mobile phone number).</em></li>
-              <li><strong>Unique Identifiers:</strong> Randomly generated alphanumeric Firebase User ID (UID).</li>
-              <li><strong>Legal Name &amp; Date of Birth:</strong> Enforces the mandatory 18+ age threshold under Section 9 of the DPDP Act 2023.</li>
-              <li><strong>Gender &amp; Romantic Preferences:</strong> Declared voluntarily to facilitate reciprocal discovery filters.</li>
-            </ul>
-          </div>
-
-          <div className="data-cat-item">
-            <div className="data-cat-header">
-              <Fingerprint size={18} />
-              <span>Biometric &amp; Photo Authenticity</span>
-            </div>
-            <ul>
-              <li><strong>Curated Profile Photos:</strong> Up to 6 lifestyle pictures stored on SOC2-certified Cloudinary CDN.</li>
-              <li><strong>Real-Time Verification Selfie:</strong> Live pose selfie captured solely to verify user authenticity and prevent catfishing.</li>
-              <li><strong>16-Zone Face Geometry Descriptors:</strong> Mathematical coordinate vectors used to compare the verification selfie against profile pictures. <em>Raw facial biometric templates are never sold, leased, or exported to external parties.</em></li>
-            </ul>
-          </div>
-
-          <div className="data-cat-item">
-            <div className="data-cat-header">
-              <ChatCircleText size={18} />
-              <span>In-App Messages &amp; Communications</span>
-            </div>
-            <ul>
-              <li><strong>Direct Messages:</strong> Text chats exchanged between mutually matched users. <em>(Notice: Messages are transmitted over secure HTTPS/TLS network connections, but are NOT end-to-end encrypted or encrypted at rest on the database).</em></li>
-              <li><strong>Voice Intros &amp; Audio Notes:</strong> 2-minute voice intros and audio recordings shared with mutual matches.</li>
-              <li><strong>Rewind Letters:</strong> Time-locked digital correspondence scheduled for future delivery between connections.</li>
-              <li><strong>Our Diary:</strong> Private scrapbook moments, photos, and milestones created mutually between matched couples.</li>
-            </ul>
-          </div>
-
-          <div className="data-cat-item">
-            <div className="data-cat-header">
-              <LockKey size={18} />
-              <span>Technical, Location &amp; Safety Logs</span>
-            </div>
-            <ul>
-              <li><strong>Device Telemetry:</strong> Device model, OS version, and browser fingerprint to detect unauthorized account takeovers.</li>
-              <li><strong>City, State &amp; Distance Radius:</strong> Approximate location for distance matching. Precise GPS is only retrieved upon explicit device permission.</li>
-              <li><strong>Safety Audit Logs:</strong> Timestamped block lists, report tickets, dispute notes, and suspension records for law enforcement compliance.</li>
-            </ul>
-          </div>
+      {/* Chapter 3 */}
+      <section id="priv-sec-3" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <CheckCircle size={22} className="text-[#e27396]" />
+            <span>3. Lawful Consent Architecture (Section 6, DPDP Act)</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('priv-sec-3')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'priv-sec-3' ? 'Copied' : 'Share'}</span>
+          </button>
         </div>
+        <p className="legal-p">
+          All data processing is grounded in <strong>freely given, specific, informed, unconditional, and unambiguous consent</strong> marked by affirmative action. Consent may be revoked unconditionally at any time from your Account Settings suite or via direct written notice to our Grievance Officer.
+        </p>
+      </section>
 
-        <div className="legal-callout-box">
-          <strong>Zero Monetization of Data:</strong> Velvet Hearts does <strong>not sell, rent, monetize, or trade</strong> your personal data, biometric vectors, photos, or private communications to data aggregators, advertising brokers, or external AI model training consortiums.
+      {/* Chapter 4 */}
+      <section id="priv-sec-4" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <Scales size={22} className="text-[#e27396]" />
+            <span>4. Statutory Rights of the Data Principal</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('priv-sec-4')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'priv-sec-4' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Under Sections 11, 12, 13, and 14 of the DPDP Act 2023, you retain fully enforceable legal rights:
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">
+          <div className="p-3.5 rounded-xl bg-[#180e15] border border-[#2d1824]">
+            <h4 className="text-xs font-bold text-[#d4ad6a] uppercase mb-1">Right to Access (Sec 11)</h4>
+            <p className="text-xs text-[#cebac4]">Receive a full digital summary of all personal data being processed.</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-[#180e15] border border-[#2d1824]">
+            <h4 className="text-xs font-bold text-[#d4ad6a] uppercase mb-1">Right to Correction (Sec 12)</h4>
+            <p className="text-xs text-[#cebac4]">Update, amend, or correct incomplete, misleading, or outdated personal information.</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-[#180e15] border border-[#2d1824]">
+            <h4 className="text-xs font-bold text-[#d4ad6a] uppercase mb-1">Right to Erasure (Sec 12)</h4>
+            <p className="text-xs text-[#cebac4]">Exercise your &ldquo;Right to be Forgotten&rdquo; and request permanent profile deletion.</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-[#180e15] border border-[#2d1824]">
+            <h4 className="text-xs font-bold text-[#d4ad6a] uppercase mb-1">Right to Nominate (Sec 14)</h4>
+            <p className="text-xs text-[#cebac4]">Designate a trusted legal representative to exercise your privacy rights if incapacitated.</p>
+          </div>
         </div>
       </section>
 
-      {/* 3. Consent Architecture & Purpose Limitation */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <CheckCircle size={22} className="legal-section-icon" />
-          <span>3. Lawful Consent Architecture (Section 6, DPDP Act 2023)</span>
-        </h2>
-        <p className="legal-p">
-          All data processing is grounded in <strong>freely given, specific, informed, unconditional, and unambiguous consent</strong> with clear affirmative action. You retain the unconditional right to withdraw consent at any time through Account Settings or by contacting our Grievance Officer. Withdrawal of consent results in immediate cessation of processing and initiation of profile erasure, without impacting lawful processing carried out prior to withdrawal.
-        </p>
-      </section>
-
-      {/* 4. Statutory Rights of the Data Principal */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <Scales size={22} className="legal-section-icon" />
-          <span>4. Statutory Rights of Data Principals</span>
-        </h2>
-        <p className="legal-p">
-          Under Sections 11, 12, 13, and 14 of the DPDP Act 2023, you are endowed with enforceable statutory rights:
-        </p>
-        <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li><strong>Right to Access Information (Section 11):</strong> Request a summary of personal data being processed, processing activities conducted, and third-party recipients.</li>
-          <li><strong>Right to Correction &amp; Updation (Section 12):</strong> Rectify misleading, inaccurate, or incomplete personal data via the in-app Edit Profile suite.</li>
-          <li><strong>Right to Erasure (Section 12):</strong> Request permanent deletion of your account and personal data (&ldquo;Right to be Forgotten&rdquo;) via Settings or email.</li>
-          <li><strong>Right of Grievance Redressal (Section 13):</strong> Access to rapid, time-bound statutory redressal through our designated Grievance Officer.</li>
-          <li><strong>Right to Nominate (Section 14):</strong> Designate a representative who may exercise your privacy rights in the event of death or physical/mental incapacity.</li>
-        </ul>
-      </section>
-
-      {/* 5. Statutory 180-Day Data Retention */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <Clock size={22} className="legal-section-icon" />
-          <span>5. Data Retention &amp; Mandatory 180-Day Regulatory Storage</span>
-        </h2>
-        <p className="legal-p">
-          When you delete your account, your profile, photos, voice intros, and matching entries are immediately deactivated and hidden from all users.
-        </p>
-        <p className="legal-p">
-          However, in mandatory compliance with <strong>Rule 3(1)(h) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong> and the <strong>CERT-In Cyber Security Directions 2022 (under Section 70B of the IT Act, 2000)</strong>, Velvet Hearts preserves account registration details, authentication timestamps, and transaction logs in secure encrypted cold storage for a minimum statutory period of <strong>180 (one hundred eighty) days</strong> following account deletion, or longer where ordered by a competent court of law or lawful investigative agency. Following expiration of this statutory retention period, all remaining records are permanently expunged.
-        </p>
-      </section>
-
-      {/* 6. Cybersecurity, Breach Notification & CERT-In */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <LockKey size={22} className="legal-section-icon" />
-          <span>6. Cybersecurity Safeguards &amp; Breach Protocol</span>
-        </h2>
-        <p className="legal-p">
-          Velvet Hearts implements industry-standard security practices under Section 8(5) of the DPDP Act 2023 and the SPDI Rules 2011, including TLS 1.3 network transit encryption, strict database access controls, API rate-limiting, and injection mitigations. As disclosed in Section 2, in-app direct messages and voice notes are stored on access-controlled cloud database servers and are not end-to-end encrypted.
-        </p>
-        <p className="legal-p">
-          In the event of an identified personal data breach, Velvet Hearts will formally notify the <strong>Data Protection Board of India (DPBI)</strong> and each affected Data Principal without undue delay, in accordance with <strong>Section 8(6) of the DPDP Act 2023</strong>. Furthermore, relevant cybersecurity incidents will be reported to <strong>CERT-In</strong> within statutory timeframes (within 6 hours of discovery).
-        </p>
-      </section>
-
-      {/* 7. Cross-Border Data Processing */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <MapPin size={22} className="legal-section-icon" />
-          <span>7. Cross-Border Data Processing (Section 16, DPDP Act 2023)</span>
-        </h2>
-        <p className="legal-p">
-          Personal data may be hosted on secure cloud infrastructure provided by Google Firebase (Google Cloud Platform) and Cloudinary CDN. In compliance with <strong>Section 16 of the DPDP Act 2023</strong>, Velvet Hearts only transfers data to countries and territories that are not restricted by the Central Government of India, ensuring equivalent or superior security safeguards.
-        </p>
-      </section>
-
-      {/* 8. Child Safety & Absolute Minor Ban */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <WarningCircle size={22} className="legal-section-icon" />
-          <span>8. Child Protection &amp; Strict 18+ Prohibition (Section 9, DPDP Act)</span>
-        </h2>
-        <p className="legal-p">
-          Under Section 9 of the DPDP Act 2023, Velvet Hearts enforces a <strong>strict, absolute prohibition on users under 18 years of age</strong>. We do not knowingly track, process, or monitor children. Any account found to be operated by an individual under 18 will be permanently terminated with immediate effect and all associated records purged.
-        </p>
-      </section>
-
-      {/* 9. Statutory Grievance Redressal & Point of Contact */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <EnvelopeSimple size={22} className="legal-section-icon" />
-          <span>9. Statutory Grievance Redressal Officer &amp; Escalation Mechanism</span>
-        </h2>
-        <p className="legal-p">
-          In compliance with Rule 3(2)(a) of the IT Rules 2021 and Section 13 of the DPDP Act 2023, Velvet Hearts has appointed a designated Grievance &amp; Data Protection Officer:
-        </p>
-
-        <div className="grievance-card">
-          <h4 style={{ color: '#ffffff', margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
-            Grievance Redressal &amp; Data Protection Officer
-          </h4>
-          <div className="grievance-row">
-            <div className="grievance-detail">
-              <span className="grievance-label">Designated Officer</span>
-              <span className="grievance-val">Indrani Roy (Founder &amp; Designated Grievance Officer)</span>
-            </div>
-            <div className="grievance-detail">
-              <span className="grievance-label">Official Grievance Email</span>
-              <span className="grievance-val">
-                <a
-                  href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="email-link"
-                >
-                  velvethearts.in@gmail.com
-                </a>
-              </span>
-            </div>
-            <div className="grievance-detail">
-              <span className="grievance-label">Statutory Response SLA</span>
-              <span className="grievance-val">Acknowledged in 24h &bull; Resolved in 15 days (24h for Rule 3(2)(b))</span>
-            </div>
-          </div>
+      {/* Chapter 5 */}
+      <section id="priv-sec-5" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <Clock size={22} className="text-[#e27396]" />
+            <span>5. Mandatory 180-Day Regulatory Cold Storage</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('priv-sec-5')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'priv-sec-5' ? 'Copied' : 'Share'}</span>
+          </button>
         </div>
-
-        <p className="legal-p" style={{ marginTop: '1.5rem' }}>
-          <strong>3-Tier Grievance Escalation Hierarchy:</strong>
+        <p className="legal-p">
+          When an account is deleted, all profile media, voice introductions, matches, and diary entries are immediately de-indexed from the active discovery matrix.
         </p>
-        <div className="escalation-steps">
-          <div className="escalation-step">
-            <span className="escalation-step-badge">Tier 1 &bull; Internal</span>
-            <span className="escalation-step-title">Grievance Officer</span>
-            <p className="escalation-step-desc">
-              Submit your complaint directly to{" "}
-              <a
-                href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="email-link"
-              >
-                velvethearts.in@gmail.com
-              </a>
-              . Acknowledgment guaranteed within 24 hours.
-            </p>
-          </div>
-          <div className="escalation-step">
-            <span className="escalation-step-badge">Tier 2 &bull; IT Rules 2021</span>
-            <span className="escalation-step-title">Grievance Appellate Committee (GAC)</span>
-            <p className="escalation-step-desc">
-              If dissatisfied with our resolution, appeal to the Central Government&rsquo;s GAC at <a href="https://gac.gov.in" target="_blank" rel="noopener noreferrer" className="email-link">https://gac.gov.in</a> within 30 days under Rule 3A.
-            </p>
-          </div>
-          <div className="escalation-step">
-            <span className="escalation-step-badge">Tier 3 &bull; DPDP Act 2023</span>
-            <span className="escalation-step-title">Data Protection Board of India</span>
-            <p className="escalation-step-desc">
-              Data Principals may lodge formal complaints alleging statutory privacy non-compliance directly with the <strong>Data Protection Board of India (DPBI)</strong>.
-            </p>
-          </div>
-        </div>
+        <p className="legal-p">
+          However, in mandatory compliance with <strong>Rule 3(1)(h) of the IT Rules 2021</strong> and the <strong>CERT-In Directions under Section 70B of the IT Act, 2000</strong>, Velvet Hearts retains registration authentication logs and safety transaction records in secure, offline encrypted cold storage for exactly <strong>180 (one hundred eighty) days</strong> to satisfy lawful law enforcement inquiries, following which all records are cryptographically destroyed.
+        </p>
       </section>
-    </div>
+
+      {/* Chapter 6 */}
+      <section id="priv-sec-6" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <LockKey size={22} className="text-[#e27396]" />
+            <span>6. Cybersecurity &amp; CERT-In Incident Protocol</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('priv-sec-6')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'priv-sec-6' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Velvet Hearts implements strict technical measures including TLS 1.3 encryption in transit, isolated NoSQL security rules, and granular API rate limiting. Pursuant to <strong>Section 8(6) of the DPDP Act 2023</strong> and CERT-In directions, any verified cybersecurity incident will be formally reported to the <strong>Data Protection Board of India</strong> and CERT-In within statutory SLA limits (within 6 hours of discovery).
+        </p>
+      </section>
+
+      {/* Chapter 7 */}
+      <section id="priv-sec-7" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <MapPin size={22} className="text-[#e27396]" />
+            <span>7. Cross-Border Cloud Safeguards (Section 16, DPDP Act)</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('priv-sec-7')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'priv-sec-7' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Cloud servers are hosted with enterprise-grade cloud providers (Google Firebase Cloud Platform and Cloudinary CDN). Data is stored and processed strictly within jurisdictions and territories that are not blacklisted by the Central Government of India under Section 16 of the DPDP Act 2023.
+        </p>
+      </section>
+
+      {/* Chapter 8 */}
+      <section id="priv-sec-8" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <WarningCircle size={22} className="text-[#e27396]" />
+            <span>8. Absolute Prohibition on Minors (Section 9, DPDP Act)</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('priv-sec-8')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'priv-sec-8' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Velvet Hearts strictly enforces an <strong>absolute ban on individuals under 18 years of age</strong>. We do not knowingly process personal data of children. Any account suspected or discovered to belong to a minor is instantly purged, and associated hardware identifiers are blacklisted.
+        </p>
+      </section>
+
+      {/* Chapter 9 */}
+      <section id="priv-sec-9" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <EnvelopeSimple size={22} className="text-[#e27396]" />
+            <span>9. Grievance Officer &amp; Redressal Escalation</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('priv-sec-9')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'priv-sec-9' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Complaints regarding personal data handling, unauthorized processing, or consent revocation should be addressed directly to our Grievance Officer at <a href="mailto:velvethearts.in@gmail.com" className="text-[#d4ad6a] underline font-semibold">velvethearts.in@gmail.com</a>. Formal acknowledgments are dispatched within 24 hours.
+        </p>
+      </section>
+    </>
   );
 };
 
 /* -------------------------------------------------------------------------- */
-/* TERMS OF SERVICE CONTENT (INDIAN IT ACT 2000 & INTERMEDIARY RULES 2021)   */
+/* TERMS OF SERVICE CLAUSES COMPONENT                                         */
 /* -------------------------------------------------------------------------- */
-const TermsOfServiceContent = () => {
+const TermsClauses = ({ searchQuery, onCopy, copiedId, expandedDetails, toggleDetail }) => {
   return (
-    <div className="legal-content-doc">
-      {/* Hero Header */}
-      <div className="legal-doc-hero">
-        <div className="legal-tag-badge">
-          <Scales size={14} weight="bold" />
-          <span>IT Act 2000 &bull; IT Rules 2021 &bull; Contract Act 1872 Compliant</span>
-        </div>
-        <h1 className="legal-doc-title font-display">Terms of Service &amp; User Agreement</h1>
-        <div className="legal-doc-meta">
-          <span className="legal-doc-meta-item">
-            <Clock size={14} /> Effective Date: September 11, 2026
-          </span>
-          <span className="legal-doc-meta-item">
-            <MapPin size={14} /> Jurisdiction: Courts of New Delhi, India
-          </span>
-          <span className="legal-doc-meta-item">
-            <ShieldCheck size={14} /> Governed by the Laws of India
-          </span>
-        </div>
-      </div>
-
-      {/* AI Codebase Transparency Banner */}
-      <div className="ai-disclosure-banner">
-        <div className="ai-icon-wrap">
-          <Cpu size={26} weight="duotone" />
-        </div>
-        <div className="ai-banner-content">
-          <h4>
-            <span>AI-Authored Software Architecture &amp; Algorithmic Heuristics Notice</span>
-          </h4>
-          <p>
-            Users acknowledge that Velvet Hearts software, backend infrastructure, compatibility metrics, and user safety monitors are <strong>authored, generated, and synthesized utilizing Advanced Artificial Intelligence (Google DeepMind Antigravity AI Systems)</strong> under ongoing human oversight. Compatibility percentages are entertaining affinity suggestions and do not constitute character endorsements, background verifications, or relationship warranties. The service is provided strictly on an &ldquo;AS-IS&rdquo; and &ldquo;AS-AVAILABLE&rdquo; basis.
-          </p>
-        </div>
-      </div>
-
-      {/* Emergency Rule 3(2)(b) Banner */}
-      <div className="legal-callout-emergency">
-        <h4 style={{ margin: '0 0 0.5rem 0', color: '#ffffff', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <WarningCircle size={18} weight="fill" />
-          <span>Rule 3(2)(b) Emergency Takedown Mechanism (24-Hour SLA)</span>
-        </h4>
-        <p style={{ margin: 0 }}>
-          If any user uploads non-consensual sexual material, nudity, intimate content, or impersonated/morphed media of you, email our Grievance Officer immediately at{" "}
-          <a
-            href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=%5BEMERGENCY%20RULE%203(2)(b)%20TAKEDOWN%5D"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="email-link"
+    <>
+      {/* Chapter 1 */}
+      <section id="terms-sec-1" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <FileText size={22} className="text-[#e27396]" />
+            <span>1. Acceptance of Terms &amp; Binding Contract</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('terms-sec-1')}
+            className="clause-copy-btn"
           >
-            velvethearts.in@gmail.com
-          </a>
-          . Velvet Hearts enforces a zero-tolerance policy and guarantees access removal <strong>within 24 hours of complaint receipt</strong>.
-        </p>
-      </div>
-
-      {/* 1. Acceptance of Terms */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <FileText size={22} className="legal-section-icon" />
-          <span>1. Acceptance of Terms &amp; Binding Contract</span>
-        </h2>
-        <p className="legal-p">
-          By downloading, installing, registering, or accessing Velvet Hearts (&ldquo;App&rdquo; or &ldquo;Platform&rdquo;), you enter into a legally enforceable contract under the <strong>Indian Contract Act, 1872</strong> with Velvet Hearts (founded by Indrani Roy). If you do not accept all terms of this User Agreement, you are not authorized to use the Service and must delete your account immediately.
-        </p>
-      </section>
-
-      {/* 2. Eligibility & 18+ Verification */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <UserCheck size={22} className="legal-section-icon" />
-          <span>2. Eligibility &amp; Statutory Disqualifications</span>
-        </h2>
-        <p className="legal-p">
-          By creating an account, you solemnly represent, warrant, and covenant that:
-        </p>
-        <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li>You are at least <strong>18 (eighteen) years of age</strong> as of the registration date.</li>
-          <li>You have the legal capacity to enter into a valid contract under Indian law.</li>
-          <li>You have never been convicted of any sexual offense, violent crime, cyber harassment, or moral turpitude under the <strong>Bharatiya Nyaya Sanhita, 2023 (BNS)</strong>, <strong>Protection of Children from Sexual Offences (POCSO) Act, 2012</strong>, or equivalent criminal statutes.</li>
-          <li>You are not barred from using communications services under the laws of India.</li>
-          <li>You will maintain only one verified personal account on the Platform.</li>
-        </ul>
-      </section>
-
-      {/* 3. Comprehensive Rule 3(1)(b) Prohibited Conduct */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <WarningCircle size={22} className="legal-section-icon" />
-          <span>3. User Conduct &amp; Prohibited Content (Rule 3(1)(b) IT Rules 2021)</span>
-        </h2>
-        <p className="legal-p">
-          In mandatory adherence to <strong>Rule 3(1)(b) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021</strong>, as amended, you covenant that you shall NOT host, display, upload, modify, publish, transmit, store, update, or share any information that:
-        </p>
-        <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li>Belongs to another person and to which you do not have any right.</li>
-          <li>Is obscene, pornographic, paedophilic, invasive of another&rsquo;s bodily privacy, insulting or harassing on the basis of gender, racially or ethnically objectionable, or relating to or encouraging money laundering or gambling.</li>
-          <li>Is harmful to child or minor in any manner whatsoever.</li>
-          <li>Infringes any patent, trademark, copyright, or other proprietary rights of any third party.</li>
-          <li>Deceives or misleads the addressee about the origin of the message or knowingly transmits any information which is patently false or misleading in nature.</li>
-          <li>Impersonates another person (including creating fraudulent catfish profiles or sharing someone else&rsquo;s photos/identity).</li>
-          <li>Threatens the unity, integrity, defence, security, or sovereignty of India, friendly relations with foreign states, or public order, or causes incitement to the commission of any cognisable offence or prevents investigation of any offence.</li>
-          <li>Contains software virus or any other computer code, file, or program designed to interrupt, destroy, or limit the functionality of any computer resource.</li>
-          <li>Is in the nature of an online game that is not verified as a permissible online game, or involves real-money gambling.</li>
-          <li>Is patently false, untrue, or misleading in nature with intent to deceive or harass any person or entity.</li>
-        </ul>
-
-        <div className="legal-callout-box">
-          <strong>Zero Tolerance &amp; Law Enforcement Reporting:</strong> Any violation of Rule 3(1)(b) results in immediate, non-appealable account ban, device fingerprint blacklisting, and where deemed necessary, proactive transmission of records to law enforcement authorities.
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'terms-sec-1' ? 'Copied' : 'Share'}</span>
+          </button>
         </div>
-      </section>
-
-      {/* 4. Criminal Liabilities & Penal Provisions */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <Scales size={22} className="legal-section-icon" />
-          <span>4. Criminal Liabilities under Bharatiya Nyaya Sanhita &amp; IT Act</span>
-        </h2>
         <p className="legal-p">
-          Users are formally cautioned that engaging in harassment, non-consensual recordings, identity theft, or extortion on Velvet Hearts triggers severe criminal liabilities under Indian law:
-        </p>
-        <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li><strong>Section 66E, IT Act 2000:</strong> Capturing or transmitting images of private body areas without consent (imprisonment up to 3 years or fine up to ₹2,00,000).</li>
-          <li><strong>Section 67 &amp; 67A, IT Act 2000:</strong> Transmitting obscene or sexually explicit material in electronic form (rigorous imprisonment up to 5 years / 7 years).</li>
-          <li><strong>Section 67B, IT Act 2000:</strong> Depicting children in sexually explicit acts (rigorous imprisonment up to 7 years).</li>
-          <li><strong>Sections 75, 78 &amp; 79, Bharatiya Nyaya Sanhita 2023 (BNS):</strong> Sexual harassment, cyber stalking, and assault or criminal force to outrage the modesty of a woman.</li>
-          <li><strong>Sections 318 &amp; 319, BNS:</strong> Cheating by personation (catfishing and romance fraud).</li>
-          <li><strong>Section 308, BNS:</strong> Extortion, sextortion, and coercion.</li>
-        </ul>
-        <p className="legal-p">
-          Velvet Hearts cooperates fully with Cyber Crime Cells and Indian Law Enforcement Agencies (LEAs) under <strong>Section 94 of the Bharatiya Nagarik Suraksha Sanhita, 2023 (BNSS)</strong> / Section 91 CrPC upon receiving lawful notices.
+          By downloading, accessing, or creating an account on Velvet Hearts, you enter into a legally binding contract under the <strong>Indian Contract Act, 1872</strong> with Velvet Hearts Technologies. If you do not agree to every clause herein, you must immediately terminate your session and cease all access to the platform.
         </p>
       </section>
 
-      {/* 5. Intermediary Status & Safe Harbor (Section 79) */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <LockKey size={22} className="legal-section-icon" />
-          <span>5. Intermediary Status &amp; Safe Harbor (Section 79, IT Act 2000)</span>
-        </h2>
+      {/* Chapter 2 */}
+      <section id="terms-sec-2" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <UserCheck size={22} className="text-[#e27396]" />
+            <span>2. Eligibility &amp; Statutory Disqualifications</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('terms-sec-2')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'terms-sec-2' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
         <p className="legal-p">
-          Velvet Hearts qualifies as an <em>intermediary</em> under Section 2(1)(w) of the Information Technology Act, 2000. In accordance with Section 79 of the IT Act, Velvet Hearts provides a platform for user interactions and is not responsible or liable for user-generated content, chats, voice notes, or off-platform physical interactions, provided due diligence obligations under the IT Rules 2021 are maintained.
+          You represent and warrant that:
         </p>
-      </section>
-
-      {/* 6. Offline Dating & Real-World Encounters */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <ShieldCheck size={22} className="legal-section-icon" />
-          <span>6. Offline Safety &amp; Assumption of Risk</span>
-        </h2>
-        <p className="legal-p">
-          Velvet Hearts does <strong>not conduct criminal background checks</strong> on its members. You agree that you are solely and exclusively responsible for your interactions with other users. You acknowledge the inherent risks in online dating and agree to exercise personal caution: always meet in public locations, inform trusted friends or family, and never transfer money, UPI payments, cryptocurrency, or banking OTPs to anyone met on the Platform.
-        </p>
-      </section>
-
-      {/* 7. Limitation of Liability & Disclaimers */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <WarningCircle size={22} className="legal-section-icon" />
-          <span>7. Comprehensive Limitation of Liability &amp; Disclaimers</span>
-        </h2>
-        <p className="legal-p">
-          TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE INDIAN LAW, VELVET HEARTS, ITS CREATORS, DEVELOPERS, DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY, ARISING OUT OF:
-        </p>
-        <ul className="legal-p" style={{ paddingLeft: '1.4rem' }}>
-          <li>YOUR ACCESS TO, USE OF, OR INABILITY TO ACCESS THE SERVICE;</li>
-          <li>THE CONDUCT OR CONTENT OF ANY USER OR THIRD PARTY ON THE SERVICE;</li>
-          <li>UNAUTHORIZED ACCESS, USE, OR ALTERATION OF YOUR CONTENT OR DATA;</li>
-          <li>OFFLINE IN-PERSON DATING ENCOUNTERS, PHYSICAL DISPUTES, OR FINANCIAL TRANSACTIONS BETWEEN USERS.</li>
+        <ul className="legal-p list-disc pl-5 space-y-1.5">
+          <li>You are at least <strong>18 years of age</strong> as of the date of account registration.</li>
+          <li>You have never been convicted of any sexual offense, violent felony, cyber harassment, or crime of moral turpitude under the <strong>Bharatiya Nyaya Sanhita, 2023 (BNS)</strong> or the <strong>POCSO Act, 2012</strong>.</li>
+          <li>You are legally competent to enter into enforceable contractual relations under Indian law.</li>
+          <li>You maintain only one active personal account, representing your true, authentic identity.</li>
         </ul>
       </section>
 
-      {/* 8. Intellectual Property & AI Codebase License */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <Cpu size={22} className="legal-section-icon" />
-          <span>8. Intellectual Property &amp; User Content License</span>
-        </h2>
+      {/* Chapter 3 */}
+      <section id="terms-sec-3" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <Prohibit size={22} className="text-[#e27396]" />
+            <span>3. Prohibited Conduct (Rule 3(1)(b), IT Rules 2021)</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('terms-sec-3')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'terms-sec-3' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
         <p className="legal-p">
-          All proprietary trademarks, logos, visual designs, and AI-synthesized software code comprising Velvet Hearts remain the exclusive property of Velvet Hearts Technologies. You retain copyright in the photos and prompts you submit; however, by uploading content, you grant Velvet Hearts a non-exclusive, royalty-free, worldwide license to host, display, and format your content solely for operating the platform.
+          Under <strong>Rule 3(1)(b) of the Information Technology Rules, 2021</strong>, users are strictly prohibited from hosting, displaying, uploading, transmitting, or sharing any information that:
         </p>
+        <ul className="legal-p list-disc pl-5 space-y-1.5">
+          <li>Belongs to another individual without lawful entitlement or express authorization;</li>
+          <li>Is defamatory, obscene, pornographic, paedophilic, invasive of bodily privacy, or gender-harassing;</li>
+          <li>Is harmful to minors in any manner whatsoever;</li>
+          <li>Infringes any patent, trademark, copyright, or proprietary trade secrets;</li>
+          <li>Impersonates another person or intentionally presents false, deceptive, or catfish profile imagery;</li>
+          <li>Threatens the unity, integrity, defense, security, or sovereignty of India or public order;</li>
+          <li>Contains malicious scripts, trojans, bots, or unauthorized scraping routines.</li>
+        </ul>
       </section>
 
-      {/* 9. Grievance Redressal & Point of Contact */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <EnvelopeSimple size={22} className="legal-section-icon" />
-          <span>9. Grievance Redressal &amp; Point of Contact</span>
-        </h2>
+      {/* Chapter 4 */}
+      <section id="terms-sec-4" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <Scales size={22} className="text-[#e27396]" />
+            <span>4. Criminal Liabilities under Bharatiya Nyaya Sanhita &amp; IT Act</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('terms-sec-4')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'terms-sec-4' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
         <p className="legal-p">
-          For any legal inquiries, rule violations, or technical grievances, contact our Grievance Officer:
+          Users are placed on express notice that engaging in cyber abuse, extortion, or romance fraud invokes severe criminal penalties:
         </p>
-        <div className="grievance-card">
-          <h4 style={{ color: '#ffffff', margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>
-            Statutory Grievance Officer
-          </h4>
-          <div className="grievance-row">
-            <div className="grievance-detail">
-              <span className="grievance-label">Designated Officer</span>
-              <span className="grievance-val">Indrani Roy (Founder &amp; Designated Grievance Officer)</span>
-            </div>
-            <div className="grievance-detail">
-              <span className="grievance-label">Official Contact Email</span>
-              <span className="grievance-val">
-                <a
-                  href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="email-link"
-                >
-                  velvethearts.in@gmail.com
-                </a>
-              </span>
-            </div>
-            <div className="grievance-detail">
-              <span className="grievance-label">Statutory Redressal SLA</span>
-              <span className="grievance-val">24h Acknowledgment &bull; 15 Days Resolution (24h for Rule 3(2)(b))</span>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">
+          <div className="p-3.5 rounded-xl bg-[#1b0a12] border border-[#4a1827]">
+            <h4 className="text-xs font-bold text-[#ff809f] uppercase mb-1">Section 66E, IT Act 2000</h4>
+            <p className="text-xs text-[#ffe1ea]">Non-consensual capture or distribution of private bodily imagery (imprisonment up to 3 years).</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-[#1b0a12] border border-[#4a1827]">
+            <h4 className="text-xs font-bold text-[#ff809f] uppercase mb-1">Section 67 &amp; 67A, IT Act 2000</h4>
+            <p className="text-xs text-[#ffe1ea]">Electronic transmission of sexually explicit material (rigorous imprisonment up to 5–7 years).</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-[#1b0a12] border border-[#4a1827]">
+            <h4 className="text-xs font-bold text-[#ff809f] uppercase mb-1">Sections 75 &amp; 78, BNS 2023</h4>
+            <p className="text-xs text-[#ffe1ea]">Sexual harassment and cyber stalking offenses with cognizable legal liability.</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-[#1b0a12] border border-[#4a1827]">
+            <h4 className="text-xs font-bold text-[#ff809f] uppercase mb-1">Sections 318 &amp; 319, BNS 2023</h4>
+            <p className="text-xs text-[#ffe1ea]">Cheating by personation, deceptive catfish profiles, and romance extortion.</p>
           </div>
         </div>
       </section>
 
-      {/* 10. Governing Law & Dispute Resolution */}
-      <section className="legal-section-card">
-        <h2 className="legal-section-title font-display">
-          <Scales size={22} className="legal-section-icon" />
-          <span>10. Governing Law &amp; Exclusive Jurisdiction</span>
-        </h2>
+      {/* Chapter 5 */}
+      <section id="terms-sec-5" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <LockKey size={22} className="text-[#e27396]" />
+            <span>5. Intermediary Status &amp; Safe Harbor (Section 79, IT Act)</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('terms-sec-5')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'terms-sec-5' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
         <p className="legal-p">
-          These Terms and any dispute or claim arising out of or in connection with them shall be governed by and construed in accordance with the substantive laws of the <strong>Republic of India</strong>, without regard to conflict of law principles. Any dispute, litigation, or legal proceeding arising out of these Terms shall be subject to the <strong>exclusive jurisdiction of the competent civil courts located in New Delhi, India</strong>.
+          Velvet Hearts qualifies as an <em>intermediary</em> under Section 2(1)(w) of the Information Technology Act, 2000. In accordance with Section 79 of the IT Act, Velvet Hearts is not liable for user-generated content, voice recordings, or third-party interactions, provided statutory due diligence under the IT Rules 2021 is diligently fulfilled.
         </p>
       </section>
-    </div>
+
+      {/* Chapter 6 */}
+      <section id="terms-sec-6" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <HandHeart size={22} className="text-[#e27396]" />
+            <span>6. Offline Dating &amp; Risk Assumption</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('terms-sec-6')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'terms-sec-6' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Velvet Hearts does not perform criminal background checks or state registry lookups. You agree that you are exclusively responsible for your interactions with other members. You agree to exercise common sense and prudent caution: always meet in public venues, tell trusted companions your plans, and never send money, wire transfers, UPI payments, or financial credentials to anyone met through the platform.
+        </p>
+      </section>
+
+      {/* Chapter 7 */}
+      <section id="terms-sec-7" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <Warning size={22} className="text-[#e27396]" />
+            <span>7. Disclaimers &amp; Limitation of Liability</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('terms-sec-7')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'terms-sec-7' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          TO THE FULLEST EXTENT PERMITTED BY INDIAN LAW, THE SERVICE IS PROVIDED &ldquo;AS IS&rdquo; AND &ldquo;AS AVAILABLE&rdquo;. VELVET HEARTS DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING FITNESS FOR A PARTICULAR PURPOSE, COMPATIBILITY SUCCESS, OR CONTINUOUS UNINTERRUPTED AVAILABILITY. VELVET HEARTS SHALL NOT BE LIABLE FOR ANY INDIRECT, CONSEQUENTIAL, PUNITIVE, OR SPECIAL DAMAGES ARISING FROM USER CONDUCT.
+        </p>
+      </section>
+
+      {/* Chapter 8 */}
+      <section id="terms-sec-8" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <Cpu size={22} className="text-[#e27396]" />
+            <span>8. Intellectual Property &amp; AI Codebase License</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('terms-sec-8')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'terms-sec-8' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          All proprietary trademarks, graphic logos, and AI-synthesized software comprising Velvet Hearts are the exclusive intellectual property of Velvet Hearts Technologies. You retain ownership in your uploaded photos and audio notes, granting Velvet Hearts a worldwide, non-exclusive license solely for platform transmission and display.
+        </p>
+      </section>
+
+      {/* Chapter 9 */}
+      <section id="terms-sec-9" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <EnvelopeSimple size={22} className="text-[#e27396]" />
+            <span>9. Grievance Redressal SLA</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('terms-sec-9')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'terms-sec-9' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Grievances regarding platform terms or safety issues can be submitted to our Grievance Officer, Indrani Roy, at <a href="mailto:velvethearts.in@gmail.com" className="text-[#d4ad6a] underline font-semibold">velvethearts.in@gmail.com</a>. All complaints receive formal acknowledgment within 24 hours.
+        </p>
+      </section>
+
+      {/* Chapter 10 */}
+      <section id="terms-sec-10" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <Scales size={22} className="text-[#e27396]" />
+            <span>10. Governing Law &amp; Exclusive Jurisdiction</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('terms-sec-10')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'terms-sec-10' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          These Terms and any dispute arising hereunder shall be governed by the substantive laws of the <strong>Republic of India</strong>. Any litigation or dispute proceeding shall be subject to the exclusive jurisdiction of the competent courts of <strong>New Delhi, India</strong>.
+        </p>
+      </section>
+    </>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/* COMMUNITY GUIDELINES CLAUSES COMPONENT                                     */
+/* -------------------------------------------------------------------------- */
+const GuidelinesClauses = ({ searchQuery, onCopy, copiedId, expandedDetails, toggleDetail }) => {
+  return (
+    <>
+      {/* Chapter 1 */}
+      <section id="guide-sec-1" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <HandHeart size={22} className="text-[#e27396]" />
+            <span>1. Core Philosophy of Intentional Discovery</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('guide-sec-1')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'guide-sec-1' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Velvet Hearts was created as an antidote to shallow swipe culture. We celebrate emotional resonance, shared vulnerability, and genuine human warmth. We expect every member to arrive with kindness, integrity, and clear intentions.
+        </p>
+        <div className="legal-highlight-box">
+          <strong>The Golden Principle:</strong> Treat every profile as a whole human being with dignity and emotional depth. Casual cruelty, mocking profiles, or deceitful interactions have zero place in our community.
+        </div>
+      </section>
+
+      {/* Chapter 2 */}
+      <section id="guide-sec-2" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <Fingerprint size={22} className="text-[#e27396]" />
+            <span>2. Identity Authenticity &amp; Photo Standards</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('guide-sec-2')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'guide-sec-2' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Authenticity is our bedrock covenant. Every profile must represent the living person operating it:
+        </p>
+        <ul className="legal-p list-disc pl-5 space-y-1.5">
+          <li><strong>Real Photos Required:</strong> Profiles must feature recent, unobstructed photos where your face is clearly identifiable.</li>
+          <li><strong>No Impersonation or Catfishing:</strong> Operating an account under someone else&rsquo;s identity or celebrity pictures results in an immediate permanent ban.</li>
+          <li><strong>No Synthetic Deepfakes:</strong> Generative AI avatars, heavily manipulated face swaps, or computer-generated personas are strictly banned.</li>
+          <li><strong>No Minors:</strong> Photos depicting minors (including your own children or relatives) are forbidden to safeguard child privacy.</li>
+        </ul>
+      </section>
+
+      {/* Chapter 3 */}
+      <section id="guide-sec-3" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <ChatCircleText size={22} className="text-[#e27396]" />
+            <span>3. Respectful Communication &amp; Audio Notes</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('guide-sec-3')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'guide-sec-3' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Meaningful dialogue requires consent, boundaries, and mutual respect:
+        </p>
+        <ul className="legal-p list-disc pl-5 space-y-1.5">
+          <li><strong>Consent-First Interactions:</strong> Do not barrage matches with unsolicited explicit comments, sexual demands, or intrusive interrogations.</li>
+          <li><strong>Voice Intro Etiquette:</strong> Voice intros and audio recordings must be original, respectful, and free of background obscenity or hate speech.</li>
+          <li><strong>Discontinuing with Grace:</strong> If a connection isn&rsquo;t reciprocal, respect their boundary gracefully. Aggressive responses to unmatching or rejection trigger immediate moderation.</li>
+        </ul>
+      </section>
+
+      {/* Chapter 4 */}
+      <section id="guide-sec-4" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <WarningCircle size={22} className="text-[#e27396]" />
+            <span>4. Zero Tolerance for Harassment &amp; Abuse</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('guide-sec-4')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'guide-sec-4' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Velvet Hearts maintains absolute zero tolerance for abusive behaviors. Any of the following triggers immediate profile termination and permanent hardware blacklisting:
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">
+          <div className="p-3.5 rounded-xl bg-[#200912] border border-[#d9385d]">
+            <h4 className="text-xs font-bold text-[#ff99b3] uppercase mb-1">Unsolicited Sexual Media</h4>
+            <p className="text-xs text-[#ffe1ea]">Sharing intimate photos, nudity, or sexually explicit voice notes without prior mutual consent.</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-[#200912] border border-[#d9385d]">
+            <h4 className="text-xs font-bold text-[#ff99b3] uppercase mb-1">Hate Speech &amp; Slurs</h4>
+            <p className="text-xs text-[#ffe1ea]">Any attack or degradation based on caste, religion, gender, sexual orientation, disability, or nationality.</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-[#200912] border border-[#d9385d]">
+            <h4 className="text-xs font-bold text-[#ff99b3] uppercase mb-1">Doxxing &amp; Extortion</h4>
+            <p className="text-xs text-[#ffe1ea]">Publishing a match&rsquo;s phone number, address, workplace, or private messages without their consent.</p>
+          </div>
+          <div className="p-3.5 rounded-xl bg-[#200912] border border-[#d9385d]">
+            <h4 className="text-xs font-bold text-[#ff99b3] uppercase mb-1">Predatory Stalking</h4>
+            <p className="text-xs text-[#ffe1ea]">Tracking a user across social platforms after being unmatched or blocked on Velvet Hearts.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Chapter 5 */}
+      <section id="guide-sec-5" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <LockKey size={22} className="text-[#e27396]" />
+            <span>5. Financial Safety &amp; Anti-Scam Rules</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('guide-sec-5')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'guide-sec-5' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Velvet Hearts is strictly for romantic and personal connections. We enforce a zero-tolerance policy against financial solicitation:
+        </p>
+        <ul className="legal-p list-disc pl-5 space-y-1.5">
+          <li><strong>Never Send Money:</strong> Never transfer funds via UPI, Google Pay, bank wire, crypto, or gift cards to someone met online.</li>
+          <li><strong>No Commercial Solicitation:</strong> Accounts advertising escort services, paid modeling, adult content subscriptions (OnlyFans), MLM schemes, or financial investments are terminated instantly.</li>
+          <li><strong>Emergency Scams:</strong> Fabricated sob stories regarding sudden hospital bills, travel tickets, or customs fees are common romance scam patterns. Report them immediately.</li>
+        </ul>
+      </section>
+
+      {/* Chapter 6 */}
+      <section id="guide-sec-6" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <MapPin size={22} className="text-[#e27396]" />
+            <span>6. Real-World Date Protocol</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('guide-sec-6')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'guide-sec-6' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          When transitioning from digital chats to real-world encounters, prioritize your safety:
+        </p>
+        <ul className="legal-p list-disc pl-5 space-y-1.5">
+          <li><strong>Meet in Populated Public Spaces:</strong> Coffee shops, busy restaurants, art galleries, or public gardens are ideal for first dates. Never meet in private residences or remote areas.</li>
+          <li><strong>Tell a Trusted Friend:</strong> Share your location, who you are meeting, and an agreed check-in time with a friend or family member.</li>
+          <li><strong>Control Your Transportation:</strong> Arrange your own ride to and from the venue. Do not let someone you just met pick you up at your home.</li>
+          <li><strong>Watch Your Drinks &amp; Belongings:</strong> Keep drinks and personal items in view at all times.</li>
+        </ul>
+      </section>
+
+      {/* Chapter 7 */}
+      <section id="guide-sec-7" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <Eye size={22} className="text-[#e27396]" />
+            <span>7. Reporting, Triaging &amp; Dispute Channels</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('guide-sec-7')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'guide-sec-7' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          Every chat screen and user profile contains a persistent &ldquo;Report Profile&rdquo; action. When a report is filed:
+        </p>
+        <ul className="legal-p list-disc pl-5 space-y-1.5">
+          <li>The reported user is immediately muted from interacting with your profile.</li>
+          <li>Safety telemetry and relevant messages are frozen in audit isolation.</li>
+          <li>Our Trust &amp; Safety team reviews the report with a priority triage queue for urgent harassment flags.</li>
+        </ul>
+      </section>
+
+      {/* Chapter 8 */}
+      <section id="guide-sec-8" className="legal-doc-section">
+        <div className="legal-section-header">
+          <h2 className="legal-section-heading font-display">
+            <WarningCircle size={22} className="text-[#e27396]" />
+            <span>8. Three-Strike Account Sanctions</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => onCopy('guide-sec-8')}
+            className="clause-copy-btn"
+          >
+            <ShareNetwork size={13} />
+            <span>{copiedId === 'guide-sec-8' ? 'Copied' : 'Share'}</span>
+          </button>
+        </div>
+        <p className="legal-p">
+          To maintain fairness, minor infractions follow a transparent progressive sanction framework:
+        </p>
+        <div className="space-y-2.5 my-4">
+          <div className="p-3 rounded-xl bg-[#170e14] border border-[#2e1825] flex items-center justify-between">
+            <span className="text-xs font-bold text-[#d4ad6a]">Strike 1 • Formal Warning</span>
+            <span className="text-xs text-[#cebac4]">Guideline notification and 24h profile edit requirement</span>
+          </div>
+          <div className="p-3 rounded-xl bg-[#170e14] border border-[#2e1825] flex items-center justify-between">
+            <span className="text-xs font-bold text-[#ffaa48]">Strike 2 • Temporary Cool-Down</span>
+            <span className="text-xs text-[#cebac4]">7-day account suspension and match discovery freeze</span>
+          </div>
+          <div className="p-3 rounded-xl bg-[#1e0a12] border border-[#d9385d] flex items-center justify-between">
+            <span className="text-xs font-bold text-[#ff809f]">Strike 3 • Permanent Blacklist</span>
+            <span className="text-xs text-[#ffd6e0]">Irreversible account termination &amp; hardware device ban</span>
+          </div>
+        </div>
+        <p className="legal-p text-xs text-[#9e858f]">
+          *Note: Severe violations (intimate media, extortion, hate speech, minor contact) trigger immediate, non-appealable Permanent Blacklisting on first offense.
+        </p>
+      </section>
+    </>
   );
 };

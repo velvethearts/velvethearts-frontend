@@ -178,7 +178,7 @@ function AppContent() {
 
   // Handle URL pathname and query parameter deep linking (e.g. /discover, /?tab=chat, or unknown 404 routes)
   React.useEffect(() => {
-    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety', 'admin', 'privacy', 'terms'];
+    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety', 'admin', 'privacy', 'terms', 'guidelines'];
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
 
@@ -289,9 +289,14 @@ function AppContent() {
         description: 'Review Velvet Hearts Terms of Service, User Agreement, and Community Guidelines compliant with applicable intermediary rules and safety standards.',
         path: '/terms',
       },
+      guidelines: {
+        title: 'Community Guidelines — Trust, Respect & Conduct',
+        description: 'Review Velvet Hearts Community Guidelines: mutual respect, consent, anti-harassment standards, and zero-tolerance safety policies for genuine relationships.',
+        path: '/guidelines',
+      },
     };
 
-    if (activeTab === 'privacy' || activeTab === 'terms' || activeTab === 'safety') {
+    if (activeTab === 'privacy' || activeTab === 'terms' || activeTab === 'safety' || activeTab === 'guidelines') {
       const currentMeta = TAB_META[activeTab];
       updateMetadata({
         title: currentMeta.title,
@@ -428,6 +433,7 @@ function AppContent() {
 
       case 'privacy':
       case 'terms':
+      case 'guidelines':
         return (
           <LegalPage
             initialTab={activeTab}
@@ -500,7 +506,7 @@ function AppContent() {
     // 2. Logged Out State: Legal Pages, Safety Center, Auth Screen, or Landing Page
     if (!isLoggedIn) {
 
-      if (activeTab === 'privacy' || activeTab === 'terms') {
+      if (activeTab === 'privacy' || activeTab === 'terms' || activeTab === 'guidelines') {
         return (
           <Suspense fallback={<AuthLoadingScreen />}>
             <LegalPage
