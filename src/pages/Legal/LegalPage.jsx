@@ -90,12 +90,12 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
       // Hero entrance
       gsap.fromTo(
         '.legal-hero-elem',
-        { y: 30, opacity: 0 },
+        { y: 25, opacity: 0 },
         {
           y: 0,
           opacity: 1,
-          duration: 0.8,
-          stagger: 0.12,
+          duration: 0.7,
+          stagger: 0.1,
           ease: 'power3.out',
         }
       );
@@ -103,14 +103,14 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
       // Bento cards reveal
       gsap.fromTo(
         '.legal-bento-card',
-        { y: 35, opacity: 0 },
+        { y: 30, opacity: 0 },
         {
           y: 0,
           opacity: 1,
-          duration: 0.7,
-          stagger: 0.08,
+          duration: 0.6,
+          stagger: 0.07,
           ease: 'power2.out',
-          delay: 0.3,
+          delay: 0.25,
         }
       );
 
@@ -264,27 +264,27 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         {/* ATTENTION: Ultra-Wide Cinematic Hero Section */}
         <section ref={heroRef} className="legal-hero py-12 md:py-16 text-center">
           <div className="legal-hero-elem inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase border legal-badge-pill mb-6">
-            <Sparkle size={14} weight="fill" className="text-amber-400" />
+            <Sparkle size={14} weight="fill" className="legal-badge-icon" />
             <span>{tabDetails.badge}</span>
           </div>
 
-          <h1 className="legal-hero-elem font-display text-4xl sm:text-5xl md:text-6xl text-white tracking-tight leading-[1.1] max-w-5xl mx-auto mb-6">
+          <h1 className="legal-hero-elem legal-hero-title font-display text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.1] max-w-5xl mx-auto mb-6">
             {tabDetails.title}
           </h1>
 
-          <p className="legal-hero-elem font-ui text-base sm:text-lg text-[#d3bcc7] max-w-3xl mx-auto leading-relaxed mb-8">
+          <p className="legal-hero-elem legal-hero-subtitle font-ui text-base sm:text-lg max-w-3xl mx-auto leading-relaxed mb-8">
             {tabDetails.subtitle}
           </p>
 
-          <div className="legal-hero-elem flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-[#a8909b]">
+          <div className="legal-hero-elem legal-hero-meta flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs">
             <span className="flex items-center gap-1.5">
-              <Clock size={15} className="text-[#d4ad6a]" /> Effective: {tabDetails.date}
+              <Clock size={15} className="legal-accent-icon" /> Effective: {tabDetails.date}
             </span>
             <span className="flex items-center gap-1.5">
-              <MapPin size={15} className="text-[#d4ad6a]" /> Jurisdiction: {tabDetails.jurisdiction}
+              <MapPin size={15} className="legal-accent-icon" /> Jurisdiction: {tabDetails.jurisdiction}
             </span>
             <span className="flex items-center gap-1.5">
-              <UserCheck size={15} className="text-[#d4ad6a]" /> Fiduciary: {tabDetails.fiduciary}
+              <UserCheck size={15} className="legal-accent-icon" /> Fiduciary: {tabDetails.fiduciary}
             </span>
           </div>
         </section>
@@ -298,7 +298,7 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-base font-bold text-white tracking-wide">
+                  <h2 className="legal-beacon-title text-base font-bold tracking-wide">
                     Autonomous Codebase &amp; Algorithmic Safety Notice
                   </h2>
                   <span className="legal-live-indicator" title="Continuously Audited">
@@ -306,7 +306,7 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
                     <span>Audited</span>
                   </span>
                 </div>
-                <p className="text-sm text-[#cebac4] leading-relaxed">
+                <p className="legal-beacon-text text-sm leading-relaxed">
                   The Velvet Hearts software systems, communication protocols, database schemas, and discovery affinity matching heuristics are <strong>authored, generated, and synthesized utilizing Advanced Artificial Intelligence (Google DeepMind Antigravity AI Systems)</strong> under human supervisory stewardship. All data processing operates strictly in compliance with Indian IT Rules and the Digital Personal Data Protection Act, 2023.
                 </p>
               </div>
@@ -333,16 +333,16 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
                   <Fingerprint size={16} className="text-[#e27396]" />
                   <span>Biometric Protection</span>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2 font-display">
+                <h3 className="legal-bento-title text-lg font-bold mb-2 font-display">
                   16-Zone Facial Coordinate Descriptors
                 </h3>
-                <p className="text-sm text-[#cbb2bd] leading-relaxed">
+                <p className="legal-bento-text text-sm leading-relaxed">
                   Real-time selfie verification extracts temporary geometric spatial coordinates to mathematically verify profile authenticity against catfishing. Raw facial biometrics are strictly isolated and <strong>never exported, sold, or trained into third-party commercial AI models</strong>.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#311b27] flex items-center justify-between text-xs text-[#a9909c]">
+              <div className="legal-bento-footer mt-4 pt-3 flex items-center justify-between text-xs">
                 <span>DPDPA Section 8(5) Compliant</span>
-                <span className="text-[#d4ad6a] font-medium">Encrypted Cold Isolation</span>
+                <span className="legal-accent-tag font-medium">Encrypted Cold Isolation</span>
               </div>
             </div>
 
@@ -350,27 +350,27 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
             <div id="takedown-notice" className="legal-bento-card emergency-card col-span-1 md:col-span-2 p-6 rounded-2xl flex flex-col justify-between">
               <div>
                 <div className="bento-badge-tag emergency mb-3">
-                  <WarningCircle size={16} weight="fill" className="text-[#ff6b8b]" />
+                  <WarningCircle size={16} weight="fill" className="emergency-icon" />
                   <span>Statutory Emergency Takedown</span>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2 font-display">
+                <h3 className="emergency-title text-lg font-bold mb-2 font-display">
                   Rule 3(2)(b) 24-Hour Removal Protocol
                 </h3>
-                <p className="text-sm text-[#ffd6e0] leading-relaxed">
+                <p className="emergency-text text-sm leading-relaxed">
                   If non-consensual intimate imagery, nudity, deepfakes, or impersonation content appears, report directly to our Grievance Officer. Velvet Hearts guarantees access deactivation <strong>within 24 hours of notice receipt</strong>.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#541c2c] flex items-center justify-between">
+              <div className="emergency-footer mt-4 pt-3 flex items-center justify-between">
                 <a
                   href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=%5BEMERGENCY%20RULE%203(2)(b)%20TAKEDOWN%5D"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="emergency-action-btn inline-flex items-center gap-2 text-xs font-bold text-white"
+                  className="emergency-action-btn inline-flex items-center gap-2 text-xs font-bold"
                 >
                   <EnvelopeSimple size={15} weight="bold" />
                   <span>velvethearts.in@gmail.com</span>
                 </a>
-                <span className="text-xs text-[#ff99b3] font-mono">SLA: &lt; 24h</span>
+                <span className="emergency-sla text-xs font-mono font-semibold">SLA: &lt; 24h</span>
               </div>
             </div>
 
@@ -378,17 +378,17 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
             <div className="legal-bento-card col-span-1 p-6 rounded-2xl flex flex-col justify-between">
               <div>
                 <div className="bento-badge-tag mb-3">
-                  <LockKey size={16} className="text-[#d4ad6a]" />
+                  <LockKey size={16} className="legal-accent-icon" />
                   <span>Privacy Pledge</span>
                 </div>
-                <h3 className="text-base font-bold text-white mb-2 font-display">
+                <h3 className="legal-bento-title text-base font-bold mb-2 font-display">
                   Zero Data Monetization
                 </h3>
-                <p className="text-xs text-[#cbb2bd] leading-relaxed">
+                <p className="legal-bento-text text-xs leading-relaxed">
                   We never sell, rent, or trade your personal conversations, phone numbers, or match history to ad brokers, data aggregators, or credit bureaus.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#311b27] text-xs text-[#d4ad6a] font-medium">
+              <div className="legal-bento-footer mt-4 pt-3 text-xs legal-accent-tag font-medium">
                 No Ad Trackers
               </div>
             </div>
@@ -400,14 +400,14 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
                   <HardDrive size={16} className="text-[#a78bfa]" />
                   <span>Statutory Retention</span>
                 </div>
-                <h3 className="text-base font-bold text-white mb-2 font-display">
+                <h3 className="legal-bento-title text-base font-bold mb-2 font-display">
                   180-Day CERT-In Retention
                 </h3>
-                <p className="text-xs text-[#cbb2bd] leading-relaxed">
+                <p className="legal-bento-text text-xs leading-relaxed">
                   Per Rule 3(1)(h) IT Rules 2021, deleted account metadata is preserved in cold encrypted isolation for 180 days for statutory investigative agencies before permanent deletion.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#311b27] text-xs text-[#a78bfa] font-medium">
+              <div className="legal-bento-footer mt-4 pt-3 text-xs font-medium text-[#a78bfa]">
                 Cryptographic Purge
               </div>
             </div>
@@ -419,16 +419,16 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
                   <Scales size={16} className="text-[#e27396]" />
                   <span>Criminal Liabilities</span>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2 font-display">
+                <h3 className="legal-bento-title text-lg font-bold mb-2 font-display">
                   Bharatiya Nyaya Sanhita (BNS) Enforcement
                 </h3>
-                <p className="text-sm text-[#cbb2bd] leading-relaxed">
+                <p className="legal-bento-text text-sm leading-relaxed">
                   Cyberstalking, romance scamming, sextortion, and non-consensual recordings attract severe criminal punishment under Sections 75, 78, 308, 318 of BNS 2023 and Section 66E of the IT Act. Full investigative cooperation is rendered to law enforcement.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#311b27] flex items-center justify-between text-xs text-[#a9909c]">
+              <div className="legal-bento-footer mt-4 pt-3 flex items-center justify-between text-xs">
                 <span>Sec 94 BNSS Legal Cooperation</span>
-                <span className="text-[#e27396] font-medium">Zero Tolerance</span>
+                <span className="legal-accent-rose-tag font-medium">Zero Tolerance</span>
               </div>
             </div>
           </div>
@@ -439,12 +439,12 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           {/* Left Column: Pinned Table of Contents */}
           <aside className="lg:col-span-4 sticky top-28 hidden lg:block">
             <div className="legal-toc-card p-5 rounded-2xl">
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#2d1824]">
-                <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Article size={16} className="text-[#d4ad6a]" />
+              <div className="legal-toc-header flex items-center justify-between mb-4 pb-3">
+                <span className="legal-toc-title text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                  <Article size={16} className="legal-accent-icon" />
                   <span>Table of Contents</span>
                 </span>
-                <span className="text-[11px] text-[#9e8590] font-mono">
+                <span className="legal-toc-badge text-[11px] font-mono">
                   {activeTab.toUpperCase()}
                 </span>
               </div>
@@ -493,11 +493,11 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
                 )}
               </nav>
 
-              <div className="mt-6 pt-4 border-t border-[#2d1824] flex items-center justify-between text-xs text-[#a8909b]">
+              <div className="legal-toc-footer mt-6 pt-4 flex items-center justify-between text-xs">
                 <span>Need immediate help?</span>
                 <a
                   href="mailto:velvethearts.in@gmail.com"
-                  className="text-[#d4ad6a] hover:underline font-semibold"
+                  className="legal-accent-link font-semibold"
                 >
                   Contact Trust Desk
                 </a>
@@ -507,6 +507,21 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
 
           {/* Right Column: Exhaustive Legal Clauses */}
           <div className="lg:col-span-8 space-y-8">
+            {searchQuery && (
+              <div className="legal-search-banner flex items-center justify-between p-3.5 rounded-xl text-xs">
+                <span>
+                  Filtering provisions for: <strong>&ldquo;{searchQuery}&rdquo;</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="legal-search-reset underline font-semibold"
+                >
+                  Show all
+                </button>
+              </div>
+            )}
+
             {activeTab === 'privacy' && (
               <PrivacyClauses
                 searchQuery={searchQuery}
@@ -541,42 +556,42 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         <section className="legal-grievance-terminal mt-20 p-8 rounded-3xl relative overflow-hidden">
           <div className="flex flex-col md:flex-row items-start justify-between gap-8">
             <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-[#2a1320] border border-[#d4ad6a] text-[#d4ad6a] mb-4">
+              <div className="legal-terminal-badge inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
                 <Scales size={14} weight="bold" />
                 <span>Statutory Dispute Escalation Node</span>
               </div>
-              <h2 className="text-2xl font-bold text-white font-display mb-3">
+              <h2 className="legal-terminal-title text-2xl font-bold font-display mb-3">
                 Three-Tier Redressal Hierarchy (IT Rules 2021 &amp; DPDPA 2023)
               </h2>
-              <p className="text-sm text-[#cebac4] leading-relaxed mb-6">
+              <p className="legal-terminal-desc text-sm leading-relaxed mb-6">
                 Under Rule 3(2)(a) of the Information Technology Rules 2021 and Section 13 of the Digital Personal Data Protection Act 2023, Data Principals possess an enforceable right to rapid grievance resolution.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-4 rounded-xl bg-[#140b11] border border-[#2b1623]">
-                  <span className="text-[11px] font-bold text-[#d4ad6a] uppercase tracking-wider block mb-1">
+                <div className="legal-terminal-subcard p-4 rounded-xl">
+                  <span className="legal-tier-badge text-[11px] font-bold uppercase tracking-wider block mb-1">
                     Tier 1 • Internal
                   </span>
-                  <p className="text-xs font-semibold text-white mb-1">Grievance Officer</p>
-                  <p className="text-[11px] text-[#a9909b]">
+                  <p className="legal-tier-title text-xs font-semibold mb-1">Grievance Officer</p>
+                  <p className="legal-tier-desc text-[11px]">
                     Acknowledged within 24 hours. Resolved within 15 days.
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-[#140b11] border border-[#2b1623]">
-                  <span className="text-[11px] font-bold text-[#d4ad6a] uppercase tracking-wider block mb-1">
+                <div className="legal-terminal-subcard p-4 rounded-xl">
+                  <span className="legal-tier-badge text-[11px] font-bold uppercase tracking-wider block mb-1">
                     Tier 2 • Ministry
                   </span>
-                  <p className="text-xs font-semibold text-white mb-1">Grievance Appellate</p>
-                  <p className="text-[11px] text-[#a9909b]">
-                    Appeal to GAC via <a href="https://gac.gov.in" target="_blank" rel="noopener noreferrer" className="text-[#d4ad6a] underline">gac.gov.in</a> within 30 days.
+                  <p className="legal-tier-title text-xs font-semibold mb-1">Grievance Appellate</p>
+                  <p className="legal-tier-desc text-[11px]">
+                    Appeal to GAC via <a href="https://gac.gov.in" target="_blank" rel="noopener noreferrer" className="legal-accent-link underline">gac.gov.in</a> within 30 days.
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-[#140b11] border border-[#2b1623]">
-                  <span className="text-[11px] font-bold text-[#d4ad6a] uppercase tracking-wider block mb-1">
+                <div className="legal-terminal-subcard p-4 rounded-xl">
+                  <span className="legal-tier-badge text-[11px] font-bold uppercase tracking-wider block mb-1">
                     Tier 3 • Statutory
                   </span>
-                  <p className="text-xs font-semibold text-white mb-1">Data Protection Board</p>
-                  <p className="text-[11px] text-[#a9909b]">
+                  <p className="legal-tier-title text-xs font-semibold mb-1">Data Protection Board</p>
+                  <p className="legal-tier-desc text-[11px]">
                     Formal complaints directly to the Data Protection Board of India.
                   </p>
                 </div>
@@ -584,35 +599,35 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
             </div>
 
             {/* Officer Details Card */}
-            <div className="w-full md:w-80 p-6 rounded-2xl bg-[#160c13] border border-[#d4ad6a]/30 flex flex-col justify-between">
+            <div className="legal-officer-card w-full md:w-80 p-6 rounded-2xl flex flex-col justify-between">
               <div>
-                <span className="text-[11px] text-[#a9909b] uppercase tracking-wider font-semibold block mb-1">
+                <span className="legal-officer-sub text-[11px] uppercase tracking-wider font-semibold block mb-1">
                   Designated Grievance Officer
                 </span>
-                <h4 className="text-base font-bold text-white mb-4">
+                <h4 className="legal-officer-name text-base font-bold mb-4">
                   Indrani Roy
-                  <span className="text-xs font-normal text-[#d4ad6a] block">Founder &amp; Legal Compliance Head</span>
+                  <span className="legal-officer-role text-xs font-normal block">Founder &amp; Legal Compliance Head</span>
                 </h4>
 
-                <div className="space-y-2.5 text-xs text-[#cebac4]">
+                <div className="space-y-2.5 text-xs">
                   <div>
-                    <span className="text-[11px] text-[#8e7681] block">Direct Redressal Email</span>
+                    <span className="legal-officer-label text-[11px] block">Direct Redressal Email</span>
                     <a
                       href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-mono text-[#d4ad6a] hover:underline font-semibold"
+                      className="legal-officer-email font-mono hover:underline font-semibold"
                     >
                       velvethearts.in@gmail.com
                     </a>
                   </div>
                   <div>
-                    <span className="text-[11px] text-[#8e7681] block">Emergency Takedown SLA</span>
-                    <span className="text-white font-medium">Within 24 Hours (Rule 3(2)(b))</span>
+                    <span className="legal-officer-label text-[11px] block">Emergency Takedown SLA</span>
+                    <span className="legal-officer-val font-medium">Within 24 Hours (Rule 3(2)(b))</span>
                   </div>
                   <div>
-                    <span className="text-[11px] text-[#8e7681] block">Corporate Jurisdiction</span>
-                    <span className="text-white font-medium">New Delhi &bull; Republic of India</span>
+                    <span className="legal-officer-label text-[11px] block">Corporate Jurisdiction</span>
+                    <span className="legal-officer-val font-medium">New Delhi &bull; Republic of India</span>
                   </div>
                 </div>
               </div>
@@ -621,7 +636,7 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
                 href="https://mail.google.com/mail/?view=cm&fs=1&to=velvethearts.in@gmail.com&su=Legal%20Grievance%20Notice"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-6 w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#b8436a] to-[#7c2242] text-white font-semibold text-xs text-center hover:opacity-95 transition-opacity"
+                className="legal-officer-btn mt-6 w-full py-2.5 px-4 rounded-xl text-white font-semibold text-xs text-center transition-opacity"
               >
                 File Formal Grievance
               </a>
@@ -631,29 +646,130 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
       </main>
 
       {/* Footer Disclaimer & Legal Attributes */}
-      <footer className="legal-doc-footer py-10 border-t border-[#2a1320] text-center">
+      <footer className="legal-doc-footer py-10 text-center">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="flex flex-wrap items-center justify-center gap-6 mb-4 text-xs text-[#a9909b]">
-            <button onClick={() => handleTabChange('privacy')} className="hover:text-white transition-colors">Privacy Policy</button>
+          <div className="legal-footer-links flex flex-wrap items-center justify-center gap-6 mb-4 text-xs">
+            <button onClick={() => handleTabChange('privacy')} className="legal-footer-btn transition-colors">Privacy Policy</button>
             <span>&bull;</span>
-            <button onClick={() => handleTabChange('terms')} className="hover:text-white transition-colors">Terms of Service</button>
+            <button onClick={() => handleTabChange('terms')} className="legal-footer-btn transition-colors">Terms of Service</button>
             <span>&bull;</span>
-            <button onClick={() => handleTabChange('guidelines')} className="hover:text-white transition-colors">Community Guidelines</button>
+            <button onClick={() => handleTabChange('guidelines')} className="legal-footer-btn transition-colors">Community Guidelines</button>
             <span>&bull;</span>
-            <a href="mailto:velvethearts.in@gmail.com" className="hover:text-white transition-colors">Contact Legal Desk</a>
+            <a href="mailto:velvethearts.in@gmail.com" className="legal-footer-btn transition-colors">Contact Legal Desk</a>
           </div>
-          <p className="text-xs text-[#7e6772] max-w-2xl mx-auto leading-relaxed">
+          <p className="legal-footer-copy text-xs max-w-2xl mx-auto leading-relaxed">
             &copy; {new Date().getFullYear()} Velvet Hearts India. Fully compliant with the Digital Personal Data Protection Act, 2023 (DPDPA), the Information Technology Act, 2000, and the Information Technology Rules, 2021. All rights reserved.
           </p>
         </div>
       </footer>
 
-      {/* Styled Component CSS */}
+      {/* Styled Component CSS with Complete Light and Dark Mode Color Engine */}
       <style>{`
+        /* ==========================================================
+           COLOR ENGINE & DESIGN TOKENS
+           ========================================================== */
         .legal-universe {
-          background-color: #0b070a;
-          color: #f7eff3;
+          --legal-bg: #0b070a;
+          --legal-text-primary: #ffffff;
+          --legal-text-body: #d6c1ca;
+          --legal-text-muted: #a8909b;
+          --legal-text-subtle: #8e7681;
+          --legal-card-bg: #140c11;
+          --legal-card-border: #2a1522;
+          --legal-subcard-bg: #180e15;
+          --legal-subcard-border: #2d1824;
+          --legal-subcard-title: #d4ad6a;
+          --legal-subcard-text: #cebac4;
+          --legal-danger-bg: #200912;
+          --legal-danger-border: #d9385d;
+          --legal-danger-title: #ff99b3;
+          --legal-danger-text: #ffe1ea;
+          --legal-highlight-bg: #190f16;
+          --legal-highlight-text: #f7e6ec;
+          --legal-highlight-border: #d4ad6a;
+          --legal-terminal-bg: linear-gradient(135deg, #190c14 0%, #0e070c 100%);
+          --legal-terminal-border: rgba(212, 173, 106, 0.35);
+          --legal-terminal-subcard-bg: #140b11;
+          --legal-terminal-subcard-border: #2b1623;
+          --legal-officer-bg: #160c13;
+          --legal-officer-border: rgba(212, 173, 106, 0.3);
+          --legal-accent-gold: #d4ad6a;
+          --legal-accent-rose: #e27396;
+          --legal-nav-bg: rgba(15, 9, 13, 0.88);
+          --legal-nav-border: rgba(212, 173, 106, 0.18);
+          --legal-tab-track-bg: #140b10;
+          --legal-tab-item-color: #cbb2bc;
+          --legal-action-btn-bg: #190f15;
+          --legal-action-btn-color: #d4adb7;
+          --legal-search-bg: #160e13;
+          --legal-search-border: rgba(212, 173, 106, 0.2);
+          --legal-search-text: #ffffff;
+          --legal-badge-bg: rgba(212, 173, 106, 0.08);
+          --legal-badge-border: rgba(212, 173, 106, 0.4);
+          --legal-badge-text: #d4ad6a;
+          --legal-takedown-bg: #25121b;
+          --legal-takedown-border: #d9385d;
+          --legal-takedown-color: #ff99b3;
+          --legal-plain-box-bg: #12090f;
+          --legal-plain-box-border: rgba(212, 173, 106, 0.35);
+          --legal-plain-box-text: #f3dfa2;
+          --legal-footer-border: #2a1320;
+          --legal-footer-text: #7e6772;
+
+          background-color: var(--legal-bg);
+          color: var(--legal-text-body);
           position: relative;
+          transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* LIGHT MODE COMPLETE ADAPTATION */
+        [data-theme="light"] .legal-universe {
+          --legal-bg: #FAF5F8;
+          --legal-text-primary: #1C0D15;
+          --legal-text-body: #3A2631;
+          --legal-text-muted: #6B525E;
+          --legal-text-subtle: #7A626F;
+          --legal-card-bg: #FFFFFF;
+          --legal-card-border: #E8D3DF;
+          --legal-subcard-bg: #FDF4F8;
+          --legal-subcard-border: #E8D3DF;
+          --legal-subcard-title: #8A2444;
+          --legal-subcard-text: #3A2631;
+          --legal-danger-bg: #FFF3F6;
+          --legal-danger-border: #F09CB0;
+          --legal-danger-title: #991636;
+          --legal-danger-text: #4D1623;
+          --legal-highlight-bg: #FFF9EE;
+          --legal-highlight-text: #422D10;
+          --legal-highlight-border: #C4964A;
+          --legal-terminal-bg: #FFFFFF;
+          --legal-terminal-border: #C4964A;
+          --legal-terminal-subcard-bg: #FBF0F5;
+          --legal-terminal-subcard-border: #E5CDDB;
+          --legal-officer-bg: #FFFFFF;
+          --legal-officer-border: #C4964A;
+          --legal-accent-gold: #9E742E;
+          --legal-accent-rose: #B8436A;
+          --legal-nav-bg: rgba(255, 255, 255, 0.94);
+          --legal-nav-border: #EAD8E2;
+          --legal-tab-track-bg: #F4E5ED;
+          --legal-tab-item-color: #644F59;
+          --legal-action-btn-bg: #F7EBF1;
+          --legal-action-btn-color: #7A2842;
+          --legal-search-bg: #FFFFFF;
+          --legal-search-border: #E2CCD7;
+          --legal-search-text: #1C0D15;
+          --legal-badge-bg: #FFF7FA;
+          --legal-badge-border: #C4964A;
+          --legal-badge-text: #9E742E;
+          --legal-takedown-bg: #FFF0F4;
+          --legal-takedown-border: #E87A9A;
+          --legal-takedown-color: #991636;
+          --legal-plain-box-bg: #FFFDF7;
+          --legal-plain-box-border: #C4964A;
+          --legal-plain-box-text: #422D10;
+          --legal-footer-border: #EAD8E2;
+          --legal-footer-text: #705864;
         }
 
         .legal-ambient-glow {
@@ -665,6 +781,10 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           pointer-events: none;
           z-index: 0;
           opacity: 0.15;
+        }
+
+        [data-theme="light"] .legal-ambient-glow {
+          opacity: 0.08;
         }
 
         .legal-ambient-primary {
@@ -690,14 +810,21 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           z-index: 0;
         }
 
+        [data-theme="light"] .legal-grid-mesh {
+          background-image: linear-gradient(rgba(184, 67, 106, 0.035) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(184, 67, 106, 0.035) 1px, transparent 1px);
+        }
+
+        /* Sticky Navigation Bar */
         .legal-nav-bar {
           position: sticky;
           top: 0;
           z-index: 50;
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
-          background: rgba(15, 9, 13, 0.88);
-          border-bottom: 1px solid rgba(212, 173, 106, 0.18);
+          background: var(--legal-nav-bg);
+          border-bottom: 1px solid var(--legal-nav-border);
+          box-shadow: 0 2px 14px rgba(90, 20, 45, 0.04);
         }
 
         .legal-nav-inner {
@@ -723,9 +850,9 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           gap: 0.4rem;
           padding: 0.45rem 0.85rem;
           border-radius: 999px;
-          background: #190f15;
-          border: 1px solid rgba(212, 173, 106, 0.25);
-          color: #d4adb7;
+          background: var(--legal-action-btn-bg);
+          border: 1px solid var(--legal-card-border);
+          color: var(--legal-action-btn-color);
           font-size: 0.8rem;
           font-weight: 600;
           cursor: pointer;
@@ -762,13 +889,13 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         .legal-nav-brand {
           font-size: 1.1rem;
           font-weight: 700;
-          color: #d4ad6a;
+          color: var(--legal-accent-gold);
           line-height: 1.1;
         }
 
         .legal-nav-status {
           font-size: 0.68rem;
-          color: #9e858f;
+          color: var(--legal-text-muted);
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
@@ -776,8 +903,8 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         .legal-tab-track {
           display: flex;
           align-items: center;
-          background: #140b10;
-          border: 1px solid rgba(212, 173, 106, 0.22);
+          background: var(--legal-tab-track-bg);
+          border: 1px solid var(--legal-card-border);
           border-radius: 999px;
           padding: 0.25rem;
           gap: 0.2rem;
@@ -791,7 +918,7 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           border-radius: 999px;
           font-size: 0.82rem;
           font-weight: 600;
-          color: #cbb2bc;
+          color: var(--legal-tab-item-color);
           border: none;
           background: transparent;
           cursor: pointer;
@@ -799,12 +926,12 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         }
 
         .legal-tab-item:hover {
-          color: #ffffff;
+          color: var(--legal-text-primary);
         }
 
         .legal-tab-item.active {
           background: linear-gradient(135deg, #b8436a 0%, #7c2242 100%);
-          color: #ffffff;
+          color: #ffffff !important;
           box-shadow: 0 2px 10px rgba(184, 67, 106, 0.35);
         }
 
@@ -823,17 +950,17 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         .legal-search-icon {
           position: absolute;
           left: 0.75rem;
-          color: #9e858f;
+          color: var(--legal-text-muted);
           pointer-events: none;
         }
 
         .legal-search-input {
-          background: #160e13;
-          border: 1px solid rgba(212, 173, 106, 0.2);
+          background: var(--legal-search-bg);
+          border: 1px solid var(--legal-search-border);
           border-radius: 999px;
           padding: 0.45rem 1.8rem 0.45rem 2.2rem;
           font-size: 0.8rem;
-          color: #ffffff;
+          color: var(--legal-search-text);
           width: 170px;
           transition: all 0.25s ease;
         }
@@ -841,8 +968,7 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         .legal-search-input:focus {
           outline: none;
           width: 220px;
-          border-color: #d4ad6a;
-          background: #1e111a;
+          border-color: var(--legal-accent-gold);
           box-shadow: 0 0 0 3px rgba(212, 173, 106, 0.15);
         }
 
@@ -851,35 +977,81 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           right: 0.6rem;
           background: transparent;
           border: none;
-          color: #9e858f;
+          color: var(--legal-text-muted);
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
+        /* Hero Typography & Elements */
         .legal-badge-pill {
-          background: rgba(212, 173, 106, 0.08);
-          border-color: rgba(212, 173, 106, 0.4);
-          color: #d4ad6a;
+          background: var(--legal-badge-bg);
+          border-color: var(--legal-badge-border);
+          color: var(--legal-badge-text);
         }
 
+        .legal-badge-icon {
+          color: var(--legal-accent-gold);
+        }
+
+        .legal-hero-title {
+          color: var(--legal-text-primary);
+        }
+
+        .legal-hero-subtitle {
+          color: var(--legal-text-body);
+        }
+
+        .legal-hero-meta {
+          color: var(--legal-text-muted);
+        }
+
+        .legal-accent-icon {
+          color: var(--legal-accent-gold);
+        }
+
+        .legal-accent-link {
+          color: var(--legal-accent-rose);
+        }
+
+        .legal-accent-tag {
+          color: var(--legal-accent-gold);
+        }
+
+        .legal-accent-rose-tag {
+          color: var(--legal-accent-rose);
+        }
+
+        /* AI Systems Beacon Card */
         .legal-ai-beacon-card {
-          background: linear-gradient(145deg, #180d15 0%, #11080e 100%);
-          border: 1.5px solid rgba(212, 173, 106, 0.4);
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+          background: var(--legal-card-bg);
+          border: 1.5px solid var(--legal-highlight-border);
+          box-shadow: 0 8px 26px rgba(0, 0, 0, 0.25);
+        }
+
+        [data-theme="light"] .legal-ai-beacon-card {
+          box-shadow: 0 4px 20px rgba(90, 20, 45, 0.05);
         }
 
         .legal-ai-beacon-icon {
           width: 48px;
           height: 48px;
           border-radius: 14px;
-          background: #25121e;
-          border: 1px solid rgba(212, 173, 106, 0.4);
-          color: #d4ad6a;
+          background: var(--legal-subcard-bg);
+          border: 1px solid var(--legal-card-border);
+          color: var(--legal-accent-gold);
           display: flex;
           align-items: center;
           justify-content: center;
+        }
+
+        .legal-beacon-title {
+          color: var(--legal-text-primary);
+        }
+
+        .legal-beacon-text {
+          color: var(--legal-text-body);
         }
 
         .legal-live-indicator {
@@ -892,7 +1064,7 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           border: 1px solid rgba(34, 197, 94, 0.3);
           font-size: 0.68rem;
           font-weight: 700;
-          color: #4ade80;
+          color: #22c55e;
           text-transform: uppercase;
         }
 
@@ -910,9 +1082,9 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         }
 
         .legal-takedown-quick-link {
-          background: #25121b;
-          border: 1px solid #d9385d;
-          color: #ff99b3;
+          background: var(--legal-takedown-bg);
+          border: 1px solid var(--legal-takedown-border);
+          color: var(--legal-takedown-color);
           transition: all 0.2s ease;
         }
 
@@ -923,20 +1095,69 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
 
         /* Bento Grid */
         .legal-bento-card {
-          background: #140b11;
-          border: 1px solid #2b1723;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-          transition: transform 0.4s ease, border-color 0.3s ease;
+          background: var(--legal-card-bg);
+          border: 1px solid var(--legal-card-border);
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        [data-theme="light"] .legal-bento-card {
+          box-shadow: 0 4px 18px rgba(90, 20, 45, 0.04);
         }
 
         .legal-bento-card:hover {
           transform: translateY(-2px);
-          border-color: rgba(212, 173, 106, 0.35);
+          border-color: var(--legal-accent-gold);
+        }
+
+        .legal-bento-title {
+          color: var(--legal-text-primary);
+        }
+
+        .legal-bento-text {
+          color: var(--legal-text-body);
+        }
+
+        .legal-bento-footer {
+          border-top: 1px solid var(--legal-card-border);
+          color: var(--legal-text-muted);
         }
 
         .legal-bento-card.emergency-card {
-          background: linear-gradient(145deg, #200912 0%, #15060b 100%);
-          border-color: #d9385d;
+          background: var(--legal-danger-bg);
+          border-color: var(--legal-danger-border);
+        }
+
+        .emergency-title {
+          color: var(--legal-danger-title);
+        }
+
+        .emergency-text {
+          color: var(--legal-danger-text);
+        }
+
+        .emergency-icon {
+          color: var(--legal-danger-title);
+        }
+
+        .emergency-footer {
+          border-top: 1px solid var(--legal-danger-border);
+        }
+
+        .emergency-sla {
+          color: var(--legal-danger-title);
+        }
+
+        .emergency-action-btn {
+          padding: 0.4rem 0.85rem;
+          border-radius: 999px;
+          background: #d9385d;
+          color: #ffffff;
+          transition: background 0.2s ease;
+        }
+
+        .emergency-action-btn:hover {
+          background: #b52848;
         }
 
         .bento-badge-tag {
@@ -945,37 +1166,47 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           gap: 0.35rem;
           padding: 0.25rem 0.65rem;
           border-radius: 999px;
-          background: #1f111a;
-          border: 1px solid rgba(212, 173, 106, 0.2);
+          background: var(--legal-subcard-bg);
+          border: 1px solid var(--legal-card-border);
           font-size: 0.72rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          color: #d4adb7;
+          color: var(--legal-text-muted);
         }
 
         .bento-badge-tag.emergency {
-          background: #310c17;
-          border-color: #e24b74;
-          color: #ff99b3;
-        }
-
-        .emergency-action-btn {
-          padding: 0.4rem 0.85rem;
-          border-radius: 999px;
-          background: #d9385d;
-          transition: background 0.2s ease;
-        }
-
-        .emergency-action-btn:hover {
-          background: #f44336;
+          background: var(--legal-danger-bg);
+          border-color: var(--legal-danger-border);
+          color: var(--legal-danger-title);
         }
 
         /* Table of Contents */
         .legal-toc-card {
-          background: #130a10;
-          border: 1px solid #281420;
-          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+          background: var(--legal-card-bg);
+          border: 1px solid var(--legal-card-border);
+          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="light"] .legal-toc-card {
+          box-shadow: 0 4px 18px rgba(90, 20, 45, 0.04);
+        }
+
+        .legal-toc-header {
+          border-bottom: 1px solid var(--legal-card-border);
+        }
+
+        .legal-toc-title {
+          color: var(--legal-text-primary);
+        }
+
+        .legal-toc-badge {
+          color: var(--legal-text-muted);
+        }
+
+        .legal-toc-footer {
+          border-top: 1px solid var(--legal-card-border);
+          color: var(--legal-text-muted);
         }
 
         .toc-link-item {
@@ -985,35 +1216,39 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           padding: 0.45rem 0.65rem;
           border-radius: 8px;
           font-size: 0.78rem;
-          color: #bfa8b3;
+          color: var(--legal-text-muted);
           text-decoration: none;
           transition: all 0.2s ease;
         }
 
         .toc-link-item:hover {
-          color: #ffffff;
-          background: #1e111a;
+          color: var(--legal-text-primary);
+          background: var(--legal-subcard-bg);
         }
 
         .toc-link-item.active {
-          color: #d4ad6a;
+          color: var(--legal-accent-gold);
           font-weight: 700;
-          background: rgba(212, 173, 106, 0.08);
-          border-left: 2px solid #d4ad6a;
+          background: var(--legal-badge-bg);
+          border-left: 2px solid var(--legal-accent-gold);
         }
 
         /* Document Section Cards */
         .legal-doc-section {
-          background: #140c11;
-          border: 1px solid #2a1522;
+          background: var(--legal-card-bg);
+          border: 1px solid var(--legal-card-border);
           border-radius: 20px;
           padding: 2rem;
-          box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+          box-shadow: 0 6px 22px rgba(0, 0, 0, 0.25);
           transition: border-color 0.3s ease;
         }
 
+        [data-theme="light"] .legal-doc-section {
+          box-shadow: 0 4px 18px rgba(90, 20, 45, 0.04);
+        }
+
         .legal-doc-section:hover {
-          border-color: rgba(212, 173, 106, 0.3);
+          border-color: var(--legal-accent-gold);
         }
 
         .legal-section-header {
@@ -1022,13 +1257,13 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           justify-content: space-between;
           margin-bottom: 1.25rem;
           padding-bottom: 0.85rem;
-          border-bottom: 1px solid #23111c;
+          border-bottom: 1px solid var(--legal-card-border);
         }
 
         .legal-section-heading {
           font-size: 1.28rem;
           font-weight: 700;
-          color: #ffffff;
+          color: var(--legal-text-primary);
           display: flex;
           align-items: center;
           gap: 0.65rem;
@@ -1040,23 +1275,23 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           gap: 0.3rem;
           padding: 0.3rem 0.6rem;
           border-radius: 6px;
-          background: #1d1018;
-          border: 1px solid rgba(212, 173, 106, 0.2);
-          color: #bfa8b3;
+          background: var(--legal-subcard-bg);
+          border: 1px solid var(--legal-card-border);
+          color: var(--legal-text-muted);
           font-size: 0.72rem;
           cursor: pointer;
           transition: all 0.2s ease;
         }
 
         .clause-copy-btn:hover {
-          color: #ffffff;
-          border-color: #d4ad6a;
+          color: var(--legal-text-primary);
+          border-color: var(--legal-accent-gold);
         }
 
         .legal-p {
           font-size: 0.92rem;
           line-height: 1.72;
-          color: #d6c1ca;
+          color: var(--legal-text-body);
           margin-bottom: 1rem;
         }
 
@@ -1064,15 +1299,56 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           margin-bottom: 0;
         }
 
+        .legal-doc-section ul li {
+          color: var(--legal-text-body);
+        }
+
+        .legal-doc-section strong {
+          color: var(--legal-text-primary);
+        }
+
+        /* Generic Inner Sub-Cards (DPDPA Rights, Sanction Strikes, etc.) */
+        .legal-sub-card {
+          background: var(--legal-subcard-bg);
+          border: 1px solid var(--legal-subcard-border);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="light"] .legal-sub-card {
+          box-shadow: 0 2px 8px rgba(90, 20, 45, 0.03);
+        }
+
+        .legal-subcard-title {
+          color: var(--legal-subcard-title);
+        }
+
+        .legal-subcard-desc {
+          color: var(--legal-subcard-text);
+        }
+
+        /* Danger Sub-Cards (Criminal Penalties, Hate Speech, Zero Tolerance) */
+        .legal-danger-sub-card {
+          background: var(--legal-danger-bg);
+          border: 1px solid var(--legal-danger-border);
+        }
+
+        .legal-danger-title {
+          color: var(--legal-danger-title);
+        }
+
+        .legal-danger-desc {
+          color: var(--legal-danger-text);
+        }
+
         .legal-highlight-box {
-          background: #190f16;
-          border-left: 4px solid #d4ad6a;
+          background: var(--legal-highlight-bg);
+          border-left: 4px solid var(--legal-highlight-border);
           border-radius: 0 12px 12px 0;
           padding: 1rem 1.25rem;
           margin: 1.25rem 0;
           font-size: 0.88rem;
           line-height: 1.65;
-          color: #f7e6ec;
+          color: var(--legal-highlight-text);
         }
 
         .legal-plain-english-toggle {
@@ -1082,9 +1358,9 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           margin-top: 1rem;
           padding: 0.4rem 0.85rem;
           border-radius: 8px;
-          background: #1b1017;
-          border: 1px solid rgba(212, 173, 106, 0.25);
-          color: #d4ad6a;
+          background: var(--legal-subcard-bg);
+          border: 1px solid var(--legal-card-border);
+          color: var(--legal-accent-gold);
           font-size: 0.78rem;
           font-weight: 600;
           cursor: pointer;
@@ -1092,154 +1368,141 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
         }
 
         .legal-plain-english-toggle:hover {
-          background: #251320;
+          background: var(--legal-badge-bg);
         }
 
         .legal-plain-english-content {
           margin-top: 0.75rem;
           padding: 1rem;
           border-radius: 12px;
-          background: #12090f;
-          border: 1px dashed rgba(212, 173, 106, 0.35);
+          background: var(--legal-plain-box-bg);
+          border: 1px dashed var(--legal-plain-box-border);
           font-size: 0.85rem;
-          color: #f3dfa2;
+          color: var(--legal-plain-box-text);
           line-height: 1.6;
         }
 
+        /* Search Filter Banner */
+        .legal-search-banner {
+          background: var(--legal-badge-bg);
+          border: 1px solid var(--legal-badge-border);
+          color: var(--legal-accent-gold);
+        }
+
+        .legal-search-reset {
+          color: var(--legal-text-primary);
+          background: transparent;
+          border: none;
+          cursor: pointer;
+        }
+
+        /* Grievance Terminal */
         .legal-grievance-terminal {
-          background: linear-gradient(135deg, #190c14 0%, #0e070c 100%);
-          border: 1.5px solid rgba(212, 173, 106, 0.35);
-          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-        }
-
-        /* Light Mode Override */
-        [data-theme="light"] .legal-universe {
-          background-color: #faf6f8;
-          color: #271f22;
-        }
-
-        [data-theme="light"] .legal-nav-bar {
-          background: rgba(255, 255, 255, 0.9);
-          border-bottom-color: #ead8e0;
-        }
-
-        [data-theme="light"] .legal-action-btn {
-          background: #f7ebf0;
-          border-color: #e2ccd6;
-          color: #7a2842;
-        }
-
-        [data-theme="light"] .legal-nav-brand {
-          color: #8b2545;
-        }
-
-        [data-theme="light"] .legal-tab-track {
-          background: #f2e4ea;
-          border-color: #e2ccd6;
-        }
-
-        [data-theme="light"] .legal-tab-item {
-          color: #6a555d;
-        }
-
-        [data-theme="light"] .legal-tab-item.active {
-          background: linear-gradient(135deg, #b8436a 0%, #7a2842 100%);
-          color: #ffffff;
-        }
-
-        [data-theme="light"] .legal-search-input {
-          background: #ffffff;
-          border-color: #e2ccd6;
-          color: #271f22;
-        }
-
-        [data-theme="light"] .legal-ai-beacon-card {
-          background: #ffffff;
-          border-color: #c4964a;
-          box-shadow: 0 4px 20px rgba(90, 20, 45, 0.06);
-        }
-
-        [data-theme="light"] .legal-hero-elem.font-display {
-          color: #1a1215;
-        }
-
-        [data-theme="light"] .legal-bento-card {
-          background: #ffffff;
-          border-color: #ede0e6;
-          box-shadow: 0 4px 18px rgba(90, 20, 45, 0.05);
-        }
-
-        [data-theme="light"] .legal-bento-card h3 {
-          color: #1c0e15 !important;
-        }
-
-        [data-theme="light"] .legal-bento-card.emergency-card {
-          background: #fff5f7;
-          border-color: #e87a9a;
-        }
-
-        [data-theme="light"] .legal-bento-card.emergency-card h3 {
-          color: #7a1d36 !important;
-        }
-
-        [data-theme="light"] .legal-bento-card.emergency-card p {
-          color: #5a1426 !important;
-        }
-
-        [data-theme="light"] .legal-doc-section {
-          background: #ffffff;
-          border-color: #ece0e6;
-          box-shadow: 0 4px 18px rgba(90, 20, 45, 0.04);
-        }
-
-        [data-theme="light"] .legal-section-heading {
-          color: #1c0e15;
-          border-bottom-color: #f5edf1;
-        }
-
-        [data-theme="light"] .legal-p {
-          color: #4a3a41;
-        }
-
-        [data-theme="light"] .legal-highlight-box {
-          background: #fff9f0;
-          border-left-color: #c4964a;
-          color: #3d3135;
-        }
-
-        [data-theme="light"] .legal-toc-card {
-          background: #ffffff;
-          border-color: #ece0e6;
-        }
-
-        [data-theme="light"] .toc-link-item {
-          color: #6a555d;
-        }
-
-        [data-theme="light"] .toc-link-item:hover {
-          background: #f7ebf0;
-          color: #1a1215;
-        }
-
-        [data-theme="light"] .toc-link-item.active {
-          color: #8b2545;
-          background: #fbedf2;
-          border-left-color: #8b2545;
+          background: var(--legal-terminal-bg);
+          border: 1.5px solid var(--legal-terminal-border);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
         }
 
         [data-theme="light"] .legal-grievance-terminal {
-          background: #ffffff;
-          border-color: #c4964a;
-          box-shadow: 0 6px 24px rgba(90, 20, 45, 0.06);
+          box-shadow: 0 6px 28px rgba(90, 20, 45, 0.06);
         }
 
-        [data-theme="light"] .legal-grievance-terminal h2 {
-          color: #1a1215 !important;
+        .legal-terminal-badge {
+          background: var(--legal-badge-bg);
+          border: 1px solid var(--legal-badge-border);
+          color: var(--legal-accent-gold);
         }
 
-        [data-theme="light"] .legal-doc-footer {
-          border-top-color: #ead8e0;
-          background: #f6eef2;
+        .legal-terminal-title {
+          color: var(--legal-text-primary);
+        }
+
+        .legal-terminal-desc {
+          color: var(--legal-text-body);
+        }
+
+        .legal-terminal-subcard {
+          background: var(--legal-terminal-subcard-bg);
+          border: 1px solid var(--legal-terminal-subcard-border);
+        }
+
+        .legal-tier-badge {
+          color: var(--legal-accent-gold);
+        }
+
+        .legal-tier-title {
+          color: var(--legal-text-primary);
+        }
+
+        .legal-tier-desc {
+          color: var(--legal-text-muted);
+        }
+
+        .legal-officer-card {
+          background: var(--legal-officer-bg);
+          border: 1.5px solid var(--legal-officer-border);
+          box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="light"] .legal-officer-card {
+          box-shadow: 0 4px 18px rgba(90, 20, 45, 0.05);
+        }
+
+        .legal-officer-sub {
+          color: var(--legal-text-muted);
+        }
+
+        .legal-officer-name {
+          color: var(--legal-text-primary);
+        }
+
+        .legal-officer-role {
+          color: var(--legal-accent-gold);
+        }
+
+        .legal-officer-label {
+          color: var(--legal-text-subtle);
+        }
+
+        .legal-officer-email {
+          color: var(--legal-accent-gold);
+        }
+
+        .legal-officer-val {
+          color: var(--legal-text-primary);
+        }
+
+        .legal-officer-btn {
+          background: linear-gradient(135deg, #b8436a 0%, #7c2242 100%);
+        }
+
+        .legal-officer-btn:hover {
+          opacity: 0.95;
+        }
+
+        /* Footer */
+        .legal-doc-footer {
+          border-top: 1px solid var(--legal-footer-border);
+          background: transparent;
+        }
+
+        .legal-footer-links {
+          color: var(--legal-text-muted);
+        }
+
+        .legal-footer-btn {
+          background: transparent;
+          border: none;
+          color: var(--legal-text-muted);
+          cursor: pointer;
+        }
+
+        .legal-footer-btn:hover {
+          color: var(--legal-text-primary);
+        }
+
+        .legal-footer-copy {
+          color: var(--legal-footer-text);
         }
       `}</style>
     </div>
@@ -1372,21 +1635,21 @@ const PrivacyClauses = ({ searchQuery, onCopy, copiedId, expandedDetails, toggle
           Under Sections 11, 12, 13, and 14 of the DPDP Act 2023, you retain fully enforceable legal rights:
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">
-          <div className="p-3.5 rounded-xl bg-[#180e15] border border-[#2d1824]">
-            <h4 className="text-xs font-bold text-[#d4ad6a] uppercase mb-1">Right to Access (Sec 11)</h4>
-            <p className="text-xs text-[#cebac4]">Receive a full digital summary of all personal data being processed.</p>
+          <div className="legal-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-subcard-title text-xs font-bold uppercase mb-1">Right to Access (Sec 11)</h4>
+            <p className="legal-subcard-desc text-xs">Receive a full digital summary of all personal data being processed.</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#180e15] border border-[#2d1824]">
-            <h4 className="text-xs font-bold text-[#d4ad6a] uppercase mb-1">Right to Correction (Sec 12)</h4>
-            <p className="text-xs text-[#cebac4]">Update, amend, or correct incomplete, misleading, or outdated personal information.</p>
+          <div className="legal-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-subcard-title text-xs font-bold uppercase mb-1">Right to Correction (Sec 12)</h4>
+            <p className="legal-subcard-desc text-xs">Update, amend, or correct incomplete, misleading, or outdated personal information.</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#180e15] border border-[#2d1824]">
-            <h4 className="text-xs font-bold text-[#d4ad6a] uppercase mb-1">Right to Erasure (Sec 12)</h4>
-            <p className="text-xs text-[#cebac4]">Exercise your &ldquo;Right to be Forgotten&rdquo; and request permanent profile deletion.</p>
+          <div className="legal-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-subcard-title text-xs font-bold uppercase mb-1">Right to Erasure (Sec 12)</h4>
+            <p className="legal-subcard-desc text-xs">Exercise your &ldquo;Right to be Forgotten&rdquo; and request permanent profile deletion.</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#180e15] border border-[#2d1824]">
-            <h4 className="text-xs font-bold text-[#d4ad6a] uppercase mb-1">Right to Nominate (Sec 14)</h4>
-            <p className="text-xs text-[#cebac4]">Designate a trusted legal representative to exercise your privacy rights if incapacitated.</p>
+          <div className="legal-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-subcard-title text-xs font-bold uppercase mb-1">Right to Nominate (Sec 14)</h4>
+            <p className="legal-subcard-desc text-xs">Designate a trusted legal representative to exercise your privacy rights if incapacitated.</p>
           </div>
         </div>
       </section>
@@ -1495,7 +1758,7 @@ const PrivacyClauses = ({ searchQuery, onCopy, copiedId, expandedDetails, toggle
           </button>
         </div>
         <p className="legal-p">
-          Complaints regarding personal data handling, unauthorized processing, or consent revocation should be addressed directly to our Grievance Officer at <a href="mailto:velvethearts.in@gmail.com" className="text-[#d4ad6a] underline font-semibold">velvethearts.in@gmail.com</a>. Formal acknowledgments are dispatched within 24 hours.
+          Complaints regarding personal data handling, unauthorized processing, or consent revocation should be addressed directly to our Grievance Officer at <a href="mailto:velvethearts.in@gmail.com" className="legal-accent-link underline font-semibold">velvethearts.in@gmail.com</a>. Formal acknowledgments are dispatched within 24 hours.
         </p>
       </section>
     </>
@@ -1606,21 +1869,21 @@ const TermsClauses = ({ searchQuery, onCopy, copiedId, expandedDetails, toggleDe
           Users are placed on express notice that engaging in cyber abuse, extortion, or romance fraud invokes severe criminal penalties:
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">
-          <div className="p-3.5 rounded-xl bg-[#1b0a12] border border-[#4a1827]">
-            <h4 className="text-xs font-bold text-[#ff809f] uppercase mb-1">Section 66E, IT Act 2000</h4>
-            <p className="text-xs text-[#ffe1ea]">Non-consensual capture or distribution of private bodily imagery (imprisonment up to 3 years).</p>
+          <div className="legal-danger-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-danger-title text-xs font-bold uppercase mb-1">Section 66E, IT Act 2000</h4>
+            <p className="legal-danger-desc text-xs">Non-consensual capture or distribution of private bodily imagery (imprisonment up to 3 years).</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#1b0a12] border border-[#4a1827]">
-            <h4 className="text-xs font-bold text-[#ff809f] uppercase mb-1">Section 67 &amp; 67A, IT Act 2000</h4>
-            <p className="text-xs text-[#ffe1ea]">Electronic transmission of sexually explicit material (rigorous imprisonment up to 5–7 years).</p>
+          <div className="legal-danger-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-danger-title text-xs font-bold uppercase mb-1">Section 67 &amp; 67A, IT Act 2000</h4>
+            <p className="legal-danger-desc text-xs">Electronic transmission of sexually explicit material (rigorous imprisonment up to 5–7 years).</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#1b0a12] border border-[#4a1827]">
-            <h4 className="text-xs font-bold text-[#ff809f] uppercase mb-1">Sections 75 &amp; 78, BNS 2023</h4>
-            <p className="text-xs text-[#ffe1ea]">Sexual harassment and cyber stalking offenses with cognizable legal liability.</p>
+          <div className="legal-danger-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-danger-title text-xs font-bold uppercase mb-1">Sections 75 &amp; 78, BNS 2023</h4>
+            <p className="legal-danger-desc text-xs">Sexual harassment and cyber stalking offenses with cognizable legal liability.</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#1b0a12] border border-[#4a1827]">
-            <h4 className="text-xs font-bold text-[#ff809f] uppercase mb-1">Sections 318 &amp; 319, BNS 2023</h4>
-            <p className="text-xs text-[#ffe1ea]">Cheating by personation, deceptive catfish profiles, and romance extortion.</p>
+          <div className="legal-danger-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-danger-title text-xs font-bold uppercase mb-1">Sections 318 &amp; 319, BNS 2023</h4>
+            <p className="legal-danger-desc text-xs">Cheating by personation, deceptive catfish profiles, and romance extortion.</p>
           </div>
         </div>
       </section>
@@ -1726,7 +1989,7 @@ const TermsClauses = ({ searchQuery, onCopy, copiedId, expandedDetails, toggleDe
           </button>
         </div>
         <p className="legal-p">
-          Grievances regarding platform terms or safety issues can be submitted to our Grievance Officer, Indrani Roy, at <a href="mailto:velvethearts.in@gmail.com" className="text-[#d4ad6a] underline font-semibold">velvethearts.in@gmail.com</a>. All complaints receive formal acknowledgment within 24 hours.
+          Grievances regarding platform terms or safety issues can be submitted to our Grievance Officer, Indrani Roy, at <a href="mailto:velvethearts.in@gmail.com" className="legal-accent-link underline font-semibold">velvethearts.in@gmail.com</a>. All complaints receive formal acknowledgment within 24 hours.
         </p>
       </section>
 
@@ -1857,21 +2120,21 @@ const GuidelinesClauses = ({ searchQuery, onCopy, copiedId, expandedDetails, tog
           Velvet Hearts maintains absolute zero tolerance for abusive behaviors. Any of the following triggers immediate profile termination and permanent hardware blacklisting:
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">
-          <div className="p-3.5 rounded-xl bg-[#200912] border border-[#d9385d]">
-            <h4 className="text-xs font-bold text-[#ff99b3] uppercase mb-1">Unsolicited Sexual Media</h4>
-            <p className="text-xs text-[#ffe1ea]">Sharing intimate photos, nudity, or sexually explicit voice notes without prior mutual consent.</p>
+          <div className="legal-danger-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-danger-title text-xs font-bold uppercase mb-1">Unsolicited Sexual Media</h4>
+            <p className="legal-danger-desc text-xs">Sharing intimate photos, nudity, or sexually explicit voice notes without prior mutual consent.</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#200912] border border-[#d9385d]">
-            <h4 className="text-xs font-bold text-[#ff99b3] uppercase mb-1">Hate Speech &amp; Slurs</h4>
-            <p className="text-xs text-[#ffe1ea]">Any attack or degradation based on caste, religion, gender, sexual orientation, disability, or nationality.</p>
+          <div className="legal-danger-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-danger-title text-xs font-bold uppercase mb-1">Hate Speech &amp; Slurs</h4>
+            <p className="legal-danger-desc text-xs">Any attack or degradation based on caste, religion, gender, sexual orientation, disability, or nationality.</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#200912] border border-[#d9385d]">
-            <h4 className="text-xs font-bold text-[#ff99b3] uppercase mb-1">Doxxing &amp; Extortion</h4>
-            <p className="text-xs text-[#ffe1ea]">Publishing a match&rsquo;s phone number, address, workplace, or private messages without their consent.</p>
+          <div className="legal-danger-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-danger-title text-xs font-bold uppercase mb-1">Doxxing &amp; Extortion</h4>
+            <p className="legal-danger-desc text-xs">Publishing a match&rsquo;s phone number, address, workplace, or private messages without their consent.</p>
           </div>
-          <div className="p-3.5 rounded-xl bg-[#200912] border border-[#d9385d]">
-            <h4 className="text-xs font-bold text-[#ff99b3] uppercase mb-1">Predatory Stalking</h4>
-            <p className="text-xs text-[#ffe1ea]">Tracking a user across social platforms after being unmatched or blocked on Velvet Hearts.</p>
+          <div className="legal-danger-sub-card p-3.5 rounded-xl">
+            <h4 className="legal-danger-title text-xs font-bold uppercase mb-1">Predatory Stalking</h4>
+            <p className="legal-danger-desc text-xs">Tracking a user across social platforms after being unmatched or blocked on Velvet Hearts.</p>
           </div>
         </div>
       </section>
@@ -1975,20 +2238,20 @@ const GuidelinesClauses = ({ searchQuery, onCopy, copiedId, expandedDetails, tog
           To maintain fairness, minor infractions follow a transparent progressive sanction framework:
         </p>
         <div className="space-y-2.5 my-4">
-          <div className="p-3 rounded-xl bg-[#170e14] border border-[#2e1825] flex items-center justify-between">
-            <span className="text-xs font-bold text-[#d4ad6a]">Strike 1 • Formal Warning</span>
-            <span className="text-xs text-[#cebac4]">Guideline notification and 24h profile edit requirement</span>
+          <div className="legal-sub-card p-3 rounded-xl flex items-center justify-between">
+            <span className="legal-subcard-title text-xs font-bold">Strike 1 • Formal Warning</span>
+            <span className="legal-subcard-desc text-xs">Guideline notification and 24h profile edit requirement</span>
           </div>
-          <div className="p-3 rounded-xl bg-[#170e14] border border-[#2e1825] flex items-center justify-between">
-            <span className="text-xs font-bold text-[#ffaa48]">Strike 2 • Temporary Cool-Down</span>
-            <span className="text-xs text-[#cebac4]">7-day account suspension and match discovery freeze</span>
+          <div className="legal-sub-card p-3 rounded-xl flex items-center justify-between">
+            <span className="text-xs font-bold text-[#ea580c] dark:text-[#ffaa48]">Strike 2 • Temporary Cool-Down</span>
+            <span className="legal-subcard-desc text-xs">7-day account suspension and match discovery freeze</span>
           </div>
-          <div className="p-3 rounded-xl bg-[#1e0a12] border border-[#d9385d] flex items-center justify-between">
-            <span className="text-xs font-bold text-[#ff809f]">Strike 3 • Permanent Blacklist</span>
-            <span className="text-xs text-[#ffd6e0]">Irreversible account termination &amp; hardware device ban</span>
+          <div className="legal-danger-sub-card p-3 rounded-xl flex items-center justify-between">
+            <span className="legal-danger-title text-xs font-bold">Strike 3 • Permanent Blacklist</span>
+            <span className="legal-danger-desc text-xs">Irreversible account termination &amp; hardware device ban</span>
           </div>
         </div>
-        <p className="legal-p text-xs text-[#9e858f]">
+        <p className="legal-p text-xs opacity-75">
           *Note: Severe violations (intimate media, extortion, hate speech, minor contact) trigger immediate, non-appealable Permanent Blacklisting on first offense.
         </p>
       </section>
