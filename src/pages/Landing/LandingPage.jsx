@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { 
-  Heart, 
-  ShieldCheck, 
-  Users, 
-  Bookmark, 
-  Sparkle, 
-  Play, 
-  Pause, 
-  Waveform, 
-  SpeakerHigh, 
-  ArrowRight, 
+import {
+  Heart,
+  ShieldCheck,
+  Users,
+  Bookmark,
+  Sparkle,
+  Play,
+  Pause,
+  Waveform,
+  SpeakerHigh,
+  ArrowRight,
   CheckCircle,
   Microphone,
   LockKey
 } from '@phosphor-icons/react';
 import logo from "../../assets/velvet-heart-logo.png";
-import ananyaPhoto from "../../assets/ananya.png";
+import heroPortrait from "../../assets/real-portrait-1.jpg";
 import { ThemeToggle } from '../../components/UI/ThemeToggle';
 import { triggerCookieBanner } from '../../lib/analytics';
 
@@ -100,9 +100,9 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
 
         <div className="landing-header-actions">
           <ThemeToggle />
-          <button 
-            onClick={onSignIn} 
-            className="sign-in-btn font-ui" 
+          <button
+            onClick={onSignIn}
+            className="sign-in-btn font-ui"
             aria-label="Sign in to your Velvet Hearts account"
           >
             Sign In
@@ -114,13 +114,7 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
         {/* Hero Section — Engineered for Immediate Clarity Above the Fold */}
         <section className="hero-section" aria-labelledby="hero-heading">
           <div className="hero-content">
-            {/* 1. EYEBROW BADGE — Signals category & intention */}
-            <div className="accent-badge font-ui">
-              <Sparkle size={15} weight="fill" className="badge-sparkle-icon" />
-              <span>A Slower, More Human Dating Space</span>
-            </div>
-
-            {/* 2. HERO HEADLINE — What to look at first (Primary Visual Anchor) */}
+            {/* HERO HEADLINE — What to look at first (Primary Visual Anchor) */}
             <h1 id="hero-heading" className="hero-title font-display">
               Where genuine hearts connect. <br />
               <span className="hero-title-accent">Beyond the superficial swipe.</span>
@@ -162,9 +156,9 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
             {/* 5. HERO ACTIONS — Answers WHAT TO DO NEXT (Primary CTA Prominence) */}
             <div className="hero-actions-container">
               <div className="hero-actions">
-                <button 
-                  onClick={onGetStarted} 
-                  className="cta-primary font-ui" 
+                <button
+                  onClick={onGetStarted}
+                  className="cta-primary font-ui"
                   aria-label="Begin your journey on Velvet Hearts for free"
                 >
                   <span>Begin Your Journey</span>
@@ -172,8 +166,8 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
                     <ArrowRight size={16} weight="bold" />
                   </div>
                 </button>
-                <button 
-                  onClick={onSignIn} 
+                <button
+                  onClick={onSignIn}
                   className="cta-ghost font-ui"
                   aria-label="Sign in to existing account"
                 >
@@ -206,8 +200,8 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
                 {/* Photo & Match Header */}
                 <div className="showcase-photo-container">
                   <img
-                    src={ananyaPhoto}
-                    alt="Sample verified profile - Ananya"
+                    src={heroPortrait}
+                    alt="Sample verified profile - Elena"
                     className="showcase-photo"
                     width="420"
                     height="320"
@@ -224,12 +218,12 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
                   {/* Profile Name & Badges Overlay */}
                   <div className="showcase-identity font-ui">
                     <div className="identity-title-row">
-                      <h3 className="identity-name font-display">Ananya, 26</h3>
+                      <h3 className="identity-name font-display">Elena, 26</h3>
                       <span className="verified-shield-icon" title="16-zone identity verified">
                         <CheckCircle size={18} weight="fill" />
                       </span>
                     </div>
-                    <p className="identity-bio">Documentary Photographer • Bangalore</p>
+                    <p className="identity-bio">Sound Artist & Vinyl Collector • San Francisco</p>
                   </div>
                 </div>
 
@@ -246,9 +240,9 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
                   </div>
 
                   <div className="voice-player-bar">
-                    <button 
-                      type="button" 
-                      onClick={toggleAudio} 
+                    <button
+                      type="button"
+                      onClick={toggleAudio}
                       className={`voice-play-btn ${isPlayingAudio ? 'is-playing' : ''}`}
                       aria-label={isPlayingAudio ? "Pause sample voice note" : "Play sample voice note"}
                     >
@@ -262,10 +256,10 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
                     {/* Animated Soundwave Bars */}
                     <div className={`waveform-track ${isPlayingAudio ? 'animating' : ''}`}>
                       {[40, 75, 55, 90, 60, 30, 85, 100, 70, 45, 80, 95, 65, 40, 70, 85, 50, 95, 60, 40, 75, 50].map((h, i) => (
-                        <span 
-                          key={i} 
-                          className="wave-bar" 
-                          style={{ 
+                        <span
+                          key={i}
+                          className="wave-bar"
+                          style={{
                             height: `${h}%`,
                             animationDelay: `${(i * 0.06).toFixed(2)}s`
                           }}
@@ -275,15 +269,15 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
                   </div>
 
                   <p className="voice-quote font-body">
-                    &ldquo;Looking for someone to wander Sunday morning flower markets with and talk about favorite old books.&rdquo;
+                    &ldquo;Looking for sincere conversations, sharing favorite vinyl records, and finding the best hidden espresso in town.&rdquo;
                   </p>
                 </div>
 
                 {/* Story Prompt & Tags */}
                 <div className="showcase-tags-row font-ui">
-                  <span className="story-pill">📷 Analog Film</span>
-                  <span className="story-pill">☕ Pour-over</span>
-                  <span className="story-pill">📖 Murakami</span>
+                  <span className="story-pill">🎧 Vinyl Records</span>
+                  <span className="story-pill">☕ Coffee Roasting</span>
+                  <span className="story-pill">🌙 Midnight Walks</span>
                 </div>
               </div>
             </div>
