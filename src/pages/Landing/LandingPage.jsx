@@ -91,26 +91,23 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
     const ctx = gsap.context(() => {
 
       // --- Hero entrance stagger ---
+      // Title is ALWAYS visible immediately (no fade-in) — it's the primary visual anchor.
+      // Supporting elements animate in around it.
       const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
       heroTl
-        .fromTo(heroTitleRef.current,
-          { opacity: 0, y: 60, scale: 0.97 },
-          { opacity: 1, y: 0, scale: 1, duration: 1.1, delay: 0.2 }
-        )
         .fromTo(heroSubRef.current,
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.9 },
-          '-=0.6'
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.9, delay: 0.15 }
         )
         .fromTo(heroCTARef.current,
-          { opacity: 0, y: 30 },
+          { opacity: 0, y: 25 },
           { opacity: 1, y: 0, duration: 0.8 },
           '-=0.5'
         )
         .fromTo(heroCardRef.current,
-          { opacity: 0, y: 50, rotateY: -8, rotateX: 4, scale: 0.92 },
+          { opacity: 0, y: 40, rotateY: -6, rotateX: 3, scale: 0.94 },
           { opacity: 1, y: 0, rotateY: 0, rotateX: 0, scale: 1, duration: 1.2, ease: 'power2.out' },
-          '-=0.8'
+          '-=0.6'
         )
         .fromTo(scrollIndicatorRef.current,
           { opacity: 0, y: -10 },
