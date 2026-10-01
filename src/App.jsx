@@ -303,12 +303,29 @@ function AppContent() {
     }
 
     if (!isLoggedIn) {
-      updateMetadata({
-        title: 'Official Website — Intentional Dating & Verified Profiles',
-        description: 'Velvet Hearts is the official intentional dating platform featuring 16-zone biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching across India and worldwide.',
-        robots: 'index, follow, max-image-preview:large',
-        canonicalPath: '/',
-      });
+      const cleanPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+      const isHome = !cleanPath || cleanPath === '';
+      if (isHome) {
+        updateMetadata({
+          title: 'Official Website — Intentional Dating & Verified Profiles',
+          description: 'Velvet Hearts is the official intentional dating platform featuring 16-zone biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching across India and worldwide.',
+          robots: 'index, follow, max-image-preview:large',
+          canonicalPath: '/',
+        });
+      } else {
+        // Authenticated-only or private deep links accessed while unauthenticated
+        const currentMeta = TAB_META[cleanPath] || {
+          title: 'Official Website — Intentional Dating & Verified Profiles',
+          description: 'Velvet Hearts is the official intentional dating platform.',
+          path: `/${cleanPath}`,
+        };
+        updateMetadata({
+          title: currentMeta.title,
+          description: currentMeta.description,
+          robots: 'noindex, nofollow',
+          canonicalPath: '/',
+        });
+      }
     } else if (!isOnboarded) {
       updateMetadata({
         title: 'Get Started & Complete Your Profile',
@@ -480,7 +497,7 @@ function AppContent() {
       );
     }
 
-    // 2. Logged Out State: Legal Pages, Auth Screen, or Landing Page
+    // 2. Logged Out State: Legal Pages, Safety Center, Auth Screen, or Landing Page
     if (!isLoggedIn) {
 
       if (activeTab === 'privacy' || activeTab === 'terms') {
@@ -493,6 +510,14 @@ function AppContent() {
                 try { window.history.pushState({}, '', '/'); } catch (_) {}
               }}
             />
+          </Suspense>
+        );
+      }
+
+      if (activeTab === 'safety') {
+        return (
+          <Suspense fallback={<AuthLoadingScreen />}>
+            <SafetyCenter />
           </Suspense>
         );
       }

@@ -7,11 +7,11 @@ Allow: /
 Allow: /safety
 Allow: /privacy
 Allow: /terms
-Allow: /discover
 Allow: /llms.txt
 Allow: /llms-full.txt
 Allow: /sitemap.xml
 Disallow: /api/
+Disallow: /discover
 Disallow: /chat
 Disallow: /matches
 Disallow: /diary
@@ -26,11 +26,11 @@ Allow: /
 Allow: /safety
 Allow: /privacy
 Allow: /terms
-Allow: /discover
 Allow: /llms.txt
 Allow: /llms-full.txt
 Allow: /sitemap.xml
 Disallow: /api/
+Disallow: /discover
 Disallow: /chat
 Disallow: /matches
 Disallow: /diary
@@ -44,10 +44,10 @@ Allow: /
 Allow: /safety
 Allow: /privacy
 Allow: /terms
-Allow: /discover
 Allow: /llms.txt
 Allow: /sitemap.xml
 Disallow: /api/
+Disallow: /discover
 Disallow: /chat
 Disallow: /matches
 Disallow: /diary

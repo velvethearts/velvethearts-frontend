@@ -12,7 +12,7 @@ import { PhotoVerificationModal } from '../../components/Safety/PhotoVerificatio
 import { VerifiedBadge } from '../../components/UI/VerifiedBadge';
 
 export const SafetyCenter = () => {
-  const { blockedUsers, unblockUser, reportedUsers, submitSupportTicket, setActiveTab, profiles, showAlert, userProfile } = useApp();
+  const { blockedUsers, unblockUser, reportedUsers, submitSupportTicket, setActiveTab, profiles, showAlert, userProfile, isLoggedIn } = useApp();
   const [unblockingId, setUnblockingId] = useState(null);
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
@@ -108,7 +108,15 @@ export const SafetyCenter = () => {
       <PageHeader
         title="Safety Center"
         subtitle="Your comfort and safety are our highest priorities."
-        onBack={() => setActiveTab('profile')}
+        onBack={() => {
+          if (isLoggedIn) {
+            setActiveTab('profile');
+            try { window.history.pushState({}, '', '/profile'); } catch (_) {}
+          } else {
+            setActiveTab('discover');
+            try { window.history.pushState({}, '', '/'); } catch (_) {}
+          }
+        }}
       />
 
       <div className="safety-container font-ui">
