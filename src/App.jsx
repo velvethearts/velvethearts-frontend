@@ -503,8 +503,23 @@ function AppContent() {
       );
     }
 
-    // 2. Logged Out State: Legal Pages, Safety Center, Auth Screen, or Landing Page
+    // 2. Logged Out State: Auth Screen, Legal Pages, Safety Center, or Landing Page
     if (!isLoggedIn) {
+      if (showAuth) {
+        return (
+          <Suspense fallback={<AuthLoadingScreen />}>
+            <AuthFlow
+              onBack={() => setShowAuth(false)}
+              initialMode={authInitialMode}
+              onNavigate={(tab) => {
+                setShowAuth(false);
+                setActiveTab(tab);
+                try { window.history.pushState({}, '', `/${tab}`); } catch (_) {}
+              }}
+            />
+          </Suspense>
+        );
+      }
 
       if (activeTab === 'privacy' || activeTab === 'terms' || activeTab === 'guidelines') {
         return (
@@ -537,21 +552,6 @@ function AppContent() {
         );
       }
 
-      if (showAuth) {
-        return (
-          <Suspense fallback={<AuthLoadingScreen />}>
-            <AuthFlow
-              onBack={() => setShowAuth(false)}
-              initialMode={authInitialMode}
-              onNavigate={(tab) => {
-                setShowAuth(false);
-                setActiveTab(tab);
-                try { window.history.pushState({}, '', `/${tab}`); } catch (_) {}
-              }}
-            />
-          </Suspense>
-        );
-      }
       return (
         <>
           <LandingPage

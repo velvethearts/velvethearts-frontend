@@ -1,109 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRight } from '@phosphor-icons/react';
+import { ArrowRight, Sparkle } from '@phosphor-icons/react';
+import gsap from 'gsap';
 import velvetHeartLogo from '../../assets/velvet-heart-logo.png';
 import { triggerHaptic } from '../../utils/haptics';
 import './WelcomeSplashScreen.css';
 
-// 40 balanced star positions spread across the entire viewport (desktop & mobile)
-const FULL_SCREEN_STARS = [
-  { top: '6%', left: '8%', size: 10, delay: '0.2s', duration: '2.4s' },
-  { top: '10%', left: '22%', size: 14, delay: '0.8s', duration: '3.0s' },
-  { top: '7%', left: '42%', size: 8, delay: '1.2s', duration: '2.1s' },
-  { top: '12%', left: '60%', size: 12, delay: '0.4s', duration: '2.8s' },
-  { top: '8%', left: '78%', size: 13, delay: '1.5s', duration: '3.3s' },
-  { top: '14%', left: '92%', size: 9, delay: '0.6s', duration: '2.5s' },
-
-  { top: '22%', left: '5%', size: 11, delay: '1.1s', duration: '2.9s' },
-  { top: '26%', left: '18%', size: 15, delay: '0.3s', duration: '3.2s' },
-  { top: '20%', left: '33%', size: 8, delay: '1.7s', duration: '2.2s' },
-  { top: '24%', left: '52%', size: 10, delay: '0.5s', duration: '2.7s' },
-  { top: '28%', left: '70%', size: 14, delay: '1.0s', duration: '3.1s' },
-  { top: '22%', left: '85%', size: 9, delay: '0.9s', duration: '2.6s' },
-
-  { top: '38%', left: '10%', size: 12, delay: '0.7s', duration: '2.8s' },
-  { top: '36%', left: '26%', size: 8, delay: '1.3s', duration: '2.3s' },
-  { top: '42%', left: '40%', size: 13, delay: '0.1s', duration: '3.4s' },
-  { top: '39%', left: '62%', size: 9, delay: '1.6s', duration: '2.5s' },
-  { top: '44%', left: '79%', size: 15, delay: '0.4s', duration: '3.0s' },
-  { top: '40%', left: '94%', size: 10, delay: '1.1s', duration: '2.7s' },
-
-  { top: '56%', left: '7%', size: 14, delay: '0.5s', duration: '3.2s' },
-  { top: '52%', left: '20%', size: 9, delay: '1.4s', duration: '2.4s' },
-  { top: '58%', left: '36%', size: 11, delay: '0.8s', duration: '2.9s' },
-  { top: '54%', left: '56%', size: 8, delay: '1.8s', duration: '2.2s' },
-  { top: '60%', left: '74%', size: 13, delay: '0.2s', duration: '3.1s' },
-  { top: '55%', left: '88%', size: 10, delay: '1.2s', duration: '2.6s' },
-
-  { top: '72%', left: '12%', size: 10, delay: '0.9s', duration: '2.7s' },
-  { top: '68%', left: '28%', size: 14, delay: '0.3s', duration: '3.3s' },
-  { top: '75%', left: '48%', size: 9, delay: '1.5s', duration: '2.5s' },
-  { top: '70%', left: '66%', size: 12, delay: '0.6s', duration: '2.8s' },
-  { top: '76%', left: '82%', size: 8, delay: '1.1s', duration: '2.1s' },
-  { top: '72%', left: '93%', size: 13, delay: '0.7s', duration: '3.0s' },
-
-  { top: '88%', left: '6%', size: 11, delay: '1.3s', duration: '2.9s' },
-  { top: '84%', left: '22%', size: 8, delay: '0.4s', duration: '2.3s' },
-  { top: '90%', left: '38%', size: 13, delay: '1.0s', duration: '3.2s' },
-  { top: '86%', left: '58%', size: 10, delay: '0.2s', duration: '2.6s' },
-  { top: '91%', left: '75%', size: 15, delay: '1.6s', duration: '3.1s' },
-  { top: '85%', left: '89%', size: 9, delay: '0.8s', duration: '2.4s' },
+// 32 balanced celestial stardust motes across the viewport
+const CELESTIAL_MOTES = [
+  { top: '8%', left: '10%', size: 3, delay: '0.2s', duration: '2.5s' },
+  { top: '14%', left: '26%', size: 4, delay: '0.8s', duration: '3.2s' },
+  { top: '9%', left: '46%', size: 2, delay: '1.2s', duration: '2.2s' },
+  { top: '15%', left: '68%', size: 4, delay: '0.4s', duration: '2.8s' },
+  { top: '10%', left: '86%', size: 3, delay: '1.5s', duration: '3.4s' },
+  { top: '24%', left: '6%', size: 3, delay: '1.1s', duration: '2.9s' },
+  { top: '28%', left: '20%', size: 4, delay: '0.3s', duration: '3.1s' },
+  { top: '22%', left: '80%', size: 3, delay: '1.0s', duration: '2.7s' },
+  { top: '26%', left: '92%', size: 4, delay: '0.7s', duration: '3.0s' },
+  { top: '40%', left: '8%', size: 3, delay: '0.9s', duration: '2.8s' },
+  { top: '38%', left: '24%', size: 2, delay: '1.4s', duration: '2.4s' },
+  { top: '44%', left: '76%', size: 4, delay: '0.5s', duration: '3.3s' },
+  { top: '42%', left: '90%', size: 3, delay: '1.2s', duration: '2.6s' },
+  { top: '58%', left: '9%', size: 4, delay: '0.6s', duration: '3.0s' },
+  { top: '62%', left: '22%', size: 2, delay: '1.6s', duration: '2.3s' },
+  { top: '56%', left: '82%', size: 3, delay: '0.2s', duration: '3.2s' },
+  { top: '60%', left: '94%', size: 4, delay: '1.3s', duration: '2.9s' },
+  { top: '74%', left: '12%', size: 3, delay: '0.8s', duration: '2.7s' },
+  { top: '78%', left: '28%', size: 4, delay: '0.4s', duration: '3.4s' },
+  { top: '72%', left: '72%', size: 2, delay: '1.5s', duration: '2.5s' },
+  { top: '76%', left: '88%', size: 4, delay: '0.9s', duration: '3.1s' },
+  { top: '88%', left: '15%', size: 3, delay: '1.0s', duration: '2.8s' },
+  { top: '85%', left: '34%', size: 2, delay: '0.3s', duration: '2.4s' },
+  { top: '90%', left: '65%', size: 4, delay: '1.1s', duration: '3.3s' },
+  { top: '86%', left: '84%', size: 3, delay: '0.5s', duration: '2.6s' },
 ];
 
 export const WelcomeSplashScreen = ({ onComplete }) => {
-  // Strict Choreography: 'welcome' -> 'rocket' -> 'clouds' -> 'reveal' -> 'exit'
-  const [stage, setStage] = useState('welcome');
   const [progress, setProgress] = useState(0);
-  const isCompletedRef = useRef(false);
-
-  // System & App Theme Detection for the cloud/reveal stage
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    try {
-      if (typeof window === 'undefined') return false;
-      const attr = document.documentElement.getAttribute('data-theme');
-      if (attr === 'dark') return true;
-      if (attr === 'light') return false;
-      return Boolean(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    } catch {
-      return false;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleThemeChange = () => {
-        const attr = document.documentElement.getAttribute('data-theme');
-        if (attr === 'dark') {
-          setIsDarkMode(true);
-        } else if (attr === 'light') {
-          setIsDarkMode(false);
-        } else {
-          setIsDarkMode(mq.matches);
-        }
-      };
-      mq.addEventListener('change', handleThemeChange);
-      const observer = new MutationObserver(handleThemeChange);
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-      return () => {
-        mq.removeEventListener('change', handleThemeChange);
-        observer.disconnect();
-      };
-    } catch (_) {}
-  }, []);
+  const [isExiting, setIsExiting] = useState(false);
+  const isFinishedRef = useRef(false);
+  const containerRef = useRef(null);
 
   const handleFinish = () => {
-    if (isCompletedRef.current) return;
-    isCompletedRef.current = true;
-    setStage('exit');
+    if (isFinishedRef.current) return;
+    isFinishedRef.current = true;
+    setIsExiting(true);
     triggerHaptic('light');
     setTimeout(() => {
       if (onComplete) onComplete();
-    }, 600);
+    }, 700);
   };
 
-  // Seamless, tight timing & Edge-case Handling
   useEffect(() => {
-    // Edge case 1: User prefers reduced motion
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
       window.matchMedia &&
@@ -112,401 +59,241 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
     const params = new URLSearchParams(window.location.search);
     const isForced = params.get('splash') === '1' || params.get('splash') === 'true';
 
-    // If reduced motion is preferred and not explicitly forced, fast-forward directly to reveal
     if (prefersReducedMotion && !isForced) {
-      setStage('reveal');
-      setProgress(100);
+      handleFinish();
       return;
     }
 
     const startTime = Date.now();
+    const TOTAL_DURATION = 4800; // Complete cinematic sequence
 
-    // Rocket blasts off at 1.8s
-    const tLaunch = setTimeout(() => {
-      setStage('rocket');
-    }, 1800);
-
-    // Clouds roll down immediately as rocket clears top of screen at 3.1s
-    const tClouds = setTimeout(() => {
-      setStage('clouds');
-    }, 3100);
-
-    // Brand Reveal displays at 4.3s once clouds have rolled in
-    const tReveal = setTimeout(() => {
-      setStage('reveal');
-    }, 4300);
-
-    // Inactivity safety fallback (35s)
-    const tTimeout = setTimeout(() => {
-      handleFinish();
-    }, 35000);
-
-    // Progress bar runs up to reveal
-    const PROGRESS_DURATION = 4300;
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const pct = Math.min(100, Math.round((elapsed / PROGRESS_DURATION) * 100));
+      const pct = Math.min(100, Math.round((elapsed / TOTAL_DURATION) * 100));
       setProgress(pct);
-      if (pct >= 100) clearInterval(interval);
+      if (pct >= 100) {
+        clearInterval(interval);
+        handleFinish();
+      }
     }, 40);
 
-    // Edge case 2: Background tab synchronization
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        const elapsed = Date.now() - startTime;
-        if (elapsed >= 4300) {
-          setStage('reveal');
-          setProgress(100);
-        } else if (elapsed >= 3100) {
-          setStage('clouds');
-        } else if (elapsed >= 1800) {
-          setStage('rocket');
-        }
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      clearTimeout(tLaunch);
-      clearTimeout(tClouds);
-      clearTimeout(tReveal);
-      clearTimeout(tTimeout);
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
-  // Edge case 3: Global Keyboard accessibility (Escape to skip, Enter/Space to continue)
-  useEffect(() => {
+    // Global keyboard listener
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        handleFinish();
-      } else if ((e.key === 'Enter' || e.key === ' ') && stage === 'reveal') {
+      if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
         handleFinish();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [stage]);
 
-  const isCloudRevealStage = stage === 'clouds' || stage === 'reveal' || stage === 'exit';
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <div
-      className={`vws-fullscreen-root ${stage === 'exit' ? 'is-exiting' : ''} ${
-        isCloudRevealStage ? (isDarkMode ? 'is-dark-canvas' : 'is-light-canvas') : ''
-      }`}
+      ref={containerRef}
+      className={`vws-root ${isExiting ? 'is-exiting' : ''}`}
       role="dialog"
       aria-label="Welcome to Velvet Hearts"
-      onClick={() => {
-        if (stage === 'reveal') handleFinish();
-      }}
+      onClick={handleFinish}
     >
-      {/* Dynamic Edge-to-Edge Starfield Canvas */}
-      <div className="vws-starfield-canvas" aria-hidden="true">
-        {FULL_SCREEN_STARS.map((star, idx) => (
-          <svg
-            key={idx}
-            className="vws-star"
-            style={{
-              top: star.top,
-              left: star.left,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              '--delay': star.delay,
-              '--duration': star.duration,
-            }}
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-          </svg>
-        ))}
+      {/* Deep Ambient Lighting Flares */}
+      <div className="vws-ambient-glow vws-glow-primary" />
+      <div className="vws-ambient-glow vws-glow-gold" />
 
-        {/* Floating stardust motes */}
-        <div className="vws-dust" style={{ left: '15%', '--drift-time': '7s', '--drift-x': '20px' }} />
-        <div className="vws-dust" style={{ left: '35%', '--drift-time': '9s', '--drift-x': '-25px' }} />
-        <div className="vws-dust" style={{ left: '65%', '--drift-time': '8s', '--drift-x': '30px' }} />
-        <div className="vws-dust" style={{ left: '85%', '--drift-time': '10s', '--drift-x': '-20px' }} />
+      {/* Stardust Celestial Particles */}
+      <div className="vws-starfield" aria-hidden="true">
+        {CELESTIAL_MOTES.map((mote, idx) => (
+          <div
+            key={idx}
+            className="vws-star-mote"
+            style={{
+              top: mote.top,
+              left: mote.left,
+              width: `${mote.size}px`,
+              height: `${mote.size}px`,
+              '--delay': mote.delay,
+              '--duration': mote.duration,
+            }}
+          />
+        ))}
       </div>
 
-      {/* Top Header Navigation: Skip Button */}
-      <header className="vws-top-nav">
-        <div className={`vws-brand-indicator ${stage !== 'welcome' ? 'is-fading-out' : ''}`}>
-          <img src={velvetHeartLogo} alt="" className="vws-mini-logo" />
-          <span>VELVET HEARTS</span>
+      {/* Top Header: Brandmark + Skip Button */}
+      <header className="vws-header">
+        <div className="vws-brandmark">
+          <img
+            src={velvetHeartLogo}
+            alt="Velvet Hearts Emblem"
+            className="vws-brand-emblem-mini"
+          />
+          <span className="vws-brand-name">VELVET HEARTS</span>
         </div>
 
         <button
           type="button"
-          className={`vws-skip-pill ${
-            isCloudRevealStage ? (isDarkMode ? 'is-dark-pill' : 'is-light-pill') : ''
-          }`}
+          className="vws-skip-btn"
           onClick={(e) => {
             e.stopPropagation();
             handleFinish();
           }}
-          aria-label="Skip splash animation and go to landing page"
+          aria-label="Skip welcome animation"
         >
           <span>Skip</span>
-          <ArrowRight size={14} weight="bold" />
+          <ArrowRight size={13} weight="bold" />
         </button>
       </header>
 
-      {/* ==========================================================
-          STAGE 1: WELCOME SCREEN (Cosmic typography, clean & romantic)
-         ========================================================== */}
-      <div className={`vws-welcome-stage ${stage !== 'welcome' ? 'is-fading-out' : ''}`}>
-        <div className="vws-welcome-content">
-          <h1 className="vws-hero-title font-display">WELCOME</h1>
-
-          <p className="vws-hero-sub font-ui">
-            Where authentic hearts meet, verified stories connect, and true romance begins.
-          </p>
+      {/* Centerpiece Arena: Silk Ribbons + Floating Love Letters + Sculpted Heart */}
+      <main className="vws-arena">
+        {/* Floating Love Letters with Wax Seals in 3D Orbit */}
+        <div className="vws-letters-orbit" aria-hidden="true">
+          <div className="vws-floating-letter letter-1">
+            <div className="vws-wax-seal" />
+          </div>
+          <div className="vws-floating-letter letter-2">
+            <div className="vws-wax-seal" />
+          </div>
+          <div className="vws-floating-letter letter-3">
+            <div className="vws-wax-seal" />
+          </div>
+          <div className="vws-floating-letter letter-4">
+            <div className="vws-wax-seal" />
+          </div>
         </div>
-      </div>
 
-      {/* ==========================================================
-          STAGE 2: SMOOTH CUPID HEART-ROCKET ASCENT
-          Launches swiftly and is COMPLETELY GONE before clouds appear
-         ========================================================== */}
-      {(stage === 'welcome' || stage === 'rocket') && (
-        <div className="vws-rocket-stage" aria-hidden="true">
-          <div
-            className={`vws-rocket-assembly ${
-              stage === 'welcome' ? 'is-hovering' : 'is-ascending'
-            }`}
+        {/* Dynamic Dual Silk Ribbons Stage */}
+        <div className="vws-ribbon-stage" aria-hidden="true">
+          <svg
+            className="vws-ribbon-svg"
+            viewBox="0 0 400 400"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            {/* Custom SVG Cupid Heart-Rocket */}
+            <defs>
+              {/* Crimson Velvet Silk Gradient */}
+              <linearGradient id="vwsCrimsonRibbon" x1="50" y1="50" x2="350" y2="350" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#fda4af" stopOpacity="0.4" />
+                <stop offset="30%" stopColor="#f43f5e" />
+                <stop offset="70%" stopColor="#e11d48" />
+                <stop offset="100%" stopColor="#881337" />
+              </linearGradient>
+
+              {/* Champagne Gold Silk Gradient */}
+              <linearGradient id="vwsGoldRibbon" x1="350" y1="50" x2="50" y2="350" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#fef08a" stopOpacity="0.4" />
+                <stop offset="35%" stopColor="#fde047" />
+                <stop offset="75%" stopColor="#eab308" />
+                <stop offset="100%" stopColor="#854d0e" />
+              </linearGradient>
+
+              {/* Heart Drop Shadow Glow */}
+              <filter id="vwsHeartGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="8" stdDeviation="16" floodColor="#e11d48" floodOpacity="0.5" />
+                <feDropShadow dx="0" dy="2" stdDeviation="6" floodColor="#f6d365" floodOpacity="0.3" />
+              </filter>
+            </defs>
+
+            {/* Crimson Silk Ribbon Ribbon Loop (Forms Left Heart Arch) */}
+            <path
+              className="vws-ribbon-crimson"
+              d="M 40,80 C 120,-10 240,40 200,160 C 170,250 80,260 70,170 C 60,110 130,80 200,160 C 240,210 210,290 200,340"
+              stroke="url(#vwsCrimsonRibbon)"
+              strokeWidth="5"
+              strokeLinecap="round"
+            />
+
+            {/* Champagne Gold Ribbon Ribbon Loop (Forms Right Heart Arch) */}
+            <path
+              className="vws-ribbon-gold"
+              d="M 360,320 C 280,410 160,360 200,240 C 230,150 320,140 330,230 C 340,290 270,320 200,240 C 160,190 190,110 200,60"
+              stroke="url(#vwsGoldRibbon)"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+          </svg>
+
+          {/* Sculpted Velvet Heart Emblem Core */}
+          <div className="vws-heart-core">
             <svg
-              className="vws-rocket-svg"
-              viewBox="0 0 160 250"
+              className="vws-heart-svg"
+              viewBox="0 0 160 160"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              filter="url(#vwsHeartGlow)"
             >
               <defs>
-                {/* Metallic Rose-Gold Shading */}
-                <linearGradient id="rocketBodyGrad" x1="20" y1="20" x2="140" y2="190" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#FFFFFF" />
-                  <stop offset="25%" stopColor="#FFF0F3" />
-                  <stop offset="55%" stopColor="#F7CAD6" />
-                  <stop offset="85%" stopColor="#E28EA6" />
-                  <stop offset="100%" stopColor="#A83258" />
-                </linearGradient>
-
-                {/* Heart Wings Velvet Crimson */}
-                <linearGradient id="rocketWingGrad" x1="0" y1="120" x2="160" y2="200" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#E11D48" />
-                  <stop offset="50%" stopColor="#BE123C" />
-                  <stop offset="100%" stopColor="#670C23" />
-                </linearGradient>
-
-                {/* Champagne Gold Nose Cone */}
-                <linearGradient id="goldNoseGrad" x1="60" y1="5" x2="100" y2="65" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#FFFBEB" />
-                  <stop offset="40%" stopColor="#FBBF24" />
-                  <stop offset="100%" stopColor="#B45309" />
-                </linearGradient>
-
-                {/* Specular Highlight Streak */}
-                <linearGradient id="bodyHighlight" x1="50" y1="30" x2="70" y2="170" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.75" />
-                  <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-                </linearGradient>
-
-                {/* Glowing Heart Core */}
-                <radialGradient id="heartPortholeGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="#F43F5E" />
-                  <stop offset="70%" stopColor="#BE123C" />
-                  <stop offset="100%" stopColor="#4C0519" />
+                <radialGradient id="vwsHeartVelvet" cx="50%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#f43f5e" />
+                  <stop offset="45%" stopColor="#be123c" />
+                  <stop offset="85%" stopColor="#881337" />
+                  <stop offset="100%" stopColor="#4c0519" />
                 </radialGradient>
+                <linearGradient id="vwsGoldFiligree" x1="0" y1="0" x2="160" y2="160" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#fef08a" />
+                  <stop offset="50%" stopColor="#eab308" />
+                  <stop offset="100%" stopColor="#ca8a04" />
+                </linearGradient>
               </defs>
 
-              {/* Left Heart-Shaped Aerofoil Wing */}
+              {/* Heart Outer Filigree Rim */}
               <path
-                d="M52 135 C32 135 12 158 15 186 C17 205 36 215 52 208 Z"
-                fill="url(#rocketWingGrad)"
-                stroke="rgba(255,255,255,0.4)"
-                strokeWidth="1.5"
+                d="M 80,145 C 30,105 10,75 10,48 C 10,25 28,12 48,12 C 63,12 74,21 80,31 C 86,21 97,12 112,12 C 132,12 150,25 150,48 C 150,75 130,105 80,145 Z"
+                fill="url(#vwsHeartVelvet)"
+                stroke="url(#vwsGoldFiligree)"
+                strokeWidth="2.5"
               />
 
-              {/* Right Heart-Shaped Aerofoil Wing */}
+              {/* Inner Specular Light Glaze */}
               <path
-                d="M108 135 C128 135 148 158 145 186 C143 205 124 215 108 208 Z"
-                fill="url(#rocketWingGrad)"
-                stroke="rgba(255,255,255,0.4)"
-                strokeWidth="1.5"
+                d="M 28,45 C 28,32 37,22 48,22 C 55,22 62,26 68,34 C 55,42 40,55 33,70 C 30,62 28,53 28,45 Z"
+                fill="#ffffff"
+                opacity="0.3"
               />
-
-              {/* Main Rocket Fuselage */}
-              <path
-                d="M80 18 C96 50 106 100 106 170 C106 198 100 206 80 206 C60 206 54 198 54 170 C54 100 64 50 80 18 Z"
-                fill="url(#rocketBodyGrad)"
-                stroke="rgba(255,255,255,0.6)"
-                strokeWidth="2"
-              />
-
-              {/* Smooth Specular Glaze Reflection */}
-              <path
-                d="M74 35 C70 65 66 110 66 160 C66 180 67 195 70 198 C66 195 62 170 62 140 C62 90 68 50 74 35 Z"
-                fill="url(#bodyHighlight)"
-              />
-
-              {/* Gold Aerodynamic Nose Tip */}
-              <path
-                d="M80 16 C87 34 94 54 95 65 C85 68 75 68 65 65 C66 54 73 34 80 16 Z"
-                fill="url(#goldNoseGrad)"
-              />
-
-              {/* Center Porthole Window with Beating Heart */}
-              <circle cx="80" cy="118" r="21" fill="#1C0914" stroke="#FDE047" strokeWidth="2.5" />
-              <circle cx="80" cy="118" r="16" fill="url(#heartPortholeGlow)" />
-              <path
-                d="M80 128 C73 121 68 116 68 111 C68 107 71 104 75 104 C77.5 104 79.5 105.5 80 107 C80.5 105.5 82.5 104 85 104 C89 104 92 107 92 111 C92 116 87 121 80 128 Z"
-                fill="#FFFFFF"
-                opacity="0.95"
-              />
-
-              {/* Engine Exhaust Nozzles */}
-              <path d="M64 206 L96 206 L100 220 L60 220 Z" fill="#471426" stroke="#FBBF24" strokeWidth="1.5" />
-              <path d="M68 220 L92 220 L94 228 L66 228 Z" fill="#1C0914" />
             </svg>
 
-            {/* Smooth Dual Flame Exhaust Plume */}
-            <div className="vws-plasma-thruster">
-              <div className="vws-flame-outer" />
-              <div className="vws-flame-inner" />
-              <div className="vws-flame-core" />
-            </div>
-
-            {/* Stardust exhaust spark particles */}
-            <div className="vws-spark-cascade">
-              <span className="vws-spark s-1" />
-              <span className="vws-spark s-2" />
-              <span className="vws-spark s-3" />
-              <span className="vws-spark s-4" />
-              <span className="vws-spark s-5" />
-              <span className="vws-spark s-6" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==========================================================
-          STAGE 3: ORGANIC BILLOWING VOLUMETRIC CLOUD CURTAIN
-          CRITICAL: RENDERED ONLY AFTER ROCKET IS 100% OFF-SCREEN!
-          Adapts palette dynamically to system/app theme (Dark or Light)
-         ========================================================== */}
-      {isCloudRevealStage && (
-        <div className="vws-cloud-wipe-layer" aria-hidden="true">
-          <div className="vws-cloud-curtain-wrap is-sweeping-down">
-            {/* Solid 100% viewport coverage body */}
-            <div className="vws-cloud-solid-body" />
-
-            {/* Continuous multi-layered organic wave lip */}
-            <div className="vws-cloud-wave-lip">
-              <svg
-                className="vws-fluid-cloud-svg"
-                viewBox="0 0 1920 320"
-                preserveAspectRatio="none"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <defs>
-                  {/* Theme-Adaptive Cloud Wave Gradients */}
-                  <linearGradient id="cloudDeepGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor={isDarkMode ? '#0c050b' : '#FFF5F7'} />
-                    <stop offset="50%" stopColor={isDarkMode ? '#170614' : '#FEE4EC'} />
-                    <stop offset="100%" stopColor={isDarkMode ? '#250820' : '#FBCFE8'} />
-                  </linearGradient>
-
-                  <linearGradient id="cloudMidGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor={isDarkMode ? '#130510' : '#FFFFFF'} />
-                    <stop offset="60%" stopColor={isDarkMode ? '#22081c' : '#FFF2F6'} />
-                    <stop offset="100%" stopColor={isDarkMode ? '#340b2a' : '#FDD8E5'} />
-                  </linearGradient>
-
-                  <linearGradient id="cloudFrontGrad" x1="960" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor={isDarkMode ? '#1a0717' : '#FFFFFF'} />
-                    <stop offset="70%" stopColor={isDarkMode ? '#2e0a25' : '#FFF5F8'} />
-                    <stop offset="100%" stopColor={isDarkMode ? '#440f37' : '#FDE2EC'} />
-                  </linearGradient>
-
-                  <filter id="cloudSoftBloom" x="-10%" y="-10%" width="120%" height="150%">
-                    <feDropShadow
-                      dx="0"
-                      dy="16"
-                      stdDeviation="20"
-                      floodColor={isDarkMode ? '#f43f5e' : '#881337'}
-                      floodOpacity={isDarkMode ? 0.25 : 0.14}
-                    />
-                  </filter>
-                </defs>
-
-                {/* Layer 1: Background Velvet Blush/Night Wave */}
-                <path
-                  d="M 0,0 L 1920,0 L 1920,190 C 1800,250 1680,150 1520,210 C 1360,270 1240,170 1080,230 C 920,290 800,170 640,220 C 480,270 360,160 200,220 C 100,260 0,200 0,200 Z"
-                  fill="url(#cloudDeepGrad)"
-                  opacity="0.85"
-                />
-
-                {/* Layer 2: Middle Soft Wave */}
-                <path
-                  d="M 0,0 L 1920,0 L 1920,150 C 1780,200 1660,120 1500,170 C 1340,220 1220,130 1060,180 C 900,230 780,130 620,175 C 460,220 340,120 180,170 C 90,200 0,155 0,155 Z"
-                  fill="url(#cloudMidGrad)"
-                  opacity="0.95"
-                />
-
-                {/* Layer 3: Foreground Billowing Wave */}
-                <path
-                  d="M 0,0 L 1920,0 L 1920,110 C 1760,160 1640,85 1480,130 C 1320,175 1200,90 1040,135 C 880,180 760,95 600,135 C 440,175 320,90 160,130 C 80,155 0,115 0,115 Z"
-                  fill="url(#cloudFrontGrad)"
-                  filter="url(#cloudSoftBloom)"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==========================================================
-          STAGE 4: VELVET HEARTS BRAND REVEAL (Prestige Minimalist Design)
-          Adapts typography and buttons to Dark Mode or Light Mode
-         ========================================================== */}
-      <div className={`vws-brand-stage ${stage === 'reveal' || stage === 'exit' ? 'is-visible' : ''}`}>
-        <div className="vws-brand-card">
-          {/* Concentric Gold Medallion Halo */}
-          <div className="vws-emblem-medallion">
-            <div className="vws-gold-filigree-ring" />
-            <div className="vws-gold-filigree-ring-outer" />
+            {/* Embedded Official Velvet Heart Brandmark */}
             <img
               src={velvetHeartLogo}
-              alt="Velvet Hearts Logo"
-              className="vws-emblem-image"
+              alt=""
+              className="vws-heart-logo-embed"
             />
           </div>
-
-          <div className="vws-prestige-tag font-ui">OFFICIAL PLATFORM</div>
-
-          {/* Clean, Modern, Highly Readable Typography */}
-          <h2 className="vws-brand-title">Velvet Hearts</h2>
-          <p className="vws-brand-tagline">Where sweet moments turn into forever</p>
-
-          <div className="vws-continue-hint font-ui">
-            Tap anywhere to continue
-          </div>
         </div>
-      </div>
 
-      {/* Bottom Timeline Bar */}
-      <div className="vws-footer-bar">
+        {/* Editorial Luxury Typography */}
+        <div className="vws-typography">
+          <h1 className="vws-title">VELVET HEARTS</h1>
+          <p className="vws-tagline">
+            Where intentional hearts meet, verified stories connect, and true romance begins.
+          </p>
+          <button
+            type="button"
+            className="vws-cta-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFinish();
+            }}
+          >
+            <Sparkle size={16} weight="fill" />
+            <span>Enter Velvet Hearts</span>
+            <ArrowRight size={15} weight="bold" />
+          </button>
+          <div className="vws-tap-hint">Tap anywhere to enter</div>
+        </div>
+      </main>
+
+      {/* Footer: Timeline Progress Track */}
+      <footer className="vws-footer">
         <div className="vws-progress-track">
-          <div className="vws-progress-fill" style={{ width: `${progress}%` }} />
+          <div className="vws-progress-bar" style={{ width: `${progress}%` }} />
         </div>
-      </div>
+        <span className="vws-footer-legal">Curated Verified Romantic Discovery &bull; India</span>
+      </footer>
     </div>
   );
 };
