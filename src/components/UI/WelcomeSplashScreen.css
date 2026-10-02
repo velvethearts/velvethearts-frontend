@@ -1,7 +1,7 @@
 /* ==========================================================================
    VELVET HEARTS — EDITORIAL LUXURY ONBOARDING & SPLASH SCREEN
-   Stationary Arch Portal with Silk-Smooth Crossfade Artwork Transitions,
-   Prominent Vertical Micro-Lettering, and Auto-Advancing Narrative
+   Generously proportioned, high-impact arched centerpiece portal,
+   enlarged typography, bold vector artwork, and fluid media queries.
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -18,7 +18,7 @@
   --vh-ruby: #8E1738;
   --vh-crimson: #BE123C;
   --vh-text-primary: #19060E;
-  --vh-text-secondary: #695D5B;
+  --vh-text-secondary: #645759;
   --vh-dot-inactive: #E5D7D1;
   --vh-dot-active: #3D0C1E;
 }
@@ -56,43 +56,53 @@
 }
 
 .vh-glow-top-right {
-  top: -80px;
-  right: -80px;
-  width: 440px;
-  height: 440px;
-  background: radial-gradient(circle, rgba(251, 232, 233, 0.85) 0%, rgba(250, 247, 242, 0) 70%);
-  filter: blur(40px);
+  top: -100px;
+  right: -100px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(251, 232, 233, 0.9) 0%, rgba(250, 247, 242, 0) 70%);
+  filter: blur(50px);
 }
 
 .vh-glow-bottom-left {
-  bottom: -60px;
-  left: -80px;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(247, 237, 234, 0.85) 0%, rgba(250, 247, 242, 0) 70%);
-  filter: blur(40px);
+  bottom: -80px;
+  left: -100px;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(247, 237, 234, 0.9) 0%, rgba(250, 247, 242, 0) 70%);
+  filter: blur(50px);
 }
 
-/* Fluid Free-standing Layout Container (No phone chassis, fully responsive) */
+/* Fluid Free-standing Layout Container */
 .vh-editorial-container {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 420px;
+  max-width: 430px;
   height: 100dvh;
-  max-height: 870px;
+  max-height: 920px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: max(env(safe-area-inset-top), 16px) 24px max(env(safe-area-inset-bottom), 16px) 24px;
+  padding: max(env(safe-area-inset-top), 16px) 20px max(env(safe-area-inset-bottom), 16px) 20px;
   box-sizing: border-box;
 }
 
-@media (min-height: 800px) and (min-width: 640px) {
+/* Tablet Media Query */
+@media (min-width: 640px) {
   .vh-editorial-container {
-    padding-top: 24px;
-    padding-bottom: 24px;
+    max-width: 460px;
+    padding: 24px 28px;
+  }
+}
+
+/* Laptop / Desktop Media Query */
+@media (min-width: 1024px) {
+  .vh-editorial-container {
+    max-width: 490px;
+    max-height: 940px;
+    padding: 28px 32px;
   }
 }
 
@@ -103,27 +113,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 4px 6px 4px;
+  padding: 2px 4px 6px 4px;
 }
 
 .vh-brandmark {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
 }
 
 .vh-brand-dot {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background-color: var(--vh-ruby);
-  box-shadow: 0 1px 4px rgba(142, 23, 56, 0.35);
+  box-shadow: 0 1px 4px rgba(142, 23, 56, 0.4);
   display: inline-block;
 }
 
 .vh-brand-title {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.26em;
   color: var(--vh-wine);
@@ -133,14 +143,14 @@
 
 .vh-skip-btn {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #7A6E70;
   background: transparent;
   border: none;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -148,12 +158,11 @@
 
 .vh-skip-btn:hover {
   color: var(--vh-ruby);
-  background-color: rgba(251, 232, 233, 0.6);
+  background-color: rgba(251, 232, 233, 0.7);
 }
 
 /* ==========================================================================
-   Central Component: Fixed Arch Window with Crossfade Artwork Transition
-   (Eliminates the "page flipping" motion while smoothly transitioning artwork)
+   Central Component: Generously Enlarge Arched Showcase Portal
    ========================================================================== */
 .vh-center-stage {
   position: relative;
@@ -164,31 +173,47 @@
   align-items: center;
   justify-content: center;
   min-height: 0;
-  padding: 4px 0;
+  padding: 10px 0;
 }
 
-/* The Grand Arched Sanctuary Portal */
+/* Grand Arched Sanctuary Portal (Enlarged for commanding visual presence) */
 .vh-arch-outer {
   position: relative;
   width: 100%;
-  max-width: 320px;
-  aspect-ratio: 4 / 4.8;
-  max-height: 385px;
-  border-top-left-radius: 165px;
-  border-top-right-radius: 165px;
-  border-bottom-left-radius: 36px;
-  border-bottom-right-radius: 36px;
+  max-width: 350px;
+  height: clamp(380px, 48vh, 440px);
+  aspect-ratio: 4 / 4.9;
+  border-top-left-radius: 175px;
+  border-top-right-radius: 175px;
+  border-bottom-left-radius: 40px;
+  border-bottom-right-radius: 40px;
   background: linear-gradient(180deg, var(--vh-arch-outer-from) 0%, var(--vh-arch-outer-to) 100%);
   padding: 5px;
-  box-shadow: 0 16px 36px rgba(42, 11, 20, 0.08);
-  border: 1px solid rgba(142, 23, 56, 0.14);
+  box-shadow: 0 18px 42px rgba(42, 11, 20, 0.09);
+  border: 1px solid rgba(142, 23, 56, 0.16);
   box-sizing: border-box;
 }
 
-@media (min-height: 820px) {
+/* Tablet & Laptop Enlarge */
+@media (min-width: 640px) {
   .vh-arch-outer {
-    max-width: 335px;
-    max-height: 400px;
+    max-width: 370px;
+    height: clamp(400px, 50vh, 470px);
+    border-top-left-radius: 185px;
+    border-top-right-radius: 185px;
+    border-bottom-left-radius: 44px;
+    border-bottom-right-radius: 44px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vh-arch-outer {
+    max-width: 390px;
+    height: clamp(420px, 52vh, 490px);
+    border-top-left-radius: 195px;
+    border-top-right-radius: 195px;
+    border-bottom-left-radius: 46px;
+    border-bottom-right-radius: 46px;
   }
 }
 
@@ -196,15 +221,24 @@
   position: relative;
   width: 100%;
   height: 100%;
-  border-top-left-radius: 160px;
-  border-top-right-radius: 160px;
-  border-bottom-left-radius: 32px;
-  border-bottom-right-radius: 32px;
+  border-top-left-radius: 170px;
+  border-top-right-radius: 170px;
+  border-bottom-left-radius: 36px;
+  border-bottom-right-radius: 36px;
   overflow: hidden;
   background-color: var(--vh-arch-bg);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .vh-arch-inner {
+    border-top-left-radius: 180px;
+    border-top-right-radius: 180px;
+    border-bottom-left-radius: 40px;
+    border-bottom-right-radius: 40px;
+  }
 }
 
 /* Subtle Geometric Dot Pattern inside Arch */
@@ -213,37 +247,45 @@
   inset: 0;
   background-image: radial-gradient(#D6C6B7 1px, transparent 1px);
   background-size: 14px 14px;
-  opacity: 0.8;
+  opacity: 0.85;
   pointer-events: none;
 }
 
 /* Delicate Dashed Arch Outline */
 .vh-arch-dashed-border {
   position: absolute;
-  inset: 7px;
-  border-top-left-radius: 153px;
-  border-top-right-radius: 153px;
-  border-bottom-left-radius: 26px;
-  border-bottom-right-radius: 26px;
+  inset: 8px;
+  border-top-left-radius: 162px;
+  border-top-right-radius: 162px;
+  border-bottom-left-radius: 30px;
+  border-bottom-right-radius: 30px;
   border: 1px dashed rgba(222, 206, 190, 0.95);
   pointer-events: none;
   z-index: 3;
 }
 
-/* Micro-Lettering on Left Arch (ROMANCE / DEVOTION / INTENTION)
-   Positioned safely down the straight side wall so letters are NEVER clipped! */
+@media (min-width: 640px) {
+  .vh-arch-dashed-border {
+    border-top-left-radius: 172px;
+    border-top-right-radius: 172px;
+    border-bottom-left-radius: 34px;
+    border-bottom-right-radius: 34px;
+  }
+}
+
+/* Micro-Lettering on Left Arch (ROMANCE / DEVOTION / INTENTION) */
 .vh-micro-lettering {
   position: absolute;
   left: 20px;
-  top: 96px;
+  top: 92px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5.5px;
+  gap: 6px;
   font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.34em;
   color: var(--vh-ruby);
   text-transform: uppercase;
   user-select: none;
@@ -252,7 +294,16 @@
   animation: vhFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Artwork Stage with Silky Crossfade + Subtle Float Transition */
+@media (min-width: 640px) {
+  .vh-micro-lettering {
+    left: 24px;
+    top: 104px;
+    font-size: 12px;
+    gap: 7px;
+  }
+}
+
+/* Artwork Stage with Generously Sized Artworks */
 .vh-art-stage {
   position: relative;
   width: 100%;
@@ -269,7 +320,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
+  padding: 4px;
   box-sizing: border-box;
   opacity: 0;
   transform: translateX(18px) scale(0.97);
@@ -285,8 +336,8 @@
 }
 
 .vh-art-svg {
-  width: 94%;
-  height: 94%;
+  width: 98%;
+  height: 98%;
   object-fit: contain;
 }
 
@@ -301,16 +352,16 @@
   -webkit-backdrop-filter: blur(6px);
   color: var(--vh-bg-cream);
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  padding: 4.5px 12px;
+  padding: 5px 14px;
   border-radius: 9999px;
-  box-shadow: 0 4px 12px rgba(42, 11, 20, 0.25);
+  box-shadow: 0 4px 14px rgba(42, 11, 20, 0.28);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   animation: vhBadgePop 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
@@ -388,7 +439,7 @@
 }
 
 /* ==========================================================================
-   Editorial Copy, Pagination Dots & Primary Actions
+   Editorial Copy, Pagination Dots & Primary Actions (Enlarged)
    ========================================================================== */
 .vh-footer-section {
   position: relative;
@@ -396,15 +447,15 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 10px 4px 0 4px;
+  padding: 12px 4px 0 4px;
 }
 
 /* Pagination Dots */
 .vh-dots-nav {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
+  gap: 7px;
+  margin-bottom: 14px;
 }
 
 .vh-dot-btn {
@@ -424,7 +475,7 @@
 }
 
 .vh-dot.is-active {
-  width: 24px;
+  width: 26px;
   background-color: var(--vh-dot-active);
 }
 
@@ -437,37 +488,43 @@
   background-color: #C8B8B0;
 }
 
-/* Editorial Headline & Subtitle */
+/* Editorial Headline & Subtitle (Enlarged & Bold) */
 .vh-copy-block {
-  min-height: 105px;
+  min-height: 112px;
   text-align: left;
-}
-
-@media (max-height: 700px) {
-  .vh-copy-block {
-    min-height: 85px;
-  }
 }
 
 .vh-headline {
   font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-  font-size: clamp(28px, 6.8vw, 36px);
-  line-height: 1.1;
-  letter-spacing: -0.015em;
+  font-size: clamp(32px, 8.2vw, 42px);
+  line-height: 1.08;
+  letter-spacing: -0.018em;
   font-weight: 700;
   color: var(--vh-wine-dark);
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   white-space: pre-line;
   animation: vhTextGlide 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+@media (min-width: 640px) {
+  .vh-headline {
+    font-size: 38px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vh-headline {
+    font-size: 42px;
+  }
+}
+
 .vh-subtitle {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-size: 13.5px;
-  line-height: 1.48;
+  font-size: clamp(14px, 3.6vw, 15.5px);
+  line-height: 1.5;
   color: var(--vh-text-secondary);
   font-weight: 400;
-  max-width: 330px;
+  max-width: 360px;
   margin: 0;
   animation: vhTextGlide 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -483,11 +540,11 @@
   }
 }
 
-/* Primary Action CTA Button */
+/* Primary Action CTA Button (Enlarged, Full-Width, Bold Pill) */
 .vh-primary-btn {
   width: 100%;
-  height: 56px;
-  margin-top: 14px;
+  height: 58px;
+  margin-top: 16px;
   background-color: var(--vh-wine-btn);
   color: #FAF7F2;
   border: none;
@@ -498,12 +555,19 @@
   justify-content: space-between;
   cursor: pointer;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 8px 24px rgba(39, 8, 21, 0.24);
+  box-shadow: 0 10px 26px rgba(39, 8, 21, 0.28);
+}
+
+@media (min-width: 640px) {
+  .vh-primary-btn {
+    height: 62px;
+    padding: 0 16px 0 28px;
+  }
 }
 
 .vh-primary-btn:hover {
   background-color: var(--vh-ruby);
-  box-shadow: 0 10px 28px rgba(142, 23, 56, 0.3);
+  box-shadow: 0 12px 30px rgba(142, 23, 56, 0.34);
   transform: translateY(-1px);
 }
 
@@ -513,20 +577,33 @@
 
 .vh-btn-label {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-size: 14.5px;
+  font-size: 15.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
+@media (min-width: 640px) {
+  .vh-btn-label {
+    font-size: 16.5px;
+  }
+}
+
 .vh-arrow-circle {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .vh-arrow-circle {
+    width: 42px;
+    height: 42px;
+  }
 }
 
 .vh-primary-btn:hover .vh-arrow-circle {
@@ -538,9 +615,9 @@
 .vh-signin-prompt {
   text-align: center;
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  font-size: 12.5px;
+  font-size: 13px;
   color: #786C6A;
-  margin-top: 10px;
+  margin-top: 12px;
   margin-bottom: 2px;
 }
 
@@ -563,11 +640,11 @@
 
 /* iOS Home Indicator Bar */
 .vh-home-indicator {
-  width: 120px;
+  width: 128px;
   height: 4px;
   background-color: #D1C6BE;
   border-radius: 9999px;
-  margin: 8px auto 0 auto;
+  margin: 10px auto 0 auto;
   opacity: 0.7;
 }
 
