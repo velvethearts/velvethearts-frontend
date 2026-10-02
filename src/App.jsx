@@ -523,7 +523,16 @@ function AppContent() {
       if (activeTab === 'safety') {
         return (
           <Suspense fallback={<AuthLoadingScreen />}>
-            <SafetyCenter />
+            <SafetyCenter
+              onSignIn={() => {
+                setAuthInitialMode('login');
+                setShowAuth(true);
+              }}
+              onGetStarted={() => {
+                setAuthInitialMode('signup');
+                setShowAuth(true);
+              }}
+            />
           </Suspense>
         );
       }

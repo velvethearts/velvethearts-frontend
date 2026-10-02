@@ -39,6 +39,7 @@ gsap.registerPlugin(ScrollTrigger);
 export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
   const [activeTab, setActiveTab] = useState(initialTab); // 'privacy' | 'terms' | 'guidelines'
   const [searchQuery, setSearchQuery] = useState('');
+  const [matchingSectionIds, setMatchingSectionIds] = useState(null);
   const [activeSection, setActiveSection] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const [expandedDetails, setExpandedDetails] = useState({});
@@ -129,6 +130,43 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
 
     return () => ctx.revert();
   }, [activeTab]);
+
+  // Real-time Provision Search Filtering
+  useEffect(() => {
+    if (!searchQuery || !searchQuery.trim()) {
+      const sections = document.querySelectorAll('.legal-doc-section');
+      sections.forEach((sec) => {
+        sec.style.display = '';
+        sec.classList.remove('legal-search-match');
+      });
+      setMatchingSectionIds(null);
+      if (typeof ScrollTrigger !== 'undefined') {
+        ScrollTrigger.refresh();
+      }
+      return;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    const sections = document.querySelectorAll('.legal-doc-section');
+    const matched = new Set();
+
+    sections.forEach((sec) => {
+      const text = (sec.textContent || sec.innerText || '').toLowerCase();
+      if (text.includes(query)) {
+        sec.style.display = '';
+        sec.classList.add('legal-search-match');
+        matched.add(sec.id);
+      } else {
+        sec.style.display = 'none';
+        sec.classList.remove('legal-search-match');
+      }
+    });
+
+    setMatchingSectionIds(matched);
+    if (typeof ScrollTrigger !== 'undefined') {
+      ScrollTrigger.refresh();
+    }
+  }, [searchQuery, activeTab]);
 
   // Current tab metadata
   const tabDetails = {
@@ -452,44 +490,50 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
               <nav className="legal-toc-list space-y-1">
                 {activeTab === 'privacy' && (
                   <>
-                    <TocLink id="priv-sec-1" title="1. Regulatory Notice & Data Fiduciary" active={activeSection === 'priv-sec-1'} />
-                    <TocLink id="priv-sec-2" title="2. Personal Data Stored & Processed" active={activeSection === 'priv-sec-2'} />
-                    <TocLink id="priv-sec-3" title="3. Lawful Consent Architecture" active={activeSection === 'priv-sec-3'} />
-                    <TocLink id="priv-sec-4" title="4. Statutory Rights of Data Principal" active={activeSection === 'priv-sec-4'} />
-                    <TocLink id="priv-sec-5" title="5. 180-Day Regulatory Retention" active={activeSection === 'priv-sec-5'} />
-                    <TocLink id="priv-sec-6" title="6. Cybersecurity & CERT-In Incident SLA" active={activeSection === 'priv-sec-6'} />
-                    <TocLink id="priv-sec-7" title="7. Cross-Border Cloud Safeguards" active={activeSection === 'priv-sec-7'} />
-                    <TocLink id="priv-sec-8" title="8. Absolute Minor Prohibition (18+)" active={activeSection === 'priv-sec-8'} />
-                    <TocLink id="priv-sec-9" title="9. Grievance Officer & Escalation" active={activeSection === 'priv-sec-9'} />
+                    <TocLink id="priv-sec-1" title="1. Regulatory Notice & Data Fiduciary" active={activeSection === 'priv-sec-1'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('priv-sec-1')} />
+                    <TocLink id="priv-sec-2" title="2. Personal Data Stored & Processed" active={activeSection === 'priv-sec-2'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('priv-sec-2')} />
+                    <TocLink id="priv-sec-3" title="3. Lawful Consent Architecture" active={activeSection === 'priv-sec-3'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('priv-sec-3')} />
+                    <TocLink id="priv-sec-4" title="4. Statutory Rights of Data Principal" active={activeSection === 'priv-sec-4'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('priv-sec-4')} />
+                    <TocLink id="priv-sec-5" title="5. 180-Day Regulatory Retention" active={activeSection === 'priv-sec-5'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('priv-sec-5')} />
+                    <TocLink id="priv-sec-6" title="6. Cybersecurity & CERT-In Incident SLA" active={activeSection === 'priv-sec-6'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('priv-sec-6')} />
+                    <TocLink id="priv-sec-7" title="7. Cross-Border Cloud Safeguards" active={activeSection === 'priv-sec-7'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('priv-sec-7')} />
+                    <TocLink id="priv-sec-8" title="8. Absolute Minor Prohibition (18+)" active={activeSection === 'priv-sec-8'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('priv-sec-8')} />
+                    <TocLink id="priv-sec-9" title="9. Grievance Officer & Escalation" active={activeSection === 'priv-sec-9'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('priv-sec-9')} />
                   </>
                 )}
 
                 {activeTab === 'terms' && (
                   <>
-                    <TocLink id="terms-sec-1" title="1. Acceptance & Binding Contract" active={activeSection === 'terms-sec-1'} />
-                    <TocLink id="terms-sec-2" title="2. Eligibility & Disqualifications" active={activeSection === 'terms-sec-2'} />
-                    <TocLink id="terms-sec-3" title="3. Prohibited Conduct (Rule 3(1)(b))" active={activeSection === 'terms-sec-3'} />
-                    <TocLink id="terms-sec-4" title="4. Criminal Penalties (BNS & IT Act)" active={activeSection === 'terms-sec-4'} />
-                    <TocLink id="terms-sec-5" title="5. Intermediary Safe Harbor (Sec 79)" active={activeSection === 'terms-sec-5'} />
-                    <TocLink id="terms-sec-6" title="6. Offline Dating & Risk Assumption" active={activeSection === 'terms-sec-6'} />
-                    <TocLink id="terms-sec-7" title="7. Disclaimers & Liability Caps" active={activeSection === 'terms-sec-7'} />
-                    <TocLink id="terms-sec-8" title="8. Intellectual Property & AI Codebase" active={activeSection === 'terms-sec-8'} />
-                    <TocLink id="terms-sec-9" title="9. Grievance Redressal SLA" active={activeSection === 'terms-sec-9'} />
-                    <TocLink id="terms-sec-10" title="10. Governing Law & Jurisdiction" active={activeSection === 'terms-sec-10'} />
+                    <TocLink id="terms-sec-1" title="1. Acceptance & Binding Contract" active={activeSection === 'terms-sec-1'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('terms-sec-1')} />
+                    <TocLink id="terms-sec-2" title="2. Eligibility & Disqualifications" active={activeSection === 'terms-sec-2'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('terms-sec-2')} />
+                    <TocLink id="terms-sec-3" title="3. Prohibited Conduct (Rule 3(1)(b))" active={activeSection === 'terms-sec-3'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('terms-sec-3')} />
+                    <TocLink id="terms-sec-4" title="4. Criminal Penalties (BNS & IT Act)" active={activeSection === 'terms-sec-4'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('terms-sec-4')} />
+                    <TocLink id="terms-sec-5" title="5. Intermediary Safe Harbor (Sec 79)" active={activeSection === 'terms-sec-5'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('terms-sec-5')} />
+                    <TocLink id="terms-sec-6" title="6. Offline Dating & Risk Assumption" active={activeSection === 'terms-sec-6'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('terms-sec-6')} />
+                    <TocLink id="terms-sec-7" title="7. Disclaimers & Liability Caps" active={activeSection === 'terms-sec-7'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('terms-sec-7')} />
+                    <TocLink id="terms-sec-8" title="8. Intellectual Property & AI Codebase" active={activeSection === 'terms-sec-8'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('terms-sec-8')} />
+                    <TocLink id="terms-sec-9" title="9. Grievance Redressal SLA" active={activeSection === 'terms-sec-9'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('terms-sec-9')} />
+                    <TocLink id="terms-sec-10" title="10. Governing Law & Jurisdiction" active={activeSection === 'terms-sec-10'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('terms-sec-10')} />
                   </>
                 )}
 
                 {activeTab === 'guidelines' && (
                   <>
-                    <TocLink id="guide-sec-1" title="1. Core Philosophy of Intentional Discovery" active={activeSection === 'guide-sec-1'} />
-                    <TocLink id="guide-sec-2" title="2. Identity Authenticity & Photo Standards" active={activeSection === 'guide-sec-2'} />
-                    <TocLink id="guide-sec-3" title="3. Respectful Communication & Audio Notes" active={activeSection === 'guide-sec-3'} />
-                    <TocLink id="guide-sec-4" title="4. Zero Tolerance for Harassment & Abuse" active={activeSection === 'guide-sec-4'} />
-                    <TocLink id="guide-sec-5" title="5. Financial Safety & Anti-Scam Rules" active={activeSection === 'guide-sec-5'} />
-                    <TocLink id="guide-sec-6" title="6. Real-World Date Protocol" active={activeSection === 'guide-sec-6'} />
-                    <TocLink id="guide-sec-7" title="7. Reporting, Triaging & Dispute Channels" active={activeSection === 'guide-sec-7'} />
-                    <TocLink id="guide-sec-8" title="8. Three-Strike Account Sanctions" active={activeSection === 'guide-sec-8'} />
+                    <TocLink id="guide-sec-1" title="1. Core Philosophy of Intentional Discovery" active={activeSection === 'guide-sec-1'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('guide-sec-1')} />
+                    <TocLink id="guide-sec-2" title="2. Identity Authenticity & Photo Standards" active={activeSection === 'guide-sec-2'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('guide-sec-2')} />
+                    <TocLink id="guide-sec-3" title="3. Respectful Communication & Audio Notes" active={activeSection === 'guide-sec-3'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('guide-sec-3')} />
+                    <TocLink id="guide-sec-4" title="4. Zero Tolerance for Harassment & Abuse" active={activeSection === 'guide-sec-4'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('guide-sec-4')} />
+                    <TocLink id="guide-sec-5" title="5. Financial Safety & Anti-Scam Rules" active={activeSection === 'guide-sec-5'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('guide-sec-5')} />
+                    <TocLink id="guide-sec-6" title="6. Real-World Date Protocol" active={activeSection === 'guide-sec-6'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('guide-sec-6')} />
+                    <TocLink id="guide-sec-7" title="7. Reporting, Triaging & Dispute Channels" active={activeSection === 'guide-sec-7'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('guide-sec-7')} />
+                    <TocLink id="guide-sec-8" title="8. Three-Strike Account Sanctions" active={activeSection === 'guide-sec-8'} isHidden={matchingSectionIds !== null && !matchingSectionIds.has('guide-sec-8')} />
                   </>
+                )}
+
+                {matchingSectionIds !== null && matchingSectionIds.size === 0 && (
+                  <div className="py-4 text-xs opacity-60 text-center font-ui">
+                    No matching provisions in this document
+                  </div>
                 )}
               </nav>
 
@@ -509,15 +553,51 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           <div className="lg:col-span-8 space-y-8">
             {searchQuery && (
               <div className="legal-search-banner flex items-center justify-between p-3.5 rounded-xl text-xs">
-                <span>
-                  Filtering provisions for: <strong>&ldquo;{searchQuery}&rdquo;</strong>
-                </span>
+                <div className="flex items-center gap-2">
+                  <MagnifyingGlass size={14} className="text-[#e27396]" />
+                  <span>
+                    Found <strong>{matchingSectionIds !== null ? matchingSectionIds.size : 0}</strong>{' '}
+                    {matchingSectionIds?.size === 1 ? 'provision' : 'provisions'} matching{' '}
+                    <strong>&ldquo;{searchQuery}&rdquo;</strong>
+                  </span>
+                </div>
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="legal-search-reset underline font-semibold"
+                  className="legal-search-reset underline font-semibold cursor-pointer"
                 >
-                  Show all
+                  Clear Search
+                </button>
+              </div>
+            )}
+
+            {searchQuery && matchingSectionIds !== null && matchingSectionIds.size === 0 && (
+              <div className="legal-no-results p-8 text-center rounded-2xl border my-4 bg-[var(--legal-card-bg)] border-[var(--legal-border)]">
+                <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center mb-3 bg-[#e27396]/10 text-[#e27396]">
+                  <MagnifyingGlass size={22} weight="bold" />
+                </div>
+                <h3 className="font-display text-lg font-semibold mb-2">No matching provisions found</h3>
+                <p className="text-sm opacity-70 max-w-md mx-auto mb-5 font-ui">
+                  We couldn&apos;t find any clauses matching &ldquo;{searchQuery}&rdquo; in the {tabDetails.title}. Try searching these common regulatory terms:
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+                  {['Biometrics', 'DPDP Act', 'Retention', 'CERT-In', 'Consent', 'Minor (18+)', 'Grievance', 'BNS'].map(topic => (
+                    <button
+                      key={topic}
+                      type="button"
+                      onClick={() => setSearchQuery(topic)}
+                      className="text-xs px-3 py-1.5 rounded-full border border-[var(--legal-border)] hover:border-[#e27396] transition-colors cursor-pointer"
+                    >
+                      {topic}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#e27396] text-white hover:bg-[#d05c80] transition-colors cursor-pointer"
+                >
+                  Reset Search Filter
                 </button>
               </div>
             )}
@@ -1501,6 +1581,12 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
           color: var(--legal-text-primary);
         }
 
+        .legal-search-match {
+          border-color: rgba(226, 115, 150, 0.65) !important;
+          box-shadow: 0 4px 24px -4px rgba(226, 115, 150, 0.25) !important;
+          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
         .legal-footer-copy {
           color: var(--legal-footer-text);
         }
@@ -1512,15 +1598,18 @@ export const LegalPage = ({ initialTab = 'privacy', onBack }) => {
 /* -------------------------------------------------------------------------- */
 /* TOC Link Helper Component                                                   */
 /* -------------------------------------------------------------------------- */
-const TocLink = ({ id, title, active }) => (
-  <a
-    href={`#${id}`}
-    className={`toc-link-item ${active ? 'active' : ''}`}
-  >
-    <span className="truncate">{title}</span>
-    <CaretRight size={12} className={active ? 'opacity-100' : 'opacity-40'} />
-  </a>
-);
+const TocLink = ({ id, title, active, isHidden }) => {
+  if (isHidden) return null;
+  return (
+    <a
+      href={`#${id}`}
+      className={`toc-link-item ${active ? 'active' : ''}`}
+    >
+      <span className="truncate">{title}</span>
+      <CaretRight size={12} className={active ? 'opacity-100' : 'opacity-40'} />
+    </a>
+  );
+};
 
 /* -------------------------------------------------------------------------- */
 /* PRIVACY POLICY CLAUSES COMPONENT                                           */
