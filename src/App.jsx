@@ -37,16 +37,10 @@ const NotFoundPage = lazy(() => import('./pages/NotFound/NotFoundPage').then(m =
 const WelcomeRadarModal = lazy(() => import('./components/Onboarding/WelcomeRadarModal').then(m => ({ default: m.WelcomeRadarModal })));
 const LegalPage = lazy(() => import('./pages/Legal/LegalPage').then(m => ({ default: m.LegalPage })));
 
+import { LandingSkeletonScreen } from './components/UI/LandingSkeletonScreen';
+
 const AuthLoadingScreen = () => {
-  return (
-    <LoadingScreen
-      logoSrc={velvetHeartLogo}
-      heartSize={84}
-      fullscreen={true}
-      messageInterval={2200}
-      longWaitThreshold={10000}
-    />
-  );
+  return <LandingSkeletonScreen />;
 };
 
 class ErrorBoundary extends Component {
@@ -101,9 +95,16 @@ function AppContent() {
     return evaluateSplashEligibility().shouldPlay;
   });
 
-  const handleCompleteWelcomeSplash = () => {
+  const handleCompleteWelcomeSplash = (options) => {
     markSplashSeen();
     setShowWelcomeSplash(false);
+    if (options?.openSignIn) {
+      setAuthInitialMode('login');
+      setShowAuth(true);
+    } else if (options?.openSignUp) {
+      setAuthInitialMode('signup');
+      setShowAuth(true);
+    }
   };
 
   // Specific detail sub-page triggers

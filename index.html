@@ -279,33 +279,50 @@
       ]
     </script>
     <style>
-      @keyframes vhSplashPulse {
-        0%, 100% { transform: scale(1); opacity: 0.9; }
-        50% { transform: scale(1.06); opacity: 1; filter: drop-shadow(0 0 20px rgba(243,198,143,0.45)); }
+      @keyframes vhInstantShimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+      .vh-pre-box {
+        background: linear-gradient(90deg, #EFE7DE 0%, #FAF5EF 50%, #EFE7DE 100%);
+        background-size: 200% 100%;
+        animation: vhInstantShimmer 1.8s ease-in-out infinite;
+        border-radius: 8px;
       }
     </style>
   </head>
   <body>
     <div id="root">
-      <!-- Instant Pre-paint Shell: Prevents blank flash and registers sub-second LCP before JS executes -->
-      <div id="vh-instant-shell" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(180deg,#090408 0%,#160813 45%,#250c1c 100%);z-index:99999;color:#ffffff;font-family:'Playfair Display',Georgia,serif;text-align:center;padding:24px;">
-        <h1 style="font-size:clamp(44px,6.2vw,76px);font-weight:800;letter-spacing:4px;margin:0 0 16px;text-shadow:0 4px 30px rgba(225,29,72,0.65);">WELCOME</h1>
-        <p style="font-family:'Outfit',-apple-system,BlinkMacSystemFont,sans-serif;font-size:clamp(14px,1.3vw,18px);color:rgba(255,235,240,0.85);max-width:520px;margin:0;">Where intentional connections ignite into lifelong stories</p>
+      <!-- Instant Pre-paint Skeletal Shell: Warm luxury landing wireframe that displays instantly before JS bundle executes -->
+      <div id="vh-instant-shell" style="position:fixed;inset:0;background-color:#FAF7F2;z-index:99999;display:flex;flex-direction:column;padding:0 24px;box-sizing:border-box;overflow:hidden;">
+        <!-- Nav skeleton -->
+        <div style="height:76px;display:flex;align-items:center;justify-content:space-between;max-width:1200px;width:100%;margin:0 auto;border-bottom:1px solid rgba(222,206,190,0.4);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="vh-pre-box" style="width:34px;height:34px;border-radius:50%;"></div>
+            <div class="vh-pre-box" style="width:130px;height:14px;border-radius:6px;"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="vh-pre-box" style="width:74px;height:36px;border-radius:9999px;"></div>
+            <div class="vh-pre-box" style="width:110px;height:38px;border-radius:9999px;"></div>
+          </div>
+        </div>
+        <!-- Hero skeleton -->
+        <div style="max-width:1200px;width:100%;margin:48px auto 0 auto;display:flex;justify-content:space-between;align-items:center;gap:48px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:16px;">
+            <div class="vh-pre-box" style="width:180px;height:24px;border-radius:9999px;"></div>
+            <div class="vh-pre-box" style="width:90%;height:48px;border-radius:10px;"></div>
+            <div class="vh-pre-box" style="width:65%;height:48px;border-radius:10px;"></div>
+            <div class="vh-pre-box" style="width:80%;height:16px;border-radius:6px;margin-top:8px;"></div>
+            <div class="vh-pre-box" style="width:55%;height:16px;border-radius:6px;"></div>
+            <div style="display:flex;align-items:center;gap:16px;margin-top:16px;">
+              <div class="vh-pre-box" style="width:170px;height:52px;border-radius:9999px;"></div>
+              <div class="vh-pre-box" style="width:130px;height:52px;border-radius:9999px;"></div>
+            </div>
+          </div>
+          <div class="vh-pre-box" style="width:320px;height:400px;border-top-left-radius:160px;border-top-right-radius:160px;border-bottom-left-radius:32px;border-bottom-right-radius:32px;flex-shrink:0;"></div>
+        </div>
       </div>
     </div>
-    <script>
-      (function() {
-        try {
-          var seen = sessionStorage.getItem('vh-seen-welcome-splash');
-          var p = new URLSearchParams(window.location.search);
-          var isSplash = p.get('splash') === '1' || p.get('splash') === 'true';
-          if (seen === 'true' && !isSplash) {
-            var s = document.getElementById('vh-instant-shell');
-            if (s) s.style.display = 'none';
-          }
-        } catch (_) {}
-      })();
-    </script>
 
     <noscript>
       <!-- Grounding content for Search Crawlers, AI Bots, and non-JS clients -->
