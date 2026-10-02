@@ -446,125 +446,128 @@ export const WelcomeSplashScreen = ({ onComplete }) => {
           </button>
         </header>
 
-        {/* Central Component: Fixed Arch Window with Silk-Smooth Artwork Transition */}
-        <section className="vh-center-stage" aria-label="Editorial Showcase Carousel">
-          <div className="vh-arch-outer">
-            <div className="vh-arch-inner">
-              {/* Subtle Dotted Texture Pattern */}
-              <div className="vh-arch-dot-grid" aria-hidden="true" />
+        {/* Responsive Content Body: Vertical stack on mobile, 2-column luxury spread on laptop */}
+        <div className="vh-editorial-body">
+          {/* Central Component: Fixed Arch Window with Silk-Smooth Artwork Transition */}
+          <section className="vh-center-stage" aria-label="Editorial Showcase Carousel">
+            <div className="vh-arch-outer">
+              <div className="vh-arch-inner">
+                {/* Subtle Dotted Texture Pattern */}
+                <div className="vh-arch-dot-grid" aria-hidden="true" />
 
-              {/* Delicate Dashed Arch Line */}
-              <div className="vh-arch-dashed-border" aria-hidden="true" />
+                {/* Delicate Dashed Arch Line */}
+                <div className="vh-arch-dashed-border" aria-hidden="true" />
 
-              {/* Vertical Micro-Lettering on Left Arch Margin (Safely positioned to never clip!) */}
-              <div
-                className="vh-micro-lettering"
-                key={`lettering-${activeIndex}`}
-                aria-hidden="true"
-              >
-                {currentSlide.verticalLetters.map((char, cIdx) => (
-                  <span key={cIdx}>{char}</span>
-                ))}
-              </div>
+                {/* Vertical Micro-Lettering on Left Arch Margin (Safely positioned to never clip!) */}
+                <div
+                  className="vh-micro-lettering"
+                  key={`lettering-${activeIndex}`}
+                  aria-hidden="true"
+                >
+                  {currentSlide.verticalLetters.map((char, cIdx) => (
+                    <span key={cIdx}>{char}</span>
+                  ))}
+                </div>
 
-              {/* Artwork Stage: Smoothly Crossfades without any page-flipping motion */}
-              <div className="vh-art-stage">
-                {SLIDES.map((slide, idx) => (
-                  <div
-                    key={slide.id}
-                    className={`vh-art-slide ${idx === activeIndex ? 'is-active' : ''}`}
-                    aria-hidden={idx !== activeIndex}
-                  >
-                    {slide.renderArt()}
-                  </div>
-                ))}
-              </div>
+                {/* Artwork Stage: Smoothly Crossfades without any page-flipping motion */}
+                <div className="vh-art-stage">
+                  {SLIDES.map((slide, idx) => (
+                    <div
+                      key={slide.id}
+                      className={`vh-art-slide ${idx === activeIndex ? 'is-active' : ''}`}
+                      aria-hidden={idx !== activeIndex}
+                    >
+                      {slide.renderArt()}
+                    </div>
+                  ))}
+                </div>
 
-              {/* Bottom-Right Floating Pill Badge */}
-              <div className="vh-arch-badge" key={`badge-${activeIndex}`}>
-                <span>{currentSlide.badge}</span>
+                {/* Bottom-Right Floating Pill Badge */}
+                <div className="vh-arch-badge" key={`badge-${activeIndex}`}>
+                  <span>{currentSlide.badge}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Editorial Copy, Dots Navigation & Primary Actions */}
-        <footer className="vh-footer-section">
-          {/* Pagination Indicators */}
-          <nav
-            className="vh-dots-nav"
-            aria-label="Slide indicators"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {SLIDES.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                className="vh-dot-btn"
-                onClick={() => goToSlide(idx)}
-                aria-label={`Go to slide ${idx + 1}`}
-                aria-current={activeIndex === idx ? 'true' : 'false'}
-              >
-                <span
-                  className={`vh-dot ${
-                    activeIndex === idx ? 'is-active' : 'is-inactive'
-                  }`}
-                />
-              </button>
-            ))}
-          </nav>
+          {/* Editorial Copy, Dots Navigation & Primary Actions */}
+          <footer className="vh-footer-section">
+            {/* Pagination Indicators */}
+            <nav
+              className="vh-dots-nav"
+              aria-label="Slide indicators"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {SLIDES.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className="vh-dot-btn"
+                  onClick={() => goToSlide(idx)}
+                  aria-label={`Go to slide ${idx + 1}`}
+                  aria-current={activeIndex === idx ? 'true' : 'false'}
+                >
+                  <span
+                    className={`vh-dot ${
+                      activeIndex === idx ? 'is-active' : 'is-inactive'
+                    }`}
+                  />
+                </button>
+              ))}
+            </nav>
 
-          {/* Editorial Headline & Subtitle */}
-          <div className="vh-copy-block">
-            <h2 className="vh-headline" key={`headline-${activeIndex}`}>
-              {currentSlide.headline}
-            </h2>
-            <p className="vh-subtitle" key={`sub-${activeIndex}`}>
-              {currentSlide.subtitle}
-            </p>
-          </div>
-
-          {/* Primary Action Button — Single click enters the app/landing page immediately */}
-          <button
-            type="button"
-            className="vh-primary-btn group"
-            onClick={() => handleFinish()}
-          >
-            <span className="vh-btn-label">{currentSlide.buttonText}</span>
-            <div className="vh-arrow-circle">
-              <svg
-                className="w-4 h-4 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-              >
-                <path
-                  d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2.2"
-                />
-              </svg>
+            {/* Editorial Headline & Subtitle */}
+            <div className="vh-copy-block">
+              <h2 className="vh-headline" key={`headline-${activeIndex}`}>
+                {currentSlide.headline}
+              </h2>
+              <p className="vh-subtitle" key={`sub-${activeIndex}`}>
+                {currentSlide.subtitle}
+              </p>
             </div>
-          </button>
 
-          {/* Secondary Sign In Link */}
-          <p className="vh-signin-prompt">
-            Already a member?
+            {/* Primary Action Button — Single click enters the app/landing page immediately */}
             <button
               type="button"
-              className="vh-signin-link"
-              onClick={() => handleFinish({ openSignIn: true })}
+              className="vh-primary-btn group"
+              onClick={() => handleFinish()}
             >
-              Sign In
+              <span className="vh-btn-label">{currentSlide.buttonText}</span>
+              <div className="vh-arrow-circle">
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                >
+                  <path
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.2"
+                  />
+                </svg>
+              </div>
             </button>
-          </p>
 
-          {/* iOS Home Indicator Bar */}
-          <div className="vh-home-indicator" aria-hidden="true" />
-        </footer>
+            {/* Secondary Sign In Link */}
+            <p className="vh-signin-prompt">
+              Already a member?
+              <button
+                type="button"
+                className="vh-signin-link"
+                onClick={() => handleFinish({ openSignIn: true })}
+              >
+                Sign In
+              </button>
+            </p>
+
+            {/* iOS Home Indicator Bar */}
+            <div className="vh-home-indicator" aria-hidden="true" />
+          </footer>
+        </div>
       </div>
     </div>
   );

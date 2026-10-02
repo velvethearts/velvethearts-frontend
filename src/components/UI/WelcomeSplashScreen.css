@@ -97,14 +97,6 @@
   }
 }
 
-/* Laptop / Desktop Media Query */
-@media (min-width: 1024px) {
-  .vh-editorial-container {
-    max-width: 490px;
-    max-height: 940px;
-    padding: 28px 32px;
-  }
-}
 
 /* Header Section */
 .vh-header-bar {
@@ -161,6 +153,16 @@
   background-color: rgba(251, 232, 233, 0.7);
 }
 
+/* Responsive Editorial Body Container */
+.vh-editorial-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  min-height: 0;
+  width: 100%;
+}
+
 /* ==========================================================================
    Central Component: Generously Enlarge Arched Showcase Portal
    ========================================================================== */
@@ -206,16 +208,6 @@
   }
 }
 
-@media (min-width: 1024px) {
-  .vh-arch-outer {
-    max-width: 390px;
-    height: clamp(420px, 52vh, 490px);
-    border-top-left-radius: 195px;
-    border-top-right-radius: 195px;
-    border-bottom-left-radius: 46px;
-    border-bottom-right-radius: 46px;
-  }
-}
 
 .vh-arch-inner {
   position: relative;
@@ -512,11 +504,6 @@
   }
 }
 
-@media (min-width: 1024px) {
-  .vh-headline {
-    font-size: 42px;
-  }
-}
 
 .vh-subtitle {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
@@ -651,5 +638,236 @@
 @media (min-width: 768px) {
   .vh-home-indicator {
     display: none;
+  }
+}
+
+/* ==========================================================================
+   LAPTOP & DESKTOP LUXURY EDITORIAL SPREAD (min-width: 1024px)
+   Balanced 2-column magazine layout:
+   - Left Column: Grand Arched Sanctuary Portal (large, proud, dignified)
+   - Right Column: Elegant Typography, Slide Navigation, CTA, & Sign In
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .vh-editorial-container {
+    max-width: 1120px;
+    width: 90vw;
+    height: 100dvh;
+    max-height: 860px;
+    padding: clamp(24px, 3.5vh, 40px) clamp(32px, 5vw, 64px);
+    justify-content: space-between;
+  }
+
+  .vh-header-bar {
+    padding: 6px 12px 18px 12px;
+  }
+
+  .vh-brand-title {
+    font-size: 13.5px;
+    letter-spacing: 0.3em;
+  }
+
+  .vh-brand-dot {
+    width: 11px;
+    height: 11px;
+  }
+
+  .vh-skip-btn {
+    font-size: 12.5px;
+    padding: 8px 20px;
+    letter-spacing: 0.2em;
+  }
+
+  /* 2-Column Responsive Editorial Grid */
+  .vh-editorial-body {
+    display: grid;
+    grid-template-columns: minmax(380px, 460px) minmax(400px, 520px);
+    column-gap: clamp(48px, 6vw, 96px);
+    align-items: center;
+    justify-content: center;
+    margin: auto 0;
+    width: 100%;
+    flex: 1;
+  }
+
+  /* Center Stage: Centered inside Left Column */
+  .vh-center-stage {
+    padding: 0;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .vh-arch-outer {
+    max-width: 440px;
+    width: 100%;
+    height: clamp(420px, 56vh, 520px);
+    aspect-ratio: 4 / 4.9;
+    border-top-left-radius: 220px;
+    border-top-right-radius: 220px;
+    border-bottom-left-radius: 50px;
+    border-bottom-right-radius: 50px;
+    box-shadow: 0 24px 56px rgba(42, 11, 20, 0.12);
+  }
+
+  .vh-arch-inner {
+    border-top-left-radius: 214px;
+    border-top-right-radius: 214px;
+    border-bottom-left-radius: 44px;
+    border-bottom-right-radius: 44px;
+  }
+
+  .vh-arch-dashed-border {
+    inset: 10px;
+    border-top-left-radius: 204px;
+    border-top-right-radius: 204px;
+    border-bottom-left-radius: 36px;
+    border-bottom-right-radius: 36px;
+  }
+
+  .vh-micro-lettering {
+    left: 28px;
+    top: 112px;
+    font-size: 13px;
+    gap: 8px;
+    letter-spacing: 0.36em;
+  }
+
+  .vh-arch-badge {
+    bottom: 20px;
+    right: 22px;
+    padding: 7px 16px;
+  }
+
+  .vh-arch-badge span {
+    font-size: 10.5px;
+    letter-spacing: 0.26em;
+  }
+
+  /* Right Column: Editorial Copy, Navigation & Primary Actions */
+  .vh-footer-section {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .vh-dots-nav {
+    justify-content: flex-start;
+    margin-bottom: 24px;
+    gap: 9px;
+  }
+
+  .vh-dot {
+    height: 7px;
+  }
+
+  .vh-dot.is-active {
+    width: 32px;
+  }
+
+  .vh-dot.is-inactive {
+    width: 7px;
+  }
+
+  .vh-copy-block {
+    text-align: left;
+    min-height: auto;
+    margin-bottom: 28px;
+  }
+
+  .vh-headline {
+    font-size: clamp(38px, 3.4vw, 50px);
+    line-height: 1.1;
+    letter-spacing: -0.022em;
+    margin: 0 0 16px 0;
+    text-align: left;
+  }
+
+  .vh-subtitle {
+    font-size: clamp(15.5px, 1.2vw, 17px);
+    line-height: 1.6;
+    max-width: 460px;
+    text-align: left;
+    color: var(--vh-text-secondary);
+  }
+
+  .vh-primary-btn {
+    max-width: 400px;
+    height: 64px;
+    margin-top: 18px;
+    padding: 0 16px 0 30px;
+  }
+
+  .vh-btn-label {
+    font-size: 17px;
+    letter-spacing: 0.025em;
+  }
+
+  .vh-arrow-circle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .vh-signin-prompt {
+    text-align: left;
+    margin-top: 20px;
+    margin-left: 2px;
+    font-size: 14.5px;
+  }
+
+  .vh-home-indicator {
+    display: none;
+  }
+}
+
+/* Extra Large Screens / Ultrawide Monitors (min-width: 1440px) */
+@media (min-width: 1440px) {
+  .vh-editorial-container {
+    max-width: 1240px;
+    max-height: 880px;
+  }
+
+  .vh-editorial-body {
+    grid-template-columns: minmax(420px, 500px) minmax(460px, 580px);
+    column-gap: 108px;
+  }
+
+  .vh-arch-outer {
+    max-width: 480px;
+    height: clamp(460px, 58vh, 560px);
+    border-top-left-radius: 240px;
+    border-top-right-radius: 240px;
+    border-bottom-left-radius: 54px;
+    border-bottom-right-radius: 54px;
+  }
+
+  .vh-arch-inner {
+    border-top-left-radius: 234px;
+    border-top-right-radius: 234px;
+    border-bottom-left-radius: 48px;
+    border-bottom-right-radius: 48px;
+  }
+
+  .vh-arch-dashed-border {
+    border-top-left-radius: 224px;
+    border-top-right-radius: 224px;
+  }
+
+  .vh-headline {
+    font-size: 54px;
+  }
+
+  .vh-subtitle {
+    font-size: 17.5px;
+    max-width: 500px;
+  }
+
+  .vh-primary-btn {
+    max-width: 420px;
+    height: 66px;
   }
 }
