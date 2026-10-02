@@ -5,6 +5,7 @@
 User-agent: *
 Allow: /
 Allow: /safety
+Allow: /guidelines
 Allow: /privacy
 Allow: /terms
 Allow: /llms.txt
@@ -24,6 +25,7 @@ Disallow: /admin
 User-agent: Googlebot
 Allow: /
 Allow: /safety
+Allow: /guidelines
 Allow: /privacy
 Allow: /terms
 Allow: /llms.txt
@@ -42,6 +44,7 @@ Disallow: /admin
 User-agent: Bingbot
 Allow: /
 Allow: /safety
+Allow: /guidelines
 Allow: /privacy
 Allow: /terms
 Allow: /llms.txt
@@ -59,6 +62,7 @@ Disallow: /admin
 User-agent: Applebot
 Allow: /
 Allow: /safety
+Allow: /guidelines
 Allow: /privacy
 Allow: /terms
 Allow: /llms.txt

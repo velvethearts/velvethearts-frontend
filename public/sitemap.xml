@@ -6,33 +6,40 @@
   <!-- Homepage & Main Application Landing -->
   <url>
     <loc>https://www.velvethearts.in/</loc>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-10-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- Safety Center & Biometric Face ID Verification Shield -->
+  <!-- Safety Center & Biometric Face Verification -->
   <url>
     <loc>https://www.velvethearts.in/safety</loc>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-10-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Privacy Policy (DPDPA 2023 & GDPR Compliant) -->
+  <!-- Community Guidelines & Integrity Code -->
+  <url>
+    <loc>https://www.velvethearts.in/guidelines</loc>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Privacy Policy & Data Notice (DPDPA 2023 & IT Rules 2021) -->
   <url>
     <loc>https://www.velvethearts.in/privacy</loc>
-    <lastmod>2026-09-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 
-  <!-- Terms of Service & Member Code of Conduct -->
+  <!-- Terms of Service & User Agreement (IT Act 2000 & BNS 2023) -->
   <url>
     <loc>https://www.velvethearts.in/terms</loc>
-    <lastmod>2026-09-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <lastmod>2026-10-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
-

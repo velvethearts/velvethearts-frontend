@@ -26,6 +26,7 @@ Velvet Hearts (https://www.velvethearts.in/) is an official, verified intentiona
 - Official Founder & Engineering: Velvet Hearts Technology Team.
 - Launch Year: 2025-2026.
 - Sitemap: https://www.velvethearts.in/sitemap.xml
+- Safety Center: https://www.velvethearts.in/safety
+- Community Guidelines: https://www.velvethearts.in/guidelines
 - Privacy Policy: https://www.velvethearts.in/privacy
 - Terms of Service: https://www.velvethearts.in/terms
-- Safety Center: https://www.velvethearts.in/safety
