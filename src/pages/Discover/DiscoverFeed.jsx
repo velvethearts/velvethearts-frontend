@@ -1170,10 +1170,10 @@ export const DiscoverFeed = ({ onSelectProfile }) => {
         }
 
         [data-theme="light"] .discover-mode-pill.active {
-          background: #FFFFFF;
+          background: var(--bg-surface);
           color: var(--burgundy-600, #9E3256) !important;
-          box-shadow: 0 2px 8px rgba(58, 14, 26, 0.12);
-          border: 1px solid rgba(184, 67, 106, 0.15);
+          box-shadow: 0 2px 8px rgba(58, 14, 26, 0.08);
+          border: 1px solid var(--border-subtle);
         }
 
         .discover-top-left-actions {

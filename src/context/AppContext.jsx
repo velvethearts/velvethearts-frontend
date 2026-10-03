@@ -46,15 +46,12 @@ const removeStoredChatClear = (profileId) => {
 export const AppProvider = ({ children }) => {
     // --- Persistent Settings & Themes ---
     const [theme, setTheme] = useState(() => {
-        return localStorage.getItem('vh-theme') || 'system';
+        return localStorage.getItem('vh-theme') || 'light';
     });
 
     const [resolvedTheme, setResolvedTheme] = useState(() => {
-        const saved = localStorage.getItem('vh-theme') || 'system';
-        if (saved === 'system') {
-            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        return saved;
+        const saved = localStorage.getItem('vh-theme');
+        return saved === 'dark' ? 'dark' : 'light';
     });
 
     const [accessibility, setAccessibility] = useState(() => {

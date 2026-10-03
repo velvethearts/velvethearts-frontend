@@ -36,6 +36,8 @@ const AdminPanel = lazy(() => import('./pages/Admin/AdminPanel').then(m => ({ de
 const NotFoundPage = lazy(() => import('./pages/NotFound/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const WelcomeRadarModal = lazy(() => import('./components/Onboarding/WelcomeRadarModal').then(m => ({ default: m.WelcomeRadarModal })));
 const LegalPage = lazy(() => import('./pages/Legal/LegalPage').then(m => ({ default: m.LegalPage })));
+const HowItWorksPage = lazy(() => import('./pages/HowItWorks/HowItWorksPage').then(m => ({ default: m.HowItWorksPage })));
+const BlogPage = lazy(() => import('./pages/Blog/BlogPage').then(m => ({ default: m.BlogPage })));
 
 import { LandingSkeletonScreen } from './components/UI/LandingSkeletonScreen';
 
@@ -179,7 +181,7 @@ function AppContent() {
 
   // Handle URL pathname and query parameter deep linking (e.g. /discover, /?tab=chat, or unknown 404 routes)
   React.useEffect(() => {
-    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety', 'admin', 'privacy', 'terms', 'guidelines'];
+    const validTabs = ['discover', 'matches', 'chat', 'notifications', 'profile', 'settings', 'safety', 'admin', 'privacy', 'terms', 'guidelines', 'how-it-works', 'blog'];
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab');
 
@@ -272,7 +274,7 @@ function AppContent() {
       },
       safety: {
         title: 'Safety Center & Guidelines',
-        description: 'Biometric face verification guidelines, emergency contacts, and anti-catfish safety resources on Velvet Hearts.',
+        description: 'Identity verification guidelines, emergency contacts, and anti-catfish safety resources on Velvet Hearts.',
         path: '/safety',
       },
       admin: {
@@ -295,9 +297,19 @@ function AppContent() {
         description: 'Review Velvet Hearts Community Guidelines: mutual respect, consent, anti-harassment standards, and zero-tolerance safety policies for genuine relationships.',
         path: '/guidelines',
       },
+      'how-it-works': {
+        title: 'How It Works — Intentional Dating & Features',
+        description: 'Learn how Velvet Hearts replaces superficial swiping with authentic voice intros, Grace Close, Date Check-In, Blind Spark, and Our Diary.',
+        path: '/how-it-works',
+      },
+      blog: {
+        title: 'Dating Safety Blog — How to Spot and Avoid Catfishing',
+        description: 'Practical, non-salesy advice on spotting fake profiles, avoiding catfishing, and protecting your emotional and physical safety while dating online.',
+        path: '/blog',
+      },
     };
 
-    if (activeTab === 'privacy' || activeTab === 'terms' || activeTab === 'safety' || activeTab === 'guidelines') {
+    if (activeTab === 'privacy' || activeTab === 'terms' || activeTab === 'safety' || activeTab === 'guidelines' || activeTab === 'how-it-works' || activeTab === 'blog') {
       const currentMeta = TAB_META[activeTab];
       updateMetadata({
         title: currentMeta.title,
@@ -314,7 +326,7 @@ function AppContent() {
       if (isHome) {
         updateMetadata({
           title: 'Official Website — Intentional Dating & Verified Profiles',
-          description: 'Velvet Hearts is the official intentional dating platform featuring 16-zone biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching across India and worldwide.',
+          description: 'Velvet Hearts is the official intentional dating platform featuring AI-assisted face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching across India and worldwide.',
           robots: 'index, follow, max-image-preview:large',
           canonicalPath: '/',
         });
@@ -445,6 +457,26 @@ function AppContent() {
           />
         );
 
+      case 'how-it-works':
+        return (
+          <HowItWorksPage
+            onNavigate={(tab) => {
+              setActiveTab(tab || 'discover');
+              try { window.history.pushState({}, '', tab ? `/${tab}` : '/'); } catch (_) {}
+            }}
+          />
+        );
+
+      case 'blog':
+        return (
+          <BlogPage
+            onNavigate={(tab) => {
+              setActiveTab(tab || 'discover');
+              try { window.history.pushState({}, '', tab ? `/${tab}` : '/'); } catch (_) {}
+            }}
+          />
+        );
+
       case '404':
         return (
           <NotFoundPage
@@ -547,6 +579,48 @@ function AppContent() {
               onGetStarted={() => {
                 setAuthInitialMode('signup');
                 setShowAuth(true);
+              }}
+            />
+          </Suspense>
+        );
+      }
+
+      if (activeTab === 'how-it-works') {
+        return (
+          <Suspense fallback={<AuthLoadingScreen />}>
+            <HowItWorksPage
+              onSignIn={() => {
+                setAuthInitialMode('login');
+                setShowAuth(true);
+              }}
+              onGetStarted={() => {
+                setAuthInitialMode('signup');
+                setShowAuth(true);
+              }}
+              onNavigate={(tab) => {
+                setActiveTab(tab || 'discover');
+                try { window.history.pushState({}, '', tab ? `/${tab}` : '/'); } catch (_) {}
+              }}
+            />
+          </Suspense>
+        );
+      }
+
+      if (activeTab === 'blog') {
+        return (
+          <Suspense fallback={<AuthLoadingScreen />}>
+            <BlogPage
+              onSignIn={() => {
+                setAuthInitialMode('login');
+                setShowAuth(true);
+              }}
+              onGetStarted={() => {
+                setAuthInitialMode('signup');
+                setShowAuth(true);
+              }}
+              onNavigate={(tab) => {
+                setActiveTab(tab || 'discover');
+                try { window.history.pushState({}, '', tab ? `/${tab}` : '/'); } catch (_) {}
               }}
             />
           </Suspense>

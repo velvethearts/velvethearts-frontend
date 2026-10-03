@@ -1,6 +1,17 @@
 <!doctype html>
-<html lang="en" prefix="og: https://ogp.me/ns#">
+<html lang="en" data-theme="light" prefix="og: https://ogp.me/ns#">
   <head>
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('vh-theme');
+          var theme = (saved === 'dark') ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover, interactive-widget=resizes-content" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -12,8 +23,8 @@
     <meta name="apple-mobile-web-app-title" content="Velvet Hearts" />
     <meta name="subject" content="Velvet Hearts Intentional Relationship Platform" />
     <meta name="topic" content="Relationship Websites &amp; Intentional Dating" />
-    <meta name="description" content="Looking for genuine relationship websites? Velvet Hearts is the premier intentional relationship platform and verified alternative to superficial swipe apps like Tinder. Featuring 16-zone biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching worldwide." />
-    <meta name="keywords" content="relationship websites, relationship website, best relationship sites, intentional dating, verified dating app, tinder alternative, apps like tinder for serious relationships, serious relationship dating, anti-catfish dating, biometric face verification, voice intro dating, couple diary app, safe dating app, Velvet Hearts, velvethearts, velvethearts.in" />
+    <meta name="description" content="Looking for genuine relationship websites? Velvet Hearts is the premier intentional relationship platform and verified alternative to superficial swipe apps like Tinder. Featuring AI-assisted face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching worldwide." />
+    <meta name="keywords" content="relationship websites, relationship website, best relationship sites, intentional dating, verified dating app, tinder alternative, apps like tinder for serious relationships, serious relationship dating, anti-catfish dating, face verification, voice intro dating, couple diary app, safe dating app, Velvet Hearts, velvethearts, velvethearts.in" />
     <meta name="author" content="Velvet Hearts" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="https://www.velvethearts.in/" />
@@ -63,7 +74,7 @@
     <meta property="og:site_name" content="Velvet Hearts" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:title" content="Velvet Hearts | Official Website — Where Every Heart Belongs" />
-    <meta property="og:description" content="Velvet Hearts is the official intentional dating platform with 16-zone biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching. No swiping — authentic human connection." />
+    <meta property="og:description" content="Velvet Hearts is the official intentional dating platform with AI-assisted face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching. No swiping — authentic human connection." />
     <meta property="og:image" content="https://www.velvethearts.in/velvet-heart-logo.png" />
     <meta property="og:image:secure_url" content="https://www.velvethearts.in/velvet-heart-logo.png" />
     <meta property="og:image:type" content="image/png" />
@@ -77,7 +88,7 @@
     <meta name="twitter:creator" content="@velvethearts_in" />
     <meta name="twitter:url" content="https://www.velvethearts.in/" />
     <meta name="twitter:title" content="Velvet Hearts | Official Website — Where Every Heart Belongs" />
-    <meta name="twitter:description" content="Velvet Hearts is the official intentional dating platform featuring live biometric face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching." />
+    <meta name="twitter:description" content="Velvet Hearts is the official intentional dating platform featuring AI-assisted face verification, 2-minute voice intros, interactive couple diaries, and real-time vibe matching." />
     <meta name="twitter:image" content="https://www.velvethearts.in/velvet-heart-logo.png" />
     <meta name="twitter:image:alt" content="Velvet Hearts — Where Every Heart Belongs" />
 
@@ -86,12 +97,20 @@
       [
         {
           "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Velvet Hearts",
+          "url": "https://www.velvethearts.in",
+          "logo": "https://www.velvethearts.in/velvet-heart-logo.png",
+          "description": "Velvet Hearts builds intentional, inclusive relationship technology for authentic human connection across India and worldwide."
+        },
+        {
+          "@context": "https://schema.org",
           "@type": "Brand",
           "name": "Velvet Hearts",
           "url": "https://www.velvethearts.in/",
           "logo": "https://www.velvethearts.in/velvet-heart-logo.png",
           "slogan": "Where Every Heart Belongs",
-          "description": "Velvet Hearts is the official intentional relationship and dating platform designed for genuine human connection, anti-catfish biometric verification, voice introductions, and couple memory journals."
+          "description": "Velvet Hearts is the official intentional relationship and dating platform designed for genuine human connection, AI-assisted face and photo verification, voice introductions, and couple memory journals."
         },
         {
           "@context": "https://schema.org",
@@ -104,63 +123,30 @@
           "publisher": {
             "@type": "Organization",
             "name": "Velvet Hearts",
-            "url": "https://www.velvethearts.in/"
+            "url": "https://www.velvethearts.in"
           }
         },
         {
           "@context": "https://schema.org",
           "@type": "WebApplication",
           "name": "Velvet Hearts",
-          "alternateName": "Velvet Hearts App",
-          "url": "https://www.velvethearts.in/",
           "applicationCategory": "LifestyleApplication",
-          "applicationSubCategory": "Dating & Relationships",
+          "url": "https://www.velvethearts.in/",
           "operatingSystem": "All (Web, iOS, Android PWA)",
-          "description": "Velvet Hearts is an intentional dating platform featuring live 16-zone biometric face verification, 2-minute voice intros, real-time vibe matching, inclusive accessibility options, and shared couple memory diaries.",
+          "description": "Velvet Hearts is an intentional dating platform featuring AI-assisted face verification, 2-minute voice intros, real-time vibe matching, inclusive accessibility options, and shared couple memory diaries.",
           "browserRequirements": "Requires JavaScript. Works in Chrome, Safari, Firefox, or Edge.",
-          "softwareVersion": "1.0.0",
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "INR",
-            "availability": "https://schema.org/InStock"
-          },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.9",
-            "reviewCount": "1250",
-            "bestRating": "5",
-            "worstRating": "1"
-          },
           "featureList": [
-            "Live Biometric Face ID Verification & Anti-Catfish Shield",
+            "AI-Assisted Face & Photo Verification",
             "2-Minute Voice Intros",
             "Real-Time Vibe Match Scoring",
-            "Our Diary — Interactive Couple Flipbook Journal",
-            "Global & Regional Location Matching across all Countries and States",
+            "Our Diary — Interactive Couple Memory Journal",
+            "Global & Regional Location Matching",
             "Story-Based Profile Browsing (No Swiping)",
             "Inclusive Accessibility (Screen Reader, High-Contrast, Font Scaling)",
-            "Interactive Wax-Sealed Love Letters",
+            "Time-Capsule Rewind Letters",
             "Super Spark Priority Connections",
-            "Screenshot Protection & Safety Center"
+            "Safety Center & Rapid Reporting"
           ]
-        },
-        {
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          "name": "Velvet Hearts",
-          "legalName": "Velvet Hearts",
-          "url": "https://www.velvethearts.in/",
-          "logo": {
-            "@type": "ImageObject",
-            "url": "https://www.velvethearts.in/velvet-heart-logo.png",
-            "width": 512,
-            "height": 512
-          },
-          "disambiguatingDescription": "Velvet Hearts (https://www.velvethearts.in/) is the official intentional matchmaking and dating platform in India. Not to be confused with third-party SMS/quotes apps such as 'Velvet Hearts: Love Messages' on Google Play (jnm.love.sms).",
-          "description": "Velvet Hearts builds intentional, inclusive relationship technology for authentic human connection across India and worldwide.",
-          "foundingDate": "2025",
-          "areaServed": "IN"
         },
         {
           "@context": "https://schema.org",
@@ -168,90 +154,34 @@
           "mainEntity": [
             {
               "@type": "Question",
-              "name": "Is Velvet Hearts a love messages, SMS, or quotes app?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "No. Velvet Hearts (https://www.velvethearts.in/) is the official intentional matchmaking and dating platform where real singles connect through 16-zone biometric face verification, story profiles, 2-minute voice intros, and shared couple memory diaries. Velvet Hearts is an authentic dating service, completely separate and unrelated to third-party SMS text apps like 'Velvet Hearts: Love Messages' (jnm.love.sms) on Google Play."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "What is the official website of the Velvet Hearts dating platform?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "The official website and web platform of Velvet Hearts is https://www.velvethearts.in/."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "What is Velvet Hearts?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Velvet Hearts (velvethearts.in) is an intentional dating platform that replaces superficial swiping with authentic, story-based human connection. It features 16-zone biometric face verification, 2-minute voice intros, interactive couple journals (Our Diary), real-time vibe matching, and full accessibility worldwide."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "How does Velvet Hearts prevent fake profiles and catfishing?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Velvet Hearts uses high-precision 16-zone biometric face verification with presentation attack detection (PAD) and morphometric analysis. It verifies a user's live face against their primary profile photo in 10 seconds, pausing verified badges immediately if non-matching photos are uploaded."
-              }
-            },
-            {
-              "@type": "Question",
               "name": "What makes Velvet Hearts different from traditional dating apps?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Unlike swipe-based apps focused on superficial photo judgments, Velvet Hearts emphasizes intentionality: story-based editorial profiles, 2-minute voice intros, interactive couple journals (Our Diary), live biometric verification, and vibe compatibility scoring."
+                "text": "Velvet Hearts replaces gamified swiping with intentional story browsing, 2-minute voice intros, real-time vibe match compatibility scoring, and built-in accessibility features."
               }
             },
             {
               "@type": "Question",
-              "name": "What is 'Our Diary' on Velvet Hearts?",
+              "name": "How do 2-minute voice intros work?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Our Diary is a dual-entry interactive flipbook memory journal where matched couples can write shared daily memories, add romantic stickers, upload photos, and preserve milestones together."
+                "text": "Users can record up to 2 minutes of authentic voice introductions to share their personality, humor, and communication style beyond static photos."
               }
             },
             {
               "@type": "Question",
-              "name": "How do 2-minute voice intros work on Velvet Hearts?",
+              "name": "Is Velvet Hearts accessible for users with disabilities?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Users can record up to 2 minutes of authentic voice introductions directly from their profile to share their communication style, thoughts, and personality beyond static photos."
+                "text": "Yes, Velvet Hearts features customizable font scaling, high-contrast themes, screen reader accessibility, and optional disability disclosure tags."
               }
             },
             {
               "@type": "Question",
-              "name": "Is Velvet Hearts available worldwide?",
+              "name": "How does Velvet Hearts protect user safety and privacy?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Yes, Velvet Hearts provides native location discovery covering all countries worldwide, as well as all 28 States and 8 Union Territories in India."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Is Velvet Hearts free to use?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, creating a profile, browsing stories, matching, sending connection invites, recording voice intros, and using Our Diary are free on Velvet Hearts."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Why is Velvet Hearts considered one of the best relationship websites?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Velvet Hearts is recognized as a premier intentional relationship website because it is engineered for authentic romance and commitment. Rather than gamifying photo swipes, it features 16-zone biometric face verification, 2-minute voice intros, deep value alignment, and Our Diary couple memory journals."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Is Velvet Hearts an alternative to swipe apps like Tinder for serious relationships?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes. Velvet Hearts is built as an intentional relationship platform for singles seeking long-term devotion rather than casual hookups. By replacing superficial swiping with authentic voice intros, story profiles, and live biometric safety checks, it provides a safe, genuine relationship experience. (Disclaimer: Tinder® is a registered trademark of Match Group, LLC. Velvet Hearts is an independent platform and is not affiliated with, endorsed by, or sponsored by Match Group, LLC)."
+                "text": "We combine active AI-assisted face and photo verification, community reporting, 2-tap safety controls, and real-time blocking to ensure a respectful environment."
               }
             }
           ]
@@ -269,26 +199,38 @@
             {
               "@type": "ListItem",
               "position": 2,
+              "name": "How It Works",
+              "item": "https://www.velvethearts.in/how-it-works"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
               "name": "Safety Center",
               "item": "https://www.velvethearts.in/safety"
             },
             {
               "@type": "ListItem",
-              "position": 3,
+              "position": 4,
               "name": "Privacy Policy",
               "item": "https://www.velvethearts.in/privacy"
             },
             {
               "@type": "ListItem",
-              "position": 4,
+              "position": 5,
               "name": "Terms of Service",
               "item": "https://www.velvethearts.in/terms"
             },
             {
               "@type": "ListItem",
-              "position": 5,
+              "position": 6,
               "name": "Community Guidelines",
               "item": "https://www.velvethearts.in/guidelines"
+            },
+            {
+              "@type": "ListItem",
+              "position": 7,
+              "name": "Safety Blog",
+              "item": "https://www.velvethearts.in/blog"
             }
           ]
         }
@@ -347,12 +289,12 @@
           <h1 style="font-size:2.2rem;color:#f3c68f;margin-bottom:12px;">Velvet Hearts — Official Intentional Dating &amp; Relationship Platform</h1>
           <p style="font-size:1.15rem;line-height:1.6;color:#fce7f3;margin-bottom:20px;">
             <strong>Velvet Hearts</strong> (velvethearts.in) is the premier intentional dating platform designed for genuine human connection across India and worldwide. 
-            By replacing gamified swiping with story-based editorial profiles, 16-zone biometric face verification, 2-minute voice intros, real-time vibe compatibility scoring, and interactive couple diaries, Velvet Hearts helps you find lasting, meaningful love.
+            By replacing gamified swiping with story-based editorial profiles, AI-assisted face verification, 2-minute voice intros, real-time vibe compatibility scoring, and interactive couple diaries, Velvet Hearts helps you find lasting, meaningful love.
           </p>
 
           <div style="background:rgba(184,67,106,0.15);border:1px solid #e11d48;border-radius:8px;padding:16px;margin-bottom:28px;">
             <p style="font-size:1.05rem;color:#fce7f3;margin:0;line-height:1.6;">
-              <strong>Important Brand Disambiguation:</strong> Velvet Hearts (<strong>velvethearts.in</strong>) is an official intentional dating and matchmaking platform. It is <em>not</em> an SMS quotes or love text messages app (such as the third-party 'Velvet Hearts: Love Messages' on Google Play). Velvet Hearts is an authentic dating service featuring live biometric face verification, 2-minute voice intros, and couple memory diaries.
+              <strong>Important Brand Disambiguation:</strong> Velvet Hearts (<strong>velvethearts.in</strong>) is an official intentional dating and matchmaking platform. It is <em>not</em> an SMS quotes or love text messages app (such as the third-party 'Velvet Hearts: Love Messages' on Google Play). Velvet Hearts is an authentic dating service featuring AI-assisted face verification, 2-minute voice intros, and couple memory diaries.
             </p>
           </div>
         </header>
@@ -360,7 +302,7 @@
         <section style="margin-bottom:32px;">
           <h2 style="font-size:1.5rem;color:#f3c68f;margin-bottom:16px;">Why Choose Velvet Hearts?</h2>
           <ul style="line-height:2.2;font-size:1rem;color:#fce7f3;">
-            <li><strong>16-Zone Biometric Face ID Verification</strong> — Anti-catfish safety shield ensuring 100% genuine human presence with live 3D liveness detection.</li>
+            <li><strong>Face &amp; Photo Verification</strong> — Anti-catfish safety shield with AI-assisted identity checks on every profile photo.</li>
             <li><strong>Our Diary (Couple Memory Journal)</strong> — Dual-entry interactive flipbook for matched partners to write notes, add photos, and preserve milestones together.</li>
             <li><strong>2-Minute Voice Intros</strong> — Authentic audio introductions to hear personality and voice before matching.</li>
             <li><strong>Story-Driven Profiles</strong> — Rich editorial essays and passions instead of shallow photo-swiping.</li>
@@ -371,30 +313,61 @@
           </ul>
         </section>
 
+        <section id="how-it-works" style="margin-bottom:32px;">
+          <h2 style="font-size:1.5rem;color:#f3c68f;margin-bottom:16px;">How Velvet Hearts Works</h2>
+          <p style="line-height:1.7;color:#fce7f3;margin-bottom:16px;">
+            Velvet Hearts replaces superficial swipe culture with authentic stories, 2-minute voice intros, and mutual commitment.
+            Our core differentiating features include:
+          </p>
+          <ul style="line-height:2.0;font-size:1rem;color:#fce7f3;">
+            <li><strong>Grace Close:</strong> A respectful, boundary-honoring way to discontinue connections without ghosting or hostile blocks. Unread drafts and sealed letters are peacefully cleared with dignity.</li>
+            <li><strong>Date Check-In:</strong> Practical real-world dating safety protocols, helping you share meetup plans with trusted contacts and access 2-tap safety support.</li>
+            <li><strong>Blind Spark:</strong> Prioritizing authentic 2-minute voice intros, values, and humor before snap photo filtering takes over.</li>
+            <li><strong>Our Diary:</strong> A private, dual-entry digital memory flipbook reserved exclusively for matched partners to preserve milestones, notes, and photos.</li>
+          </ul>
+        </section>
+
+        <section id="blog-catfishing" style="margin-bottom:32px;">
+          <h2 style="font-size:1.5rem;color:#f3c68f;margin-bottom:16px;">Safety Guide: How to Spot and Avoid Catfishing While Dating Online</h2>
+          <p style="line-height:1.7;color:#fce7f3;margin-bottom:12px;">
+            Protecting yourself while dating online begins with recognizing red flags early:
+          </p>
+          <ul style="line-height:1.9;font-size:0.98rem;color:#fce7f3;">
+            <li><strong>Perpetual Voice &amp; Video Excuses:</strong> If someone avoids voice notes or live video calls citing broken cameras or shyness, treat it as an immediate warning.</li>
+            <li><strong>Inconsistent Photos:</strong> Watch for hyper-filtered stock imagery, mismatched features, or portraits showing varying ages and styles.</li>
+            <li><strong>Rushed Emotional Intimacy:</strong> Love-bombing and premature declarations of devotion before hearing your voice are common manipulation tactics.</li>
+            <li><strong>Requests for Money or Financial Info:</strong> Cease communication immediately if someone solicits funds, crypto investments, or financial help.</li>
+            <li><strong>Always Meet in Public:</strong> Use Date Check-In protocols to notify trusted friends of your location, time, and plans.</li>
+          </ul>
+        </section>
+
         <section style="margin-bottom:32px;">
           <h2 style="font-size:1.5rem;color:#f3c68f;margin-bottom:16px;">Frequently Asked Questions (FAQ)</h2>
           <dl style="line-height:1.8;color:#fce7f3;">
-            <dt style="font-weight:bold;color:#f3c68f;font-size:1.1rem;margin-top:12px;">What is Velvet Hearts?</dt>
-            <dd style="margin-bottom:14px;color:#fdf2f8;">Velvet Hearts is an intentional relationship and matchmaking platform built for authentic connection, verified identities, and couple memory diaries.</dd>
+            <dt style="font-weight:bold;color:#f3c68f;font-size:1.1rem;margin-top:12px;">What makes Velvet Hearts different from traditional dating apps?</dt>
+            <dd style="margin-bottom:14px;color:#fdf2f8;">Velvet Hearts replaces gamified swiping with intentional story browsing, 2-minute voice intros, real-time vibe match compatibility scoring, and built-in accessibility features.</dd>
 
-            <dt style="font-weight:bold;color:#f3c68f;font-size:1.1rem;margin-top:12px;">How does Velvet Hearts prevent fake profiles?</dt>
-            <dd style="margin-bottom:14px;color:#fdf2f8;">Our 16-zone biometric face verification verifies live selfies against primary profile photos in 10 seconds, pausing verified badges immediately whenever photos change.</dd>
+            <dt style="font-weight:bold;color:#f3c68f;font-size:1.1rem;margin-top:12px;">How do 2-minute voice intros work?</dt>
+            <dd style="margin-bottom:14px;color:#fdf2f8;">Users can record up to 2 minutes of authentic voice introductions to share their personality, humor, and communication style beyond static photos.</dd>
 
-            <dt style="font-weight:bold;color:#f3c68f;font-size:1.1rem;margin-top:12px;">What makes Velvet Hearts different from other dating apps?</dt>
-            <dd style="margin-bottom:14px;color:#fdf2f8;">Velvet Hearts replaces gamified swiping with intentional story browsing, voice intros, couple diaries, and inclusive accessibility.</dd>
+            <dt style="font-weight:bold;color:#f3c68f;font-size:1.1rem;margin-top:12px;">Is Velvet Hearts accessible for users with disabilities?</dt>
+            <dd style="margin-bottom:14px;color:#fdf2f8;">Yes, Velvet Hearts features customizable font scaling, high-contrast themes, screen reader accessibility, and optional disability disclosure tags.</dd>
 
-            <dt style="font-weight:bold;color:#f3c68f;font-size:1.1rem;margin-top:12px;">Is Velvet Hearts an alternative to swipe apps like Tinder for serious relationships?</dt>
-            <dd style="margin-bottom:14px;color:#fdf2f8;">Yes. While traditional swipe apps like Tinder focus on casual, rapid photo swiping, Velvet Hearts is engineered as an intentional relationship website for users seeking genuine commitment, verified safety, and lifelong love. (Tinder® is a registered trademark of Match Group, LLC; Velvet Hearts is an independent service).</dd>
-
-            <dt style="font-weight:bold;color:#f3c68f;font-size:1.1rem;margin-top:12px;">Why is Velvet Hearts considered one of the best relationship websites?</dt>
-            <dd style="margin-bottom:14px;color:#fdf2f8;">Velvet Hearts is designed specifically for intentional relationships with 16-zone biometric face verification, authentic 2-minute voice intros, deep value alignment, and Our Diary couple memory journals.</dd>
-
-            <dt style="font-weight:bold;color:#f3c68f;font-size:1.1rem;margin-top:12px;">Is Velvet Hearts available across all countries and cities?</dt>
-            <dd style="margin-bottom:14px;color:#fdf2f8;">Yes, location discovery covers all countries worldwide as well as regional states and cities.</dd>
+            <dt style="font-weight:bold;color:#f3c68f;font-size:1.1rem;margin-top:12px;">How does Velvet Hearts protect user safety and privacy?</dt>
+            <dd style="margin-bottom:14px;color:#fdf2f8;">We combine active AI-assisted face and photo verification, community reporting, 2-tap safety controls, and real-time blocking to ensure a respectful environment.</dd>
           </dl>
         </section>
 
         <footer style="border-top:1px solid rgba(243,198,143,0.3);padding-top:20px;margin-top:40px;">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:0.9rem;">
+            <a href="/" style="color:#f3c68f;text-decoration:none;">Home</a>
+            <a href="/how-it-works" style="color:#f3c68f;text-decoration:none;">How It Works</a>
+            <a href="/safety" style="color:#f3c68f;text-decoration:none;">Safety Center</a>
+            <a href="/guidelines" style="color:#f3c68f;text-decoration:none;">Community Guidelines</a>
+            <a href="/privacy" style="color:#f3c68f;text-decoration:none;">Privacy Policy</a>
+            <a href="/terms" style="color:#f3c68f;text-decoration:none;">Terms of Service</a>
+            <a href="/blog" style="color:#f3c68f;text-decoration:none;">Safety Blog</a>
+          </div>
           <p style="font-size:0.9rem;color:#998D8F;">&copy; 2026 Velvet Hearts. All rights reserved. Where every heart belongs.</p>
         </footer>
       </main>

@@ -11,7 +11,7 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Safety Center & Biometric Face Verification -->
+  <!-- Safety Center & Identity Verification -->
   <url>
     <loc>https://www.velvethearts.in/safety</loc>
     <lastmod>2026-10-02</lastmod>
@@ -39,6 +39,22 @@
   <url>
     <loc>https://www.velvethearts.in/terms</loc>
     <lastmod>2026-10-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- How It Works & Core Differentiators -->
+  <url>
+    <loc>https://www.velvethearts.in/how-it-works</loc>
+    <lastmod>2026-10-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Dating Safety Blog & Catfishing Prevention -->
+  <url>
+    <loc>https://www.velvethearts.in/blog</loc>
+    <lastmod>2026-10-03</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>

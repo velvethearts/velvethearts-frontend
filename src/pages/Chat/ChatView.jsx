@@ -3362,11 +3362,18 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
         }
 
         .partner-sent .message-bubble-text {
+          background-color: var(--bg-surface-warm, #FFF8F0);
+          color: var(--text-primary, #1C0D15);
+          border: 1px solid var(--border-subtle, #F0E2EC);
+          box-shadow: 0 1px 4px rgba(58, 14, 26, 0.05);
+          border-bottom-left-radius: var(--radius-sm);
+        }
+
+        [data-theme="dark"] .partner-sent .message-bubble-text {
           background-color: #1e1619;
           color: #fce7eb;
           border: 1px solid rgba(255, 255, 255, 0.09);
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-          border-bottom-left-radius: var(--radius-sm);
         }
 
         .message-bubble-text.deleted {
@@ -3406,11 +3413,16 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           align-items: center;
           justify-content: center;
           color: var(--text-secondary);
-          background-color: #1c1417;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background-color: var(--bg-surface, #FFFBFD);
+          border: 1px solid var(--border-subtle, #F0E2EC);
           cursor: pointer;
           transition: all var(--duration-fast);
           box-shadow: var(--shadow-sm);
+        }
+
+        [data-theme="dark"] .message-action-btn {
+          background-color: #1c1417;
+          border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .message-action-btn.reply:hover {
@@ -3527,8 +3539,8 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           align-items: stretch;
           gap: var(--space-2);
           padding: 6px 10px;
-          background: #140d10;
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: var(--bg-surface-warm, #FFF8F0);
+          border: 1px solid var(--border-subtle, #F0E2EC);
           border-radius: var(--radius-md);
           margin-bottom: 4px;
           cursor: pointer;
@@ -3537,12 +3549,21 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           overflow: hidden;
         }
 
+        [data-theme="dark"] .quoted-reply-card {
+          background: #140d10;
+          border-color: rgba(255, 255, 255, 0.08);
+        }
+
         .user-sent .quoted-reply-card {
           background: #6e1029;
           border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .quoted-reply-card:hover {
+          background: var(--bg-muted, #F3E8EE);
+        }
+
+        [data-theme="dark"] .quoted-reply-card:hover {
           background: #1d1317;
         }
 
@@ -3572,10 +3593,14 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
         .quoted-reply-author {
           font-size: 11px;
           font-weight: 700;
-          color: var(--burgundy-400);
+          color: var(--burgundy-500);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+        }
+
+        [data-theme="dark"] .quoted-reply-author {
+          color: var(--burgundy-400);
         }
 
         .user-sent .quoted-reply-author {
@@ -3600,6 +3625,13 @@ export const ChatView = ({ preselectedConnectionId, onClearPreselected, onSelect
           align-items: center;
           gap: var(--space-3);
           padding: var(--space-3) var(--space-4);
+          background: var(--bg-surface, #FFFBFD);
+          border-top: 1px solid var(--border-subtle, #F0E2EC);
+          border-bottom: 1px solid var(--border-subtle, #F0E2EC);
+          box-shadow: 0 -4px 16px rgba(58, 14, 26, 0.05);
+        }
+
+        [data-theme="dark"] .chat-replying-banner {
           background: #191014;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);

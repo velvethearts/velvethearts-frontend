@@ -272,7 +272,7 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
     },
     {
       q: 'How does Velvet Hearts protect user safety and privacy?',
-      a: 'We combine active 16-zone biometric face verification, community reporting, 2-tap safety controls, and real-time blocking to ensure a respectful environment.'
+      a: 'We combine active AI-assisted face and photo verification, community reporting, 2-tap safety controls, and real-time blocking to ensure a respectful environment.'
     }
   ];
 
@@ -308,6 +308,17 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
             <span className="fey-nav-wordmark font-display">Velvet Hearts</span>
           </div>
           <div className="fey-nav-actions">
+            <a
+              href="/how-it-works"
+              onClick={(e) => {
+                e.preventDefault();
+                if (onNavigate) onNavigate('how-it-works');
+                else window.location.href = '/how-it-works';
+              }}
+              className="fey-nav-link font-ui"
+            >
+              How It Works
+            </a>
             <ThemeToggle />
             <button onClick={onSignIn} className="fey-nav-signin font-ui" aria-label="Sign in to your Velvet Hearts account">
               Sign In
@@ -343,7 +354,7 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
                 <div className="fey-hero-trust font-ui" role="list" aria-label="Platform trust indicators">
                   <div className="fey-trust-pill" role="listitem">
                     <ShieldCheck size={16} weight="fill" className="trust-icon-shield" />
-                    <span>Biometric Verified</span>
+                    <span>Photo Verified</span>
                   </div>
                   <div className="fey-trust-pill" role="listitem">
                     <Microphone size={16} weight="fill" className="trust-icon-mic" />
@@ -595,19 +606,60 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
 
       {/* ============ Footer ============ */}
       <footer className="fey-footer font-ui">
-        <div className="fey-footer-brand font-display">
-          <img src={logo} alt="Velvet Hearts Logo" className="fey-footer-logo" width="30" height="30" />
-          <span>Velvet Hearts</span>
-        </div>
-        <nav className="fey-footer-links" aria-label="Footer navigation">
-          <a href="/guidelines" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('guidelines'); else showAlert({ title: 'Community Guidelines', message: 'Be respectful, genuine, and kind.' }); }}>Community Guidelines</a>
-          <a href="/safety" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('safety'); else showAlert({ title: 'Safety Center', message: 'Report tools are available directly inside chat and profiles.' }); }}>Safety Center</a>
-          <a href="/privacy" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('privacy'); else showAlert({ title: 'Privacy Policy', message: 'Your data is secure and never sold.' }); }}>Privacy Policy</a>
-          <a href="#cookies" onClick={(e) => { e.preventDefault(); triggerCookieBanner(); }}>Cookie Preferences</a>
-          <a href="/terms" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('terms'); else showAlert({ title: 'Terms of Service', message: 'Agree to engage with care.' }); }}>Terms of Service</a>
-        </nav>
-        <div className="fey-footer-copy">
-          Made with care. &copy; 2026 Velvet Hearts. All rights reserved.
+        <div className="fey-footer-container">
+          <div className="fey-footer-top">
+            <div className="fey-footer-brand-col">
+              <div className="fey-footer-brand font-display">
+                <img src={logo} alt="Velvet Hearts Logo" className="fey-footer-logo" width="32" height="32" />
+                <span>Velvet Hearts</span>
+              </div>
+              <p className="fey-footer-tagline font-body">
+                The intentional dating sanctuary for thoughtful singles seeking real emotional resonance.
+              </p>
+              <div className="fey-footer-badges">
+                <span className="fey-footer-badge">Photo Verified</span>
+                <span className="fey-footer-dot">·</span>
+                <span className="fey-footer-badge">Voice Intros</span>
+                <span className="fey-footer-dot">·</span>
+                <span className="fey-footer-badge">Zero Ghosting</span>
+              </div>
+            </div>
+
+            <div className="fey-footer-nav-grid">
+              <div className="fey-footer-col">
+                <h4 className="fey-footer-col-title font-ui">Platform</h4>
+                <ul className="fey-footer-col-links">
+                  <li><a href="/how-it-works" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('how-it-works'); else window.location.href = '/how-it-works'; }}>How It Works</a></li>
+                  <li><a href="/blog" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('blog'); else window.location.href = '/blog'; }}>Safety Blog</a></li>
+                  <li><button type="button" onClick={onSignIn} className="fey-footer-link-btn">Sign In</button></li>
+                  <li><button type="button" onClick={onGetStarted} className="fey-footer-link-btn">Join Sanctuary</button></li>
+                </ul>
+              </div>
+
+              <div className="fey-footer-col">
+                <h4 className="fey-footer-col-title font-ui">Safety &amp; Trust</h4>
+                <ul className="fey-footer-col-links">
+                  <li><a href="/safety" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('safety'); else showAlert({ title: 'Safety Center', message: 'Report tools are available directly inside chat and profiles.' }); }}>Safety Center</a></li>
+                  <li><a href="/guidelines" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('guidelines'); else showAlert({ title: 'Community Guidelines', message: 'Be respectful, genuine, and kind.' }); }}>Community Guidelines</a></li>
+                  <li><a href="#cookies" onClick={(e) => { e.preventDefault(); triggerCookieBanner(); }}>Cookie Preferences</a></li>
+                </ul>
+              </div>
+
+              <div className="fey-footer-col">
+                <h4 className="fey-footer-col-title font-ui">Legal</h4>
+                <ul className="fey-footer-col-links">
+                  <li><a href="/privacy" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('privacy'); else showAlert({ title: 'Privacy Policy', message: 'Your data is secure and never sold.' }); }}>Privacy Policy</a></li>
+                  <li><a href="/terms" onClick={(e) => { e.preventDefault(); if (onNavigate) onNavigate('terms'); else showAlert({ title: 'Terms of Service', message: 'Agree to engage with care.' }); }}>Terms of Service</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="fey-footer-bottom">
+            <div className="fey-footer-copy">
+              Made with care. &copy; 2026 Velvet Hearts. All rights reserved. Where every heart belongs.
+            </div>
+          </div>
         </div>
       </footer>
 
@@ -677,6 +729,8 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
           display: flex;
           align-items: center;
           gap: 10px;
+          flex-shrink: 0;
+          white-space: nowrap;
         }
 
         .fey-nav-logo {
@@ -685,6 +739,7 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
           object-fit: contain;
           filter: drop-shadow(0 2px 8px rgba(184, 67, 106, 0.25));
           transition: transform 0.3s ease;
+          flex-shrink: 0;
         }
 
         .fey-nav-brand:hover .fey-nav-logo {
@@ -696,6 +751,8 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
           font-weight: 700;
           color: var(--burgundy-900);
           letter-spacing: -0.01em;
+          white-space: nowrap;
+          flex-shrink: 0;
         }
 
         [data-theme="dark"] .fey-nav-wordmark {
@@ -706,6 +763,31 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
           display: flex;
           align-items: center;
           gap: 14px;
+          flex-shrink: 0;
+          white-space: nowrap;
+        }
+
+        .fey-nav-link {
+          color: var(--text-secondary, #665C5E);
+          text-decoration: none;
+          font-size: 0.88rem;
+          font-weight: 600;
+          white-space: nowrap;
+          cursor: pointer;
+          transition: color 0.2s ease;
+          padding: 4px 6px;
+        }
+
+        .fey-nav-link:hover {
+          color: var(--burgundy-600);
+        }
+
+        [data-theme="dark"] .fey-nav-link {
+          color: var(--text-muted, #B0A2A5);
+        }
+
+        [data-theme="dark"] .fey-nav-link:hover {
+          color: var(--cream-100);
         }
 
         .fey-nav-signin {
@@ -717,6 +799,8 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
           font-weight: 600;
           color: var(--text-primary);
           cursor: pointer;
+          white-space: nowrap;
+          flex-shrink: 0;
           transition: all 0.3s ease;
         }
 
@@ -1652,64 +1736,221 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
           line-height: 1.6;
         }
 
-        /* ---- Footer ---- */
+        /* ---- Footer Revamped ---- */
         .fey-footer {
-          padding: 48px 32px;
-          max-width: 1200px;
+          border-top: 1px solid var(--border-default);
+          background: var(--bg-surface-warm);
+          padding: 64px 24px 36px;
+          margin-top: 0;
+          transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        [data-theme="dark"] .fey-footer {
+          background: rgba(14, 9, 12, 0.95);
+          border-top-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .fey-footer-container {
+          max-width: 1160px;
           margin: 0 auto;
           display: flex;
           flex-direction: column;
-          align-items: center;
-          gap: 24px;
+          gap: 48px;
+        }
+
+        .fey-footer-top {
+          display: grid;
+          grid-template-columns: 1.4fr 2fr;
+          gap: 48px;
+          align-items: start;
+        }
+
+        .fey-footer-brand-col {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
         }
 
         .fey-footer-brand {
           display: flex;
           align-items: center;
           gap: 10px;
-          font-size: var(--text-heading);
-          color: var(--text-accent);
+          font-size: 1.35rem;
+          color: var(--burgundy-900);
           font-weight: 700;
+          letter-spacing: -0.01em;
+        }
+
+        [data-theme="dark"] .fey-footer-brand {
+          color: var(--cream-100);
         }
 
         .fey-footer-logo {
-          height: 30px;
-          width: auto;
+          height: 32px;
+          width: 32px;
           object-fit: contain;
-          transition: transform 0.3s ease;
         }
 
-        .fey-footer-brand:hover .fey-footer-logo {
-          transform: scale(1.06);
-        }
-
-        .fey-footer-links {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 14px 28px;
-        }
-
-        .fey-footer-links a {
+        .fey-footer-tagline {
+          font-size: 0.92rem;
           color: var(--text-secondary);
-          font-size: var(--text-body-sm);
-          text-decoration: none;
-          transition: color 0.2s ease;
+          line-height: 1.6;
+          max-width: 340px;
+          margin: 0;
         }
 
-        .fey-footer-links a:hover {
-          color: var(--text-primary);
-        }
-
-        .fey-footer-copy {
-          font-size: var(--text-caption);
+        .fey-footer-badges {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.78rem;
           color: var(--text-muted);
+          font-weight: 500;
+          flex-wrap: wrap;
+        }
+
+        .fey-footer-dot {
+          opacity: 0.5;
+        }
+
+        .fey-footer-nav-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 32px;
+        }
+
+        .fey-footer-col {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+
+        .fey-footer-col-title {
+          font-size: 0.82rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: var(--burgundy-500);
+          margin: 0;
+        }
+
+        [data-theme="dark"] .fey-footer-col-title {
+          color: var(--burgundy-300);
+        }
+
+        .fey-footer-col-links {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .fey-footer-col-links a,
+        .fey-footer-link-btn {
+          color: var(--text-secondary);
+          font-size: 0.88rem;
+          text-decoration: none;
+          background: none;
+          border: none;
+          padding: 0;
+          cursor: pointer;
+          text-align: left;
+          font-family: inherit;
+          transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .fey-footer-col-links a:hover,
+        .fey-footer-link-btn:hover {
+          color: var(--burgundy-600);
+          transform: translateX(2px);
+        }
+
+        [data-theme="dark"] .fey-footer-col-links a:hover,
+        [data-theme="dark"] .fey-footer-link-btn:hover {
+          color: var(--cream-100);
+        }
+
+        .fey-footer-bottom {
+          display: flex;
+          justify-content: center;
+          text-align: center;
+          padding-top: 24px;
+          border-top: 1px solid var(--border-subtle);
+          font-size: 0.82rem;
+          color: var(--text-muted);
+        }
+
+        @media (max-width: 860px) {
+          .fey-footer-top {
+            grid-template-columns: 1fr;
+            gap: 36px;
+          }
+          .fey-footer-nav-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
+          }
+        }
+
+        @media (max-width: 540px) {
+          .fey-footer {
+            padding: 44px 18px 30px;
+          }
+          .fey-footer-container {
+            gap: 32px;
+          }
+          .fey-footer-nav-grid {
+            grid-template-columns: 1fr;
+            gap: 24px;
+          }
         }
 
         /* ---- Responsive ---- */
         @media (max-width: 768px) {
+          .fey-nav {
+            padding: 8px 14px;
+          }
+
+          .fey-nav.scrolled {
+            padding: 6px 14px;
+          }
+
+          .fey-nav-inner {
+            padding: 6px 14px;
+            gap: 10px;
+          }
+
+          .fey-nav-logo {
+            width: 28px;
+            height: 28px;
+          }
+
+          .fey-nav-wordmark {
+            font-size: 1.05rem;
+          }
+
+          .fey-nav-actions {
+            gap: 8px;
+          }
+
+          .fey-nav-link {
+            display: none !important;
+          }
+
+          .fey-nav-signin {
+            padding: 5px 12px;
+            font-size: 0.8rem;
+          }
+
           .fey-hero {
-            padding: 90px 20px 30px;
+            padding: 108px 20px 30px;
+          }
+
+          .fey-hero-title {
+            font-size: clamp(2rem, 7.5vw, 2.75rem);
+            line-height: 1.12;
+            margin-bottom: 16px;
           }
 
           .fey-reveal-section {
@@ -1735,6 +1976,39 @@ export const LandingPage = ({ onGetStarted, onSignIn, onNavigate }) => {
 
           .chip-tl { top: -8px; left: 4px; }
           .chip-br { bottom: -8px; right: 4px; }
+        }
+
+        @media (max-width: 380px) {
+          .fey-nav {
+            padding: 6px 8px;
+          }
+
+          .fey-nav-inner {
+            padding: 5px 10px;
+            gap: 6px;
+          }
+
+          .fey-nav-logo {
+            width: 24px;
+            height: 24px;
+          }
+
+          .fey-nav-wordmark {
+            font-size: 0.95rem;
+          }
+
+          .fey-nav-actions {
+            gap: 6px;
+          }
+
+          .fey-nav-signin {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+          }
+
+          .fey-hero {
+            padding: 98px 14px 24px;
+          }
         }
       `}</style>
     </div>

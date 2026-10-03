@@ -126,7 +126,17 @@ export const Navigation = ({ children, isChatViewActive, isInsideChat }) => {
           min-height: 100vh;
           width: 100%;
           background-color: var(--bg-page);
+          background-image: 
+            radial-gradient(circle at 12% 18%, rgba(184, 67, 106, 0.05) 0%, transparent 45%),
+            radial-gradient(circle at 88% 82%, rgba(212, 173, 106, 0.035) 0%, transparent 45%);
+          background-attachment: fixed;
           transition: background-color var(--duration-normal) var(--ease-out-smooth);
+        }
+
+        [data-theme="dark"] .app-container {
+          background-image: 
+            radial-gradient(circle at 12% 18%, rgba(184, 67, 106, 0.08) 0%, transparent 45%),
+            radial-gradient(circle at 88% 82%, rgba(212, 173, 106, 0.04) 0%, transparent 45%);
         }
 
         .desktop-sidebar {
@@ -271,7 +281,7 @@ export const Navigation = ({ children, isChatViewActive, isInsideChat }) => {
           flex: 1;
           width: 100%;
           min-height: 100vh;
-          background-color: var(--bg-page);
+          background-color: transparent;
           transition: background-color var(--duration-normal) var(--ease-out-smooth);
           padding-bottom: calc(var(--bottom-nav-height) + var(--space-6));
         }

@@ -8,6 +8,8 @@ Allow: /safety
 Allow: /guidelines
 Allow: /privacy
 Allow: /terms
+Allow: /how-it-works
+Allow: /blog
 Allow: /llms.txt
 Allow: /llms-full.txt
 Allow: /sitemap.xml
@@ -28,6 +30,8 @@ Allow: /safety
 Allow: /guidelines
 Allow: /privacy
 Allow: /terms
+Allow: /how-it-works
+Allow: /blog
 Allow: /llms.txt
 Allow: /llms-full.txt
 Allow: /sitemap.xml
@@ -47,6 +51,8 @@ Allow: /safety
 Allow: /guidelines
 Allow: /privacy
 Allow: /terms
+Allow: /how-it-works
+Allow: /blog
 Allow: /llms.txt
 Allow: /sitemap.xml
 Disallow: /api/
@@ -65,6 +71,8 @@ Allow: /safety
 Allow: /guidelines
 Allow: /privacy
 Allow: /terms
+Allow: /how-it-works
+Allow: /blog
 Allow: /llms.txt
 Allow: /sitemap.xml
 

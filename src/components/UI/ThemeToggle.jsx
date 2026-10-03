@@ -21,7 +21,7 @@ export const ThemeToggle = ({ className = '', variant = 'auto' }) => {
     return () => window.removeEventListener('vh-theme-toggle-style-changed', handleStyleChange);
   }, []);
 
-  const currentMode = resolvedTheme || (typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : 'dark') || 'dark';
+  const currentMode = resolvedTheme || (typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : 'light') || 'light';
   const isDark = currentMode === 'dark';
 
   const activeVariant = variant === 'auto' ? toggleStyle : variant;

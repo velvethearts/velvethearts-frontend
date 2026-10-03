@@ -1216,7 +1216,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           padding: var(--space-3) var(--space-10) var(--space-3) var(--space-4);
           border-radius: var(--radius-md);
           border: 1px solid var(--border-subtle);
-          background: var(--bg-base);
+          background: var(--bg-input);
           color: var(--text-primary);
           font-size: var(--text-sm);
           outline: none;
@@ -1248,7 +1248,7 @@ export const MatchesList = ({ onSelectConnection, onSelectProfile }) => {
           display: flex;
           align-items: center;
           gap: var(--space-3);
-          background: var(--bg-base);
+          background: var(--bg-surface-warm);
           border: 1px solid var(--border-subtle);
           padding: var(--space-3) var(--space-4);
           border-radius: var(--radius-xl);
